@@ -1,0 +1,13 @@
+{
+    "name": "Cancellation",
+    "alias": "cancellation",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Cancellation\\Providers\\CancellationServiceProvider"
+    ],
+    "aliases": {},
+    "files": [],
+    "requires": []
+}

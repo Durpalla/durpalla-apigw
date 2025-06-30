@@ -1,0 +1,11 @@
+{
+    "Inventory": true,
+    "BroadCast": true,
+    "Cancellation": true,
+    "Booking": true,
+    "Gateway": true,
+    "Payment": true,
+    "Vehicle": true,
+    "Revision": true,
+    "Customer": true
+}

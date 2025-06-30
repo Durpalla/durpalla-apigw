@@ -1,0 +1,80 @@
+<?php
+
+namespace App\Observers;
+
+use App\Constants\AppConst;
+use App\Models\CabinLock;
+use App\Models\ScheduleCabinMapping;
+
+class CabinLockObserver
+{
+    /**
+     * Handle the cabin lock "created" event.
+     *
+     * @param  CabinLock  $cabinLock
+     * @return void
+     */
+    public function created(CabinLock $cabinLock)
+    {
+        if($cabinLock->mapping_id) {
+            ScheduleCabinMapping::where('id', $cabinLock->mapping_id)
+                ->first()
+                ->update(['is_locked' => AppConst::BOOKING_ITEM_ACTIVE]);
+        } else {
+            ScheduleCabinMapping::where(['cabin_id' => $cabinLock->cabin_id, 'schedule_id' => $cabinLock->trip_id])
+                ->first()
+                ->update(['is_locked' => AppConst::BOOKING_ITEM_ACTIVE]);
+        }
+    }
+
+    /**
+     * Handle the cabin lock "updated" event.
+     *
+     * @param  CabinLock  $cabinLock
+     * @return void
+     */
+    public function updated(CabinLock $cabinLock)
+    {
+        //
+    }
+
+    /**
+     * Handle the cabin lock "deleted" event.
+     *
+     * @param  CabinLock  $cabinLock
+     * @return void
+     */
+    public function deleted(CabinLock $cabinLock)
+    {
+        if($cabinLock->mapping_id) {
+            ScheduleCabinMapping::find($cabinLock->mapping_id)
+                ->update(['is_locked' => AppConst::BOOKING_ITEM_PENDING]);
+        } else {
+            ScheduleCabinMapping::where(['cabin_id' => $cabinLock->cabin_id, 'schedule_id' => $cabinLock->trip_id])
+                ->first()
+                ->update(['is_locked' => AppConst::BOOKING_ITEM_PENDING]);
+        }
+    }
+
+    /**
+     * Handle the cabin lock "restored" event.
+     *
+     * @param  CabinLock  $cabinLock
+     * @return void
+     */
+    public function restored(CabinLock $cabinLock)
+    {
+        //
+    }
+
+    /**
+     * Handle the cabin lock "force deleted" event.
+     *
+     * @param  CabinLock  $cabinLock
+     * @return void
+     */
+    public function forceDeleted(CabinLock $cabinLock)
+    {
+        //
+    }
+}
