@@ -2,6 +2,13 @@
 
 namespace App\Providers;
 
+use App\Http\View\Composers\CabinTypeComposer;
+use App\Http\View\Composers\GatewayComposer;
+use App\Http\View\Composers\GhatComposer;
+use App\Http\View\Composers\MerchantComposer;
+use App\Http\View\Composers\PartyComposer;
+use App\Http\View\Composers\RouteComposer;
+use App\Http\View\Composers\ServiceComposer;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -12,29 +19,8 @@ class ViewComposerServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
-        // View::composer(
-        //     '*', 'App\Http\View\Composers\MerchantComposer'
-        // );
-        // View::composer(
-        //     '*', 'App\Http\View\Composers\RouteComposer'
-        // );
-        // View::composer(
-        //     '*', 'App\Http\View\Composers\CabinTypeComposer'
-        // );
-        // View::composer(
-        //     '*', 'App\Http\View\Composers\GhatComposer'
-        // );
-        // View::composer(
-        //     '*', 'App\Http\View\Composers\PartyComposer'
-        // );
-        // View::composer(
-        //     '*', 'App\Http\View\Composers\ServiceComposer'
-        // );
-        // View::composer(
-        //     '*', 'App\Http\View\Composers\GatewayComposer'
-        // );
     }
 
     /**
@@ -42,8 +28,28 @@ class ViewComposerServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot(): void
     {
-        //
+        View::composer(
+            '*', MerchantComposer::class
+        );
+        View::composer(
+            '*', RouteComposer::class
+        );
+        View::composer(
+            '*', CabinTypeComposer::class
+        );
+        View::composer(
+            '*', GhatComposer::class
+        );
+        View::composer(
+            '*', PartyComposer::class
+        );
+        View::composer(
+            '*', ServiceComposer::class
+        );
+        View::composer(
+            '*', GatewayComposer::class
+        );
     }
 }

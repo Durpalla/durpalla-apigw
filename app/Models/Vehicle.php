@@ -16,6 +16,7 @@ class Vehicle extends Model
 {
     use SoftDeletes, RevisionableTrait;
     protected $fillable = [
+        'user_id',
         'merchant_id',
         'route_id',
         'name',
@@ -140,6 +141,10 @@ class Vehicle extends Model
 
     public static function boot() {
         parent::boot();
+        static::created(function ($model) {
+            $model->user_id = auth()->id();
+        });
+
         static::deleting(function($vehicle) {
             $vehicle->supervisors()->delete();
             $vehicle->routeMappings()->delete();
@@ -149,6 +154,7 @@ class Vehicle extends Model
             $vehicle->cabins()->delete();
             $vehicle->seats()->delete();
         });
+
         static::restoring(function($vehicle) {
             $vehicle->merchant()->restore();
             $vehicle->supervisors()->each(function($item, $k) {

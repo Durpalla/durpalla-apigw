@@ -29,7 +29,7 @@ class Services
     public function getServiceStatuses(): Collection
     {
         return $this->service->all()->map(function($item, $key) {
-            [
+            return [
                 'id' => $item->id,
                 'name' => $item->name,
                 'status' => $item->status

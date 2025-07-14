@@ -265,12 +265,6 @@ class VehicleController extends Controller
         return view('admin.launch.create', compact('routes', 'id', 'type'))->withTitle('Add new ' . $type);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return RedirectResponse
-     */
     public function store(VehicleCreateRequest $request): RedirectResponse
     {
         try {

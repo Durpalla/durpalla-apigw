@@ -23,7 +23,7 @@ class GhatController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
     public function index(Request $request)
     {
@@ -41,14 +41,14 @@ class GhatController extends Controller
                 }
             }
 
-            if(isset($_GET['service_type'])) {
+            if($request->filled('service_type')) {
                 $query->where('service_type', $_GET['service_type']);
             }
 
             $count = $query->count();
             $query->offset($start);
             if ($limit < 0) {
-                $limit = $total;
+                $limit = $count;
             }
             $query->limit($limit);
             // $query->orderBy($column, $order);
@@ -86,9 +86,6 @@ class GhatController extends Controller
     {
         try {
             DB::transaction(function() use ($request) {
-                $request->merge([
-                    'user_id' => \auth()->user()->id
-                ]);
                 $this->ghatService->create($request->validated());
             }, 2);
             return redirect()->route('dashboard.ghat.index');

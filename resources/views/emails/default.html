@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Simple Transactional Email</title>
+    <style type="text/css">
+      <!--
+      body {
+        background: rgb(241, 241, 241);
+      }
+      .container {
+        margin: 0 auto;
+        width: auto;
+        max-width: 600px;
+        min-width: 320px;
+        padding: 25px;
+        background: #fff;
+      }
+      .head {
+        text-align: center;
+      }
+      .logo {
+        width: auto;
+        height: 45px;
+        margin: 0 auto;
+      }
+      .box {
+        border: solid #E8EAED 1.5pt;
+        padding: 15px;
+        height: auto;
+        width 100%;
+        margin-top: 35px;
+        text-align: center;
+      }
+      .box h2 {
+        font-family: Barlow;
+        margin: 0;
+        font-weight: normal;
+      }
+      .foot {
+        margin-top: 25px;
+        width: 80%;
+        margin: 0 auto;
+        text-align: center;
+      }
+      .foot p {
+        margin: 0;
+      }
+      --!>
+    </style>
+  </head>
+  <body class="" style="background: rgb(241, 241, 241);">
+    <div class="container" style="margin: 0 auto;
+        width: auto;
+        max-width: 600px;
+        min-width: 320px;
+        padding: 25px;
+        background: #fff;">
+      <div class="head" style="text-align: center;">
+        <img src="{{ asset('default/logo.png') }}" class="logo" style="width: auto;
+        height: 45px;
+        margin: 0 auto;" />
+      </div>
+      <div class="body">
+        <div class="box" style="border: solid #E8EAED 1.5pt;
+        padding: 15px;
+        height: auto;
+        width 100%;
+        margin-top: 35px;
+        text-align: center;">
+          <h2 style="font-family: Barlow;
+        margin: 0;
+        font-weight: normal;">Hi {{ $name ?? '' }},</h2>
+          <p>Welcome to jolzan. Your new account comes with access to jolzan products, apps, and services.<br /> Here are a few tips to get you started.</p>
+          <h2>Stay in the know with the jolzan app</h2>
+          <p>Find your ticket, explore your interests, and stay up to date.</p>
+          <button style="background: #219876;
+            border: 1px solid #219876;
+            padding: 8px 25px;
+            color: #fff;
+            font-weight: bold;">Try it</button>
+        </div>
+        <div class="box" style="border: solid #E8EAED 1.5pt;
+        padding: 15px;
+        height: auto;
+        width 100%;
+        margin-top: 35px;
+        text-align: center;">
+          <h2>More from jolzan</h2>
+          <p>Discover the latest apps from <strong>jolzan.</strong></p>
+          <button style="background: #219876;
+            border: 1px solid #219876;
+            padding: 8px 25px;
+            color: #fff;
+            font-weight: bold;">Android App</button>
+        </div>
+        <div class="box" style="border: solid #E8EAED 1.5pt;
+        padding: 15px;
+        height: auto;
+        width 100%;
+        margin-top: 35px;
+        text-align: center;">
+          <h4>Find your tickets</h4>
+          <table style="width: 100%;border:0;">
+            <tr>
+              <td style="width: 30%;
+                font-size: 16pt;
+                font-weight: bold;">
+                Find your answer
+              </td>
+              <td>
+                <p>Get the expert help for your inquiry or Call <span style="font-size:22pt;font-weight: bold; color: #219876;">09639200900</span></p>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <div class="head"  style="text-align: center;">
+        <img src="{{asset('default/logo.png')}}" class="logo" style="margin-top: 25px;height:35px;" />
+      </div>
+      <div class="foot" style="margin-top: 25px;
+        width: 80%;
+        margin: 0 auto;
+        text-align: center;">
+        <p style="text-align: center;margin: 0;">Replies to this email aren't monitored. If you have a question about your new account, the Help Center likely has the answer you're looking for.</p>
+        <hr>
+        <p style="margin: 0;">jolzan</p>
+        <p style="margin: 0;">Address</p>
+        <p style="margin: 0;"><small>This email was sent to you because you created a jolzan account.</small></p>
+      </div>
+    </div>
+  </body>
+</html>

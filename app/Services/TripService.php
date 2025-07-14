@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Vehicle;
 use App\Repository\Interfaces\ScheduleRepositoryInterface;
 use App\Models\VehicleRoute;
 use App\Models\VehicleSchedule;
@@ -195,6 +196,7 @@ class TripService
 
     public function create(array $data)
     {
+        $vehicle = Vehicle::find($data['vehicle_id']);
         $schedule_type = (array_key_exists('schedule_type', $data)) ? 'reverse' : 'straight';
         $schedule_date = $this->calculation->createDate($data['schedule_date']);
         $schedule_time = $schedule_date . ' ' . date('H:i:s', strtotime($data['schedule_time']));
@@ -204,6 +206,7 @@ class TripService
         if (!$schedule) {
             $this->repository->create(array_merge($data, [
                 'user_id' => auth()->user()->id,
+                'merchant_id' => $vehicle->merchant_id,
                 'schedule_date' => $schedule_date,
                 'leaving_at' => $schedule_time,
                 'starting_point' => ($schedule_type == 'reverse') ? $route->endingPoint['ghat_id'] : $route->startingPoint['ghat_id'],
