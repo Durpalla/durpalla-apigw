@@ -213,9 +213,9 @@ class FrontApiController extends Controller
         } else {
             $results = $onWay->get();
         }
+
         if( Auth::check() ) {
-            // activity()->log($log);
-            \LogActivity::addToLog($log);
+//             activity()->log($log);
         }
 
         $trips = $results->map(function($trip, $key) {
