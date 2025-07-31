@@ -1766,16 +1766,16 @@
         },
         {
             "name": "laravel/passport",
-            "version": "v13.0.5",
+            "version": "v13.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/passport.git",
-                "reference": "9a3b47bc784dc9334aad67f690b13230b0434960"
+                "reference": "c5bf6c5c2724930d9c3517ec5244d8bd4727ae94"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/passport/zipball/9a3b47bc784dc9334aad67f690b13230b0434960",
-                "reference": "9a3b47bc784dc9334aad67f690b13230b0434960",
+                "url": "https://api.github.com/repos/laravel/passport/zipball/c5bf6c5c2724930d9c3517ec5244d8bd4727ae94",
+                "reference": "c5bf6c5c2724930d9c3517ec5244d8bd4727ae94",
                 "shasum": ""
             },
             "require": {
@@ -1839,7 +1839,7 @@
                 "issues": "https://github.com/laravel/passport/issues",
                 "source": "https://github.com/laravel/passport"
             },
-            "time": "2025-06-12T15:12:08+00:00"
+            "time": "2025-07-10T17:39:38+00:00"
         },
         {
             "name": "laravel/prompts",

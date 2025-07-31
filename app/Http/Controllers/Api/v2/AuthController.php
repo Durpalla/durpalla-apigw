@@ -275,7 +275,7 @@ class AuthController extends Controller
             return response()->json(['success'=> false, 'message' => $validator->errors()->first()], $this->success );
 
         //check if account exist of not
-        $user = User::with(['roles', 'meta'])->where(['mobile' => $request->mobile])->first();
+        $user = User::with(['roles'])->where(['mobile' => $request->mobile])->first();
 
         if( empty( $user ) )
             return response()->json(['success' => false, 'message' => __('Account not found.')], $this->success );
