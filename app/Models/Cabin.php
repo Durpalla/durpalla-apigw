@@ -11,7 +11,26 @@ use Venturecraft\Revisionable\RevisionableTrait;
 class Cabin extends Model
 {
     use RevisionableTrait;
-    protected $fillable = ['vehicle_id', 'merchant_id', 'ownership', 'ghat_id', 'cabin_no', 'type_id', 'fare', 'child_fare', 'infant_fare', 'cabin_row', 'floor', 'cabin_position', 'passenger_capacity', 'is_reserved', 'type', 'service_charge', 'service_charge_type', 'vehicle_type'];
+    protected $fillable = [
+        'vehicle_id',
+        'marchant_id',
+        'ownership',
+        'ghat_id',
+        'cabin_no',
+        'type_id',
+        'fare',
+        'child_fare',
+        'infant_fare',
+        'cabin_row',
+        'floor',
+        'cabin_position',
+        'passenger_capacity',
+        'is_reserved',
+        'type',
+        'service_charge',
+        'service_charge_type',
+        'vehicle_type'
+    ];
 
     public function launch() : belongsTo
     {
@@ -60,8 +79,8 @@ class Cabin extends Model
 
     public static function boot() {
         parent::boot();
-        static::deleting(function($vehicle) {
-
+        static::creating(function($model) {
+            $model->created_by = auth()->id();
         });
     }
 }

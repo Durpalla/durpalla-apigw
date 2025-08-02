@@ -43,13 +43,11 @@
                    id="supervisor-tab" data-toggle="tab" href="#supervisor" role="tab" aria-controls="supervisor"
                    aria-selected="false">Operators</a>
             </li>
-            @if(auth()->user()->hasAnyPermission(['vehicle-statistics', 'vehicles-statistics']) || auth()->user()->hasAnyRole(['admin', 'merchant']))
-                <li class="nav-item">
-                    <a class="nav-link @php echo ( isset( $_GET['tab'] ) && $_GET['tab'] == 'stat') ? 'active': ''; @endphp"
-                       id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact"
-                       aria-selected="false">Statistics</a>
-                </li>
-            @endif
+            <li class="nav-item">
+                <a class="nav-link @php echo ( isset( $_GET['tab'] ) && $_GET['tab'] == 'stat') ? 'active': ''; @endphp"
+                   id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact"
+                   aria-selected="false">Statistics</a>
+            </li>
         </ul>
         <div class="tab-content" id="myTabContent" style="padding: 15px; background: #fff;">
             <div
@@ -1631,77 +1629,75 @@
                             </tbody>
                         </table>
                     </div>
-                    @if(auth()->user()->hasAnyPermission(['supervisor-assign', 'supervisor-add']) || auth()->user()->hasAnyRole('admin'))
-                        <div class="col-4">
-                            <h3 class="text-secondary"><i class="fas fa-plus"></i> Assign new supervisor</h3>
-                            <hr>
-                            <form action="{{ route('dashboard.supervisor.assign') }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="vehicle_id" value="{{ $vehicle->id }}">
-                                <input type="hidden" name="tab" value="supervisor">
-                                <div class="form-group">
-                                    <label>Select supervisor</label>
-                                    <select name="supervisor_id" class="form-control" required>
-                                        <option value="">Select supervisor</option>
-                                        @if( $supervisors )
-                                            @foreach( $supervisors as $supervisor )
-                                                <option
-                                                    value="{{ $supervisor['id'] }}">{{ $supervisor['name'] }}</option>
-                                            @endforeach
-                                        @endif
-                                    </select>
-                                    @error('cabin_no')
-                                    <div class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </div>
-                                    @enderror
+                    <div class="col-4">
+                        <h3 class="text-secondary"><i class="fas fa-plus"></i> Assign new supervisor</h3>
+                        <hr>
+                        <form action="{{ route('dashboard.supervisor.assign') }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="vehicle_id" value="{{ $vehicle->id }}">
+                            <input type="hidden" name="tab" value="supervisor">
+                            <div class="form-group">
+                                <label>Select supervisor</label>
+                                <select name="supervisor_id" class="form-control" required>
+                                    <option value="">Select supervisor</option>
+                                    @if( $supervisors )
+                                        @foreach( $supervisors as $supervisor )
+                                            <option
+                                                value="{{ $supervisor['id'] }}">{{ $supervisor['name'] }}</option>
+                                        @endforeach
+                                    @endif
+                                </select>
+                                @error('cabin_no')
+                                <div class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
                                 </div>
-                                <div class="form-group">
-                                    <label>Select Master</label>
-                                    <select name="master_id" class="form-control">
-                                        <option value="">Select master</option>
-                                        @if( $vehicle->supervisors )
-                                            @foreach( $vehicle->supervisors as $supervisor )
-                                                <option
-                                                    value="{{ $supervisor->user_id }}">{{ $supervisor->user['name'] }}</option>
-                                            @endforeach
-                                        @endif
-                                    </select>
-                                    @error('master_id')
-                                    <div class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </div>
-                                    @enderror
+                                @enderror
+                            </div>
+                            <div class="form-group">
+                                <label>Select Master</label>
+                                <select name="master_id" class="form-control">
+                                    <option value="">Select master</option>
+                                    @if( $vehicle->supervisors )
+                                        @foreach( $vehicle->supervisors as $supervisor )
+                                            <option
+                                                value="{{ $supervisor->user_id }}">{{ $supervisor->user['name'] }}</option>
+                                        @endforeach
+                                    @endif
+                                </select>
+                                @error('master_id')
+                                <div class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
                                 </div>
-                                <div class="form-group">
-                                    <label for="inputPassword5">Supervisor incentive</label>
-                                    <div class="input-group">
-                                        <input type="number" id="inputPassword5" name="supervisor_incentive" value="0"
-                                               class="form-control" aria-describedby="passwordHelpBlock" required>
-                                        <div class="input-group-append">
-                                            <div class="input-group-text p-0">
-                                                <select name="incentive_type" class="form-control">
-                                                    <option value="percent"
-                                                            @if(getOption('incentive_type') == 'percent') selected @endif>
-                                                        Percentage
-                                                    </option>
-                                                    <option value="fixed"
-                                                            @if(getOption('incentive_type') == 'fixed') selected @endif>
-                                                        Fixed
-                                                    </option>
-                                                </select>
-                                            </div>
+                                @enderror
+                            </div>
+                            <div class="form-group">
+                                <label for="inputPassword5">Supervisor incentive</label>
+                                <div class="input-group">
+                                    <input type="number" id="inputPassword5" name="supervisor_incentive" value="0"
+                                           class="form-control" aria-describedby="passwordHelpBlock" required>
+                                    <div class="input-group-append">
+                                        <div class="input-group-text p-0">
+                                            <select name="incentive_type" class="form-control">
+                                                <option value="percent"
+                                                        @if(getOption('incentive_type') == 'percent') selected @endif>
+                                                    Percentage
+                                                </option>
+                                                <option value="fixed"
+                                                        @if(getOption('incentive_type') == 'fixed') selected @endif>
+                                                    Fixed
+                                                </option>
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="form-group">
-                                    <button class="btn btn-block btn-lg btn-primary" type="submit">Assign to this
-                                        vehicle
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    @endif
+                            </div>
+                            <div class="form-group">
+                                <button class="btn btn-block btn-lg btn-primary" type="submit">Assign to this
+                                    vehicle
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
                 <form action="" id="officersReportFilterForm" method="GET">
                     <div class="row mt-3">
@@ -2114,26 +2110,8 @@
     <script src="{{ asset('assets/plugins/bootstrap-switch/bootstrap-toggle.min.js') }}"></script>
     @verbatim
         <script>
-            let can_edit = false, can_active = false, can_inactive = false, can_delete = false, cabin_create = false,
-                cabin_edit = false;
-            @can('vehicle-edit')
-                can_edit = true;
-            @endcan
-                @can('vehicle-active')
-                can_active = true;
-            @endcan
-                @can('vehicle-inactive')
-                can_inactive = true;
-            @endcan
-                @can('vehicle-delete')
-                can_delete = true;
-            @endcan
-                @canany(['cabin-create', 'cabins-add'])
-                cabin_create = true;
-            @endcan
-                @canany(['cabin-edit', 'cabins-update'])
+            let can_edit = true, can_active = true, can_inactive = true, can_delete = true, cabin_create = true,
                 cabin_edit = true;
-            @endcan
             let pdf = new jsPDF();
             let specialElementHandlers = {
                 '#editor': function (element, renderer) {
@@ -3218,10 +3196,8 @@
                     });
                 }
 
-                @if(auth()->user()->hasAnyPermission(['vehicle-statistics', 'vehicles-statistics']) || auth()->user()->hasAnyRole(['admin', 'merchant']))
                 loadChartData(null);
                 vehicleStatistics(null);
-                @endif
                 vehicleOfficerStatistics(null);
             });
 
