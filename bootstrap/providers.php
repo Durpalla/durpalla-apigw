@@ -8,4 +8,6 @@ return [
     \App\Providers\RepositoryServiceProvider::class,
     \App\Providers\ViewServiceProvider::class,
     ViewComposerServiceProvider::class,
+    App\Providers\EventServiceProvider::class,
+    App\Providers\BroadcastServiceProvider::class
 ];

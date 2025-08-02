@@ -32,11 +32,6 @@ class VehicleScheduleController extends Controller
         $this->tripService = $tripService;
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index(Request $request)
     {
         if ($request->ajax() === True) {
@@ -219,22 +214,6 @@ class VehicleScheduleController extends Controller
         return view('admin.launch.schedule.index')->withTitle('Manage shcedule');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param VehicleScheduleCreateRequest $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function store(VehicleScheduleCreateRequest $request)
     {
         try {

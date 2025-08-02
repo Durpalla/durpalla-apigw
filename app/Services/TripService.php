@@ -6,6 +6,7 @@ use App\Models\Vehicle;
 use App\Repository\Interfaces\ScheduleRepositoryInterface;
 use App\Models\VehicleRoute;
 use App\Models\VehicleSchedule;
+use Illuminate\Support\Facades\DB;
 
 class TripService
 {
@@ -196,26 +197,32 @@ class TripService
 
     public function create(array $data)
     {
-        $vehicle = Vehicle::find($data['vehicle_id']);
-        $schedule_type = (array_key_exists('schedule_type', $data)) ? 'reverse' : 'straight';
-        $schedule_date = $this->calculation->createDate($data['schedule_date']);
-        $schedule_time = $schedule_date . ' ' . date('H:i:s', strtotime($data['schedule_time']));
-        $schedule = VehicleSchedule::where(['schedule_date' => $schedule_date, 'vehicle_id' => $data['vehicle_id'], 'status' => 'ACTIVE', 'schedule_type' => $schedule_type])->first();
-        $route = VehicleRoute::find($data['route_id']);
-        $operation_time = strtotime($schedule_time) + (60 * 60 * $data['operation_hour']);
-        if (!$schedule) {
-            $this->repository->create(array_merge($data, [
-                'user_id' => auth()->user()->id,
-                'merchant_id' => $vehicle->merchant_id,
-                'schedule_date' => $schedule_date,
-                'leaving_at' => $schedule_time,
-                'starting_point' => ($schedule_type == 'reverse') ? $route->endingPoint['ghat_id'] : $route->startingPoint['ghat_id'],
-                'ending_point' => ($schedule_type == 'reverse') ? $route->startingPoint['ghat_id'] : $route->endingPoint['ghat_id'],
-                'operation_timeline' => date('Y-m-d H:i:s', $operation_time),
-                'schedule_type' => $schedule_type
-            ]));
-        } else {
-            throw new \Exception('Vehicle schedule already exists');
+        try {
+            DB::transaction(function () use ($data) {
+                $vehicle = Vehicle::find($data['vehicle_id']);
+                $schedule_type = (array_key_exists('schedule_type', $data)) ? 'reverse' : 'straight';
+                $schedule_date = $this->calculation->createDate($data['schedule_date']);
+                $schedule_time = $schedule_date . ' ' . date('H:i:s', strtotime($data['schedule_time']));
+                $schedule = VehicleSchedule::where(['schedule_date' => $schedule_date, 'vehicle_id' => $data['vehicle_id'], 'status' => 'ACTIVE', 'schedule_type' => $schedule_type])->first();
+                $route = VehicleRoute::find($data['route_id']);
+                $operation_time = strtotime($schedule_time) + (60 * 60 * $data['operation_hour']);
+                if (!$schedule) {
+                    $this->repository->create(array_merge($data, [
+                        'user_id' => auth()->user()->id,
+                        'merchant_id' => $vehicle->merchant_id,
+                        'schedule_date' => $schedule_date,
+                        'leaving_at' => $schedule_time,
+                        'starting_point' => ($schedule_type == 'reverse') ? $route->endingPoint['ghat_id'] : $route->startingPoint['ghat_id'],
+                        'ending_point' => ($schedule_type == 'reverse') ? $route->startingPoint['ghat_id'] : $route->endingPoint['ghat_id'],
+                        'operation_timeline' => date('Y-m-d H:i:s', $operation_time),
+                        'schedule_type' => $schedule_type
+                    ]));
+                } else {
+                    throw new \Exception('Vehicle schedule already exists');
+                }
+            });
+        } catch (\Exception $e) {
+            dd($e->getMessage());
         }
     }
 

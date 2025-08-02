@@ -41,7 +41,7 @@ class ScheduleCreatedJob implements ShouldQueue
         $mappings = [];
         if ($items) {
             foreach ($items as $item) {
-                array_push($mappings, [
+                $mappings[] = [
                     'cabin_id' => $item->id,
                     'schedule_id' => $this->schedule->id,
                     'type' => $item->type,
@@ -60,7 +60,7 @@ class ScheduleCreatedJob implements ShouldQueue
                     'cabin_position' => $item->cabin_position,
                     'cabin_row' => $item->cabin_row,
                     'passenger_capacity' => $item->passenger_capacity
-                ]);
+                ];
             }
             ScheduleCabinMapping::insert($mappings);
         }
