@@ -14,7 +14,9 @@ class AddOwnershipColumnToCabinsTable extends Migration
     public function up()
     {
         Schema::table('cabins', function (Blueprint $table) {
-            $table->string('ownership')->default('jolzan');
+            if(!Schema::hasColumn('cabins', 'ownership')) {
+                $table->string('ownership')->default('jolzan');
+            }
         });
     }
 
@@ -26,7 +28,9 @@ class AddOwnershipColumnToCabinsTable extends Migration
     public function down()
     {
         Schema::table('cabins', function (Blueprint $table) {
-            $table->dropColumn('ownership');
+            if(Schema::hasColumn('cabins', 'ownership')) {
+                $table->dropColumn('ownership');
+            }
         });
     }
 }

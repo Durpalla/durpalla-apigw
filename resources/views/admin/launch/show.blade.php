@@ -2108,6 +2108,19 @@
     <script src="{{ asset('assets/plugins/dataTable/Buttons-1.5.6/js/buttons.html5.min.js') }}"></script>
     <script src="{{ asset('assets/plugins/dataTable/Buttons-1.5.6/js/buttons.print.min.js') }}"></script>
     <script src="{{ asset('assets/plugins/bootstrap-switch/bootstrap-toggle.min.js') }}"></script>
+    <script>
+        window.Durpalla = {
+            schedulesUrl: "{{ route('dashboard.vehicle.schedules', $vehicle->id) }}",
+            cabinUrl: "{{ route('dashboard.vehicle.cabins', $vehicle->id) }}",
+            bookingUrl: "{{ route('dashboard.vehicle.bookings', $vehicle->id)}}",
+            deckFaresUrl: "{{ route('dashboard.vehicle.deckfares', $vehicle->id)}}",
+            vehicleListUrl: "{{ route('dashboard.vehicle.index') }}",
+            vehicleStore: "{{ route('dashboard.vehicle.store') }}",
+            vehicleStatUrl: "{{ route('dashboard.vehicle.scheduleStat', $vehicle->id)}}",
+            officeReportUrl: "{{ route('dashboard.vehicle.officerReport', $vehicle->id)}}",
+            scheduleChartUrl: "{{ route('dashboard.vehicle.scheduleChart', $vehicle->id)}}",
+        };
+    </script>
     @verbatim
         <script>
             let can_edit = true, can_active = true, can_inactive = true, can_delete = true, cabin_create = true,
@@ -2118,7 +2131,7 @@
                     return true;
                 }
             };
-            var url = "{{ route('dashboard.vehicle.schedules', $vehicle->id) }}";
+            var url = window.Durpalla.schedulesUrl;
 
             function tableToExcel(table, name, filename) {
                 let uri = 'data:application/vnd.ms-excel;base64,',
@@ -2157,7 +2170,7 @@
                 // Configuration options
                 var conf = $.extend({
                     pages: 5,     // number of pages to cache
-                    url: "{{ route('dashboard.vehicle.schedules', $vehicle->id) }}",      // script url
+                    url: window.Durpalla.schedulesUrl,      // script url
                     data: null,   // function or object with parameters to send to the server
                                   // matching how `ajax.data` works in DataTables
                     method: 'GET' // Ajax HTTP method
@@ -2268,7 +2281,7 @@
                     "bInfo": false,
                     "searching": false
                 });
-                var cabinUrl = "{{ route('dashboard.vehicle.cabins', $vehicle->id) }}";
+                var cabinUrl = window.Durpalla.cabinUrl;
                 let cabinFloor = $('#cabinFloorFilter');
                 let cabinNo = $('#cabin_no');
                 let cabinRow = $('#cabinRowFilter');
@@ -2423,7 +2436,7 @@
                     "bAutoWidth": false,
                     "sPageButtonActive": "active",
                     "ajax": {
-                        'url': "{{ route('dashboard.vehicle.bookings', $vehicle->id)}}",
+                        'url': window.Durpalla.bookingUrl,
                         pages: 5, // number of pages to cache
                         'data': function (data) {
                             data.type = $('#filterType').val();
@@ -2555,7 +2568,7 @@
                     "bAutoWidth": false,
                     "sPageButtonActive": "active",
                     "ajax": {
-                        'url': "{{ route('dashboard.vehicle.deckfares', $vehicle->id)}}",
+                        'url': window.Durpalla.deckFaresUrl,
                         pages: 5, // number of pages to cache
                         'data': function (data) {
                             data.type = 'cabin';
@@ -2658,7 +2671,7 @@
                 // $('#myModal').modal('show');
                 $('table').on('click', '.cabin-action', function () {
                     console.log(this);
-                    var url = "{{ route('dashboard.vehicle.index') }}";
+                    var url = window.Durpalla.vehicleListUrl;
                     var action = $(this).data('action');
                     var id = $(this).data('vehicle-id');
                     if (action == 'request') {
@@ -2714,7 +2727,7 @@
                 $('table').on('click', '.vehicle-request', function () {
                     var id = $(this).data('vehicle-id');
                     var name = $(this).data('vehicle-name');
-                    var url = "{{ route('dashboard.vehicle.store') }}";
+                    var url = window.Durpalla.vehicleStore;
                     var modalContent = $(confirmModal).find('.modal-body');
                     $(confirmModal).find('form').attr('action', url);
                     $(modalContent).html("");
@@ -2743,7 +2756,7 @@
                     $(modalContent).find('#vehicleRequestType').change(function (e) {
                         var type = $(this).val();
                         if (['Package'].includes(type)) {
-                            var url = "{{ route('dashboard.vehicle.index') }}";
+                            var url = window.Durpalla.vehicleListUrl;
                             $.ajaxSetup({
                                 headers: {
                                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -3056,7 +3069,7 @@
                         }
                     });
                     $.ajax({
-                        url: "{{ route('dashboard.vehicle.scheduleStat', $vehicle->id)}}",
+                        url: window.Durpalla.vehicleStatUrl,
                         type: 'post',
                         data: params,
                         dataType: "html",
@@ -3074,7 +3087,7 @@
                         }
                     });
                     $.ajax({
-                        url: "{{ route('dashboard.vehicle.officerReport', $vehicle->id)}}",
+                        url: window.Durpalla.officeReportUrl,
                         type: 'post',
                         data: params,
                         dataType: "html",
@@ -3179,7 +3192,7 @@
                         }
                     });
                     $.ajax({
-                        url: "{{ route('dashboard.vehicle.scheduleChart', $vehicle->id)}}",
+                        url: window.Durpalla.scheduleChartUrl,
                         type: 'post',
                         data: params,
                         dataType: "json",

@@ -10,8 +10,9 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Booking;
 use App\Models\ScheduleCabinMapping;
+use Illuminate\Support\Facades\Log;
 
-class CabinMappingBookingJob implements ShouldQueue
+class CabinMappingBookingJob
 {
     use Dispatchable, InteractsWithQueue, SerializesModels, Queueable;
 
@@ -39,15 +40,24 @@ class CabinMappingBookingJob implements ShouldQueue
      */
     public function handle()
     {
-        collect($this->booking->bookingItems)->each(function ($item, $key) {
-            if ($item->booking_type != 'deck') {
-                ScheduleCabinMapping::where(['cabin_id' => $item->cabin_id, 'schedule_id' => $item->trip_id])
-                    ->update([
-                        'booked' => AppConst::BOOKING_ITEM_ACTIVE,
-                        'booking_id' => $item->booking_id,
-                        'is_locked' => AppConst::BOOKING_ITEM_PENDING
-                    ]);
-            }
-        });
+        try {
+            collect($this->booking->bookingItems)->each(function ($item, $key) {
+                if ($item->booking_type != 'deck') {
+                    ScheduleCabinMapping::where(['cabin_id' => $item->cabin_id, 'schedule_id' => $item->trip_id])
+                        ->update([
+                            'booked' => AppConst::BOOKING_ITEM_ACTIVE,
+                            'booking_id' => $item->booking_id,
+                            'is_locked' => AppConst::BOOKING_ITEM_PENDING
+                        ]);
+                }
+            });
+        } catch (\Exception $e) {
+            dd($e);
+            Log::error($e->getMessage(), [
+                'keyword' => 'SCHEDULE_CABIN_MAPPING_JOB',
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+        }
     }
 }

@@ -10,10 +10,12 @@ use Illuminate\Queue\SerializesModels;
 use App\Models\Cabin;
 use App\Models\ScheduleCabinMapping;
 use App\Models\VehicleSchedule;
+use Illuminate\Support\Facades\Log;
 
 class ScheduleCreatedJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
     public $timeout = 120;
     public $backoff = 15;
     public $tries = 5;
@@ -37,32 +39,40 @@ class ScheduleCreatedJob implements ShouldQueue
      */
     public function handle()
     {
-        $items = Cabin::where(['vehicle_id' => $this->schedule->vehicle_id])->get();
-        $mappings = [];
-        if ($items) {
-            foreach ($items as $item) {
-                $mappings[] = [
-                    'cabin_id' => $item->id,
-                    'schedule_id' => $this->schedule->id,
-                    'type' => $item->type,
-                    'fare' => $item->fare,
-                    'child_fare' => $item->child_fare,
-                    'infant_fare' => $item->infant_fare,
-                    'ownership' => $item->ownership,
-                    'is_reserved' => $item->is_reserved,
-                    'ghat_id' => $item->ghat_id,
-                    'vehicle_id' => $item->vehicle_id,
-                    'merchant_id' => $item->marchant_id,
-                    'type_id' => $item->type_id,
-                    'cabin_no' => $item->cabin_no,
-                    'service_charge' => $item->service_charge,
-                    'floor' => $item->floor,
-                    'cabin_position' => $item->cabin_position,
-                    'cabin_row' => $item->cabin_row,
-                    'passenger_capacity' => $item->passenger_capacity
-                ];
+        try {
+            $items = Cabin::where(['vehicle_id' => $this->schedule->vehicle_id])->get();
+            $mappings = [];
+            if ($items) {
+                foreach ($items as $item) {
+                    $mappings[] = [
+                        'cabin_id' => $item->id,
+                        'schedule_id' => $this->schedule->id,
+                        'type' => $item->type,
+                        'fare' => $item->fare,
+                        'child_fare' => $item->child_fare,
+                        'infant_fare' => $item->infant_fare,
+                        'ownership' => $item->ownership,
+                        'is_reserved' => $item->is_reserved,
+                        'ghat_id' => $item->ghat_id,
+                        'vehicle_id' => $item->vehicle_id,
+                        'merchant_id' => $item->marchant_id,
+                        'type_id' => $item->type_id,
+                        'cabin_no' => $item->cabin_no,
+                        'service_charge' => $item->service_charge,
+                        'floor' => $item->floor,
+                        'cabin_position' => $item->cabin_position,
+                        'cabin_row' => $item->cabin_row,
+                        'passenger_capacity' => $item->passenger_capacity
+                    ];
+                }
+                ScheduleCabinMapping::insert($mappings);
             }
-            ScheduleCabinMapping::insert($mappings);
+        } catch (\Exception $e) {
+            Log::error($e->getMessage(), [
+                'keyword' => 'SCHEDULE_CREATED_CABIN_MAPPING_JOB',
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
         }
     }
 }

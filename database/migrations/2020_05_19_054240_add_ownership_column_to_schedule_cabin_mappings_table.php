@@ -14,6 +14,9 @@ class AddOwnershipColumnToScheduleCabinMappingsTable extends Migration
     public function up()
     {
         Schema::table('schedule_cabin_mappings', function (Blueprint $table) {
+            if(!Schema::hasColumn('schedule_cabin_mappings', 'ownership')) {
+                $table->string('ownership')->default('jolzan');
+            }
         });
     }
 
@@ -25,6 +28,9 @@ class AddOwnershipColumnToScheduleCabinMappingsTable extends Migration
     public function down()
     {
         Schema::table('schedule_cabin_mappings', function (Blueprint $table) {
+            if(!Schema::hasColumn('schedule_cabin_mappings', 'ownership')) {
+                $table->dropColumn('ownership');
+            }
         });
     }
 }
