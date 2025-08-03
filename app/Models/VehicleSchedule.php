@@ -24,7 +24,7 @@ class VehicleSchedule extends Model
         'starting_point',
         'ending_point',
         'leaving_at',
-        'launch_schedule_id',
+        'vehicle_schedule_id',
         'user_id',
         'status',
         'operation_hour',

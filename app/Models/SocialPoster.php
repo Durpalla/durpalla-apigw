@@ -8,11 +8,11 @@ use App\Models\User;
 
 class SocialPoster extends Model
 {
-    protected $fillable = ['name', 'description', 'launch_schedule_id', 'merchant_id', 'vehicle_id', 'user_id', 'launch_name', 'route_name', 'poster', 'share_count'];
+    protected $fillable = ['name', 'description', 'vehicle_schedule_id', 'merchant_id', 'vehicle_id', 'user_id', 'launch_name', 'route_name', 'poster', 'share_count'];
 
     public function VehicleSchedule()
     {
-        return $this->belongsTo(VehicleSchedule::class, 'launch_schedule_id', 'id')->withTrashed();
+        return $this->belongsTo(VehicleSchedule::class, 'vehicle_schedule_id', 'id')->withTrashed();
     }
 
     public function user(): BelongsTo

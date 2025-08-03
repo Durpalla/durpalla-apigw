@@ -527,42 +527,42 @@ class VehicleScheduleController extends Controller
 
     private function cancelBookings($rescheduleId, $type, $newScheduleId = null)
     {
-        $schedule = VehicleSchedule::findOrFail($rescheduleId);
-        $schedule->status = $type;
-        if (VehicleSchedule::RESCHEDULE) $schedule->launch_schedule_id = $newScheduleId;
-        $schedule->save();
+        try {
+            DB::transaction(function () use ($rescheduleId, $type, $newScheduleId) {
+                $schedule = VehicleSchedule::findOrFail($rescheduleId);
+                $schedule->status = $type;
+                if (VehicleSchedule::RESCHEDULE) $schedule->vehicle_schedule_id = $newScheduleId;
+                $schedule->save();
 
-        $bookingItem = BookingItem::where('trip_id', $schedule->id)->first();
-        if ($bookingItem) {
-            $booking = Booking::find($bookingItem->booking_id);
+                $bookingItem = BookingItem::where('trip_id', $schedule->id)->first();
+                if ($bookingItem) {
+                    $booking = Booking::find($bookingItem->booking_id);
 
-            $allBookingItems = $booking->bookingItems;
-            $bookingItems = BookingItem::where('trip_id', $schedule->id)->get();
+                    $allBookingItems = $booking->bookingItems;
+                    $bookingItems = BookingItem::where('trip_id', $schedule->id)->get();
 
-            $ids = "";
-            foreach ($bookingItems as $index => $item) {
-                if ($index == sizeof($bookingItems) - 1)
-                    $ids .= $item->id;
-                else
-                    $ids .= $item->id . ",";
-            }
+                    $ids = "";
+                    foreach ($bookingItems as $index => $item) {
+                        if ($index == sizeof($bookingItems) - 1)
+                            $ids .= $item->id;
+                        else
+                            $ids .= $item->id . ",";
+                    }
 
-
-            $bookingCancelation = new BookingCancellation();
-            $bookingCancelation->booking_id = $booking->id;
-            $bookingCancelation->customer_id = $booking->customer->id;
-            $bookingCancelation->type = (sizeof($allBookingItems) == sizeof($bookingItems)) ? "t" : "p";
-            $bookingCancelation->items = $ids;
-            $bookingCancelation->status = 1;
-            $bookingCancelation->save();
-
-
-            if ($bookingCancelation) {
-                return true;
-            } else {
-                return false;
-            }
-
+                    $bookingCancelation = new BookingCancellation();
+                    $bookingCancelation->booking_id = $booking->id;
+                    $bookingCancelation->customer_id = $booking->customer->id;
+                    $bookingCancelation->type = (sizeof($allBookingItems) == sizeof($bookingItems)) ? "t" : "p";
+                    $bookingCancelation->items = $ids;
+                    $bookingCancelation->status = 1;
+                    $bookingCancelation->save();
+                }
+            });
+            return true;
+        } catch (\Exception $exception) {
+            \Log::error('Error while canceling schedule: ' . $exception->getMessage());
+            dd($exception->getMessage());
+            return false;
         }
 
         return false;

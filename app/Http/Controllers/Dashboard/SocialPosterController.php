@@ -96,7 +96,7 @@ class SocialPosterController extends Controller
         $data = ['status' => false, 'label' => 'error', 'content' => 'Cannot create banner'];
         $validator = Validator::make($request->all(), [
             'name' => 'bail|required|string',
-            'launch_schedule_id' => 'bail|required|numeric|exists:vehicle_schedules,id',
+            'vehicle_schedule_id' => 'bail|required|numeric|exists:vehicle_schedules,id',
             'poster' => 'bail|required|mimes:jpeg,png,jpg,gif,svg|max:2048|dimensions:min_width=460,min_height=340'
         ]);
 
@@ -128,13 +128,13 @@ class SocialPosterController extends Controller
                 $poster = '/uploads/posters/' . $filename;
             }
 
-            $trip = VehicleSchedule::findOrFail($request->launch_schedule_id);
+            $trip = VehicleSchedule::findOrFail($request->vehicle_schedule_id);
             $route = explode('-', $trip->route->route_name);
             $route_name = ($trip->schedule_type == 'reverse') ? trim($route[1] . ' - ' . trim($route[0])) : $route[0] . '-' . $route[1];
             SocialPoster::create([
                 'name' => $request->name,
                 'description' => $request->description,
-                'launch_schedule_id' => $trip->id,
+                'vehicle_schedule_id' => $trip->id,
                 'merchant_id' => $request->merchant_id,
                 'vehicle_id' => $request->vehicle_id,
                 'launch_name' => $trip->launch->name,
@@ -203,7 +203,7 @@ class SocialPosterController extends Controller
         $data = ['status' => false, 'label' => 'error', 'content' => 'Cannot update poster'];
         $validator = Validator::make($request->all(), [
             'name' => 'bail|required|string',
-            'launch_schedule_id' => 'bail|required|numeric|exists:vehicle_schedules,id',
+            'vehicle_schedule_id' => 'bail|required|numeric|exists:vehicle_schedules,id',
             'poster' => 'bail|nullable|mimes:jpeg,png,jpg,gif,svg|max:2048|dimensions:min_width=460,min_height=340'
         ]);
 
@@ -221,14 +221,14 @@ class SocialPosterController extends Controller
 
         DB::beginTransaction();
         try {
-            $trip = VehicleSchedule::findOrFail($request->launch_schedule_id);
+            $trip = VehicleSchedule::findOrFail($request->vehicle_schedule_id);
             $route = explode('-', $trip->route->route_name);
             $route_name = ($trip->schedule_type == 'reverse') ? trim($route[1] . ' - ' . trim($route[0])) : $route[0] . '-' . $route[1];
             $social = SocialPoster::findOrFail($id);
             $social->update([
                 'name' => $request->name,
                 'description' => $request->description,
-                'launch_schedule_id' => $trip->id,
+                'vehicle_schedule_id' => $trip->id,
                 'merchant_id' => $request->merchant_id,
                 'vehicle_id' => $request->vehicle_id,
                 'launch_name' => $trip->launch->name,
