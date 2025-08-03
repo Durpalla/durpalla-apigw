@@ -51,7 +51,7 @@ return [
              *
              */
             'credentials' => [
-                'file' => public_path(env('FIREBASE_CREDENTIALS', 'firebase/jolzatra-4157d-9c19b19b3b2e.json')),
+                'file' => storage_path(env('FIREBASE_CREDENTIALS', 'public/d71-jolzatra-firebase-adminsdk-g8plf-199b02db02.json')),
 
                 /**
                  * If you want to prevent the auto discovery of credentials, set the
