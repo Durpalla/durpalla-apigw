@@ -276,6 +276,7 @@ class VehicleController extends Controller
                 }
                 $this->vehicleService->create($request->validated());
             }, 2);
+
             return redirect()->route('dashboard.vehicle.index', ['type' => $request->vehicle_type]);
         } catch (\Exception $e) {
             session()->flash('error', $e->getMessage() . ' on line-' . $e->getLine());

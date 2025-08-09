@@ -16,21 +16,11 @@ class VehicleListUpdateToFirebase
     public $maxExceptions = 3;
     private $firebase;
 
-    /**
-     * Create a new job instance.
-     *
-     * @param FirebaseService $firebaseService
-     */
     public function __construct(FirebaseService $firebaseService)
     {
         $this->firebase = $firebaseService;
     }
 
-    /**
-     * Execute the job.
-     *
-     * @return void
-     */
     public function handle()
     {
         $vehicles = Vehicle::where('status', AppConst::LAUNCH_ACTIVE)->get();

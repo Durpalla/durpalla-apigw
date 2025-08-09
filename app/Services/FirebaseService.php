@@ -3,6 +3,8 @@
 namespace App\Services;
 
 
+use Kreait\Firebase\Exception\DatabaseException;
+
 class FirebaseService
 {
     private $database;
@@ -32,9 +34,8 @@ class FirebaseService
 
     public function transaction($mapped)
     {
-        $this->database->runTransaction(/**
-         * @throws DatabaseException
-         */ function (Database\Transaction $transaction) use($mapped) {
+        $this->database->runTransaction(
+            function (Database\Transaction $transaction) use($mapped) {
             $transaction->snapshot('options')->set($mapped);
         });
     }

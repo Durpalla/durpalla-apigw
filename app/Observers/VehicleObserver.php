@@ -13,7 +13,7 @@ class VehicleObserver
     public function __construct(FirebaseService $firebase)
     {
         Cache::forget('vehicles');
-        dispatch(new VehicleListUpdateToFirebase($firebase));
+//        dispatch(new VehicleListUpdateToFirebase($firebase));
     }
 
     /**

@@ -96,11 +96,12 @@ class VehicleService
 
     public function create(array $data)
     {
-        return $this->vehicle->create(array_merge($data, [
+        $data = array_merge($data, [
             'user_id' => auth()->user()->id,
             'registration_expiry_date' => $this->calculation->createDate($data['registration_expiry_date']),
             'fitness_expiry_date' => $this->calculation->createDate($data['fitness_expiry_date'])
-        ]));
+        ]);
+        return $this->vehicle->create($data);
     }
 
     public function update(array $data, $id)
