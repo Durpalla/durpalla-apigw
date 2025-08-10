@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\GhatUniqueRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class GhatCreateRequest extends FormRequest
@@ -24,7 +25,12 @@ class GhatCreateRequest extends FormRequest
     public function rules()
     {
         return [
-            'name'=>'bail|required|string|max:191,title|unique:ghats,name',
+            'name' => [
+                'bail',
+                'required',
+                'string',
+                new GhatUniqueRule()
+            ],
             'latitude' => 'bail|nullable',
             'longitude' => 'bail|nullable',
             'altitude' => 'bail|nullable',

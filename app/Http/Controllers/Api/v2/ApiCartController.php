@@ -17,7 +17,7 @@ class ApiCartController extends Controller
 {
     protected $success = 200;
     private $cart;
-    private $tripService;
+    private TripService $tripService;
 
     public function __construct(CartService $cart, TripService $tripService)
     {
@@ -25,12 +25,6 @@ class ApiCartController extends Controller
         $this->tripService = $tripService;
     }
 
-    /**
-     * Lock item for customer.
-     *
-     * @param AddToCartApiRequest $request
-     * @return JsonResponse
-     */
     public function lock(AddToCartApiRequest $request): JsonResponse
     {
         $data = ['success' => false, 'message' => __('Your item cannot be locked')];
@@ -73,11 +67,6 @@ class ApiCartController extends Controller
         return response()->json($data, $this->success);
     }
 
-    /**
-     * Add item to cart, bassically lock the item for this customer.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function remove(Request $request): JsonResponse
     {
         $data = ['success' => false, 'message' => __('Your item cannot be unlocked')];
