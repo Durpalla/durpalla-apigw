@@ -15,7 +15,7 @@ class TripService
 
     public function __construct(
         ScheduleRepositoryInterface $scheduleRepository,
-        CalculationService          $calculationService
+        CalculationService $calculationService
     )
     {
         $this->repository = $scheduleRepository;
@@ -34,35 +34,35 @@ class TripService
         $return_date = '';
 //        $return_date = (array_key_exists('trip_return_date', $data)) ? date('Y-m-d', strtotime($data['trip_return_date'])) : '';
         $results = $this->repository->searchTrip($trip_date, $return_date, $data);
-        $results = $results->filter(function ($item, $key) use ($data, $return_date) {
+        $results = $results->filter(function($item, $key) use($data, $return_date) {
             $status = true;
-            if (array_key_exists('trip_from', $data) && !empty($data['trip_from']) && array_key_exists('trip_to', $data) && !empty($data['trip_to'])) {
-                $tripFrom = $item->routeProperties->first(function ($item, $key) use ($data) {
+            if(array_key_exists('trip_from', $data) && !empty($data['trip_from']) && array_key_exists('trip_to', $data) && !empty($data['trip_to'])) {
+                $tripFrom = $item->routeProperties->first(function($item, $key) use($data) {
                     return strtolower($item->ghat->name) === strtolower($data['trip_from']);
                 });
-                $tripTo = $item->routeProperties->first(function ($item, $key) use ($data) {
+                $tripTo = $item->routeProperties->first(function($item, $key) use($data) {
                     return strtolower($item->ghat['name']) === strtolower($data['trip_to']);
                 });
                 $tripType = 'straight';
-                if (($tripFrom && $tripTo) && ($tripFrom->serial_num > $tripTo->serial_num)) {
+                if(($tripFrom && $tripTo) && ($tripFrom->serial_num > $tripTo->serial_num)) {
                     $tripType = 'reverse';
                 }
-                if ($tripFrom->serial_num === $tripTo->serial_num) {
+                if($tripFrom->serial_num === $tripTo->serial_num) {
                     $status = true;
                 } else {
                     $status = $item->schedule_type === $tripType;
                 }
             }
-            if ($return_date && $item->schedule_date === $return_date) {
+            if($return_date && $item->schedule_date === $return_date) {
                 $status = false;
             }
             return $status;
         })
-            ->map(function ($trip, $key) {
+            ->map(function($trip, $key) {
                 return $this->formatTripList($trip);
             });
         $returnArr = [];
-        $results->each(function ($item, $key) use (&$returnArr) {
+        $results->each(function($item, $key) use(&$returnArr) {
             array_push($returnArr, $item);
         });
 
@@ -246,30 +246,30 @@ class TripService
             'total_seats' => $trip->mappings->where('type', 'seat')->count(),
             'default_tab' => $trip->vehicle['default_tab'],
             'default_floor' => $trip->vehicle['default_floor'],
-            'cabin_available' => $trip->mappings->where('type', 'cabin')->filter(function ($item, $key) use ($user) {
+            'cabin_available' => $trip->mappings->where('type', 'cabin')->filter(function($item, $key) use($user) {
                 $status = true;
-                if ($item->is_reserved || $item->is_locked || $item->booked) {
+                if($item->is_reserved || $item->is_locked || $item->booked) {
                     $status = false;
                 }
                 $type = 'jolzan';
-                if ($user !== null) {
+                if($user !== null) {
                     $type = (in_array($user->type, ['customer', 'admin'])) ? 'jolzan' : $user->type;
                 }
-                if ($type !== $item->ownership) {
+                if($type !== $item->ownership) {
                     $status = false;
                 }
                 return $status;
             })->count(),
-            'seat_available' => $trip->mappings->where('type', 'seat')->filter(function ($item, $key) use ($user) {
+            'seat_available' => $trip->mappings->where('type', 'seat')->filter(function($item, $key) use($user) {
                 $status = true;
-                if ($item->is_reserved || $item->is_locked || $item->booked) {
+                if($item->is_reserved || $item->is_locked || $item->booked) {
                     $status = false;
                 }
                 $type = 'jolzan';
-                if ($user != null) {
+                if($user != null) {
                     $type = (in_array($user->type, ['customer', 'admin'])) ? 'jolzan' : $user->type;
                 }
-                if ($type !== $item->ownership) {
+                if($type !== $item->ownership) {
                     $status = false;
                 }
                 return $status;
@@ -316,13 +316,13 @@ class TripService
             $row['service_charge'] = $cabin->service_charge;
             $row['status'] = (($cabin->is_reserved == 1) || $cabin->booked == 1 || $cabin->is_locked == 1) ? 0 : 1;
             $type = 'jolzan';
-            if ($user) {
+            if($user) {
                 $type = (in_array($user->type, ['customer', 'admin', 'agent'])) ? 'jolzan' : $user->type;
             }
-            if ($type !== $cabin->ownership) {
+            if($type !== $cabin->ownership) {
                 $row['status'] = 0;
             }
-            if ($cabin->is_advance) {
+            if($cabin->is_advance) {
                 $row['status'] = 9;
             }
             $row['cabin_class'] = $row['status'] ? 'cabin-active' : 'cabin-disable';
@@ -343,18 +343,18 @@ class TripService
 
         $cabinsLayout = [];
         $seatsLayout = [];
-        if ($floor == null) {
+        if($floor == null) {
             if ($cabins) {
-                $first_floor_cabin = _my_layout(_my_group_by(collect($cabins)->filter(function ($item, $key) {
+                $first_floor_cabin = _my_layout(_my_group_by(collect($cabins)->filter(function($item, $key) {
                     return $item['cabin_floor'] === 1;
                 }), 'cabin_row'));
-                $second_floor_cabin = _my_layout(_my_group_by(collect($cabins)->filter(function ($item, $key) {
+                $second_floor_cabin = _my_layout(_my_group_by(collect($cabins)->filter(function($item, $key) {
                     return $item['cabin_floor'] === 2;
                 }), 'cabin_row'));
-                $third_floor_cabin = _my_layout(_my_group_by(collect($cabins)->filter(function ($item, $key) {
+                $third_floor_cabin = _my_layout(_my_group_by(collect($cabins)->filter(function($item, $key) {
                     return $item['cabin_floor'] === 3;
                 }), 'cabin_row'));
-                $fourth_floor_cabin = _my_layout(_my_group_by(collect($cabins)->filter(function ($item, $key) {
+                $fourth_floor_cabin = _my_layout(_my_group_by(collect($cabins)->filter(function($item, $key) {
                     return $item['cabin_floor'] === 4;
                 }), 'cabin_row'));
                 ksort($first_floor_cabin);
@@ -362,39 +362,23 @@ class TripService
                 ksort($third_floor_cabin);
                 ksort($fourth_floor_cabin);
                 $cabinsLayout = [
-                    [
-                        'floor' => 1,
-                        'label' => '1st Floor',
-                        'cabins' => $first_floor_cabin,
-                    ],
-                    [
-                        'floor' => 2,
-                        'label' => '2nd Floor',
-                        'cabins' => $second_floor_cabin,
-                    ],
-                    [
-                        'floor' => 3,
-                        'label' => '3rd Floor',
-                        'cabins' => $third_floor_cabin,
-                    ],
-                    [
-                        'floor' => 4,
-                        'label' => '4th Floor',
-                        'cabins' => $fourth_floor_cabin,
-                    ]
+                    'first_floor' => $first_floor_cabin,
+                    'second_floor' => $second_floor_cabin,
+                    'third_floor' => $third_floor_cabin,
+                    'fourth_floor' => $fourth_floor_cabin
                 ];
             }
             if ($seats) {
-                $first_floor_seat = _my_layout(_my_group_by(collect($seats)->filter(function ($item, $key) {
+                $first_floor_seat = _my_layout(_my_group_by(collect($seats)->filter(function($item, $key) {
                     return $item['cabin_floor'] == 1;
                 })->toArray(), 'cabin_row'));
-                $second_floor_seat = _my_layout(_my_group_by(collect($seats)->filter(function ($item, $key) {
+                $second_floor_seat = _my_layout(_my_group_by(collect($seats)->filter(function($item, $key) {
                     return $item['cabin_floor'] == 2;
                 }), 'cabin_row'));
-                $third_floor_seat = _my_layout(_my_group_by(collect($seats)->filter(function ($item, $key) {
+                $third_floor_seat = _my_layout(_my_group_by(collect($seats)->filter(function($item, $key) {
                     return $item['cabin_row'] == 3;
                 }), 'cabin_row'));
-                $fourth_floor_seat = _my_layout(_my_group_by(collect($seats)->filter(function ($item, $key) {
+                $fourth_floor_seat = _my_layout(_my_group_by(collect($seats)->filter(function($item, $key) {
                     return $item['cabin_row'] == 4;
                 }), 'cabin_row'));
                 ksort($first_floor_seat);
@@ -402,37 +386,21 @@ class TripService
                 ksort($third_floor_seat);
                 ksort($fourth_floor_seat);
                 $seatsLayout = [
-                    [
-                        'floor' => 1,
-                        'label' => '1st Floor',
-                        'seats' => $first_floor_seat,
-                    ],
-                    [
-                        'floor' => 2,
-                        'label' => '2nd Floor',
-                        'seats' => $second_floor_seat,
-                    ],
-                    [
-                        'floor' => 3,
-                        'label' => '3rd Floor',
-                        'seats' => $third_floor_seat,
-                    ],
-                    [
-                        'floor' => 4,
-                        'label' => '4th Floor',
-                        'seats' => $fourth_floor_seat,
-                    ]
+                    'first_floor' =>$first_floor_seat,
+                    'second_floor' =>$second_floor_seat,
+                    'third_floor' =>$third_floor_seat,
+                    'fourth_floor' =>$fourth_floor_seat
                 ];
             }
         } else {
             if ($cabins) {
-                $cabinsLayout = _my_layout(_my_group_by(collect($cabins)->filter(function ($item, $key) use ($floor) {
+                $cabinsLayout = _my_layout(_my_group_by(collect($cabins)->filter(function($item, $key) use($floor) {
                     return $item['cabin_floor'] == $floor;
                 }), 'cabin_row'));
                 ksort($cabinsLayout);
             }
             if ($seats) {
-                $seatsLayout = _my_layout(_my_group_by(collect($seats)->filter(function ($item, $key) use ($floor) {
+                $seatsLayout = _my_layout(_my_group_by(collect($seats)->filter(function($item, $key) use($floor) {
                     return $item['cabin_floor'] == $floor;
                 }), 'cabin_row'));
                 ksort($seatsLayout);
@@ -440,10 +408,10 @@ class TripService
         }
         $cabinTypes = [['value' => 0, 'label' => 'All']];
         $seatTypes = [['value' => 0, 'label' => 'All']];
-        collect($cabin_types)->each(function ($item, $key) use (&$cabinTypes) {
+        collect($cabin_types)->each(function($item, $key) use(&$cabinTypes) {
             array_push($cabinTypes, ['value' => $key, 'label' => $item]);
         });
-        collect($seat_types)->each(function ($item, $key) use (&$seatTypes) {
+        collect($seat_types)->each(function($item, $key) use(&$seatTypes) {
             array_push($seatTypes, ['value' => $key, 'label' => $item]);
         });
         return [
@@ -460,8 +428,8 @@ class TripService
             'route_name' => $trip->startFrom['name'] . ' - ' . $trip->stopTo['name'],
             'vehicle_route' => $trip->startFrom['name'] . ' - ' . $trip->stopTo['name'],
             'schedule_date' => date('Y-m-d H:i:s', strtotime($trip->leaving_at)),
-            'cabins' => (!empty($cabinsLayout)) ? $cabinsLayout : null,
-            'seats' => (!empty($seatsLayout)) ? $seatsLayout : null,
+            'cabins' =>  (!empty($cabinsLayout)) ? $cabinsLayout : null,
+            'seats' =>  (!empty($seatsLayout)) ? $seatsLayout : null,
             'decks' => $this->formatDecks($trip),
             'cabin_types' => $cabinTypes,
             'seat_types' => $seatTypes,
@@ -472,7 +440,7 @@ class TripService
         ];
     }
 
-    public function formatStoppages($trip, $last = true): array
+    public function formatStoppages($trip, $last = true)
     {
         $stoppages = [
             [
@@ -488,19 +456,19 @@ class TripService
                 krsort($vias);
 
             collect($vias)->each(function ($item, $key) use (&$stoppages) {
-                $stoppages[] = [
+                array_push($stoppages, [
                     'id' => $item['ghat']['id'],
                     'name' => $item['ghat']['name'],
                     'type' => 'via'
-                ];
+                ]);
             });
         }
-        if ($last) {
-            $stoppages[] = [
+        if($last) {
+            array_push($stoppages, [
                 'id' => $trip->stopTo['id'],
                 'name' => $trip->stopTo['name'],
                 'type' => 'end'
-            ];
+            ]);
         }
 
         return $stoppages;
