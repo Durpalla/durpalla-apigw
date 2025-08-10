@@ -15,7 +15,7 @@ class GhatObserver
     {
         $this->firebase = $firebaseService;
         Cache::forget('ghats');
-        dispatch(new GhatUpdateToFirebaseJob($this->firebase, $ghatService));
+//        dispatch(new GhatUpdateToFirebaseJob($this->firebase, $ghatService));
     }
 
     /**
