@@ -19,8 +19,7 @@ Artisan::command('schedule:run', function (Schedule $schedule) {
         });
 
     $schedule->command('release:lock')
-        ->everyFifteenMinutes()
-        ->environments(['staging', 'production'])
+        ->everyFiveMinutes()
         ->runInBackground()
         ->before(function () {
             Log::debug('Releasing lock items');

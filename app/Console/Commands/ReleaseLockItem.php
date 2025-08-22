@@ -42,7 +42,7 @@ class ReleaseLockItem extends Command
     {
         try{
             DB::transaction(function() {
-                $lockTime = getOption('cart_lock_period', 20) * 60;
+                $lockTime = getOption('cart_lock_period', 5) * 60;
                 $expiresAt = time() - $lockTime;
                 $items = CabinLock::where('created_at', '<=', date('Y-m-d H:i:s', $expiresAt))->get();
                 if($items) {
