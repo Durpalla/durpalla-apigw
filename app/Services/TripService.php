@@ -7,6 +7,7 @@ use App\Repository\Interfaces\ScheduleRepositoryInterface;
 use App\Models\VehicleRoute;
 use App\Models\VehicleSchedule;
 use Illuminate\Support\Facades\DB;
+use stdClass;
 
 class TripService
 {
