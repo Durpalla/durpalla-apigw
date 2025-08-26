@@ -285,158 +285,174 @@ class TripService
 
     public function formatTriplayout($trip, $floor = null): array
     {
-        $user = auth()->user();
-        $cabins = [];
-        $seats = [];
-        $cabin_types = [];
-        $seat_types = [];
+        $user         = auth()->user();
+        $cabins       = [];
+        $seats        = [];
+        $cabin_types  = [];
+        $seat_types   = [];
         $layouts[$trip->id] = [];
-        $trip->mappings->each(function ($cabin, $key) use ($trip, &$cabins, &$seats, &$cabin_types, &$seat_types, $floor, $user) {
-            $row['item_id'] = $cabin->id;
-            $row['trip_id'] = $trip->id;
-            $row['trip_date'] = date('Y-m-d H:i:s', strtotime($trip->leaving_at));
-            $row['route_id'] = $trip->route_id;
-            $row['vehicle_id'] = $cabin['vehicle_id'];
-            $row['vehicle_name'] = $trip->vehicle['name'];
-            $row['nid_check'] = $trip->vehicle['nid_verification_check'];
-            $row['booking_id'] = $cabin['booking_id'];
-            $row['merchant_id'] = $trip->merchant_id;
-            $row['cabin_id'] = $cabin->id;
-            $row['cabin_type_id'] = $cabin['type_id'];
-            $row['cabin_type'] = $cabin['type'];
-            $row['cabin_floor'] = $cabin['floor'];
-            $row['cabin_no'] = ($cabin->cabinType) ? $cabin['cabinType']['letter'] . '-' . $cabin['cabin_no'] : $cabin['cabin_no'];
-            $row['fare'] = $cabin['fare'];
-            $row['cabin_is_ac'] = ($cabin->cabinType && $cabin['cabinType']['is_ac']) ? 1 : 0;
-            $row['capacity'] = $cabin['passenger_capacity'];
-            $row['cabin_row'] = $cabin['cabin_row'];
+
+        // Build rows
+        $trip->mappings->each(function ($cabin) use ($trip, &$cabins, &$seats, &$cabin_types, &$seat_types, $user) {
+            $row = []; // IMPORTANT: reset per-iteration
+
+            $row['item_id']        = $cabin->id;
+            $row['trip_id']        = $trip->id;
+            $row['trip_date']      = date('Y-m-d H:i:s', strtotime($trip->leaving_at));
+            $row['route_id']       = $trip->route_id;
+            $row['vehicle_id']     = $cabin['vehicle_id'];
+            $row['vehicle_name']   = $trip->vehicle['name'];
+            $row['nid_check']      = $trip->vehicle['nid_verification_check'];
+            $row['booking_id']     = $cabin['booking_id'];
+            $row['merchant_id']    = $trip->merchant_id;
+            $row['cabin_id']       = $cabin->id;
+            $row['cabin_type_id']  = $cabin['type_id'];
+            $row['cabin_type']     = $cabin['type'];
+            $row['cabin_floor']    = $cabin['floor'];
+            $row['cabin_no']       = ($cabin->cabinType)
+                ? $cabin['cabinType']['letter'].'-'.$cabin['cabin_no']
+                : $cabin['cabin_no'];
+            $row['fare']           = $cabin['fare'];
+            $row['cabin_is_ac']    = ($cabin->cabinType && $cabin['cabinType']['is_ac']) ? 1 : 0;
+            $row['capacity']       = $cabin['passenger_capacity'];
+            $row['cabin_row']      = $cabin['cabin_row'];
             $row['cabin_position'] = $cabin['cabin_position'];
-            $row['description'] = ($cabin->cabinType) ? $cabin['cabinType']['name'] . ' - ' . $cabin['cabinType']['letter'] . '-' . $cabin['cabin_no'] : 'Cabin - ' . $cabin->cabin_no;
-            $row['ownership'] = $cabin->ownership;
+            $row['description']    = ($cabin->cabinType)
+                ? $cabin['cabinType']['name'].' - '.$cabin['cabinType']['letter'].'-'.$cabin['cabin_no']
+                : 'Cabin - '.$cabin->cabin_no;
+            $row['ownership']      = $cabin->ownership;
             $row['service_charge'] = $cabin->service_charge;
+
+            // status gating
+            $type = $user ? (in_array($user->type, ['customer','admin','agent']) ? 'jolzan' : $user->type) : 'jolzan';
             $row['status'] = (($cabin->is_reserved == 1) || $cabin->booked == 1 || $cabin->is_locked == 1) ? 0 : 1;
-            $type = 'jolzan';
-            if($user) {
-                $type = (in_array($user->type, ['customer', 'admin', 'agent'])) ? 'jolzan' : $user->type;
-            }
-            if($type !== $cabin->ownership) {
-                $row['status'] = 0;
-            }
-            if($cabin->is_advance) {
-                $row['status'] = 9;
-            }
+            if ($type !== $cabin->ownership) $row['status'] = 0;
+            if ($cabin->is_advance)          $row['status'] = 9;
+
             $row['cabin_class'] = $row['status'] ? 'cabin-active' : 'cabin-disable';
-            if ($cabin['type'] == 'cabin') {
+
+            if ($cabin['type'] === 'cabin') {
                 $cabins[] = $row;
                 if ($cabin->type_id > 0) {
                     $isAc = ($cabin->cabinType->is_ac) ? 'AC' : 'Non-AC';
-                    $cabin_types[$cabin['type_id']] = ($cabin->cabinType) ? $cabin['cabinType']['name'] . ' (' . $isAc . ')' : 'Unknown';
+                    $cabin_types[$cabin['type_id']] = $cabin->cabinType
+                        ? $cabin['cabinType']['name'].' ('.$isAc.')'
+                        : 'Unknown';
                 }
-            } elseif ($cabin['type'] == 'seat') {
+            } elseif ($cabin['type'] === 'seat') {
                 $seats[] = $row;
                 if ($cabin->type_id > 0) {
                     $isAc = ($cabin->cabinType->is_ac) ? 'AC' : 'Non-AC';
-                    $seat_types[$cabin['type_id']] = ($cabin->cabinType) ? $cabin['cabinType']['name'] . ' (' . $isAc . ')' : 'Unknown';
+                    $seat_types[$cabin['type_id']] = $cabin->cabinType
+                        ? $cabin['cabinType']['name'].' ('.$isAc.')'
+                        : 'Unknown';
                 }
             }
         });
 
+        // Helpers to keep "map of rows" shape consistent
+        $emptyRowMap = fn() => new stdClass();  // -> {}
+        $ensureRowMap = function($grouped) {
+            // $grouped is expected to be an associative array like ['1' => [ ... ], '2' => [ ... ]]
+            return !empty($grouped) ? $grouped : new stdClass();
+        };
+
         $cabinsLayout = [];
-        $seatsLayout = [];
-        if($floor == null) {
+        $seatsLayout  = [];
+
+        if ($floor === null) {
+            // All floors: always return 4 keys with {} when empty
             if ($cabins) {
-                $first_floor_cabin = _my_layout(_my_group_by(collect($cabins)->filter(function($item, $key) {
-                    return $item['cabin_floor'] === 1;
-                }), 'cabin_row'));
-                $second_floor_cabin = _my_layout(_my_group_by(collect($cabins)->filter(function($item, $key) {
-                    return $item['cabin_floor'] === 2;
-                }), 'cabin_row'));
-                $third_floor_cabin = _my_layout(_my_group_by(collect($cabins)->filter(function($item, $key) {
-                    return $item['cabin_floor'] === 3;
-                }), 'cabin_row'));
-                $fourth_floor_cabin = _my_layout(_my_group_by(collect($cabins)->filter(function($item, $key) {
-                    return $item['cabin_floor'] === 4;
-                }), 'cabin_row'));
-                ksort($first_floor_cabin);
-                ksort($second_floor_cabin);
-                ksort($third_floor_cabin);
-                ksort($fourth_floor_cabin);
+                $first  = _my_layout(_my_group_by(collect($cabins)->filter(fn($i) => $i['cabin_floor'] === 1), 'cabin_row'));
+                $second = _my_layout(_my_group_by(collect($cabins)->filter(fn($i) => $i['cabin_floor'] === 2), 'cabin_row'));
+                $third  = _my_layout(_my_group_by(collect($cabins)->filter(fn($i) => $i['cabin_floor'] === 3), 'cabin_row'));
+                $fourth = _my_layout(_my_group_by(collect($cabins)->filter(fn($i) => $i['cabin_floor'] === 4), 'cabin_row'));
+                ksort($first); ksort($second); ksort($third); ksort($fourth);
+
                 $cabinsLayout = [
-                    'first_floor' => json_encode($first_floor_cabin),
-                    'second_floor' => json_encode($second_floor_cabin),
-                    'third_floor' => json_encode($third_floor_cabin),
-                    'fourth_floor' => json_encode($fourth_floor_cabin)
+                    'first_floor'  => $ensureRowMap($first),
+                    'second_floor' => $ensureRowMap($second),
+                    'third_floor'  => $ensureRowMap($third),
+                    'fourth_floor' => $ensureRowMap($fourth),
+                ];
+            } else {
+                $cabinsLayout = [
+                    'first_floor'  => $emptyRowMap(),
+                    'second_floor' => $emptyRowMap(),
+                    'third_floor'  => $emptyRowMap(),
+                    'fourth_floor' => $emptyRowMap(),
                 ];
             }
+
             if ($seats) {
-                $first_floor_seat = _my_layout(_my_group_by(collect($seats)->filter(function($item, $key) {
-                    return $item['cabin_floor'] == 1;
-                })->toArray(), 'cabin_row'));
-                $second_floor_seat = _my_layout(_my_group_by(collect($seats)->filter(function($item, $key) {
-                    return $item['cabin_floor'] == 2;
-                }), 'cabin_row'));
-                $third_floor_seat = _my_layout(_my_group_by(collect($seats)->filter(function($item, $key) {
-                    return $item['cabin_row'] == 3;
-                }), 'cabin_row'));
-                $fourth_floor_seat = _my_layout(_my_group_by(collect($seats)->filter(function($item, $key) {
-                    return $item['cabin_row'] == 4;
-                }), 'cabin_row'));
-                ksort($first_floor_seat);
-                ksort($second_floor_seat);
-                ksort($third_floor_seat);
-                ksort($fourth_floor_seat);
+                $first  = _my_layout(_my_group_by(collect($seats)->filter(fn($i) => $i['cabin_floor'] === 1), 'cabin_row'));
+                $second = _my_layout(_my_group_by(collect($seats)->filter(fn($i) => $i['cabin_floor'] === 2), 'cabin_row'));
+                $third  = _my_layout(_my_group_by(collect($seats)->filter(fn($i) => $i['cabin_floor'] === 3), 'cabin_row')); // fixed
+                $fourth = _my_layout(_my_group_by(collect($seats)->filter(fn($i) => $i['cabin_floor'] === 4), 'cabin_row')); // fixed
+                ksort($first); ksort($second); ksort($third); ksort($fourth);
+
                 $seatsLayout = [
-                    'first_floor' => json_encode($first_floor_seat),
-                    'second_floor' => json_encode($second_floor_seat),
-                    'third_floor' => json_encode($third_floor_seat),
-                    'fourth_floor' => json_encode($fourth_floor_seat)
+                    'first_floor'  => $ensureRowMap($first),
+                    'second_floor' => $ensureRowMap($second),
+                    'third_floor'  => $ensureRowMap($third),
+                    'fourth_floor' => $ensureRowMap($fourth),
+                ];
+            } else {
+                $seatsLayout = [
+                    'first_floor'  => $emptyRowMap(),
+                    'second_floor' => $emptyRowMap(),
+                    'third_floor'  => $emptyRowMap(),
+                    'fourth_floor' => $emptyRowMap(),
                 ];
             }
         } else {
+            // Single floor: return just the row map for that floor ({} when empty)
             if ($cabins) {
-                $cabinsLayout = _my_layout(_my_group_by(collect($cabins)->filter(function($item, $key) use($floor) {
-                    return $item['cabin_floor'] == $floor;
-                }), 'cabin_row'));
+                $cabinsLayout = _my_layout(_my_group_by(collect($cabins)->filter(fn($i) => $i['cabin_floor'] == $floor), 'cabin_row'));
                 ksort($cabinsLayout);
+                $cabinsLayout = $ensureRowMap($cabinsLayout);
+            } else {
+                $cabinsLayout = $emptyRowMap();
             }
+
             if ($seats) {
-                $seatsLayout = _my_layout(_my_group_by(collect($seats)->filter(function($item, $key) use($floor) {
-                    return $item['cabin_floor'] == $floor;
-                }), 'cabin_row'));
+                $seatsLayout = _my_layout(_my_group_by(collect($seats)->filter(fn($i) => $i['cabin_floor'] == $floor), 'cabin_row'));
                 ksort($seatsLayout);
+                $seatsLayout = $ensureRowMap($seatsLayout);
+            } else {
+                $seatsLayout = $emptyRowMap();
             }
         }
+
         $cabinTypes = [['value' => 0, 'label' => 'All']];
-        $seatTypes = [['value' => 0, 'label' => 'All']];
-        collect($cabin_types)->each(function($item, $key) use(&$cabinTypes) {
-            array_push($cabinTypes, ['value' => $key, 'label' => $item]);
-        });
-        collect($seat_types)->each(function($item, $key) use(&$seatTypes) {
-            array_push($seatTypes, ['value' => $key, 'label' => $item]);
-        });
+        $seatTypes  = [['value' => 0, 'label' => 'All']];
+        collect($cabin_types)->each(fn($item, $key) => $cabinTypes[] = ['value' => $key, 'label' => $item]);
+        collect($seat_types)->each(fn($item, $key) => $seatTypes[] = ['value' => $key, 'label' => $item]);
+
         return [
-            'id' => $trip->id,
-            'trip_id' => $trip->id,
-            'cabin_rows' => 5,
-            'rowClass' => '',
-            'vehicle_id' => $trip->vehicle_id,
-            'number_of_floor' => $trip->vehicle['number_of_floor'],
-            'floors' => $this->formatFloors($trip->vehicle['number_of_floor']),
-            'merchant_id' => $trip->vehicle['merchant_id'],
-            'route_id' => $trip->route_id,
-            'vehicle_name' => $trip->vehicle['name'],
-            'route_name' => $trip->startFrom['name'] . ' - ' . $trip->stopTo['name'],
-            'vehicle_route' => $trip->startFrom['name'] . ' - ' . $trip->stopTo['name'],
-            'schedule_date' => date('Y-m-d H:i:s', strtotime($trip->leaving_at)),
-            'cabins' =>  (!empty($cabinsLayout)) ? $cabinsLayout : null,
-            'seats' =>  (!empty($seatsLayout)) ? $seatsLayout : null,
-            'decks' => $this->formatDecks($trip),
-            'cabin_types' => $cabinTypes,
-            'seat_types' => $seatTypes,
-            'stoppages' => $this->formatStoppages($trip, false),
-            'vat_amount' => getOption('vat_amount', 0),
+            'id'                => $trip->id,
+            'trip_id'           => $trip->id,
+            'cabin_rows'        => 5,
+            'rowClass'          => '',
+            'vehicle_id'        => $trip->vehicle_id,
+            'number_of_floor'   => $trip->vehicle['number_of_floor'],
+            'floors'            => $this->formatFloors($trip->vehicle['number_of_floor']),
+            'merchant_id'       => $trip->vehicle['merchant_id'],
+            'route_id'          => $trip->route_id,
+            'vehicle_name'      => $trip->vehicle['name'],
+            'route_name'        => $trip->startFrom['name'].' - '.$trip->stopTo['name'],
+            'vehicle_route'     => $trip->startFrom['name'].' - '.$trip->stopTo['name'],
+            'schedule_date'     => date('Y-m-d H:i:s', strtotime($trip->leaving_at)),
+            // ALWAYS objects (maps) per your chosen shape:
+            'cabins'            => $cabinsLayout,  // maps of rows; {} when empty
+            'seats'             => $seatsLayout,   // maps of rows; {} when empty
+            'decks'             => $this->formatDecks($trip),
+            'cabin_types'       => $cabinTypes,
+            'seat_types'        => $seatTypes,
+            'stoppages'         => $this->formatStoppages($trip, false),
+            'vat_amount'        => getOption('vat_amount', 0),
             'vat_applicable_to' => $trip->vehicle['merchant']['vat_applicable_to'],
-            'vat_visibility' => $trip->vehicle['merchant']['vat_visibility']
+            'vat_visibility'    => $trip->vehicle['merchant']['vat_visibility'],
         ];
     }
 
@@ -456,19 +472,19 @@ class TripService
                 krsort($vias);
 
             collect($vias)->each(function ($item, $key) use (&$stoppages) {
-                $stoppages[] = [
+                array_push($stoppages, [
                     'id' => $item['ghat']['id'],
                     'name' => $item['ghat']['name'],
                     'type' => 'via'
-                ];
+                ]);
             });
         }
         if($last) {
-            $stoppages[] = [
+            array_push($stoppages, [
                 'id' => $trip->stopTo['id'],
                 'name' => $trip->stopTo['name'],
                 'type' => 'end'
-            ];
+            ]);
         }
 
         return $stoppages;
