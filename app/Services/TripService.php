@@ -362,10 +362,10 @@ class TripService
                 ksort($third_floor_cabin);
                 ksort($fourth_floor_cabin);
                 $cabinsLayout = [
-                    'first_floor' => $first_floor_cabin,
-                    'second_floor' => $second_floor_cabin,
-                    'third_floor' => $third_floor_cabin,
-                    'fourth_floor' => $fourth_floor_cabin
+                    'first_floor' => json_encode($first_floor_cabin),
+                    'second_floor' => json_encode($second_floor_cabin),
+                    'third_floor' => json_encode($third_floor_cabin),
+                    'fourth_floor' => json_encode($fourth_floor_cabin)
                 ];
             }
             if ($seats) {
@@ -386,10 +386,10 @@ class TripService
                 ksort($third_floor_seat);
                 ksort($fourth_floor_seat);
                 $seatsLayout = [
-                    'first_floor' =>$first_floor_seat,
-                    'second_floor' =>$second_floor_seat,
-                    'third_floor' =>$third_floor_seat,
-                    'fourth_floor' =>$fourth_floor_seat
+                    'first_floor' => json_encode($first_floor_seat),
+                    'second_floor' => json_encode($second_floor_seat),
+                    'third_floor' => json_encode($third_floor_seat),
+                    'fourth_floor' => json_encode($fourth_floor_seat)
                 ];
             }
         } else {
@@ -456,19 +456,19 @@ class TripService
                 krsort($vias);
 
             collect($vias)->each(function ($item, $key) use (&$stoppages) {
-                array_push($stoppages, [
+                $stoppages[] = [
                     'id' => $item['ghat']['id'],
                     'name' => $item['ghat']['name'],
                     'type' => 'via'
-                ]);
+                ];
             });
         }
         if($last) {
-            array_push($stoppages, [
+            $stoppages[] = [
                 'id' => $trip->stopTo['id'],
                 'name' => $trip->stopTo['name'],
                 'type' => 'end'
-            ]);
+            ];
         }
 
         return $stoppages;
