@@ -11,8 +11,8 @@ use stdClass;
 
 class TripService
 {
-    protected $repository;
-    private $calculation;
+    protected ScheduleRepositoryInterface $repository;
+    private CalculationService $calculation;
 
     public function __construct(
         ScheduleRepositoryInterface $scheduleRepository,
@@ -23,10 +23,6 @@ class TripService
         $this->calculation = $calculationService;
     }
 
-    /*  GetSearchTrip
-     * Param $request
-     * Return $schedules :array
-     * */
     public function getSearchTrip($data): array
     {
 //        $data['trip_date'] = EtoB($data['trip_date']);
@@ -116,22 +112,24 @@ class TripService
                 $row['ending_point'] = $result->endingPoint['ghat']['name'];
                 $row['stoppages'] = [];
 
-                array_push($row['stoppages'], [
+                $row['stoppages'][] = [
                     'id' => $result->startingPoint['id'],
                     'name' => $result->startingPoint['ghat']['name'],
                     'type' => $result->startingPoint['type']
-                ]);
+                ];
+
                 foreach ($result->boardingVias as $stoppage) {
                     $prop['id'] = $stoppage['id'];
                     $prop['name'] = $stoppage['ghat']['name'];
                     $prop['type'] = $stoppage['type'];
                     array_push($row['stoppages'], $prop);
                 }
-                array_push($row['stoppages'], [
+
+                $row['stoppages'][] = [
                     'id' => $result->endingPoint['id'],
                     'name' => $result->endingPoint['ghat']['name'],
                     'type' => $result->endingPoint['type']
-                ]);
+                ];
 
                 if ($result->schedule_type == 'reverse') {
                     krsort($row['stoppages']);
@@ -168,13 +166,14 @@ class TripService
                         }
                     }
                 }
+
                 if ($request->vehicle_id && $result->vehicle_id == $request->vehicle_id) {
-                    array_push($schedules, $row);
+                    $schedules[] = $row;
                 } else {
                     if ($result->schedule_date == $trip_date && $result->schedule_type == $onWayTripType) {
-                        array_push($schedules, $row);
+                        $schedules[] = $row;
                     } elseif ($result->schedule_date == $return_date && $result->schedule_type != $onWayTripType) {
-                        array_push($schedules, $row);
+                        $schedules[] = $row;
                     }
                 }
             }

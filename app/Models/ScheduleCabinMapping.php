@@ -12,6 +12,7 @@ class ScheduleCabinMapping extends Model
 {
     use RevisionableTrait;
     protected $fillable = [
+        'lock_id',
         'is_reserved',
         'ownership',
         'booked',

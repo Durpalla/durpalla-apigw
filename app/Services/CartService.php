@@ -30,13 +30,13 @@ class CartService
         $customerToken = (auth()->check()) ? base64_encode(auth()->user()->email) :  request()->input('customer_token');
         try {
             DB::transaction(function() use($item, $customerToken) {
-                $item->update(['is_locked' => 1]);
                 $lock = CabinLock::create([
                     'cabin_id' => $item->cabin_id,
                     'mapping_id' => $item->id,
                     'customer_token' => ( string )$customerToken,
                     'trip_id' => ( int )$item->schedule_id
                 ]);
+                $item->update(['is_locked' => 1, 'lock_id' => $lock->id]);
             }, 2);
         } catch (\Exception $exception) {
             return false;
@@ -149,6 +149,7 @@ class CartService
             $service_charge_type = $charges['type'];
         }
         $cartItem = [
+            'lock_id' =>
             'type' => $item->type,
             'trip_id' => $item->schedule_id,
             'trip_date' => date('Y-m-d H:i:s', strtotime($item->schedule->leaving_at)),
