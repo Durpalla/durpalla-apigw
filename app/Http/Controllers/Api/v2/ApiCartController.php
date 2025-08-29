@@ -37,6 +37,7 @@ class ApiCartController extends Controller
             }
 
             if ($this->cart->add($item)) {
+                $item->refresh();
                 $data['item'] = $this->cart->save($item);
                 $data['success'] = true;
                 $data['message'] = __('Your item has been added to cart');

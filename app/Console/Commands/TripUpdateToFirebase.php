@@ -57,13 +57,13 @@ class TripUpdateToFirebase extends Command
             ->where('operation_timeline', '>=', $endTime)
             ->get());
         $trips->each(function ($trip, $key) use(&$layouts) {
-            if($this->firebase->set('trip_layouts/' . $trip->id)->get() == null) {
-                $this->firebase->set('trip_layouts/' . $trip->id)->update($this->trip->formatTriplayout($trip));
-            }
-            if($this->firebase->set('trips/' . $trip->vehicle['vehicle_type'] . '/' . $trip->id)->get() == null) {
-                $this->firebase->set('trips/' . $trip->vehicle['vehicle_type'] . '/' . $trip->id)
-                    ->update($this->trip->formatTripList($trip));
-            }
+//            if($this->firebase->set('trip_layouts/' . $trip->id)->get() == null) {
+//                $this->firebase->set('trip_layouts/' . $trip->id)->update($this->trip->formatTriplayout($trip));
+//            }
+//            if($this->firebase->set('trips/' . $trip->vehicle['vehicle_type'] . '/' . $trip->id)->get() == null) {
+//                $this->firebase->set('trips/' . $trip->vehicle['vehicle_type'] . '/' . $trip->id)
+//                    ->update($this->trip->formatTripList($trip));
+//            }
         });
     }
 }

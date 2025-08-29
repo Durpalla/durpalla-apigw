@@ -82,7 +82,6 @@ class CartService
 
     public function save($item): array
     {
-        $item->load();
         $platform = (request()->platform !== null && request()->platform !== 'android') ? request()->platform : 'mobile';
         $vat_applicable_to = $item->schedule->launch['merchant']['vat_applicable_to'];
         $vat_amount = abs(getOption('vat_amount', 0));
