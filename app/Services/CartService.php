@@ -33,8 +33,9 @@ class CartService
                 $lock = CabinLock::create([
                     'cabin_id' => $item->cabin_id,
                     'mapping_id' => $item->id,
-                    'customer_token' => ( string )$customerToken,
-                    'trip_id' => ( int )$item->schedule_id
+                    'customer_token' => ( string ) $customerToken,
+                    'trip_id' => ( int ) $item->schedule_id,
+                    'expire_at' => now()->addMinutes(config('constants.cart_expires'))
                 ]);
                 $item->update(['is_locked' => 1, 'lock_id' => $lock->id]);
             }, 2);

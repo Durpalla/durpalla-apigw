@@ -8,8 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CabinLock extends Model
 {
-
-    protected $fillable = ['cabin_id', 'trip_id', 'mapping_id', 'customer_token'];
+    protected $fillable = ['cabin_id', 'trip_id', 'mapping_id', 'customer_token', 'expire_at'];
 
     public function mapping(): BelongsTo
     {
