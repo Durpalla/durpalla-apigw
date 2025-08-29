@@ -82,6 +82,7 @@ class CartService
 
     public function save($item): array
     {
+        $item->load();
         $platform = (request()->platform !== null && request()->platform !== 'android') ? request()->platform : 'mobile';
         $vat_applicable_to = $item->schedule->launch['merchant']['vat_applicable_to'];
         $vat_amount = abs(getOption('vat_amount', 0));
@@ -149,7 +150,7 @@ class CartService
             $service_charge_type = $charges['type'];
         }
         $cartItem = [
-            'lock_id' =>
+            'lock_id' => $item->lock_id,
             'type' => $item->type,
             'trip_id' => $item->schedule_id,
             'trip_date' => date('Y-m-d H:i:s', strtotime($item->schedule->leaving_at)),
