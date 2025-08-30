@@ -72,11 +72,11 @@ class AuthController extends Controller
                     $otp->updated_at = now();
 
                     if( $otp->save() ) {
-                        $this->dispatch(new OTPCodeSendingJob($request->mobile, $otp->otp_code));
-                            sendSMS([
-                                'mobile' => $request->mobile,
-                                'message' => config('app.name') . ' verification code is ' . $otp->otp_code
-                            ]);
+//                        $this->dispatch(new OTPCodeSendingJob($request->mobile, $otp->otp_code));
+//                            sendSMS([
+//                                'mobile' => $request->mobile,
+//                                'message' => config('app.name') . ' verification code is ' . $otp->otp_code
+//                            ]);
                         // Log::debug('OTP Code for ' . $request->mobile . ' - ' . $otp->otp_code);
                     }
 
@@ -119,7 +119,7 @@ class AuthController extends Controller
 //                    Log::debug('OTP Code for ' . $request->mobile . ' - ' . $otp->otp_code);
                     $data['success'] = true;
                     $data['message'] = __('Customer account not found');
-                    $data['step'] = 'otp';
+                    $data['step'] = 'register';
                 }
             }
         }
