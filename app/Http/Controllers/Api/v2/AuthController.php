@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Auth;
 use App\Jobs\OTPCodeSendingJob;
 use App\Models\User;
 use App\Models\UserOtp;
-use Illuminate\Support\Facades\Log;
 use Lang;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
@@ -72,17 +71,17 @@ class AuthController extends Controller
                     $otp->updated_at = now();
 
                     if( $otp->save() ) {
-//                        $this->dispatch(new OTPCodeSendingJob($request->mobile, $otp->otp_code));
-//                            sendSMS([
-//                                'mobile' => $request->mobile,
-//                                'message' => config('app.name') . ' verification code is ' . $otp->otp_code
-//                            ]);
+                        $this->dispatch(new OTPCodeSendingJob($request->mobile, $otp->otp_code));
+                            sendSMS([
+                                'mobile' => $request->mobile,
+                                'message' => config('app.name') . ' verification code is ' . $otp->otp_code
+                            ]);
                         // Log::debug('OTP Code for ' . $request->mobile . ' - ' . $otp->otp_code);
                     }
 
                     $data['success'] = true;
                     $data['message'] = __('Customer account not verified');
-                    $data['step'] = 'register';
+                    $data['step'] = 'otp';
                 } elseif($account && $account->status == 1) {
                     $data['success'] = true;
                     $data['message'] = __('Customer account found');
@@ -112,14 +111,14 @@ class AuthController extends Controller
                 }
                 $otp->updated_at = now();
                 if( $otp->save() ) {
-//                    sendSMS([
-//                        'mobile' => $request->mobile,
-//                        'message' => config('app.name') . ' verification code is ' . $otp->otp_code
-//                    ]);
+                    sendSMS([
+                        'mobile' => $request->mobile,
+                        'message' => config('app.name') . ' verification code is ' . $otp->otp_code
+                    ]);
 //                    Log::debug('OTP Code for ' . $request->mobile . ' - ' . $otp->otp_code);
                     $data['success'] = true;
                     $data['message'] = __('Customer account not found');
-                    $data['step'] = 'register';
+                    $data['step'] = 'otp';
                 }
             }
         }
@@ -202,7 +201,7 @@ class AuthController extends Controller
         if ( $validator->fails() ) {
             $data['message'] = $validator->errors()->first();
         } else {
-            $otp = UserOtp::where(['mobile' => $request->mobile, 'verified' => 0])->first();
+            $otp = UserOtp::where(['mobile' => $request->mobile, 'verified' => 1])->first();
 
             if( $otp ) {
                 DB::beginTransaction();
@@ -241,17 +240,13 @@ class AuthController extends Controller
                         'role' => 'customer',
                         'photo' => $user->profile_pic ? asset($user->profile_pic) : asset('default/avatar.png')
                     );
-
-                    $otp->revoked();
                     $data['user'] = $userData;
                     $data['token'] = $token;
                     $data['success'] = true;
                     $data['message'] = __('You have successfully registered');
                 } catch( \Exception $e ) {
                     DB::rollback();
-                    Log::debug( $e->getMessage());
-                    $data['success'] = false;
-                    $data['message'] = $e->getMessage();
+//                    Log::debug( $e->getMessage());
                 }
             } else {
                 $data['message'] = __('Sorry! verification failed.');
