@@ -201,7 +201,7 @@ class AuthController extends Controller
         if ( $validator->fails() ) {
             $data['message'] = $validator->errors()->first();
         } else {
-            $otp = UserOtp::where(['mobile' => $request->mobile, 'verified' => 1])->first();
+            $otp = UserOtp::where(['mobile' => $request->mobile, 'verified' => 0])->first();
 
             if( $otp ) {
                 DB::beginTransaction();
@@ -240,6 +240,8 @@ class AuthController extends Controller
                         'role' => 'customer',
                         'photo' => $user->profile_pic ? asset($user->profile_pic) : asset('default/avatar.png')
                     );
+
+                    $otp->revoked();
                     $data['user'] = $userData;
                     $data['token'] = $token;
                     $data['success'] = true;
