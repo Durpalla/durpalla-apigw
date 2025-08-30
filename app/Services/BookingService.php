@@ -223,6 +223,7 @@ class BookingService
             }, 2);
         } catch (\Exception $exception) {
             $data['message'] = $exception->getMessage();
+            dd($exception);
         }
 
         return $data;
@@ -395,28 +396,31 @@ class BookingService
         $vatAmount = getOption('vat_amount', 0);
         $platform = (request()->input('platform')) ? request()->input('platform') : 'mobile';
         return collect($cartItems)->map(function ($item, $key) use ($customer, $chargeType, $vatAmount, $platform, $user) {
-            $passenger = $item->passenger;
-            if( $passenger == null ) {
+            $item = (array) $item;
+            $passenger = $item['passengers'];
+            if( $item['for_self']) {
                 $passenger = ['type' => 'self', 'name' => $customer->name, 'mobile' => $customer->mobile, 'person' => 1];
+            } else {
+                $passenger['type'] = 'other';
             }
 
-            if ($item->type == 'deck') {
+            if ($item['type'] == 'deck') {
                 return [
                     'booking_type' => 'deck'
                 ];
             } else {
-                $mapping = ScheduleCabinMapping::with(['schedule.vehicle.merchant', 'cabinType'])->find($item->item_id);
+                $mapping = ScheduleCabinMapping::with(['schedule.vehicle.merchant', 'cabinType'])->find($item['item_id']);
                 if( is_array($passenger) ) {
                     $passenger['person'] = ($mapping->cabinType) ? $mapping->cabinType['capacity'] : 1;
                 }
                 $data = [
                     'customer_id' => $customer->id,
                     'mapping_id' => $mapping->id,
-                    'booking_type' => $item->type,
+                    'booking_type' => $item['type'],
                     'is_ac' => $mapping->cabinType['is_ac'],
                     'vehicle_id' => $mapping->vehicle_id,
                     'cabin_id' => $mapping->cabin_id,
-                    'cabin_no' => ($mapping->cabinType) ? $mapping->cabinType['letter'] . '-' . $item->cabin_no : '',
+                    'cabin_no' => ($mapping->cabinType) ? $mapping->cabinType['letter'] . '-' . $item['meta']['cabin_no'] : '',
                     'price' => $mapping->fare,
                     'vat_visibility' => $mapping->schedule['vehicle']['merchant']['vat_visibility'],
                     'vat_applicable_to' => $mapping->schedule['vehicle']['merchant']['vat_applicable_to'],
@@ -426,8 +430,8 @@ class BookingService
                     'trip_date' => $mapping->schedule['schedule_date'],
                     'leaving_time' => $mapping->schedule['leaving_at'],
                     'booking_date' => date('Y-m-d'),
-                    'discount' => $item->discount,
-                    'boarding_point' => (isset($item->boardingPoint)) ? json_encode($item->boardingPoint) : null,
+                    'discount' => $item['discount'] ?? 0,
+                    'boarding_point' => (isset($item['boardingPoint'])) ? json_encode($item['boardingPoint']) : null,
                     'passenger' => json_encode($passenger),
                     'vat_amount' => $vatAmount,
                     'charge_amount' => ($chargeType == 'global') ? getOption('service_charge_' . $platform, 0) : $mapping->service_charge,
@@ -436,8 +440,8 @@ class BookingService
                     'is_honorium' => (int)$mapping->is_honorium,
                     'honorium_charge' => $mapping->schedule['vehicle']['merchant']['honorium_service_charge'],
                     'honorium_type' => $mapping->schedule['vehicle']['merchant']['honorium_type'],
-                    'incentive' => $item->incentive,
-                    'incentive_type' => $item->incentive_type
+                    'incentive' => 0,
+                    'incentive_type' => 'percent',
                 ];
                 if($user->hasRole(AppConst::AGENT_ROLE)) {
                     $data['incentive'] = $user->incentive->incentive;

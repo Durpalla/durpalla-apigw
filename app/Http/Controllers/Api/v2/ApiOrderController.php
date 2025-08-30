@@ -37,11 +37,14 @@ class ApiOrderController extends Controller
     public function confirm(Request $request): JsonResponse
     {
         $data = ['success' => false, 'message' => __('Your booking request is not valid')];
-
-        $items = json_decode(str_replace("\\", "", $request->items));
         try {
+            $items = $request->input('items');
+            if(!is_array($items)) {
+                $items = json_decode(str_replace("\\", "", $request->items));
+            }
             $itemsTobeValidated = collect($items)->filter(function ($item, $k) {
-                return $item->type != 'deck';
+                $item = (array) $item;
+                return $item['type'] != 'deck';
             })->pluck('item_id')->toArray();
 
             $validation = $this->bookingService->validate($itemsTobeValidated);

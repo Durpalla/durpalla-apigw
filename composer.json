@@ -19,6 +19,7 @@
         "nwidart/laravel-modules": "^10.0",
         "predis/predis": "^3.1",
         "pusher/pusher-php-server": "^7.2",
+        "simplesoftwareio/simple-qrcode": "^4.2",
         "spatie/laravel-permission": "^6.20",
         "thiagoalessio/tesseract_ocr": "^2.13",
         "venturecraft/revisionable": "^1.42"
