@@ -29,10 +29,10 @@ class SendWelcomeEmail
     {
         $data = array('name' => $event->user->name, 'email' => $event->user->email, 'body' => 'Welcome to jolzan. Hope you will enjoy our services.');
 
-        Mail::send('emails.mail', $data, function($message) use ($data) {
-            $message->to($data['email'])
-                    ->subject('Welcome to jolzan');
-            $message->from('noreply@jolzan.com');
-        });
+//        Mail::send('emails.mail', $data, function($message) use ($data) {
+//            $message->to($data['email'])
+//                    ->subject('Welcome to jolzan');
+//            $message->from('noreply@jolzan.com');
+//        });
     }
 }

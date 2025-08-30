@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Jobs\OTPCodeSendingJob;
 use App\Models\User;
 use App\Models\UserOtp;
+use Illuminate\Support\Facades\Log;
 use Lang;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
@@ -81,7 +82,7 @@ class AuthController extends Controller
 
                     $data['success'] = true;
                     $data['message'] = __('Customer account not verified');
-                    $data['step'] = 'otp';
+                    $data['step'] = 'register';
                 } elseif($account && $account->status == 1) {
                     $data['success'] = true;
                     $data['message'] = __('Customer account found');
@@ -111,10 +112,10 @@ class AuthController extends Controller
                 }
                 $otp->updated_at = now();
                 if( $otp->save() ) {
-                    sendSMS([
-                        'mobile' => $request->mobile,
-                        'message' => config('app.name') . ' verification code is ' . $otp->otp_code
-                    ]);
+//                    sendSMS([
+//                        'mobile' => $request->mobile,
+//                        'message' => config('app.name') . ' verification code is ' . $otp->otp_code
+//                    ]);
 //                    Log::debug('OTP Code for ' . $request->mobile . ' - ' . $otp->otp_code);
                     $data['success'] = true;
                     $data['message'] = __('Customer account not found');
@@ -248,7 +249,9 @@ class AuthController extends Controller
                     $data['message'] = __('You have successfully registered');
                 } catch( \Exception $e ) {
                     DB::rollback();
-//                    Log::debug( $e->getMessage());
+                    Log::debug( $e->getMessage());
+                    $data['success'] = false;
+                    $data['message'] = $e->getMessage();
                 }
             } else {
                 $data['message'] = __('Sorry! verification failed.');
