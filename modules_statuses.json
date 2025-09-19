@@ -7,5 +7,6 @@
     "Payment": true,
     "Vehicle": true,
     "Revision": true,
-    "Customer": true
+    "Customer": true,
+    "FAQ": true
 }

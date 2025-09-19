@@ -5,10 +5,10 @@ namespace App\Providers;
 
 
 use Illuminate\Support\ServiceProvider;
-use App\Gateway\Bkash;
-use App\Gateway\GatewayInterface;
-use App\Gateway\Nagad;
-use App\Gateway\Sslcom;
+use App\Gateways\Bkash;
+use App\Gateways\GatewayInterface;
+use App\Gateways\Nagad;
+use App\Gateways\Sslcom;
 
 class PaymentServiceProvider extends ServiceProvider
 {

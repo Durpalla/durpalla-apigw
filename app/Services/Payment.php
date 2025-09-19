@@ -4,8 +4,8 @@
 namespace App\Services;
 
 
-use App\Gateway\BkashInterface;
-use App\Gateway\GatewayInterface;
+use App\Gateways\BkashInterface;
+use App\Gateways\GatewayInterface;
 
 class Payment implements PaymentInterface
 {

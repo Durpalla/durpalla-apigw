@@ -28,14 +28,8 @@ class MyApiController extends Controller
         $this->supervisor = $supervisorService;
         $this->status = 200;
         $this->success = 200;
-        $this->middleware('auth:api');
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return JsonResponse
-     */
     public function profile()
     {
         $user = Auth::user();

@@ -19,12 +19,12 @@ use App\Http\Controllers\Api\v2\ApiWithdrawalMethodController;
 use App\Http\Controllers\Api\v2\ApiAgentCommissionController;
 
 Route::middleware(['JsonResponse'])->group(function () {
-    Route::get('/offers', [FrontApiController::class, 'offers']);
-    Route::get('/site/init', [FrontApiController::class, 'init']);
-    Route::get('/mobile/init', [FrontApiController::class, 'mobileInit']);
-    Route::get('/page/{slug}', [FrontApiController::class, 'page']);
-    Route::get('/vehicles', [FrontApiController::class, 'vehicles']);
-    Route::post('/download/link', [FrontApiController::class, 'downloadLink']);
+    Route::get('offers', [FrontApiController::class, 'offers']);
+    Route::get('site/init', [FrontApiController::class, 'init']);
+    Route::get('mobile/init', [FrontApiController::class, 'mobileInit']);
+    Route::get('page/{slug}', [FrontApiController::class, 'page']);
+    Route::get('vehicles', [FrontApiController::class, 'vehicles']);
+    Route::post('download/link', [FrontApiController::class, 'downloadLink']);
 
     Route::prefix('support')->group(function () {
         Route::post('/send', [ApiSupportController::class, 'store']);
@@ -107,6 +107,29 @@ Route::middleware(['JsonResponse'])->group(function () {
             Route::post('/notifications/read', [MyApiController::class, 'deleteNotifications']);
             Route::post('/notifications/read/all', [MyApiController::class, 'readAllNotification']);
             Route::get('/favourite/vehicles', [MyApiController::class, 'favouriteVehicles']);
+        });
+
+        Route::prefix('my')->group(function () {
+            Route::post('/device-id', [MyApiController::class, 'updateDeviceId']);
+            Route::get('/profile', [MyApiController::class, 'profile']);
+            Route::put('profile/update', [MyApiController::class, 'update']);
+            Route::post('update-profile', [MyApiController::class, 'updateProfile']);
+            Route::post('/email/change', [MyApiController::class, 'changeEmail']);
+            Route::post('/mobile/change', [MyApiController::class, 'changeMobile']);
+            Route::post('/password/change', [MyApiController::class, 'changePassword']);
+            Route::post('/profile/upload', [MyApiController::class, 'upload']);
+            Route::post('/profile/upload/procedural', [MyApiController::class, 'uploadProcedural']);
+            Route::get('/bookings', [MyApiController::class, 'bookings']);
+            Route::get('/cancellations', [MyApiController::class, 'cancellations']);
+            Route::get('/activities', [MyApiController::class, 'activities']);
+            Route::get('/booking/{id}', [MyApiController::class, 'booking']);
+            Route::get('/booking/android/{id}', [MyApiController::class, 'bookingAndroid']);
+            Route::get('/journey', [MyApiController::class, 'journey']);
+            Route::get('/journey/{id}', [MyApiController::class, 'viewJourney']);
+            Route::get('/notifications', [MyApiController::class, 'notifications']);
+            Route::post('/notifications/read', [MyApiController::class, 'deleteNotifications']);
+            Route::post('/notifications/read/all', [MyApiController::class, 'readAllNotification']);
+            Route::get('/favourite/launches', [MyApiController::class, 'favouriteVehicles']);
         });
 
         Route::prefix('quickbook')->group(function () {

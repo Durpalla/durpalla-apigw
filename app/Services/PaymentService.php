@@ -4,7 +4,7 @@
 namespace App\Services;
 
 
-use App\Gateway\GatewayInterface;
+use App\Gateways\GatewayInterface;
 
 class PaymentService implements PaymentInterface
 {

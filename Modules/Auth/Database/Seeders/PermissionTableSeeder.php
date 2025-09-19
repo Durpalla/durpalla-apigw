@@ -1,0 +1,128 @@
+<?php
+
+namespace Modules\Auth\Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Cache;
+use Modules\Auth\Entities\Permission;
+
+class PermissionTableSeeder extends Seeder
+{
+    public function run()
+    {
+
+        $permissions = [
+            'administrator-list',
+            'administrator-create',
+            'administrator-edit',
+            'administrator-show',
+            'administrator-action',
+            'role-list',
+            'role-create',
+            'role-edit',
+            'role-action',
+            'operator-list',
+            'operator-show',
+            'operator-create',
+            'operator-update',
+            'operator-action',
+            'category-list',
+            'category-create',
+            'category-update',
+            'category-action',
+            'bundle-list',
+            'bundle-show',
+            'bundle-create',
+            'bundle-update',
+            'bundle-action',
+            'region-list',
+            'region-create',
+            'region-update',
+            'region-action',
+            'recharge-list',
+            'recharge-show',
+            'recharge-create',
+            'recharge-update',
+            'recharge-action',
+            'service-list',
+            'service-create',
+            'service-update',
+            'service-action',
+            'media-list',
+            'media-create',
+            'media-update',
+            'media-action',
+            'gateway-list',
+            'gateway-create',
+            'gateway-update',
+            'gateway-action',
+            'country-list',
+            'country-create',
+            'country-update',
+            'country-action',
+            'city-list',
+            'city-create',
+            'city-update',
+            'city-action',
+            'department-list',
+            'department-create',
+            'department-update',
+            'department-action',
+            'language-list',
+            'language-create',
+            'language-update',
+            'language-action',
+            'commission-list',
+            'commission-create',
+            'commission-update',
+            'commission-action',
+            'purchase-list',
+            'purchase-show',
+            'purchase-create',
+            'purchase-update',
+            'purchase-action',
+            'transaction-list',
+            'transaction-show',
+            'transaction-create',
+            'transaction-update',
+            'transaction-action',
+            'support-list',
+            'support-show',
+            'support-create',
+            'support-update',
+            'support-action',
+            'statement-list',
+            'statement-show',
+            'statement-create',
+            'statement-update',
+            'statement-action',
+            'batch-list',
+            'batch-show',
+            'batch-create',
+            'batch-update',
+            'batch-action',
+            'card-list',
+            'card-create',
+            'card-update',
+            'card-action',
+            'supplier-list',
+            'supplier-show',
+            'supplier-create',
+            'supplier-update',
+            'supplier-action',
+            'reseller-list',
+            'reseller-show',
+            'reseller-create',
+            'reseller-update',
+            'reseller-action',
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::updateOrCreate(
+                ['name' => $permission],
+                ['name' => $permission, 'guard_name' => 'web']
+            );
+        }
+        Cache::forget('permissions');
+    }
+}
