@@ -76,7 +76,7 @@ class CancellationService
             if ($inCancellation == false) {
                 $cancellation = $this->cancellationRepository->create([
                     'booking_id' => $params['booking_id'],
-                    'type' => $params['type'],
+                    'type' => $bookingItem->type,
                     'customer_id' => $booking->customer_id,
                     'user_id' => Auth::user()->id,
                     'transaction_id' => uniqid(),

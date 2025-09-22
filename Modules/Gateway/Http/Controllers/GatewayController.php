@@ -2,78 +2,73 @@
 
 namespace Modules\Gateway\Http\Controllers;
 
-use Illuminate\Contracts\Support\Renderable;
+use Illuminate\Contracts\View\View;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Modules\Gateway\Entities\Gateway;
+use Modules\Gateway\GatewayService;
+use Modules\Gateway\Http\Requests\GatewayCreateRequest;
+use Modules\Gateway\Http\Requests\GatewayUpdateRequest;
+use Modules\Operator\Entities\Operator;
 
 class GatewayController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     * @return Renderable
-     */
-    public function index()
+    use AuthorizesRequests, ValidatesRequests;
+    private GatewayService $gatewayService;
+
+    public function __construct(GatewayService $gatewayService)
     {
+        $this->gatewayService = $gatewayService;
+    }
+
+    public function index(Request $request)
+    {
+        if($request->acceptsJson() && $request->wantsJson()) {
+            return $this->gatewayService->getDataTables($request);
+        }
         return view('gateway::index');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     * @return Renderable
-     */
     public function create()
     {
         return view('gateway::create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     * @param Request $request
-     * @return Renderable
-     */
-    public function store(Request $request)
+    public function store(GatewayCreateRequest $request): RedirectResponse
     {
-        //
+        return $this->gatewayService->store($request);
     }
 
-    /**
-     * Show the specified resource.
-     * @param int $id
-     * @return Renderable
-     */
-    public function show($id)
+    public function show(Gateway $gateway)
     {
-        return view('gateway::show');
+        $endpointTypes = $this->gatewayService->getEndpointTypes();
+        return view('gateway::show', compact('gateway', 'endpointTypes'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     * @param int $id
-     * @return Renderable
-     */
-    public function edit($id)
+    public function edit(Gateway $gateway): View
     {
-        return view('gateway::edit');
+        return view('gateway::edit', compact('gateway'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     * @param Request $request
-     * @param int $id
-     * @return Renderable
-     */
-    public function update(Request $request, $id)
+    public function update(GatewayUpdateRequest $request, Gateway $gateway): RedirectResponse
     {
-        //
+        return $this->gatewayService->update($gateway, $request);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     * @param int $id
-     * @return Renderable
-     */
-    public function destroy($id)
+    public function suggestion(Request $request): JsonResponse
     {
-        //
+        return $this->gatewayService->getSuggestions($request);
+    }
+
+    public function callAction($method, $parameters)
+    {
+        if (!in_array($method, ['attachVendor', 'stockSuggestions', 'suggestion'])) {
+            $this->authorize($method, Gateway::class);
+        }
+        return parent::callAction($method, $parameters);
     }
 }

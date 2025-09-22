@@ -4,6 +4,11 @@ namespace Modules\Gateway\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Factory;
+use Modules\Device\App\Models\Device;
+use Modules\Device\App\Policies\DevicePolicy;
+use Modules\Gateway\App\Policies\GatewayPolicy;
+use Modules\Gateway\Entities\Gateway;
+use Modules\Gateway\Observers\GatewayObserver;
 
 class GatewayServiceProvider extends ServiceProvider
 {
@@ -18,6 +23,14 @@ class GatewayServiceProvider extends ServiceProvider
     protected $moduleNameLower = 'gateway';
 
     /**
+     * The policy mappings for the application.
+     *
+     * @var array
+     */
+    protected array $policies = [
+        Gateway::class => GatewayPolicy::class
+    ];
+    /**
      * Boot the application events.
      *
      * @return void
@@ -28,6 +41,7 @@ class GatewayServiceProvider extends ServiceProvider
         $this->registerConfig();
         $this->registerViews();
         $this->loadMigrationsFrom(module_path($this->moduleName, 'Database/Migrations'));
+        Gateway::observe(GatewayObserver::class);
     }
 
     /**
@@ -38,6 +52,7 @@ class GatewayServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->register(RouteServiceProvider::class);
+        $this->app->register(AuthServiceProvider::class);
     }
 
     /**

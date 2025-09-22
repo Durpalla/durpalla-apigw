@@ -44,10 +44,10 @@ class ApiCancellationController extends Controller
         try{
             DB::transaction(function() use($request, &$data) {
                 $params = [
-                    'items' => json_decode( $request->items ),
-                    'type' => $request->type,
+                    'items' => $request->items,
                     'booking_id' => $request->booking_id
                 ];
+
                 $this->cancellation->cancelBooking($params);
                 $data['success'] = true;
                 $data['message'] = __('Your cancellation request success');

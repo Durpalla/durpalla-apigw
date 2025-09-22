@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
 class CreateGatewaysTable extends Migration
 {
@@ -14,12 +14,13 @@ class CreateGatewaysTable extends Migration
     public function up()
     {
         Schema::create('gateways', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->string('name')->unique();
-            $table->text('description')->nullable();
-            $table->string('logo')->nullable();
-            $table->tinyInteger('status')->default(1)->comment('1 = active, 0 = Inactive');
+            $table->id();
+            $table->string('name');
+            $table->string('class_name');
+            $table->foreignId('media_id')->nullable()->constrained()->on('medias');
+            $table->tinyInteger('status')->default(1);
             $table->timestamps();
+            $table->softDeletesTz();
         });
     }
 

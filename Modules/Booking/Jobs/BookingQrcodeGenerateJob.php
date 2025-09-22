@@ -20,12 +20,6 @@ class BookingQrcodeGenerateJob
     private $booking;
     private $code;
 
-    /**
-     * Create a new job instance.
-     *
-     * @param Booking $booking
-     * @param $code
-     */
     public function __construct(Booking $booking)
     {
         $this->booking = $booking;
@@ -49,6 +43,6 @@ class BookingQrcodeGenerateJob
             // ->color(33, 152, 118)
             ->size(500)
             ->merge(public_path('default/logo-icon.png'), .1, true)
-            ->generate($this->code, public_path('qrs/' . $this->booking->id . '.png'));
+            ->generate($this->code, storage_path('app/public/qrs/' . $this->booking->id . '.png'));
     }
 }

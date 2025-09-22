@@ -8,7 +8,7 @@
     "require": {
         "php": "^8.2",
         "guzzlehttp/psr7": "*",
-        "intervention/image": "^3.11",
+        "intervention/image": "*",
         "kreait/firebase-php": "^7.21",
         "laravel/framework": "^12.0",
         "laravel/passport": "^13.0",

@@ -1,5 +1,8 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+use Modules\Gateway\Http\Controllers\GatewayController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -11,6 +14,16 @@
 |
 */
 
-Route::prefix('gateway')->group(function() {
-    Route::get('/', 'GatewayController@index');
+Route::group(['prefix' => 'dashboard', 'middleware' => 'auth'], function() {
+    Route::resource('credential', 'GatewayCredentialController')
+        ->only(['store', 'destroy'])
+        ->names('gateway.credential');
+
+    Route::resource('endpoint', 'GatewayEndpointController')
+        ->only(['store', 'destroy'])
+        ->names('gateway.endpoint');
+
+    Route::get('suggestion', [GatewayController::class, 'suggestion'])->name('gateway.suggestion');
+
+    Route::resource('gateway', 'GatewayController')->except(['destroy']);
 });

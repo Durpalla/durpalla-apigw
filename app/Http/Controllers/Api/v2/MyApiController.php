@@ -174,14 +174,10 @@ class MyApiController extends Controller
             $query->where('booking_date', '<=', $date->format('Y-m-d'));
         }
 
-        $bookings = $query->paginate(15);
+        $bookings = $query->paginate(10);
 
-        $responseArr = ['recent' => [], 'history' => []];
-        $recentDate = '';
+        $responseArr = [];
         foreach( $bookings as $key => $booking ) {
-            if( $key == 0 ) {
-                $recentDate = date('Y-m-d', strtotime($booking->created_at));
-            }
             $row['id'] = $booking->id;
             $row['pnr'] = $booking->id;
             $row['booking_date'] = date('Y-m-d H:i:s', strtotime( $booking->created_at ) );
@@ -235,13 +231,8 @@ class MyApiController extends Controller
             if( !getOption('is_cancellation_enabled') ) {
                 $row['cancellable'] = false;
             }
-            if( date('Y-m-d', strtotime( $booking->created_at ) ) == $recentDate ) {
-                array_push($responseArr['recent'], $row);
-            }
-            array_push($responseArr['history'], $row);
+            $responseArr[] = $row;
         }
-
-        // return $responseArr;
 
         $data = [
             'total' => $bookings->total(),

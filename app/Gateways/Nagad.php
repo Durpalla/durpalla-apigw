@@ -1,13 +1,28 @@
 <?php
 
-
 namespace App\Gateways;
 
-
-class Nagad extends Builder implements GatewayInterface
+class Nagad implements GatewayInterface
 {
-    public function create()
+    public function create($payment, $request, &$data);
     {
-        // TODO: Implement create() method.
+        //
     }
+
+
+    public function execute($payment, $request, &$data)
+    {
+        //
+    }
+
+    public function verify($payment, $request, &$data)
+    {
+        //
+    }
+
+    public function token($payment, $request)
+    {
+        //
+    }
+
 }
