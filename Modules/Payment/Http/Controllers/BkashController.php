@@ -56,13 +56,13 @@ class BkashController extends Controller
     public function paymentFailed(array $data): RedirectResponse
     {
         $url = config('bkash.frontend_url') . '?' . http_build_query($data);
-        return redirect()->away($url)->with('error', 'Payment failed.');
+        return redirect()->route('payment.status')->with('error', 'Payment failed.');
     }
 
     public function paymentSuccess(array $data): RedirectResponse
     {
         $data['status'] = 'success';
         $url = config('bkash.frontend_url') . '?' . http_build_query($data);
-        return redirect()->away($url)->with('error', 'Payment failed.');
+        return redirect()->route('payment.status')->with('error', 'Payment failed.');
     }
 }

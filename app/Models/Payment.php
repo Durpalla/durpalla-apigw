@@ -5,7 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\User;
+use Illuminate\Support\Str;
+use Modules\Gateway\Entities\Gateway;
 
 class Payment extends Model
 {
@@ -14,6 +15,7 @@ class Payment extends Model
         'transaction_id',
         'customer_id',
         'booking_id',
+        'gateway_id',
         'paid_amount',
         'dues',
         'payment_method',
@@ -24,8 +26,7 @@ class Payment extends Model
         'bank_tran_id',
         'status',
         'gateway_session',
-        'gateway_initiated_id',
-        'gateway'
+        'gateway_initiated_id'
     ];
 
     public function booking(): BelongsTo
@@ -40,5 +41,23 @@ class Payment extends Model
     public function customer(): BelongsTo
     {
     	return $this->belongsTo(User::class, 'customer_id', 'id');
+    }
+
+    public function gateway(): BelongsTo
+    {
+        return $this->belongsTo(Gateway::class);
+    }
+
+    public function getNiceStatusAttribute(): string
+    {
+        return Str::ucfirst($this->status);
+    }
+
+    public function format(): array
+    {
+        return $this->only(['id', 'booking_id', 'paid_amount', 'nice_status', 'transaction_id', 'created_at', 'currency']) +
+            [
+                'gateway' => $this->gateway->only(['id', 'name']),
+            ];
     }
 }
