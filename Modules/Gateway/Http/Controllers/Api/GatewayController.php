@@ -21,7 +21,7 @@ class GatewayController extends Controller
             [
                 'success' => true,
                 'data' => $this->gatewayService->all()
-                    ->where('type', 'payment')
+//                    ->where('type', 'payment')
                     ->map(function ($gateway) {
                         return $gateway->only('id', 'name');
                     })
