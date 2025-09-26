@@ -27,6 +27,7 @@ class PaymentController extends Controller
                 $data['success'] = true;
                 $data['message'] = __('Your payment has been verified');
                 $data['data'] = $payment->format();
+                $data['data']['booking'] = $payment->booking->format();
             }
         } catch (\Exception $exception) {
             Log::error($exception->getMessage(), [
