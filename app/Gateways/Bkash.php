@@ -55,8 +55,11 @@ class Bkash implements GatewayInterface, BkashInterface
                 if (is_array($jsonData) && array_key_exists('paymentID', $jsonData)) {
                     $payment->update(['gateway_trx_id' => $jsonData['paymentID']]);
                     $data['status'] = 'success';
+                    $data['success'] = true;
                     $data['paymentID'] = $jsonData['paymentID'];
                     $data['paymentURL'] = $jsonData['bkashURL'];
+                } else {
+                    $data['status'] = false;
                 }
             }
         } catch (\Exception $e) {
