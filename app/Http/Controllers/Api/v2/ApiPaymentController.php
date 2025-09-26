@@ -18,7 +18,7 @@ class ApiPaymentController extends Controller
 
     public function make(Request $request)
     {
-        $data = ['status' => 'failed', 'message' => __('Your payment cannot be processed')];
+        $data = ['success' => false, 'message' => __('Your payment cannot be processed')];
 
         $validator = Validator::make($request->all(), [
             'order_id' => 'bail|required|integer|exists:bookings,id',
@@ -43,8 +43,9 @@ class ApiPaymentController extends Controller
             $payment->gateway_id = $request->input('gateway_id');
 
             $payment->save();
-
-            $data['transaction_id'] = $payment->transaction_id;
+            $data['data']['id'] = $payment->id;
+            $data['data']['booking_id'] = $payment->booking_id;
+            $data['data']['transaction_id'] => $payment->transaction_id;
             $gateway = Gateway::find($request->input('gateway_id'));
 
             $gwt = CommonHelper::purseGateway($gateway);
