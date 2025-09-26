@@ -11,7 +11,7 @@ use Modules\Provider\Entities\Provider;
 
 class Gateway extends Model
 {
-    use SoftDeletes;
+    //hello
     const ACTIVE                    = 1;
     const INACTIVE                  = 0;
     const ACTIVE_TEXT               = 'Active';
