@@ -1,6 +1,7 @@
 <?php
 
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use Modules\Gateway\Http\Controllers\Api\GatewayController;
 
 /*
 |--------------------------------------------------------------------------
@@ -12,7 +13,6 @@ use Illuminate\Http\Request;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-
-Route::middleware('auth:api')->get('/gateway', function (Request $request) {
-    return $request->user();
+Route::group(['prefix' => 'v2'], function () {
+    Route::get('gateway', [GatewayController::class, 'index']);
 });

@@ -22,7 +22,7 @@ use App\Http\Controllers\Dashboard\MerchantReportController;
 use App\Http\Controllers\Dashboard\OptionController;
 use App\Http\Controllers\Dashboard\OtherController;
 use App\Http\Controllers\Dashboard\PageController;
-use App\Http\Controllers\Dashboard\PartnerController;
+//use App\Http\Controllers\Dashboard\PartnerController;
 use App\Http\Controllers\Dashboard\PartyController;
 use App\Http\Controllers\Dashboard\PaymentController;
 use App\Http\Controllers\Dashboard\PermissionController;
@@ -43,7 +43,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Modules\Auth\Http\Controllers\RoleController;
 use Modules\Auth\Http\Controllers\UserController;
-use Modules\Report\App\Http\Controllers\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -131,20 +130,20 @@ Route::middleware(['throttle:100,1'])->group(function () {
         Route::prefix('/agent')->group(function () {
             Route::get('/{id}/bookings', [AgentController::class, "bookings"])->name('agent.bookings');
             Route::get('/suggest', [AgentController::class, "suggest"])->name('agent.suggest');
-            Route::resource('commission', 'AgentCommissionController');
-            Route::resource('withdrawal', 'AgentWithdrawalController');
+//            Route::resource('commission', 'Dashboard/AgentCommissionController');
+//            Route::resource('withdrawal', 'Dashboard/AgentWithdrawalController');
         });
-        Route::resource('agent', 'AgentController');
+//        Route::resource('agent', 'AgentController');
 
         //Partner routes
-        Route::prefix('/partner')->group(function () {
-            Route::get('/vehicles', [PartnerController::class, "vehicles"])->name('partner.vehicles');
-            Route::get('/{id}/bookings', [PartnerController::class, "bookings"])->name('partner.bookings');
-            Route::get('/suggest', [PartnerController::class, "suggest"])->name('partner.suggest');
-            Route::get('/suggest-vehicles', [PartnerController::class, "suggestVehicles"])->name('partner.suggest.vehicles');
-            Route::resource('partner_vehicle', 'PartnerVehicleController');
-        });
-        Route::resource('partner', 'PartnerController');
+//        Route::prefix('/partner')->group(function () {
+//            Route::get('/vehicles', [PartnerController::class, "vehicles"])->name('partner.vehicles');
+//            Route::get('/{id}/bookings', [PartnerController::class, "bookings"])->name('partner.bookings');
+//            Route::get('/suggest', [PartnerController::class, "suggest"])->name('partner.suggest');
+//            Route::get('/suggest-vehicles', [PartnerController::class, "suggestVehicles"])->name('partner.suggest.vehicles');
+////            Route::resource('partner_vehicle', 'PartnerVehicleController');
+//        });
+//        Route::resource('partner', 'PartnerController');
 
         Route::prefix('customer')->group(function () {
             Route::get('/', [CustomerController::class, "index"])
@@ -581,7 +580,7 @@ Route::middleware(['throttle:100,1'])->group(function () {
             });
 
             Route::get('/export', [PaymentController::class, "export"])->name('payment.export');
-            Route::resource('payment', 'PaymentController', ["as" => "dashboard"]);
+//            Route::resource('payment', 'PaymentController', ["as" => "dashboard"]);
         });
 
         Route::prefix('page')->group(function () {
@@ -641,14 +640,14 @@ Route::middleware(['throttle:100,1'])->group(function () {
             });
         });
 
-        Route::prefix('report')->group(function () {
-            Route::get('/', [ReportController::class, "index"])->name('dashboard.report.index');
-            Route::get('/daily-booking', [ReportController::class, "dailyBookings"])->name('dashboard.report.booking.daily');
-            Route::get('/daily-vehicle-booking', [ReportController::class, "dailyVehicleBookings"])->name('dashboard.report.vehicle.booking');
-            Route::post('/daily-vehicle-booking', [ReportController::class, "exportDailyVehicleBookings"])->name('dashboard.report.vehicle.export');
-            Route::get('/daily-trip-report', [ReportController::class, "dailyTripReport"])->name('dashboard.report.trip');
-            Route::post('/daily-trip-report-export', [ReportController::class, "exportTripReport"])->name('dashboard.report.trip.export');
-        });
+//        Route::prefix('report')->group(function () {
+//            Route::get('/', [ReportController::class, "index"])->name('dashboard.report.index');
+//            Route::get('/daily-booking', [ReportController::class, "dailyBookings"])->name('dashboard.report.booking.daily');
+//            Route::get('/daily-vehicle-booking', [ReportController::class, "dailyVehicleBookings"])->name('dashboard.report.vehicle.booking');
+//            Route::post('/daily-vehicle-booking', [ReportController::class, "exportDailyVehicleBookings"])->name('dashboard.report.vehicle.export');
+//            Route::get('/daily-trip-report', [ReportController::class, "dailyTripReport"])->name('dashboard.report.trip');
+//            Route::post('/daily-trip-report-export', [ReportController::class, "exportTripReport"])->name('dashboard.report.trip.export');
+//        });
 
         Route::prefix('setting')->group(function () {
             Route::prefix('user')->group(function () {
@@ -745,7 +744,7 @@ Route::middleware(['throttle:100,1'])->group(function () {
                     ->name('dashboard.option.store');
             });
 
-            Route::resource('gateway', 'GatewayController');
+//            Route::resource('gateway', 'GatewayController');
         });
     });
 
