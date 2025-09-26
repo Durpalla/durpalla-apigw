@@ -53,4 +53,9 @@ class Gateway extends Model
     {
         return CommonHelper::parseLocalTimeZone($datetime);
     }
+
+    public function getIconAttribute(): string
+    {
+        return asset('default/bkash.png');
+    }
 }

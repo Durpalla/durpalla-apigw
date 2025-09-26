@@ -23,7 +23,7 @@ class GatewayController extends Controller
                 'data' => $this->gatewayService->all()
 //                    ->where('type', 'payment')
                     ->map(function ($gateway) {
-                        return $gateway->only('id', 'name');
+                        return $gateway->only('id', 'name', 'icon');
                     })
             ]
         );
