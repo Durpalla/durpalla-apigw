@@ -18,6 +18,8 @@ use Modules\Payment\Http\Controllers\PaymentController;
 
 Route::prefix('payment')->group(function() {
     Route::get('/', 'PaymentController@index');
+    // optional
+    Route::get('status', [PaymentController::class, 'paymentStatus'])->name('payment.status');
 });
 
 Route::group(['prefix' => 'bkash'], function () {
@@ -28,6 +30,4 @@ Route::group(['prefix' => 'bkash'], function () {
 
     // optional
     Route::post('refund', [BkashController::class, 'refund'])->name('bkash.refund');
-    // optional
-    Route::get('status', [PaymentController::class, 'paymentStatus'])->name('payment.status');
 });
