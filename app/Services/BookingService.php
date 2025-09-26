@@ -180,7 +180,7 @@ class BookingService
                 collect($bookingItems)->each(function ($item, $k) use ($booking, $customer, $user) {
                     $item['booking_id'] = $booking->id;
                     $item['status'] = ($user->hasAnyRole(['customer', 'agent'])) ? AppConst::BOOKING_ITEM_PENDING : AppConst::BOOKING_ITEM_ACTIVE;
-                    $this->bookingItem->create($item);
+                    $booking->bookingItems()->create($item);
                 });
 
                 $payment = $this->savePayment($booking);
@@ -191,6 +191,8 @@ class BookingService
                 $data['invoice'] = route('invoice.download', $booking->id);
                 $data['trans_id'] = (string) $payment->transaction_id;
                 $data['message'] = 'Your order has been confirmed.';
+                $booking->load(['bookingItems', 'customer']);
+                $data['data'] = $booking->format();
                 if($user->hasRole('supervisor')) {
                     $data['advance'] = (bool)$payment->dues;
                     $data['token'] = [
@@ -223,7 +225,6 @@ class BookingService
             }, 2);
         } catch (\Exception $exception) {
             $data['message'] = $exception->getMessage();
-            dd($exception);
         }
 
         return $data;

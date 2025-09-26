@@ -119,6 +119,16 @@ class BookingItem extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function format(): array
+    {
+        return $this->only(['id', 'booking_type', 'price', 'trip_date', 'booking_date', 'passenger', 'route_name']) +
+            [
+                'vehicle' => $this->vehicle?->only(['id', 'name', 'attachment']),
+                'trip' => $this->trip?->toArray(),
+                'cabin' => $this->item?->only(['id', 'cabin_no', 'fare', 'passenger_capacity', 'type', 'ownership']),
+            ];
+    }
+
     public static function boot() {
         parent::boot();
         static::deleting(function($vehicle) {

@@ -67,7 +67,7 @@ class Booking extends Model
         return $this->hasMany(PaymentCollector::class)->orderBy('created_at', 'ASC');
     }
 
-    public function formatDailyReport()
+    public function formatDailyReport(): array
     {
         return [
             'invoice' => $this->booking->id,
@@ -76,6 +76,17 @@ class Booking extends Model
             'customer_mobile' => $this->booking->customer->mobile,
             'booking_date' => $this->booking->booking_date
         ];
+    }
+
+    public function format(): array
+    {
+        return $this->only(['id', 'status', 'created_at']) +
+            [
+                'customer' => $this->customer->only('id', 'name'),
+                'items' => $this->bookingItems->map(function ($item) {
+                    return $item->format();
+                })
+            ];
     }
 
     public static function boot() {
