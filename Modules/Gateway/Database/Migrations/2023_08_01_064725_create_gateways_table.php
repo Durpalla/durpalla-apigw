@@ -13,15 +13,17 @@ class CreateGatewaysTable extends Migration
      */
     public function up()
     {
-        Schema::create('gateways', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('class_name');
-            $table->foreignId('media_id')->nullable()->constrained()->on('medias');
-            $table->tinyInteger('status')->default(1);
-            $table->timestamps();
-            $table->softDeletesTz();
-        });
+        if(!Schema::hasTable('gateways')) {
+            Schema::create('gateways', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('class_name');
+                $table->foreignId('media_id')->nullable()->constrained()->on('medias');
+                $table->tinyInteger('status')->default(1);
+                $table->timestamps();
+                $table->softDeletesTz();
+            });
+        }
     }
 
     /**
