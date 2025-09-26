@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Payment\Http\Controllers\BkashController;
+use Modules\Payment\Http\Controllers\PaymentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,4 +28,6 @@ Route::group(['prefix' => 'bkash'], function () {
 
     // optional
     Route::post('refund', [BkashController::class, 'refund'])->name('bkash.refund');
+    // optional
+    Route::get('status', [PaymentController::class, 'paymentStatus'])->name('payment.status');
 });
