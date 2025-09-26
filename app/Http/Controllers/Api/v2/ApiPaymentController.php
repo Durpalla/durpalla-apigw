@@ -45,7 +45,7 @@ class ApiPaymentController extends Controller
             $payment->save();
             $data['data']['id'] = $payment->id;
             $data['data']['booking_id'] = $payment->booking_id;
-            $data['data']['transaction_id'] => $payment->transaction_id;
+            $data['data']['transaction_id'] = $payment->transaction_id;
             $gateway = Gateway::find($request->input('gateway_id'));
 
             $gwt = CommonHelper::purseGateway($gateway);
