@@ -2,8 +2,8 @@
 
 namespace Modules\Cart\App\Services;
 
-use App\Helpers\CommonHelper;
 use App\Helpers\LogHelper;
+use App\Models\ScheduleCabinMapping;
 use Illuminate\Http\Request;
 use Modules\Cart\App\Models\Cart;
 use Modules\Cart\App\Models\CartItem;
@@ -30,8 +30,9 @@ class CartService
                 'cookie' => $request->input('guest_unique_id'),
                 'request' => $request->all()
             ]);
-            $product = Product::find($request->product_id);
+            $product = ScheduleCabinMapping::find($request->product_id);
             $priceArr = [
+                'product_id' => $product->cabin_id,
                 'price' => $product->price,
                 'amount' => $request->input('qty', 1) * $product->price,
                 'qty' => $request->input('qty', 1)
@@ -60,7 +61,8 @@ class CartService
             } else {
                 $cart->items()->save(
                     new CartItem(
-                        $request->validated() + $priceArr
+                        $priceArr +
+                        $request->validated()
                     )
                 );
             }

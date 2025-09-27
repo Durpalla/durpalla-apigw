@@ -2,9 +2,9 @@
 
 namespace Modules\Cart\App\Models;
 
+use App\Models\Cabin;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Modules\Product\Entities\Product;
 use Ramsey\Uuid\Uuid;
 
 class CartItem extends Model
@@ -31,7 +31,7 @@ class CartItem extends Model
 
     public function  product(): BelongsTo
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Cabin::class, 'product_id', 'id');
     }
 
     public static function boot()

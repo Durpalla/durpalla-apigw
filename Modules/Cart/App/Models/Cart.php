@@ -3,12 +3,19 @@
 namespace Modules\Cart\App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\Customer\Entities\Customer;
 
 class Cart extends Model
 {
     protected $fillable = ['token', 'customer_id'];
     protected $hidden = ['customer_id'];
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
 
     public function items(): HasMany
     {
@@ -45,7 +52,7 @@ class Cart extends Model
                     'qty' => $item->qty,
                     'price' => $item->product->price,
                     'sub_total' => $item->qty * $item->product->price,
-                    'product' => $item->product->only(['id', 'title', 'price', 'thumbnail'])
+                    'product' => $item->product->format()
                 ];
             })
         ];

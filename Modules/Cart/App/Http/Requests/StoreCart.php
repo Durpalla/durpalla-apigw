@@ -13,8 +13,8 @@ class StoreCart extends FormRequest
     public function rules(): array
     {
         return [
-            'product_id' => ['required', 'integer', 'exists:cabins,id', new CartRule()],
-            'qty' => 'required|integer|min:1|max:10',
+            'product_id' => ['required', 'integer', 'exists:schedule_cabin_mappings,id', new CartRule()],
+            'qty' => 'nullable|integer|min:1|max:10',
             'price' => 'nullable|integer',
             'payload' => 'nullable|array'
         ];
