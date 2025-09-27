@@ -14,4 +14,6 @@ use Modules\Cart\App\Http\Controllers\CartController;
     |
 */
 
-Route::apiResource('cart', CartController::class)->names('api.cart');
+Route::group(['prefix' => 'v2'], function () {
+    Route::apiResource('cart', CartController::class)->names('api.cart');
+});

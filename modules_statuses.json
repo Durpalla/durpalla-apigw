@@ -9,5 +9,6 @@
     "Customer": true,
     "FAQ": true,
     "Gateway": true,
-    "Media": true
+    "Media": true,
+    "Cart": true
 }

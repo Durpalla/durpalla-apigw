@@ -3,6 +3,7 @@
 namespace Modules\Cart\App\Rules;
 
 use App\Helpers\LogHelper;
+use App\Models\Cabin;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Modules\Product\Entities\Product;
@@ -12,9 +13,9 @@ class CartRule implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         try {
-            $product = Product::find($value);
+            $product = Cabin::find($value);
             if(!$product) {
-                $fail('product_id', 'Product not found!');
+                $fail('product_id', 'Cabin not found!');
             }
         } catch (\Exception $exception) {
             LogHelper::exception($exception, [

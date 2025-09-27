@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->uuid('item_id');
             $table->foreignId('cart_id')->constrained();
-            $table->foreignId('product_id')->constrained();
+            $table->foreignId('product_id')->constrained('cabins');
             $table->integer('qty')->default(1);
             $table->float('price', 12, 2)->default(0);
             $table->float('amount', 12, 2)->default(0);

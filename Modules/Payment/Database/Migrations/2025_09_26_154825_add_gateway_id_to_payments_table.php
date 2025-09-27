@@ -25,7 +25,7 @@ return new class extends Migration
     {
         Schema::table('payments', function (Blueprint $table) {
             if(Schema::hasColumn('payments', 'gateway_id')) {
-                $table->dropForeign(['gateway_id']);   // correct way
+                $table->dropForeign(['gateway_id']);
                 $table->dropColumn('gateway_id');
             }
         });
