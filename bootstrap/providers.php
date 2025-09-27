@@ -9,5 +9,6 @@ return [
     \App\Providers\ViewServiceProvider::class,
     ViewComposerServiceProvider::class,
     App\Providers\EventServiceProvider::class,
-    App\Providers\BroadcastServiceProvider::class
+    App\Providers\BroadcastServiceProvider::class,
+    App\Providers\ResponseServiceProvider::class,
 ];
