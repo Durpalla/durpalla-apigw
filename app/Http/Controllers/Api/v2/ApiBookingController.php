@@ -27,7 +27,7 @@ class ApiBookingController extends Controller
         ->where(['customer_id' => Auth::user()->id, 'id' => $id])->first();
 
         if( $booking ) {
-            $data['item'] = $booking;
+            $data['item'] = $booking->format();
             $data['success'] = true;
             $data['message'] = 'Booking found';
         }

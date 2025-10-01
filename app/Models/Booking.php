@@ -85,7 +85,8 @@ class Booking extends Model
                 'customer' => $this->customer->only('id', 'name'),
                 'items' => $this->bookingItems->map(function ($item) {
                     return $item->format();
-                })
+                }),
+                'qr' => $responseArr['qr'] = asset('qrs/' . $this->id . '.png')
             ];
     }
 
