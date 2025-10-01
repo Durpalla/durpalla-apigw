@@ -244,7 +244,7 @@ class MyApiController extends Controller
         return response()->json(['success' => true, 'bookings' => $data ], $this->success );
     }
 
-    public function bookingAndroid( Request $request, $id )
+    public function bookingAndroid( Request $request, $id ): JsonResponse
     {
         $user = Auth::user();
         $booking = Booking::with(['customer', 'bookingItems.trip.route', 'cancellations', 'bookingItems.item.cabinType', 'bookingItems.trip.launch', 'payment'])
@@ -255,6 +255,7 @@ class MyApiController extends Controller
             $responseArr['order_id'] = $booking->id;
             $responseArr['id'] = $booking->id;
             $responseArr['pnr'] = $booking->id;
+            $responseArr['qr_code'] = $booking->payment['transaction_id'];
             $responseArr['qr'] = asset('qrs/' . $booking->id . '.png');
             $responseArr['booking_date'] = date('Y-m-d H:i:s', strtotime( $booking->created_at ) );
             $responseArr['payment_status'] = $booking->payment['status'];
@@ -332,6 +333,7 @@ class MyApiController extends Controller
         if( $booking ) {
             $responseArr['id'] = $booking->id;
             $responseArr['pnr'] = $booking->id;
+            $responseArr['qr_code'] = $booking->payment['transaction_id'];
             $responseArr['qr'] = asset('qrs/' . $booking->id . '.png');
             $responseArr['booking_date'] = date('Y-m-d H:i:s', strtotime( $booking->created_at ) );
             $responseArr['booking_date_formated'] = date('d M, Y h:i A', strtotime( $booking->created_at ) );
