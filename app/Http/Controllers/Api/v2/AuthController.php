@@ -29,11 +29,6 @@ class AuthController extends Controller
         $this->success = 200;
     }
 
-    /**
-     * check the customer exist by mobile.
-     *
-     * @return JsonResponse
-     */
     public function check(Request $request)
     {
         $data = ['success' => false, 'message' => __('Something went wrong. Please try again.')];
@@ -127,11 +122,6 @@ class AuthController extends Controller
         return response()->json($data, $this->success);
     }
 
-    /**
-     * Verify the customer.
-     *
-     * @return JsonResponse
-     */
     public function verify(Request $request)
     {
         $data = ['success' => false, 'message' => __('Cannot verify mobile')];
@@ -177,12 +167,6 @@ class AuthController extends Controller
         return response()->json($data, $this->success);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param Request $request
-     * @return JsonResponse
-     */
     public function register(Request $request): JsonResponse
     {
         $data = ['success' => false, 'message' => __('Cannot register account.')];
@@ -257,11 +241,6 @@ class AuthController extends Controller
         return response()->json($data, $this->success);
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return JsonResponse
-     */
     public function login(Request $request)
     {
         //validation rules
@@ -425,12 +404,6 @@ class AuthController extends Controller
         return (!empty($query)) ? true : false;
     }
 
-    /**
-     * Forgot password.
-     *
-     * @param int $id
-     * @return JsonResponse
-     */
     public function forgot(Request $request)
     {
         $data = ['success' => false, 'message' => __('User account not found')];
@@ -461,11 +434,6 @@ class AuthController extends Controller
         return response()->json($data, $this->success);
     }
 
-    /**
-     * Verify the customer.
-     *
-     * @return JsonResponse
-     */
     public function reset(Request $request)
     {
         $data = ['success' => false, 'message' => __('Cannot verify user')];
@@ -518,12 +486,6 @@ class AuthController extends Controller
         return response()->json($data, $this->success);
     }
 
-    /**
-     * Logout user.
-     *
-     * @param int $id
-     * @return JsonResponse
-     */
     public function logout(Request $request)
     {
         $user = Auth::user();
