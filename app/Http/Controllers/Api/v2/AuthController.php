@@ -136,7 +136,7 @@ class AuthController extends Controller
         if ($validator->fails()) {
             $data['message'] = $validator->errors()->first();
         } else {
-            $otp = UserOtp::where('mobile', $request->mobile)->where('otp_code', $request->otp_code)->first();
+            $otp = UserOtp::where('mobile', $request->mobile)->where('otp_code', $request->otp_code)->latest()->first();
             if ($otp) {
                 if (strtotime($otp->updated_at) < time() - 900) {
                     $data['message'] = 'Your otp code has been expired.';
