@@ -89,7 +89,7 @@ Route::middleware(['JsonResponse'])->group(function () {
             Route::post('/device-id', [MyApiController::class, 'updateDeviceId']);
             Route::get('/profile', [MyApiController::class, 'profile']);
             Route::post('profile/update', [MyApiController::class, 'update']);
-            Route::post('update-profile', [MyApiController::class, 'updateProfile']);
+            Route::put('update-profile', [MyApiController::class, 'updateProfile']);
             Route::post('/email/change', [MyApiController::class, 'changeEmail']);
             Route::post('/mobile/change', [MyApiController::class, 'changeMobile']);
             Route::post('/password/change', [MyApiController::class, 'changePassword']);
