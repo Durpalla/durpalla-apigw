@@ -89,13 +89,14 @@ class AuthController extends Controller
                 }
 
             } else {
-                $code = mt_rand(100000, 999999);
-                if (!App::environment('production')) {
-                    $code = '123456';
+                $code = '123456';
+                if (App::environment('production')) {
+                    $code = mt_rand(100000, 999999);
                 }
                 $otp = UserOtp::firstOrNew(['mobile' => $request->mobile]);
                 $otp->mobile = $request->mobile;
                 $otp->otp_code = $code;
+                $otp->verified = 0;
                 if ($otp) {
                     if (strtotime($otp->updated_at) < (time() - 900)) {
                         $otp->otp_code = $code;
