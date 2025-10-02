@@ -90,11 +90,12 @@ class AuthController extends Controller
 
             } else {
                 $code = mt_rand(100000, 999999);
-                if (App::environment('local')) {
+                if (!App::environment('production')) {
                     $code = '123456';
                 }
                 $otp = UserOtp::firstOrNew(['mobile' => $request->mobile]);
                 $otp->mobile = $request->mobile;
+                $otp->otp_code = $code;
                 if ($otp) {
                     if (strtotime($otp->updated_at) < (time() - 900)) {
                         $otp->otp_code = $code;
@@ -124,7 +125,7 @@ class AuthController extends Controller
 
     public function verify(Request $request)
     {
-        $data = ['success' => false, 'message' => __('Cannot verify mobile')];
+        $data = ['success' => false, 'message' => __('Cannot verify OTP')];
         //validation rules
         $validator = Validator::make($request->all(), [
             'mobile' => 'bail|required|max:14|regex:/^(01){1}[3456789]{1}(\d){8}$/|min:11',
