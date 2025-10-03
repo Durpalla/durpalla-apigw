@@ -73,21 +73,23 @@ class ApiCartController extends Controller
         $data = ['success' => false, 'message' => __('Your item cannot be unlocked')];
         //validation rules
         $validator = Validator::make($request->all(), [
-            'item_id' => 'bail|required|integer',
-            'trip_id' => 'bail|required|integer'
+            'lock_id' => 'bail|required|integer',
+            'item_id' => 'bail|required|integer|exists:schedule_cabin_mappings,id'
         ]);
 
         //validation fails
         if ($validator->fails())
             return response()->json(['success' => false, 'message' => $validator->errors()->first()], $this->success);
 
-        $item = CabinLock::where(['cabin_id' => ( int )$request->item_id, 'trip_id' => (int)$request->trip_id])->first();
+        $item = CabinLock::find($request->input('lock_id'));
 
-        DB::table('schedule_cabin_mappings')->where('id', $request->item_id)->update(['is_locked' => 0]);
         if ($item) {
             $item->delete();
+            if(!$item->mapping->update(['is_locked' => false])) {
+                DB::table('schedule_cabin_mappings')->where('id', $request->item_id)->update(['is_locked' => 0]);
+            }
             $data['success'] = true;
-            $data['index'] = (int)$request->index;
+            $data['index'] = (int) $request->index;
             $data['message'] = __('Your item has been successfully removed');
         } else {
             $data['success'] = true;
