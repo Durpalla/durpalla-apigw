@@ -36,6 +36,13 @@ class ScheduleCabinMapping extends Model
         'booking_id'
     ];
 
+    protected $casts = [
+        'is_locked' => 'boolean',
+        'is_reserved' => 'boolean',
+        'booked' => 'boolean',
+        'is_advance' => 'boolean'
+    ];
+
 	public function schedule(): BelongsTo
     {
 		return $this->belongsTo(VehicleSchedule::class);

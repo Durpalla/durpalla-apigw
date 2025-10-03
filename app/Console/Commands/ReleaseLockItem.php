@@ -42,17 +42,19 @@ class ReleaseLockItem extends Command
     {
         try{
             DB::transaction(function() {
-                $lockTime = getOption('cart_lock_period', 5) * 60;
-                $expiresAt = time() - $lockTime;
-                $items = CabinLock::where('created_at', '<=', date('Y-m-d H:i:s', $expiresAt))->get();
+                $lockTime = getOption('cart_lock_period', 5);
+                $items = CabinLock::where('created_at', '<=', now()->subMinutes($lockTime)->toDateTime())->get();
                 if($items) {
                     $items->each(function($item, $key) {
-                        if($item->mapping_id) {
-                            DB::table('schedule_cabin_mappings')->where('id', $item->mapping_id)->update(['is_locked' => AppConst::BOOKING_ITEM_PENDING]);
+                        $this->info("Releasing lock item {$item->id}");
+                        $item->mapping->update(['is_locked' => 0]);
+                        if($item->mapping->update(['is_locked' => 0])) {
+                            $item->delete();
                         } else {
-                            DB::table('schedule_cabin_mappings')->where(['schedule_id', $item->trip_id, 'cabin_id' => $item->cabin_id])->update(['is_locked' => AppConst::BOOKING_ITEM_PENDING]);
+                            DB::table('schedule_cabin_mappings')->where('id', $item->mapping_id)->update(['is_locked' => 0]);
+                            $item->delete();
                         }
-                        $item->delete();
+                        $this->info("Released lock item {$item->id}");
                     });
                 }
             },3);
