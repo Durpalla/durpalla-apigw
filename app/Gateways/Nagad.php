@@ -129,8 +129,8 @@ class Nagad implements GatewayInterface
         ], JSON_UNESCAPED_SLASHES);
 
         // Encrypt with Nagad PG public key + Sign with Merchant private key
-        $sensitiveData = $this->encryptBase64($plain, $this->credentials['nagad_public_key']);
-        $signature     = $this->signBase64($plain,  $this->credentials['merchant_private_key']);
+        $sensitiveData = $this->encryptBase64($plain, $this->credentials['public_key']);
+        $signature     = $this->signBase64($plain,  $this->credentials['private_key']);
 
         $url = $this->buildUrl($this->credentials['endpoints']['create'], [
             'merchantID' => $merchantId,
@@ -161,10 +161,10 @@ class Nagad implements GatewayInterface
         }
 
         // Decrypt response
-        $respPlain = $this->decryptBase64($js['sensitiveData'], $this->credentials['merchant_private_key']);
+        $respPlain = $this->decryptBase64($js['sensitiveData'], $this->credentials['private_key']);
 
         // Verify signature using Nagad PG public key
-        $verified = $this->verifySignatureBase64($respPlain, $js['signature'], $this->credentials['nagad_public_key']);
+        $verified = $this->verifySignatureBase64($respPlain, $js['signature'], $this->credentials['public_key']);
         if (!$verified) {
             return ['ok' => false, 'message' => 'Signature verification failed'];
         }
@@ -197,8 +197,8 @@ class Nagad implements GatewayInterface
             // 'otherAmount' => ['serviceFee' => '2.56'], // if you use v-3.0.1 and sender fee
         ], JSON_UNESCAPED_SLASHES);
 
-        $sensitiveData = $this->encryptBase64($plain, $this->credentials['nagad_public_key']);
-        $signature     = $this->signBase64($plain,  $this->credentials['merchant_private_key']);
+        $sensitiveData = $this->encryptBase64($plain, $this->credentials['public_key']);
+        $signature     = $this->signBase64($plain,  $this->credentials['private_key']);
 
         $url = $this->buildUrl($this->credentials['endpoints']['execute'], [
             'paymentRefId' => $payment->gateway_trx_id,

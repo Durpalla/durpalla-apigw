@@ -35,8 +35,8 @@ return [
             'client_type' => 'PC_WEB', // MOBILE_APP, etc.
             'merchant_id' => env('NAGAD_SANDBOX_MERCHANT_ID'),
             'merchant_mobile' => env('NAGAD_SANDBOX_MERCHANT_MOBILE'),
-            'merchant_private_key' => env('NAGAD_SANDBOX_PRIVATE_KEY'),
-            'nagad_public_key' => env('NAGAD_SANDBOX_PUBLIC_KEY'),
+            'private_key' => env('NAGAD_SANDBOX_PRIVATE_KEY'),
+            'public_key' => env('NAGAD_SANDBOX_PUBLIC_KEY'),
             'currency_code' => env('NAGAD_SANDBOX_CURRENCY_CODE', '050'),
             'endpoints' => [
                 'create' => env('NAGAD_SANDBOX_ENDPOINT_CREATE'),
