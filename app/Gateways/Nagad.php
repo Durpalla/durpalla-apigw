@@ -20,6 +20,8 @@ class Nagad implements GatewayInterface
         $config = config('gateway.nagad');
         if (is_array($config) && !empty($config['env'])) {
             $this->credentials = $config[$config['env']] ?? [];
+//dd($this->credentials);
+//            dd($this->formatPemKey($this->credentials['private_key'], 'PRIVATE'), $this->formatPemKey($this->credentials['public_key'], 'PUBLIC'));
         }
     }
 
@@ -119,7 +121,9 @@ class Nagad implements GatewayInterface
         $merchantId = $this->credentials['merchant_id'];
         $orderId    = (string) $payment->transaction_id;
         $dateTime   = now()->format('YmdHis'); // yyyyMMddHHmmSS
-        $challenge  = Str::upper(bin2hex(random_bytes(20))); // 40 hex chars
+        $challenge  = "6A9060AF6B1D0ED6B42A9104422F6670B60FCF60B20AD7065DC05DBABD20254E"; // 40 hex chars
+
+//        dd($challenge, $merchantId, $orderId, $dateTime);
 
         $plain = json_encode([
             'merchantId' => $merchantId,
@@ -130,7 +134,8 @@ class Nagad implements GatewayInterface
 
         // Encrypt with Nagad PG public key + Sign with Merchant private key
         $sensitiveData = $this->encryptBase64($plain, $this->credentials['public_key']);
-        $signature     = $this->signBase64($plain,  $this->credentials['private_key']);
+        $signature = $this->signBase64($plain, $this->credentials['private_key']);
+
 
         $url = $this->buildUrl($this->credentials['endpoints']['create'], [
             'merchantID' => $merchantId,
@@ -145,14 +150,18 @@ class Nagad implements GatewayInterface
             'signature'     => $signature,
         ];
 
+//        dd($plain, $payload, $url);
+
         $query = ['locale' => $this->credentials['locale'] ?? 'EN'];
 
         $res = Http::withHeaders($this->baseHeaders())
             ->asJson()
             ->post($url . (empty($query) ? '' : ('?' . http_build_query($query))), $payload);
 
+        dd($res->json());
+
         if (!$res->successful()) {
-            return ['ok' => false, 'message' => 'Initialization request failed'];
+            return ['ok' => false, 'message' => 'Initialization request failed', 'response' => $res->json()];
         }
 
         $js = $res->json();
