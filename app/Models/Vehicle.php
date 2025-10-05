@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\User;
-use Venturecraft\Revisionable\RevisionableTrait;
+
 
 class Vehicle extends Model
 {
-    use SoftDeletes, RevisionableTrait;
+    use SoftDeletes;
     protected $fillable = [
         'user_id',
         'merchant_id',

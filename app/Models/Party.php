@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use App\Models\User;
-use Venturecraft\Revisionable\RevisionableTrait;
+
 
 class Party extends Model
 {
-    use RevisionableTrait;
+
     protected $fillable = [
         'name',
         'description',

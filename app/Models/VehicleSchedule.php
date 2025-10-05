@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\User;
-use Venturecraft\Revisionable\RevisionableTrait;
+
 
 class VehicleSchedule extends Model
 {
-    use SoftDeletes, RevisionableTrait;
+    use SoftDeletes;
     protected $fillable = [
         'route_id',
         'vehicle_id',

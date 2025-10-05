@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\User;
-use Venturecraft\Revisionable\RevisionableTrait;
+
 
 class Merchant extends Model
 {
-    use SoftDeletes, RevisionableTrait;
+    use SoftDeletes;
     protected $fillable = ['vat_visibility'];
     public function user()
     {

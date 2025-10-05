@@ -2,39 +2,44 @@
 
 namespace App\Http\Controllers\Api\v1;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use App\Models\ActivityLog;
 use App\Models\Booking;
 use App\Models\BookingCancellation;
 use App\Models\BookingItem;
+use App\Http\Controllers\Controller;
 use App\Models\Vehicle;
 use App\Notifications\ProfileUpdate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use Image;
+use App\Services\SupervisorService;
 
 class MyApiController extends Controller
 {
     private $status;
     private $success;
+    private $supervisor;
 
-    public function __construct(){
+    public function __construct(SupervisorService $supervisorService){
+        $this->supervisor = $supervisorService;
         $this->status = 200;
         $this->success = 200;
-        $this->middleware('auth:api');
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function profile()
     {
         $user = Auth::user();
+        if($user->hasRole('customer') && $user->meta && $user->meta['nid_no']) {
+            $user->nid = [
+                'nid_no' => $user->meta['nid_no'],
+                'front' => ($user->meta['nid_photo']) ? asset('nid/' . $user->meta['nid_photo']) : '',
+                'back' => ($user->meta['nid_back_side']) ? asset('nid/' . $user->meta['nid_back_side']) : ''
+            ];
+        }
         return response()->json(['success' => true, 'user' => $user ], $this->success );
     }
 
@@ -55,12 +60,7 @@ class MyApiController extends Controller
         }
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function bookings( Request $request )
+    public function getBookings( Request $request )
     {
         $user = Auth::user();
         $query = Booking::with(['bookingItems.trip.route', 'cancellations', 'bookingItems.item.cabinType', 'bookingItems.trip.launch', 'payment'])
@@ -78,7 +78,7 @@ class MyApiController extends Controller
 
         $bookings = $query->paginate(15);
 
-        $responseArr = ['recent' => [], 'history' => []];
+        $responseArr = [];
         $recentDate = '';
         foreach( $bookings as $key => $booking ) {
             if( $key == 0 ) {
@@ -97,7 +97,9 @@ class MyApiController extends Controller
             $row['total_payable'] = round(($booking->total_amount + $booking->vat_total + $booking->charge_total - $booking->total_discount), 2);
             $row['items'] = [];
             $row['cancellable'] = false;
+            $row['downloadable'] = false;
             $row['status'] = $booking->status;
+            $row['total_dues'] = $booking->payment['dues'];
 
             $cancellations = [];
             if( $booking->cancellations ) {
@@ -112,9 +114,9 @@ class MyApiController extends Controller
                     'cabin_id' => $item['cabin_id'],
                     'cabin_no' => ( $item['cabin_type'] != 'deck' && $item['item']) ? $item['item']['cabinType']['letter'] . '-' . $item['item']['cabin_no'] : '',
                     'cabin_type' => $item['booking_type'],
-                    'cabin_fare' => $item['price'],
+                    'fare' => $item['price'],
                     'is_ac' => ( $item['cabin_type'] != 'deck' && $item['item']) ? $item['item']['cabinType']['is_ac'] : 0,
-                    'launch_name' => ($item['trip'] && $item['trip']['launch']) ? $item['trip']['launch']['name'] : '',
+                    'vehicle_name' => ($item['trip'] && $item['trip']['launch']) ? $item['trip']['launch']['name'] : '',
                     'route_name' => ($item['trip'] && $item['trip']['route']) ? $item['trip']['route']['route_name'] : '',
                     'schedule_date' => $item['trip_date'],
                     'leaving_time' => ($item['trip']) ? $item['trip']['leaving_at'] : date('Y-m-d H:i:s', 0),
@@ -130,15 +132,13 @@ class MyApiController extends Controller
                 array_push($row['items'], $irow);
                 if( $item['status'] == 1 && $item['trip_date'] >= date('Y-m-d') ) {
                     $row['cancellable'] = true;
+                    $row['downloadable'] = true;
                 }
             }
             if( !getOption('is_cancellation_enabled') ) {
                 $row['cancellable'] = false;
             }
-            if( date('Y-m-d', strtotime( $booking->created_at ) ) == $recentDate ) {
-                array_push($responseArr['recent'], $row);
-            }
-            array_push($responseArr['history'], $row);
+            $responseArr[] = $row;
         }
 
         // return $responseArr;
@@ -147,22 +147,115 @@ class MyApiController extends Controller
             'total' => $bookings->total(),
             'per_page' => 10,
             'last_page' => $bookings->lastPage(),
-            'current_page' => $request->page,
+            'current_page' => $request->page ?? 1,
             'data' => $responseArr
         ];
         return response()->json(['success' => true, 'bookings' => $data ], $this->success );
     }
 
-    public function bookingAndroid( Request $request, $id )
+    /**
+     * Display a listing of the resource.
+     *
+     * @return JsonResponse
+     */
+    public function bookings( Request $request )
     {
         $user = Auth::user();
-        $booking = Booking::with(['bookingItems.trip.route', 'cancellations', 'bookingItems.item.cabinType', 'bookingItems.trip.launch', 'payment'])
+        $query = Booking::with(['bookingItems.trip.route', 'cancellations', 'bookingItems.item.cabinType', 'bookingItems.trip.launch', 'payment'])
+            ->where('customer_id', $user->id)->orderBy('created_at', 'desc');
+
+        if( $request->date_from ) {
+            $date = \DateTime::createFromFormat('Y-m-d', $request->date_from);
+            $query->where('booking_date', '>=', $date->format('Y-m-d'));
+        }
+
+        if( $request->date_to ) {
+            $date = \DateTime::createFromFormat('Y-m-d', $request->date_to);
+            $query->where('booking_date', '<=', $date->format('Y-m-d'));
+        }
+
+        $bookings = $query->paginate(10);
+
+        $responseArr = [];
+        foreach( $bookings as $key => $booking ) {
+            $row['id'] = $booking->id;
+            $row['pnr'] = $booking->id;
+            $row['booking_date'] = date('Y-m-d H:i:s', strtotime( $booking->created_at ) );
+            $row['booking_date_formated'] = date('d M, Y h:i A', strtotime( $booking->created_at ) );
+            $row['payment_status'] = $booking->payment['status'];
+            $row['transaction_id'] = $booking->payment['transaction_id'];
+            $row['total_amount'] = round($booking->total_amount, 2);
+            $row['total_discount'] = round($booking->total_discount, 2);
+            $row['vat_total'] = round($booking->vat_total, 2);
+            $row['charge_total'] = round($booking->charge_total, 2);
+            $row['total_payable'] = round(($booking->total_amount + $booking->vat_total + $booking->charge_total - $booking->total_discount), 2);
+            $row['items'] = [];
+            $row['cancellable'] = false;
+            $row['downloadable'] = false;
+            $row['status'] = $booking->status;
+
+            $cancellations = [];
+            if( $booking->cancellations ) {
+                foreach( $booking->cancellations as $cancellation ) {
+                    $cancellations = array_merge_recursive( $cancellations, explode(',', $cancellation->items) );
+                }
+            }
+
+            foreach( $booking->bookingItems as $item ) {
+                $irow = [
+                    'id' => $item['id'],
+                    'cabin_id' => $item['cabin_id'],
+                    'cabin_no' => ( $item['cabin_type'] != 'deck' && $item['item']) ? $item['item']['cabinType']['letter'] . '-' . $item['item']['cabin_no'] : '',
+                    'cabin_type' => $item['booking_type'],
+                    'fare' => $item['price'],
+                    'is_ac' => ( $item['cabin_type'] != 'deck' && $item['item']) ? $item['item']['cabinType']['is_ac'] : 0,
+                    'vehicle_name' => ($item['trip'] && $item['trip']['launch']) ? $item['trip']['launch']['name'] : '',
+                    'route_name' => ($item['trip'] && $item['trip']['route']) ? $item['trip']['route']['route_name'] : '',
+                    'schedule_date' => $item['trip_date'],
+                    'leaving_time' => ($item['trip']) ? $item['trip']['leaving_at'] : date('Y-m-d H:i:s', 0),
+                    'leaving_time_formated' => ($item['trip']) ? date('h:i A', strtotime($item['trip']['leaving_at'])) : '',
+                    'boarding_point' => json_decode($item['boarding_point']),
+                    'passenger' => json_decode($item['passenger']),
+                    'status' => $item['status'],
+                    'cancellable' => ($item['trip_date'] >= date('Y-m-d')) ? (( in_array($item['id'], $cancellations) ) ? false : true) : false
+                ];
+                if($item['trip'] && $item['trip']['schedule_type'] == 'reverse' ) {
+                    $irow['route_name'] = $item['trip']['endingPoint']['ghat']['name'] . ' - ' . $item['trip']['startingPoint']['ghat']['name'];
+                }
+                array_push($row['items'], $irow);
+                if( $item['status'] == 1 && $item['trip_date'] >= date('Y-m-d') ) {
+                    $row['cancellable'] = true;
+                    $row['downloadable'] = true;
+                }
+            }
+            if( !getOption('is_cancellation_enabled') ) {
+                $row['cancellable'] = false;
+            }
+            $responseArr[] = $row;
+        }
+
+        $data = [
+            'total' => $bookings->total(),
+            'per_page' => 10,
+            'last_page' => $bookings->lastPage(),
+            'current_page' => $request->page ?? 1,
+            'data' => $responseArr
+        ];
+        return response()->json(['success' => true, 'bookings' => $data ], $this->success );
+    }
+
+    public function bookingAndroid( Request $request, $id ): JsonResponse
+    {
+        $user = Auth::user();
+        $booking = Booking::with(['customer', 'bookingItems.trip.route', 'cancellations', 'bookingItems.item.cabinType', 'bookingItems.trip.launch', 'payment'])
             ->where('customer_id', $user->id)->orderBy('booking_date', 'desc')->findOrFail($id);
 
         $responseArr = [];
         if( $booking ) {
+            $responseArr['order_id'] = $booking->id;
             $responseArr['id'] = $booking->id;
             $responseArr['pnr'] = $booking->id;
+            $responseArr['qr_code'] = $booking->payment['transaction_id'];
             $responseArr['qr'] = asset('qrs/' . $booking->id . '.png');
             $responseArr['booking_date'] = date('Y-m-d H:i:s', strtotime( $booking->created_at ) );
             $responseArr['payment_status'] = $booking->payment['status'];
@@ -178,6 +271,11 @@ class MyApiController extends Controller
             $responseArr['cancellable'] = false;
             $responseArr['status'] = $booking->status;
             $responseArr['items'] = [];
+            $responseArr['customer'] = [
+                'id' => $booking->customer_id,
+                'name' => $booking->customer['name'],
+                'mobile' => $booking->customer['mobile']
+            ];
 
             $cancellations = [];
             if( $booking->cancellations ) {
@@ -193,11 +291,11 @@ class MyApiController extends Controller
                     'id' => $item['id'],
                     'cabin_no' => ( $item['item'] ) ? $item['item']['cabinType']['letter'] . '-' . $item['item']['cabin_no'] : '',
                     'cabin_type' => $item['booking_type'],
-                    'cabin_fare' => $item['price'],
+                    'fare' => $item['price'],
                     'cabin_position' => $item['cabin_position'],
                     'discount' => $item['discount'],
                     'is_ac' => ($item['item']) ? $item['item']['cabinType']['is_ac'] : null,
-                    'launch_name' => $item['trip']['launch']['name'],
+                    'vehicle_name' => $item['trip']['launch']['name'],
                     'route_name' => $item['trip']['route']['route_name'],
                     'schedule_date' => date('d F Y', strtotime( $item['trip_date'] ) ),
                     'leaving_time' => $item['trip']['leaving_at'],
@@ -235,6 +333,7 @@ class MyApiController extends Controller
         if( $booking ) {
             $responseArr['id'] = $booking->id;
             $responseArr['pnr'] = $booking->id;
+            $responseArr['qr_code'] = $booking->payment['transaction_id'];
             $responseArr['qr'] = asset('qrs/' . $booking->id . '.png');
             $responseArr['booking_date'] = date('Y-m-d H:i:s', strtotime( $booking->created_at ) );
             $responseArr['booking_date_formated'] = date('d M, Y h:i A', strtotime( $booking->created_at ) );
@@ -245,6 +344,7 @@ class MyApiController extends Controller
             $responseArr['vat_total'] = $booking->vat_total;
             $responseArr['charge_amount'] = $booking->charge_amount;
             $responseArr['charge_total'] = $booking->charge_total;
+            $responseArr['total_dues'] = $booking->payment['dues'];
             $responseArr['total_payable'] = number_format(($booking->total_amount + $booking->vat_total + $booking->charge_total - $booking->total_discount),2);
             $responseArr['payment'] = $booking->payment;
             $responseArr['cancellable'] = false;
@@ -268,7 +368,7 @@ class MyApiController extends Controller
                     'cabin_position' => $item['cabin_position'],
                     'discount' => $item['discount'],
                     'is_ac' => ($item['item']) ? $item['item']['cabinType']['is_ac'] : null,
-                    'launch_name' => $item['trip']['launch']['name'],
+                    'vehicle_name' => $item['trip']['launch']['name'],
                     'route_name' => $item['trip']['route']['route_name'],
                     'schedule_date' => date('d F Y', strtotime( $item['trip_date'] ) ),
                     'leaving_time' => $item['trip']['leaving_at'],
@@ -329,13 +429,13 @@ class MyApiController extends Controller
             ->map(function($launch, $key) {
                 $nearestTrip = collect($launch->activeTrips)->first();
                 return [
-                    'launch_id' => $launch->id,
+                    'vehicle_id' => $launch->id,
                     'trip_id' => $nearestTrip->id,
                     'trip_date' => $nearestTrip->schedule_date,
                     'leaving_at' => date('Y-m-d H:i:s', strtotime($nearestTrip->leaving_at)),
                     'total_booked' => $launch->booking_items_count,
-                    'launch_name' => $launch->name,
-                    'launch_photo' => ($launch->photo) ? asset('vehicles/'. $launch->photo) : asset('default/launch.png')
+                    'vehicle_name' => $launch->name,
+                    'vehicle_photo' => ($launch->photo) ? asset('vehicles/'. $launch->photo) : asset('default/launch.png')
                 ];
             });
         return response()->json(['success' => true, 'vehicles' => $vehicles, 'message' => ''], $this->success);
@@ -402,7 +502,7 @@ class MyApiController extends Controller
             ->where('id', $request->id)
             ->update(['read_at' => now()]);
 
-        return response()->json( ['success' => true, 'message' => 'Notification has been marked as read'], $this->success );
+        return response()->json( ['success' => true, 'message' => __('Notification has been marked as read')], $this->success );
     }
 
     public function readAllNotification( Request $request )
@@ -412,7 +512,7 @@ class MyApiController extends Controller
         return response()->json( ['success' => true, 'message' => 'All unread notifications maked as read'], $this->success );
     }
 
-    public function cancellations(Request $request )
+    public function cancellations(Request $request ): JsonResponse
     {
         $user = Auth::user();
         $query = BookingCancellation::with(['bookingItems.launch', 'booking', 'bookingItems.trip.route', 'bookingItems.item.cabinType', 'bookingItems.trip.launch'])
@@ -459,9 +559,9 @@ class MyApiController extends Controller
                         'cabin_id' => $item['cabin_id'],
                         'cabin_no' => ( $item['cabin_type'] != 'deck' && $item['item']) ? $item['item']['cabinType']['letter'] . '-' . $item['item']['cabin_no'] : '',
                         'cabin_type' => $item['booking_type'],
-                        'cabin_fare' => $item['price'],
+                        'fare' => $item['price'],
                         'is_ac' => ( $item['cabin_type'] != 'deck' && $item['item']) ? $item['item']['cabinType']['is_ac'] : 0,
-                        'launch_name' => $item['trip']['launch']['name'],
+                        'vehicle_name' => $item['trip']['launch']['name'],
                         'route_name' => $item['trip']['route']['route_name'],
                         'schedule_date' => $item['trip_date'],
                         'leaving_time' => $item['trip']['leaving_at'],
@@ -520,7 +620,7 @@ class MyApiController extends Controller
 
     public function cancelBooking( Request $request )
     {
-        $data = ['success' => false, 'message' => 'Your request not success'];
+        $data = ['success' => false, 'message' => __('Your request not success')];
 
         //validation rules
         $validator = Validator::make($request->all(), [
@@ -551,7 +651,7 @@ class MyApiController extends Controller
                 DB::commit();
                 $data['success'] = true;
                 $data['label'] = 'success';
-                $data['content'] = 'Your cancellation request has been sent successfully.';
+                $data['content'] = __('Your cancellation request has been sent successfully.');
             } catch( \Exception $e ) {
                 DB::rollback();
 //                Log::debug($e->getMessage() );
@@ -564,7 +664,7 @@ class MyApiController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
     public function journey( Request $request )
     {
@@ -580,8 +680,8 @@ class MyApiController extends Controller
                     'route_name' => $journey->trip['route']['route_name'],
                     'booking_type' => $journey->booking_type,
                     'booking_fare' => $journey->price,
-                    'launch_name' => $journey->trip['launch']['name'],
-                    'launch_id' => $journey->trip['vehicle_id']
+                    'vehicle_name' => $journey->trip['launch']['name'],
+                    'vehicle_id' => $journey->trip['vehicle_id']
                 ];
             }
 
@@ -607,7 +707,7 @@ class MyApiController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
     public function viewJourney( Request $request, $id )
     {
@@ -619,7 +719,7 @@ class MyApiController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
     public function updateProfile(Request $request)
     {
@@ -642,9 +742,9 @@ class MyApiController extends Controller
 
         if( $user->save() ) {
             $user->notify(new ProfileUpdate());
-            return response()->json(['success'=> true, 'user' => ['name' => $user->name, 'mobile' => $user->mobile, 'email' => $user->email], 'message' => 'Profile successfully updated'], $this->success );
+            return response()->json(['success'=> true, 'user' => ['name' => $user->name, 'mobile' => $user->mobile, 'email' => $user->email], 'message' => __('Profile successfully updated')], $this->success );
         } else {
-            return response()->json(['success'=> false, 'message' => 'Ops! something went wrong.'], $this->success );
+            return response()->json(['success'=> false, 'message' => __('Ops! something went wrong.')], $this->success );
         }
     }
 
@@ -653,7 +753,7 @@ class MyApiController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
     public function update(Request $request)
     {
@@ -672,16 +772,16 @@ class MyApiController extends Controller
 
         if( $user->save() ) {
             $user->notify(new ProfileUpdate());
-            return response()->json(['success'=> true, 'name' => $user->name, 'message' => 'Profile successfully updated'], $this->success );
+            return response()->json(['success'=> true, 'name' => $user->name, 'message' => __('Profile successfully updated')], $this->success );
         } else {
-            return response()->json(['success'=> false, 'message' => 'Ops! something went wrong.'], $this->success );
+            return response()->json(['success'=> false, 'message' => __('Ops! something went wrong.')], $this->success );
         }
     }
 
     //change email
     public function changeEmail(Request $request)
     {
-        $data = ['success' => false, 'message' => 'Cannot change email'];
+        $data = ['success' => false, 'message' => __('Cannot change email')];
         //validation rules
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|unique:users,email,' . Auth::user()->id
@@ -699,9 +799,9 @@ class MyApiController extends Controller
                 $user->notify(new ProfileUpdate());
                 $data['email'] = $user->email;
                 $data['success'] = true;
-                $data['message'] = 'Email successfully changed';
+                $data['message'] = __('Email successfully changed');
             } else {
-                $data['message'] = 'Ops! something went wrong.';
+                $data['message'] = __('Ops! something went wrong.');
             }
         }
 
@@ -711,7 +811,7 @@ class MyApiController extends Controller
     //change email
     public function changeMobile(Request $request)
     {
-        $data = ['success' => false, 'message' => 'Cannot change mobile'];
+        $data = ['success' => false, 'message' => __('Cannot change mobile')];
         //validation rules
         $validator = Validator::make($request->all(), [
             'mobile' => 'required|max:14|regex:/^(01){1}[3456789]{1}(\d){8}$/|min:11|unique:users,mobile,' . Auth::user()->id
@@ -729,9 +829,9 @@ class MyApiController extends Controller
                 $user->notify(new ProfileUpdate());
                 $data['mobile'] = $user->mobile;
                 $data['success'] = true;
-                $data['message'] = 'Mobile successfully changed';
+                $data['message'] = __('Mobile successfully changed');
             } else {
-                $data['message'] = 'Ops! something went wrong.';
+                $data['message'] = __('Ops! something went wrong.');
             }
         }
 
@@ -741,7 +841,7 @@ class MyApiController extends Controller
     //change password
     public function changePassword(Request $request)
     {
-        $data = ['success' => false, 'message' => 'Cannot change password'];
+        $data = ['success' => false, 'message' => __('Cannot change password')];
         //validation rules
         $validator = Validator::make($request->all(), [
             'password' => 'required|max:14|min:6',
@@ -758,9 +858,9 @@ class MyApiController extends Controller
 
             if( $user->save() ) {
                 $data['success'] = true;
-                $data['message'] = 'Password successfully changed';
+                $data['message'] = __('Password successfully changed');
             } else {
-                $data['message'] = 'Ops! something went wrong.';
+                $data['message'] = __('Ops! something went wrong.');
             }
         }
 
@@ -792,9 +892,9 @@ class MyApiController extends Controller
         $user->profile_pic = "uploads/avatar/" . $filename;
 
         if( $user->save() ) :
-            return response()->json(['success' => true, 'avatar' => asset( "uploads/avatar/" . $filename ), 'message' => 'Your profile picture successfully uploaded'], $this->success);
+            return response()->json(['success' => true, 'avatar' => asset( "uploads/avatar/" . $filename ), 'message' => __('Your profile picture successfully uploaded')], $this->success);
         else :
-            return response()->json(['success' => false, 'message' => 'Sorr! upload fail.' ] );
+            return response()->json(['success' => false, 'message' => __('Sorry! upload fail.') ] );
         endif;
     }
 
@@ -823,9 +923,16 @@ class MyApiController extends Controller
         }
 
         if( $user->save() ) :
-            return response()->json(['success' => true, 'avatar' => asset( $user->profile_pic ), 'message' => 'Your profile picture successfully uploaded'], $this->success);
+            return response()->json(['success' => true, 'avatar' => asset( $user->profile_pic ), 'message' => __('Your profile picture successfully uploaded')], $this->success);
         else :
-            return response()->json(['success' => false, 'message' => 'Sorry! upload fail.' ] );
+            return response()->json(['success' => false, 'message' => __('Sorry! upload fail.') ] );
         endif;
+    }
+
+    public function wallet(Request $request): JsonResponse
+    {
+        $wallet = $this->supervisor->getWallet($request->all());
+
+        return response()->json(['success' => true, 'data' => $wallet], $this->success);
     }
 }

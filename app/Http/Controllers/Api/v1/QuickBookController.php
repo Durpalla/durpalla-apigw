@@ -3,37 +3,39 @@
 namespace App\Http\Controllers\Api\v1;
 
 use App\Constants\AppConst;
-use App\Events\UserCreated;
-use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use App\Models\Booking;
 use App\Models\BookingItem;
 use App\Models\Cabin;
 use App\Models\CabinLock;
-use App\Models\CabinType;
 use App\Models\DeckFare;
-use App\Models\Payment;
-use App\Models\PaymentCollector;
-use App\Models\ScanLog;
-use App\Models\TicketPrint;
-use App\Models\User;
+use App\Http\Controllers\Controller;
+use App\Services\TripService;
 use App\Models\VehicleRoute;
 use App\Models\VehicleSchedule;
+use App\Models\PaymentCollector;
+use App\Models\ScanLog;
 use App\Services\CalculationService;
+use App\Models\TicketPrint;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use App\Models\Payment;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
-use Spatie\Permission\Models\Role;
+use App\Models\User;
 
 class QuickBookController extends Controller
 {
     private $calculation;
-    public function __construct( CalculationService $calculationService)
+    private $trip;
+
+    public function __construct(
+        CalculationService $calculationService,
+        TripService $tripService
+    )
     {
         $this->calculation = $calculationService;
+        $this->trip = $tripService;
         $this->status = 200;
         $this->success = 200;
         $this->middleware('auth:api');
@@ -41,7 +43,7 @@ class QuickBookController extends Controller
 
     public function findBookings(Request $request)
     {
-        $data = ['success' => false, 'bookings' => [], 'message' => 'Nothing found'];
+        $data = ['success' => false, 'bookings' => [], 'message' => __('Nothing found')];
         $validator = Validator::make($request->all(), [
             'props' => 'required|string'
         ]);
@@ -49,6 +51,7 @@ class QuickBookController extends Controller
         if ($validator->fails() == True) {
             $data['message'] = $validator->errors()->first();
         } else {
+            $user = User::with(['meta', 'roles'])->find(auth()->user()->id);
             $bookings = Booking::with(['customer', 'payment', 'bookingItems.item.cabinType', 'bookingItems.launch', 'bookingItems.trip.startingPoint.ghat', 'bookingItems.trip.endingPoint.ghat', 'collections']);
             $singleTicket = false;
             $ticketID = '';
@@ -100,7 +103,7 @@ class QuickBookController extends Controller
                                 'total_discount' => $this->calculation->calculateItemDiscount($item->toArray()),
                                 'total_amount' => $this->calculation->calculateItemTotal($item->toArray()),
                                 'is_ac' => ($item['item']) ? $item['item']['cabinType']['is_ac'] : '',
-                                'launch_name' => $item['trip']['launch']['name'],
+                                'vehicle_name' => $item['trip']['launch']['name'],
                                 'route_name' => $item['trip']['route']['route_name'],
                                 'schedule_date' => date('d F Y', strtotime($item['trip_date'])),
                                 'leaving_time' => $item['trip']['leaving_at'],
@@ -150,6 +153,14 @@ class QuickBookController extends Controller
                                 }
                             });
                         }
+                        $nid = null;
+                        if($booking->customer['meta'] && $booking->customer['meta']['nid_no'] && $user->meta && $user->meta['nid_visible_until'] >= now()) {
+                            $nid = [
+                                'nid_no' => $booking->customer['meta']['nid_no'],
+                                'front' => ($booking->customer['meta']['nid_photo']) ? asset('nid/' . $booking->customer['meta']['nid_photo']) : '',
+                                'back' => ($booking->customer['meta']['nid_back_side']) ? asset('nid/' . $booking->customer['meta']['nid_back_side']) : ''
+                            ];
+                        }
                         array_push($responseArr, [
                             'id' => $booking->id,
                             'pnr' => $booking->id,
@@ -162,14 +173,15 @@ class QuickBookController extends Controller
                             'status' => $booking->status,
                             'dues' => $dues,
                             'validity' => $validity,
-                            'items' => $items
+                            'items' => $items,
+                            'nid' => $nid
                         ]);
                     }
                 }
 
                 $data['bookings'] = ($responseArr) ? $responseArr : null;
                 $data['ticket'] = ($ticket) ? $ticket : null;
-                $data['message'] = 'Booking found';
+                $data['message'] = __('Booking found');
                 $data['success'] = true;
             } else {
                 $data['bookings'] = null;
@@ -244,7 +256,7 @@ class QuickBookController extends Controller
                                 'total_discount' => $this->calculation->calculateItemDiscount($item->toArray()),
                                 'total_amount' => $this->calculation->calculateItemTotal($item->toArray()),
                                 'is_ac' => ($item['item']) ? $item['item']['cabinType']['is_ac'] : '',
-                                'launch_name' => $item['trip']['launch']['name'],
+                                'vehicle_name' => $item['trip']['launch']['name'],
                                 'route_name' => $item['trip']['route']['route_name'],
                                 'schedule_date' => date('d F Y', strtotime($item['trip_date'])),
                                 'leaving_time' => $item['trip']['leaving_at'],
@@ -324,7 +336,7 @@ class QuickBookController extends Controller
                                 'total_amount' => $this->calculation->calculateItemTotal($item->toArray()),
                                 'discount' => $item['discount'],
                                 'is_ac' => ($item['item']) ? $item['item']['cabinType']['is_ac'] : '',
-                                'launch_name' => $item['trip']['launch']['name'],
+                                'vehicle_name' => $item['trip']['launch']['name'],
                                 'route_name' => $item['trip']['route']['route_name'],
                                 'schedule_date' => date('d F Y', strtotime($item['trip_date'])),
                                 'leaving_time' => $item['trip']['leaving_at'],
@@ -362,16 +374,16 @@ class QuickBookController extends Controller
                         }
                     }
                     $data['booking'] = ($responseArr) ? $responseArr : null;
-                    $data['message'] = 'Booking found';
+                    $data['message'] = __('Booking found');
                     $data['success'] = true;
                     $data['ticket'] = ($ticket) ? $ticket : null;
                 } else {
-                    $data['message'] = 'Nothing found';
+                    $data['message'] = __('Nothing found');
                     $data['booking'] = null;
                     $data['ticket'] = null;
                 }
             } else {
-                $data['message'] = 'Nothing found';
+                $data['message'] = __('Nothing found');
                 $data['booking'] = null;
                 $data['ticket'] = null;
             }
@@ -382,7 +394,7 @@ class QuickBookController extends Controller
 
     public function getBookingByID(Request $request, int $booking_id)
     {
-        $data = ['success' => true, 'booking' => ['items' => []], 'message' => 'Booking not found'];
+        $data = ['success' => true, 'booking' => ['items' => []], 'message' => __('Booking not found')];
 
         $booking = Booking::with(['customer', 'payment', 'bookingItems.item.cabinType', 'bookingItems.trip', 'bookingItems.launch.merchant'])->find($booking_id);
 
@@ -415,8 +427,8 @@ class QuickBookController extends Controller
                     'total_charge' => $this->calculation->calculateItemCharge($bookingItem->toArray()),
                     'total_discount' => $this->calculation->calculateItemDiscount($bookingItem->toArray()),
                     'total_amount' => $this->calculation->calculateItemTotal($bookingItem->toArray()),
-                    'launch_id' => $bookingItem->vehicle_id,
-                    'launch_name' => $bookingItem->launch->name,
+                    'vehicle_id' => $bookingItem->vehicle_id,
+                    'vehicle_name' => $bookingItem->launch->name,
                     'status' => $bookingItem->status,
                     'trip_date' => date('Y-m-d H:i:s', strtotime($bookingItem->trip->leaving_at)),
                     'trip_id' => $bookingItem->trip_id,
@@ -440,7 +452,7 @@ class QuickBookController extends Controller
 
     public function printAll(Request $request)
     {
-        $data = ['success' => false, 'message' => 'Cannot handle request'];
+        $data = ['success' => false, 'message' => __('Cannot handle request')];
         $validator = Validator::make($request->all(), [
             'booking_id' => 'bail|required|numeric|exists:bookings,id',
             'items' => 'bail|nullable'
@@ -459,7 +471,7 @@ class QuickBookController extends Controller
                         'printed' => +1
                     ]);
                 $data['success'] = true;
-                $data['message'] = 'All items printed';
+                $data['message'] = __('All items printed');
             }
         }
         return response()->json($data, $this->success);
@@ -487,10 +499,10 @@ class QuickBookController extends Controller
                         'supervisor_id' => Auth::user()->id
                     ]);
                     $data['success'] = true;
-                    $data['message'] = 'Ticket print confirmed';
+                    $data['message'] = __('Ticket print confirmed');
                 }
             } else {
-                $data['message'] = 'Ticket not printable';
+                $data['message'] = __('Ticket not printable');
             }
         }
 
@@ -519,9 +531,9 @@ class QuickBookController extends Controller
                     'message' => 'Your otp code is ' . $code
                 ]);
                 $data['success'] = true;
-                $data['message'] = 'An OTP sent to customers mobile';
+                $data['message'] = __('An OTP sent to customers mobile');
             } else {
-                $data['message'] = 'Ticket not printable';
+                $data['message'] = __('Ticket not printable');
             }
         }
 
@@ -551,9 +563,9 @@ class QuickBookController extends Controller
                     'supervisor_id' => Auth::user()->id
                 ]);
                 $data['success'] = true;
-                $data['message'] = 'Reprint confirmed';
+                $data['message'] = __('Reprint confirmed');
             } else {
-                $data['message'] = 'Your otp code is not valid';
+                $data['message'] = __('Your otp code is not valid');
             }
         }
 
@@ -595,310 +607,27 @@ class QuickBookController extends Controller
 
         $results = $query->orderBy('schedule_date', 'asc')->get();
 
-        $returnArray = [];
+        $trips = $results->map(function($trip, $key) {
+            return $this->trip->formatTripList($trip);
+        });
 
-        if ($results) {
-            $startTime = date('Y-m-d H:i:s', strtotime('-24 hour'));
-            $endTime = date('Y-m-d H:i:s', strtotime('+24 hour'));
-            $currentTime = time();
-            foreach ($results as $result) {
-                $validity = 'invalid';
-                if(strtotime($result->leaving_at) <= $currentTime && (strtotime($result->leaving_at) + ($result->operation_hour * 60*60)) >= $currentTime) {
-                    $validity = 'valid';
-                }
-//                if ($result->leaving_at >= $startTime && $result->leaving_at <= $endTime) {
-                    $row['trip_id'] = $result->id;
-                    $row['route_id'] = $result->route_id;
-                    $row['route_name'] = $result->route['route_name'];
-                    $routeArr = explode('-', $result->route['route_name']);
-                    if ($result->schedule_type == 'reverse' && (count($routeArr) > 1)) {
-                        $row['route_name'] = $routeArr[1] . '-' . $routeArr[0];
-                    }
-                    $row['launch_id'] = $result->vehicle_id;
-                    $row['launch_name'] = $result->launch['name'];
-                    $row['launch_photo'] = $result->launch['photo'];
-                    $row['schedule_date'] = $result->schedule_date;
-                    $row['schedule_type'] = $result->schedule_type;
-                    $row['leaving_at'] = date('Y-m-d H:i:s', strtotime($result->leaving_at));
-                    $row['leaving_time'] = date('h:i A', strtotime($result->leaving_at));
-                    $row['operation_hour'] = round($result->operation_hour, 2);
-                    $row['operation_end_at'] = date('Y-m-d H:i:s', strtotime($result->operation_timeline));
-                    $row['total_cabins'] = (int)$result->cabinMappings->count();
-                    $row['cabin_available'] = 0;
-                    $row['total_seats'] = (int)$result->seatMappings->count();
-                    $row['seat_available'] = 0;
-                    $row['total_tickets'] = $result->launch['passengers_capacity'];
-                    $row['ticket_available'] = $row['total_tickets'] - abs($result->ticketBookings()->count());
-                    $row['starting_point'] = $result->startingPoint['ghat']['name'];
-                    $row['ending_point'] = $result->endingPoint['ghat']['name'];
-                    $row['validity'] = $validity;
-                    $row['stoppages'] = [];
-
-                    array_push($row['stoppages'], [
-                        'id' => $result->startingPoint['id'],
-                        'name' => $result->startingPoint['ghat']['name'],
-                        'type' => $result->startingPoint['type']
-                    ]);
-                    foreach ($result->boardingVias as $stoppage) {
-                        $prop['id'] = $stoppage['id'];
-                        $prop['name'] = $stoppage['ghat']['name'];
-                        $prop['type'] = $stoppage['type'];
-                        array_push($row['stoppages'], $prop);
-                    }
-                    array_push($row['stoppages'], [
-                        'id' => $result->endingPoint['id'],
-                        'name' => $result->endingPoint['ghat']['name'],
-                        'type' => $result->endingPoint['type']
-                    ]);
-
-                    if ($result->schedule_type == 'reverse') {
-                        krsort($row['stoppages']);
-                        $row['stoppages'] = array_values($row['stoppages']);
-                    }
-
-                    $books = [];
-                    if ($result->bookingItems) {
-                        foreach ($result->bookingItems as $item) {
-                            array_push($books, $item['cabin_id']);
-                        }
-                    }
-
-                    $locks = [];
-                    if ($result->locks) {
-                        foreach ($result->locks as $lock) {
-                            array_push($locks, $lock['cabin_id']);
-                        }
-                    }
-
-                    if ($result->cabinMappings) {
-                        foreach ($result->cabinMappings as $cabin) {
-                            if (!in_array($cabin['cabin_id'], $books) && !in_array($cabin['cabin_id'], $locks) && ($cabin['ownership'] == 'merchant' || $cabin['honorium'] == 1) && !($cabin['is_reserved'])) {
-                                $row['cabin_available'] += 1;
-                            }
-                        }
-                    }
-
-                    if ($result->seatMappings) {
-                        // dd( $result->seatMappings );
-                        foreach ($result->seatMappings as $seat) {
-                            if (!in_array($seat['cabin_id'], $books) && !in_array($seat['cabin_id'], $locks) && ($seat['ownership'] == 'merchant' || $seat['honorium'] == 1) && !($seat['is_reserved'])) {
-                                $row['seat_available'] += 1;
-                            }
-                        }
-                    }
-
-                    array_push($returnArray, $row);
-//                }
-            }
-        }
-
-        return response()->json(['success' => true, 'data' => $returnArray], $this->success);
+        return response()->json(['success' => true, 'data' => $trips], $this->success);
     }
 
     /**
      * Display a tip details
      * Parameter is trip id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function trip(Request $request, $id)
     {
-        $trip = VehicleSchedule::with(['bookingItems' => function ($q) use ($id) {
-            $q->where('trip_id', $id);
-        }, 'locks' => function ($q) use ($id) {
-            $q->where('trip_id', $id);
-        }, 'discounts' => function ($q) {
-            $q->where('is_deck', 1);
-        },
-            'launch.merchant', 'route.startingPoint.ghat', 'route.endingPoint.ghat', 'route.boardingVias.ghat', 'mappings'])->findOrFail($id);
-
-        $returnArray = [
-            'id' => $trip->id,
-            'launch_id' => $trip->vehicle_id,
-            'merchant_id' => $trip->launch['merchant_id'],
-            'route_id' => $trip->route_id,
-            'launch_name' => $trip->launch['name'],
-            'launch_route' => $trip->route['route_name'],
-            'schedule_date' => date('Y-m-d H:i:s', strtotime($trip->leaving_at)),
-            'scheduled_date' => date('D M, Y', strtotime($trip->leaving_at)),
-            'date' => date('d', strtotime($trip->schedule_date)),
-            'month' => date('M', strtotime($trip->schedule_date)),
-            'cabin_rows' => 3,
-            'rowClass' => 'col-sm-4 col-xs-4',
-            'cabins' => [],
-            'seats' => [],
-            'decks' => [],
-            'cabin_types' => [],
-            'seat_types' => [],
-            'stoppages' => [],
-            'vat_amount' => getOption('vat_amount', 0),
-            'vat_applicable_to' => $trip['launch']['merchant']['vat_applicable_to']
-        ];
-
-        $floor = ( int )($request->floor) ? $request->floor : 1;
-
-        $query = Cabin::with(['cabinType'])->where(['vehicle_id' => $trip->vehicle_id, 'floor' => $floor]);
-
-        $cabins = $query->get();
-
-        $tripMappings = [];
-        if ($trip->mappings) {
-            foreach ($trip->mappings as $mapping) {
-                array_push($tripMappings, $mapping->cabin_id);
-            }
-        }
-
-        $books = [];
-        if ($trip->bookingItems) {
-            foreach ($trip->bookingItems as $item) {
-                array_push($books, $item['cabin_id']);
-            }
-        }
-
-
-        $locks = [];
-        if ($trip->locks) {
-            foreach ($trip->locks as $lock) {
-                array_push($locks, $lock['cabin_id']);
-            }
-        }
-        // return response()->json($locks);
-
-        $mappings = new Collection($trip->mappings);
-
-        if ($cabins) {
-            foreach ($cabins as $cabin) {
-                $row['trip_id'] = $trip->id;
-                $row['trip_date'] = date('Y-m-d H:i:s', strtotime($trip->leaving_at));
-                $row['route_id'] = $trip->route_id;
-                $row['launch_id'] = $cabin['vehicle_id'];
-                $row['launch_name'] = $trip->launch['name'];
-                $row['merchant_id'] = $trip->launch['merchant_id'];
-                $row['cabin_id'] = $cabin['id'];
-                $row['cabin_type_id'] = $cabin['type_id'];
-                $row['cabin_type'] = $cabin['type'];
-                $row['cabin_type_name'] = ($cabin['cabinType']) ? $cabin['cabinType']['letter'] : null;
-                $row['cabin_floor'] = $cabin['floor'];
-                $row['cabin_no'] = ($cabin['type'] == 'cabin') ? $cabin['cabinType']['letter'] . '-' . $cabin['cabin_no'] : $cabin['cabin_no'];
-                $row['fare'] = $cabin['fare'];
-                $row['cabin_is_ac'] = $cabin['cabinType']['is_ac'];
-                $row['capacity'] = $cabin['passenger_capacity'];
-                $row['cabin_row'] = $cabin['cabin_row'];
-                $row['cabin_position'] = $cabin['cabin_position'];
-                $row['description'] = ($cabin->type != 'deck') ? $cabin['cabinType']['name'] . ' - ' . $cabin['cabinType']['letter'] . '-' . $cabin['cabin_no'] : '1 Deck ticket';
-                $row['status'] = 0;
-                $row['cabin_class'] = 'cabin-disable';
-                if (in_array($cabin['id'], $tripMappings)) {
-                    $mapping = $mappings->where('cabin_id', $cabin['id'])->first();
-                    if (($mapping->ownership == 'merchant' || $mapping->honorium == 1) && !($mapping->is_reserved) && !in_array($mapping->cabin_id, $books) && !in_array($mapping->cabin_id, $locks)) {
-                        $row['status'] = 1;
-                        $row['cabin_class'] = 'cabin-active';
-                    }
-                    // if( $request->cabin_type > 0 ) {
-                    //     if($row['cabin_type'] == 'cabin' && $row['cabin_type_id'] != $request->cabin_type ) {
-                    //         $row['cabin_class'] = 'cabin-disable';
-                    //     }
-                    // }
-                    // if( $request->seat_type > 0 ) {
-                    //     if($row['cabin_type'] == 'seat' && $row['cabin_type_id'] != $request->seat_type ) {
-                    //         $row['cabin_class'] = 'cabin-disable';
-                    //     }
-                    // }
-
-                    if ($cabin['type'] == 'cabin') {
-                        array_push($returnArray['cabins'], $row);
-                        $returnArray['cabin_types'][$cabin['type_id']] = $cabin['cabinType']['name'];
-                    } elseif ($cabin['type'] == 'seat') {
-                        array_push($returnArray['seats'], $row);
-                        $returnArray['seat_types'][$cabin['type_id']] = $cabin['cabinType']['name'];
-                    }
-                }
-            }
-        }
-
-        //fetch deck fares
-        $deckFares = new Collection(DeckFare::with(['departureFrom.ghat', 'departureTo.ghat'])->where('route_id', $trip->route_id)->get());
-        $launchDefined = $deckFares->where('vehicle_id', $trip->vehicle_id);
-
-        if ($launchDefined->count()) {
-            foreach ($launchDefined as $deckfare) {
-//                dd($deckfare);
-                $deck['id'] = $deckfare['id'];
-                $deck['from'] = ($trip->schedule_type == 'reverse') ? $deckfare['departureTo']['ghat']['name'] : $deckfare['departureFrom']['ghat']['name'];
-                $deck['to'] = ($trip->schedule_type == 'reverse') ? $deckfare['departureFrom']['ghat']['name'] : $deckfare['departureTo']['ghat']['name'];
-                $deck['fare'] = ($trip->schedule_type == 'reverse') ? $deckfare['reverse_fare'] : $deckfare['fare'];
-                $discounted = 0;
-                if ($trip->discounts) {
-                    foreach ($trip->discounts as $discount) {
-                        $discounted += ($discount->type == 'percent') ? ($deck['fare'] * ($discount->amount / 100)) : $discount->amount;
-                    }
-                }
-
-                $vat = 0;
-                if ($trip->launch['merchant']['vat_applicable_to'] == 'customer') {
-                    $vat_amount = getOption('vat_amount', 0);
-                    $vat += $deck['fare'] * ($vat_amount / 100);
-                }
-                $finalFare = $deck['fare'] + $vat - $discounted;
-                $deck['fare'] = $finalFare;
-                $deck['discount_percent'] = (($deck['fare'] - $finalFare) / 100) * $deck['fare'];
-
-                array_push($returnArray['decks'], $deck);
-            }
-        } else {
-            foreach ($deckFares as $deckfare) {
-                if ($deckfare->vehicle_id == '') {
-                    $deck['id'] = $deckfare['id'];
-                    $deck['from'] = ($trip->schedule_type == 'reverse') ? $deckfare['departureTo']['ghat']['name'] : $deckfare['departureFrom']['ghat']['name'];
-                    $deck['to'] = ($trip->schedule_type == 'reverse') ? $deckfare['departureTo']['ghat']['name'] : $deckfare['departureTo']['ghat']['name'];
-                    $deck['fare'] = ($trip->schedule_type == 'reverse') ? $deckfare['reverse_fare'] : $deckfare['fare'];
-                    array_push($returnArray['decks'], $deck);
-                }
-            }
-        }
-
-        //push stoppages
-        array_push($returnArray['stoppages'], [
-            'id' => $trip->route['startingPoint']['id'],
-            'name' => $trip->route['startingPoint']['ghat']['name'],
-            'type' => $trip->route['startingPoint']['type']
-        ]);
-        if ($trip->route['boardingVias']) {
-            foreach ($trip->route['boardingVias'] as $stoppage) {
-                array_push($returnArray['stoppages'], ['id' => $stoppage['id'], 'name' => $stoppage['ghat']['name']]);
-            }
-        }
-        array_push($returnArray['stoppages'], [
-            'id' => $trip->route['endingPoint']['id'],
-            'name' => $trip->route['endingPoint']['ghat']['name'],
-            'type' => $trip->route['endingPoint']['type']
-        ]);
-
-        $cabins = ($returnArray['cabins']) ? _my_group_by($returnArray['cabins'], 'cabin_row') : null;
-        $seats = ($returnArray['seats']) ? _my_group_by($returnArray['seats'], 'cabin_row') : null;
-        $returnArray['cabins'] = _my_layout($cabins);
-        $returnArray['seats'] = _my_layout($seats);
-
-        if ($returnArray['cabins']) {
-            ksort($returnArray['cabins']);
-        }
-        if ($returnArray['seats']) {
-            ksort($returnArray['seats']);
-        }
-        if ($returnArray['cabin_types']) {
-            $types = [];
-            foreach ($returnArray['cabin_types'] as $key => $type) {
-                array_push($types, ['id' => $key, 'name' => $type]);
-            }
-            $returnArray['cabin_types'] = $types;
-        }
-        if ($returnArray['seat_types']) {
-            $types = [];
-            foreach ($returnArray['seat_types'] as $key => $type) {
-                array_push($types, ['id' => $key, 'name' => $type]);
-            }
-            $returnArray['seat_types'] = $types;
-        }
-        return response()->json(['success' => true, 'data' => $returnArray], $this->success);
+        $layout = collect(VehicleSchedule::with(['route', 'decks.departureFrom.ghat', 'decks.departureTo.ghat', 'boardingVias.ghat', 'startFrom', 'stopTo', 'mappings.cabinType', 'vehicle', 'merchant'])
+            ->where('id', $id)
+            ->get())
+            ->map(function($trip, $key) use($request) {
+                return $this->trip->formatTriplayout($trip, $request->floor);
+            })->first();
+        return response()->json(['success' => true, 'data' => $layout], $this->success);
     }
 
     public function routes()
@@ -928,7 +657,7 @@ class QuickBookController extends Controller
 
     public function addToCart(Request $request)
     {
-        $data = ['success' => false, 'message' => 'Your item cannot be locked'];
+        $data = ['success' => false, 'message' => __('Your item cannot be locked')];
         $user = Auth::user();
         //validation rules
         $validator = Validator::make($request->all(), [
@@ -954,9 +683,9 @@ class QuickBookController extends Controller
                 ->findOrFail($request->item_id);
 
             if ($item->books && $item->books->count() > 0) {
-                $data['message'] = 'Your ' . $item->type . ' is already booked';
+                $data['message'] = __('Your item is already booked');
             } elseif ($item->locks && $item->locks->count() > 0) {
-                $data['message'] = 'Your ' . $item->type . ' is already been locked';
+                $data['message'] = __('Your item is already been locked');
             } else {
                 try {
                     $discounted = 0;
@@ -989,7 +718,7 @@ class QuickBookController extends Controller
                         'trip_id' => ( int )$request->trip_id
                     ]);
                     $data['success'] = true;
-                    $data['message'] = 'The item has been successfully locked';
+                    $data['message'] = __('The item has been successfully locked');
                     $vat_applicable_to = $item['launch']['merchant']['vat_applicable_to'];
                     $description = $item['cabinType']['name'] . ' - ' . strtoupper($item['cabinType']['letter']). $item['cabin_no'];
                     $description .= ($item['cabinType']['is_ac']) ? '(AC)' : '(Non AC)';
@@ -1001,10 +730,10 @@ class QuickBookController extends Controller
                     $data['item'] = [
                         'trip_id' => $lockItem->trip_id,
                         'trip_date' => date('Y-m-d h:i:s', strtotime($schedule->leaving_at)),
-                        'launch_id' => $item->vehicle_id,
+                        'vehicle_id' => $item->vehicle_id,
                         'merchant_id' => $item->launch['merchant_id'],
                         'route_id' => $schedule->route_id,
-                        'launch_name' => $item->launch['name'],
+                        'vehicle_name' => $item->launch['name'],
                         'route_name' => $schedule->startingPoint['ghat']['name'] . ' - ' . $schedule->endingPoint['ghat']['name'],
                         'cabin_type_id' => $item->type_id,
                         'cabin_floor' => $item->floor,
@@ -1059,18 +788,18 @@ class QuickBookController extends Controller
                         }
                     }
                 } catch (\Exception $e) {
-                    $data['message'] = 'Something happened wrong. please try again later.';
+                    $data['message'] = __('Something happened wrong. please try again later.');
                 }
             }
         } else {
-            $data['message'] = 'Booking operation hour expired';
+            $data['message'] = __('Booking operation hour expired');
         }
         return response()->json($data, $this->success);
     }
 
     public function addToCartDeck(Request $request)
     {
-        $data = ['success' => false, 'message' => 'Your item cannot be locked'];
+        $data = ['success' => false, 'message' => __('Your item cannot be locked')];
         //validation rules
         $validator = Validator::make($request->all(), [
             'deck_id' => 'bail|required|integer|exists:deck_fares,id',
@@ -1115,10 +844,10 @@ class QuickBookController extends Controller
                     'cabin_type' => 'deck',
                     'trip_id' => $schedule->id,
                     'trip_date' => date('Y-m-d H:i:s', strtotime($schedule->schedule_date)),
-                    'launch_id' => $schedule->vehicle_id,
+                    'vehicle_id' => $schedule->vehicle_id,
                     'merchant_id' => $schedule->launch['merchant_id'],
                     'route_id' => $schedule->route_id,
-                    'launch_name' => $schedule->launch['name'],
+                    'vehicle_name' => $schedule->launch['name'],
                     'route_name' => $schedule->startingPoint['ghat']['name'] . ' - ' . $schedule->endingPoint['ghat']['name'],
                     'cabin_no' => $item->id,
                     'cabin_id' => $item->id,
@@ -1170,10 +899,10 @@ class QuickBookController extends Controller
                 }
 
                 $data['success'] = true;
-                $data['message'] = 'Your deck ticket has been added successfully';
+                $data['message'] = __('Your deck ticket has been added successfully');
             }
         } else {
-            $data['message'] = 'Booking operation hour expired';
+            $data['message'] = __('Booking operation hour expired');
         }
         return response()->json($data, $this->success);
     }
@@ -1181,271 +910,33 @@ class QuickBookController extends Controller
     /**
      * Confirm order.
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function confirm(Request $request)
     {
-        $data = ['success' => false, 'message' => 'Your order cannot be confirmed'];
-        $user = Auth::user();
-        //validation rules
-        $rules = [
-            'items' => 'bail|required|string',
-            'payment_method' => 'bail|required|in:cash,bkash,rocket,nagad,Cash,Bkash,Rocket,Nagad',
-            'transaction_id' => 'bail|nullable|string',
-            'customer_name' => 'bail|required|string',
-            'customer_mobile' => 'bail|required|max:14|regex:/^(01){1}[3456789]{1}(\d){8}$/|min:11',
-            'paid_amount' => 'bail|required|numeric'
-        ];
-        $validator = Validator::make($request->all(), $rules);
-        $vatVisibility = 0;
-        //validation fails
-        if ($validator->fails())
-            return response()->json(['success' => false, 'message' => $validator->errors()->first()], $this->success);
+        $data = ['success' => false, 'message' => __('Your booking request is not valid')];
 
         $items = json_decode(str_replace("\\", "", $request->items));
-        $launchName = '';
-        $trip_date = '';
-        $route_name = '';
-        $leaving_time = '';
-        $boarding_point = '';
-        if (is_array($items)) {
-            DB::beginTransaction();
-            try {
-                $customer = User::firstOrnew(['mobile' => $request->customer_mobile]);
-                $newCustomer = 0;
-                if (!$customer->id) {
-                    $customer->mobile = $request->customer_mobile;
-                    $customer->name = $request->customer_name;
-                    $customer->password = Hash::make(Str::random(8));
-                    $newCustomer = 1;
-                }
-                $customer->save();
-                if ($newCustomer) {
-                    $role = Role::where('name', 'customer')->first();
-                    $customer->assignRole($role);
-                    event(new UserCreated($customer, 'office'));
-                }
-                $booking_items = [];
-                $vat_amount = abs(getOption('vat_amount', 0));
-                $charge_amount = abs(getOption('service_charge_counter', 0));
-
-                $booking = Booking::create([
-                    'booking_date' => date('Y-m-d'),
-                    'customer_id' => $customer->id,
-                    'user_id' => Auth::user()->id,
-                    'total_amount' => 0,
-                    'total_discount' => 0,
-                    'vat_amount' => $vat_amount,
-                    'charge_amount' => $charge_amount,
-                    'total_payable' => 0,
-                    'vat_total' => 0,
-                    'charge_total' => 0,
-                    'booking_party' => (Auth::user()->type == 'merchant') ? 'merchant' : AppConst::OWNER,
-                    'status' => 'COMPLETE'
-                ]);
-
-                // DB::rollback();
-                // return response()->json($booking);
-                $discount = 0;
-                $cabins = [];
-                $item_list = ['cabin' => [], 'seat' => []];
-                $item_count = collect($items)->count();
-                foreach ($items as $item) {
-                    $item->type = $item->cabin_type;
-                    $deck = ($item->type == 'deck' && $item->cabin_id != null) ? DeckFare::find($item->cabin_id) : null;
-                    $cabinItem = ($item->type != 'deck') ? Cabin::find($item->cabin_id) : null;
-                    if( $cabinItem && ($cabinItem->launch['merchant']['vat_visibility'] == 1)) {
-                        $vatVisibility = 1;
-                    } elseif($deck && ($deck->launch['merchant']['vat_visibility'] == 1)) {
-                        $vatVisibility = 1;
-                    }
-                    $item_type = CabinType::find($item->cabin_type_id);
-                    $item_list[$item->cabin_type][] = [
-                        'type' => ucfirst($item_type->name),
-                        'cabin_no' => preg_replace("/[^0-9.]/", "", $item->cabin_no),
-                        'is_ac' => ($item->cabin_is_ac) ? 'AC' : 'Non AC'
-                    ];
-                    array_push($cabins, ucfirst($item->cabin_type) . ': ' . $item->description);
-                    $discount += abs($item->discount);
-                    $trip = VehicleSchedule::with(['launch.merchant', 'startingPoint.ghat', 'endingPoint.ghat'])->find($item->trip_id);
-                    $launchName = $trip->launch['name'];
-                    $route_name = ($trip->schedule_type == 'reverse') ? $trip->endingPoint->ghat['name'] . ' - ' . $trip->startingPoint->ghat['name'] : $trip->startingPoint->ghat['name'] . ' - ' . $trip->endingPoint->ghat['name'];
-                    if($item->type == 'deck' && $deck) {
-                        $route_name = ($trip->schedule_type == 'reverse') ? $deck->departureTo->ghat->name . ' - ' . $deck->departureFrom->ghat->name : $deck->departureFrom->ghat->name . ' - ' . $deck->departureTo->ghat->name;
-                    }
-                    $trip_date = date('Y-m-d', strtotime($trip->schedule_date));
-                    $leaving_time = date('Y-m-d H:i:s', strtotime($trip->leaving_at));
-                    $boarding_point = (isset($item->boardingPoint)) ? $item->boardingPoint : null;
-                    $item->vat_applicable_to = $trip->launch['merchant']->vat_applicable_to;
-
-                    if ($item->vat_applicable_to == 'customer') {
-                        $booking->vat_total += abs($item->fare * ($vat_amount / 100));
-                    }
-
-                    $booking->total_amount = $booking->total_amount + abs($item->fare);
-                    $booking->total_discount += abs($discount);
-
-                    $passenger = $item->passenger;
-                    if ($passenger == null) {
-                        $passenger = ['type' => 'self', 'name' => Auth::user()->name, 'mobile' => Auth::user()->mobile, 'person' => 1];
-                    } else {
-                        if ($passenger->type == 'self') {
-                            $passenger->name = Auth::user()->name;
-                            $passenger->mobile = Auth::user()->mobile;
-                        }
-                    }
-
-                    array_push($booking_items, [
-                        'booking_id' => $booking->id,
-                        'vehicle_id' => $item->launch_id,
-                        'customer_id' => $booking->customer_id,
-                        'booking_type' => $item->type,
-                        'cabin_id' => (in_array($item->type, ['cabin', 'seat'])) ? $item->cabin_id : null,
-                        'price' => abs($item->fare),
-                        'trip_id' => $item->trip_id,
-                        'trip_date' => $trip_date,
-                        'booking_date' => $booking->booking_date,
-                        'discount' => $discount,
-                        'boarding_point' => (isset($item->boardingPoint)) ? json_encode($item->boardingPoint) : null,
-                        'passenger' => json_encode($passenger),
-                        'vat_amount' => $vat_amount,
-                        'charge_amount' => $charge_amount,
-                        'vat_applicable_to' => $item->vat_applicable_to,
-                        'discount_type' => 'discount',
-                        'is_honorium' => (int)$item->is_honorium,
-                        'honorium_charge' => abs($item->honorium_charge),
-                        'honorium_type' => $trip->launch['merchant']['honorium_type'],
-                        'booking_party' => $booking->booking_party,
-                        'status' => 1,
-                        'incentive' => $item->incentive,
-                        'incentive_type' => $item->incentive_type,
-                        'route_name' => $route_name,
-                        'deck_fare_id' => $item->cabin_id
-                    ]);
-
-                    if ($item->type != 'deck') {
-                        CabinLock::where([
-                            'cabin_id' => $item->cabin_id,
-                            'trip_id' => $item->trip_id
-                        ])->delete();
-                    }
-                }
-
-                // DB::rollback();
-                // return ( $booking_items );
-
-                //save items
-                BookingItem::insert($booking_items);
-
-                //update order with total amount
-                $booking->platform = 'android';
-                $booking->total_amount = abs($booking->total_amount);
-                if (Auth::user()->type != 'merchant') {
-                    $booking->charge_total = abs($booking->total_amount * ($charge_amount / 100));
-                }
-                $booking->total_payable = abs(($booking->total_amount + $booking->vat_total + $booking->charge_total - $booking->total_discount));
-//                $booking->dues = round($booking->total_payable, 2) - round($request->paid_amount, 2);
-                //set payment record
-                $payment = Payment::firstOrnew([
-                    'booking_id' => $booking->id
-                ]);
-                $payment->booking_id = $booking->id;
-                $payment->payment_method = strtolower($request->payment_method);
-                $payment->paid_amount = $request->paid_amount;
-                $payment->dues = round($booking->total_payable, 2) - round($request->paid_amount, 2);
-                $payment->store_amount = round($request->paid_amount, 2);
-                $payment->transaction_id = uniqid($booking->id . '_', false);
-                $payment->customer_id = $booking->customer_id;
-                $payment->bank_tran_id = ($request->transaction_id) ? $request->transaction_id : '';
-                $payment->status = 'success';
-                $payment->save();
-                PaymentCollector::create([
-                    'booking_id' => $booking->id,
-                    'payment_id' => $payment->id,
-                    'supervisor_id' => $user->id,
-                    'amount' => $request->paid_amount,
-                    'payment_type' => $payment->payment_method,
-                    'remarks' => ($payment->total_payable == $payment->paid_amount) ? 'Full payment' : 'Partial payment'
-                ]);
-                $booking->save();
-                DB::commit();
-                $qrstring = ($payment->dues > 0) ? $booking->id . '@' . round($payment->dues) : $booking->id;
-                $qrCode = \QrCode::size(500)
-                    ->format('png')
-                    // ->color(33, 152, 118)
-                    ->size(500)
-                    ->merge(public_path('default/logo-icon.png'), .1, true)
-                    ->generate((string) $qrstring, public_path('qrs/' . $booking->id . '.png'));
-                if($customer->hasRole('customer')) {
-                    $order = Booking::find($booking->id);
-                    $message = 'Ticket-' . $order->id . '%0A';
-                    $scheduleSms = [];
-                    if ($order->bookingItems) {
-                        foreach ($order->BookingItems as $item) {
-                            $scheduleSms[$item->trip_id][] = $item;
-                        }
-                    }
-                    if ($scheduleSms) {
-                        foreach ($scheduleSms as $key => $items) {
-                            $message .= $items[0]->launch['name'] . '<>' . date('d-m-Y h:iA', strtotime($items[0]->trip['leaving_at'])) . '<>' . $items[0]->customer['mobile'];
-                            foreach ($items as $k => $item) {
-                                $passenger = json_decode($item->passenger);
-                                if ($item->booking_type != 'deck') {
-                                    $message .= '<>' . $item->item['cabinType']['name'] . ' ' . $item->item['type'] . ' (' . $item->item['cabinType']['letter'] . '-' . $item->item['cabin_no'] . ')';
-                                } else {
-                                    $message .= '<>Deck(' . $passenger->person . ')';
-                                }
-                            }
-                        }
-                    }
-                    $message .= '%0ASafe travels!';
-                    sendSMS([
-                        'mobile' => $order->customer->mobile,
-                        'message' => $message
-                    ]);
-                }
-                $data['success'] = true;
-                $data['order_id'] = $booking->id;
-                $data['message'] = 'Your order has been confirmed.';
-                $data['advance'] = ($booking->total_payable > $payment->paid_amount) ? true : false;
-                $data['token'] = [
-                    'launch_name' => $launchName,
-                    'trip_date' => $trip_date,
-                    'route_name' => $route_name,
-                    'pnr' => $booking->id,
-                    'booking_time' => date('Y-m-d H:i:s', strtotime($booking->created_at)),
-                    'leaving_at' => $leaving_time,
-                    'transaction_id' => $payment->transaction_id,
-                    'booking_items' => "",
-                    'items' => $item_list,
-                    'items_count' => $item_count,
-                    'supervisor_name' => $user->name,
-                    'customer_name' => $customer->name,
-                    'customer_mobile' => $customer->mobile,
-                    'for' => ($user->id == $customer->id) ? 'self' : 'other',
-                    'subtotal' => $booking->total_amount,
-                    'vat_visibility' => $vatVisibility,
-                    'total_vat' => $booking->vat_total,
-                    'total_charge' => $booking->charge_total,
-                    'total_discount' => $booking->total_discount,
-                    'total' => $booking->total_payable,
-                    'paid' => $payment->paid_amount,
-                    'due' => round($booking->total_payable - $payment->paid_amount, 2),
-                    'boarding_point' => ($boarding_point) ? $boarding_point->name : '',
-                    'hotline' => getOption('company_hotline_code', '')
-                ];
-            } catch (\Exception $e) {
-                $data['message'] = $e->getMessage();
-                DB::rollback();
+        try {
+            $itemsTobeValidated = collect($items)->filter(function ($item, $k) {
+                return $item->type != 'deck';
+            })->pluck('item_id')->toArray();
+            $validation = $this->bookingService->validate($itemsTobeValidated);
+            if ($validation['status'] === true) {
+                $data = $this->bookingService->confirm($items, $data);
+            } else {
+                throw new \Exception($validation['message']);
             }
+        } catch (\Exception $exception) {
+            $data['message'] = $exception->getMessage();
         }
 
         return response()->json($data, $this->success);
     }
 
-    public function fullPaid(Request $request)
+    public function fullPaid(Request $request): JsonResponse
     {
-        $data = ['success' => false, 'message' => 'Sorry! something went wrong'];
+        $data = ['success' => false, 'message' => __('Sorry! something went wrong')];
         //validation rules
         $validator = Validator::make($request->all(), [
             'booking_id' => 'bail|required|numeric|exists:bookings,id',
@@ -1482,7 +973,7 @@ class QuickBookController extends Controller
                         $booking->save();
                     }
                     $data['success'] = true;
-                    $data['message'] = 'Payment complete';
+                    $data['message'] = __('Payment complete');
                 });
             } catch (\Exception $e) {
                 $data['message'] = $e->getMessage();
@@ -1493,7 +984,7 @@ class QuickBookController extends Controller
 
     public function quickPrint(Request $request)
     {
-        $data = ['success' => false, 'message' => 'Ticket cannot print, please try again.'];
+        $data = ['success' => false, 'message' => __('Ticket cannot print, please try again.')];
         //validation rules
         $validator = Validator::make($request->all(), [
             'deck_id' => 'bail|required|numeric|exists:deck_fares,id',
@@ -1624,13 +1115,13 @@ class QuickBookController extends Controller
                             $data['order_id'] = $booking->id;
                             $data['ticket_id'] = $bookingItem->id;
                             $data['trans_id'] = $payment->transaction_id;
-                            $data['message'] = 'Ticket booked';
+                            $data['message'] = __('Ticket booked');
                         }
                     }, 2);
                 } else {
-                    $message = 'Booking operation time is over';
+                    $message = __('Booking operation time is over');
                     if($leavingTime > time()) {
-                        $message = 'Booking operation will start from ' . date('d/m/Y h:i a', $leavingTime);
+                        $message = __('Booking operation will start from ') . date('d/m/Y h:i a', $leavingTime);
                     }
                     throw new \Exception($message);
                 }
@@ -1688,7 +1179,7 @@ class QuickBookController extends Controller
                     'fare' => $item['price'],
                     'discount' => $item['discount'],
                     'is_ac' => $item['item']['cabinType']['is_ac'],
-                    'launch_name' => $item['trip']['launch']['name'],
+                    'vehicle_name' => $item['trip']['launch']['name'],
                     'route_name' => $item['trip']['route']['route_name'],
                     'schedule_date' => date('d F Y', strtotime($item['trip_date'])),
                     'leaving_time' => $item['trip']['leaving_at'],

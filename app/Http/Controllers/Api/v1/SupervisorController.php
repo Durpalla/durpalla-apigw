@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\v1;
 
 use App\Constants\AppConst;
+use Illuminate\Http\JsonResponse;
 use App\Models\Booking;
 use App\Models\BookingItem;
 use App\Http\Controllers\Controller;
@@ -32,37 +33,9 @@ class SupervisorController extends Controller
 
     public function wallet(Request $request)
     {
-        $user = Auth::user();
-        $query = Booking::with(['bookingConfirmed'])->where('user_id', $user->id)->whereIn('status', ['ACTIVE', 'COMPLETE']);
-        $month = ($request->month) ? date('Y-m', strtotime($request->month)) : date('Y-m');
-        $query->whereBetween('booking_date', [date('Y-m-01', strtotime($month)), date('Y-m-t', strtotime($month))]);
-        $bookings = $query->get();
+        $wallet = $this->supervisor->getWallet($request->all());
 
-        $wallet = [
-            'total_bookings' => 0,
-            'total_booking_amount' => 0,
-            'month' => date('Y-m-01 H:i:s', strtotime($month)),
-            'total_incentives' => 0
-        ];
-
-        if ($bookings) {
-            foreach ($bookings as $booking) {
-                $wallet['total_bookings'] += 1;
-
-                if ($booking->bookingConfirmed) {
-                    foreach ($booking->bookingConfirmed as $item) {
-//                        dd( $item );
-                        if ($item['incentive_type'] == 'percent') {
-                            $wallet['total_incentives'] += abs(($item['price'] - $item['discount']) * ($item['incentive'] / 100));
-                        } else {
-                            $wallet['total_incentives'] += abs($item['incentive']);
-                        }
-                    }
-                }
-            }
-        }
-
-        return response()->json(['success' => true, 'wallet' => $wallet], $this->success);
+        return response()->json(['success' => true, 'data' => $wallet], $this->success);
     }
 
     public function bookingHistory(Request $request)
@@ -82,93 +55,29 @@ class SupervisorController extends Controller
         return response()->json(['success' => true, 'bookings' => $bookings], $this->success);
     }
 
-    public function jobs()
+    public function jobs(): JsonResponse
     {
         $jobs = $this->supervisor->getJobs();
 
         return response()->json(['success' => true, 'message' => '', 'data' => $jobs]);
     }
 
-    public function myCart(Request $request)
+    public function myCart(Request $request): JsonResponse
     {
-        $data = ['success' => false, 'message' => 'No booking found', 'data' => []];
-        $tripDate = ($request->trip_date) ? date('Y-m-d', strtotime($request->trip_date)) : date('Y-m-d');
-        $query = Booking::with(['payment', 'bookingItems.item.cabinType', 'collections', 'customer'])->withCount('collections')
-            ->where(['user_id' => Auth::user()->id])
-            ->where('total_payable', '>', 0);
-
-        if ($request->pnr) {
-            $query->where('id', $request->pnr);
-        } else {
-            $query->whereHas('bookingItems', function ($q) use ($tripDate) {
-                $q->where(['trip_date' => $tripDate, 'status' => 1]);
-            });
-            if ($request->type == 'complete') {
-                $query->whereHas('payment', function ($q) use ($request) {
-                    $q->where('dues', 0);
-                })->has('collections', '=', 1);
-            } elseif ($request->type == 'due') {
-                $query->whereHas('payment', function ($q) use ($request) {
-                    $q->where('dues', '>', 0);
-                });
-            } elseif($request->type == 'advance') {
-                $query->has('collections', '>', 1);
-                $query->whereHas('payment', function($q) {
-                    $q->where('dues', '=', 0);
-                });
-            }
-        }
-        $bookings = $query->orderByDesc('created_at')->paginate(15);
-        if ($bookings) {
-            $data['success'] = true;
-            $data['message'] = 'Bookings found';
-            foreach ($bookings as $booking) {
-                $payments = [];
-                $collections = [];
-                $countCollections = $booking->collections->count();
-                $bookingStatus = ($booking->payment['dues'] == 0 && $countCollections > 1) ? 'advance' : (($booking->payment['dues'] == 0 && $countCollections == 1) ? 'complete' : 'due');
-                foreach ($booking->collections as $key => $collection) {
-                    if($countCollections > 1){
-                        $payment_type = ($key == 0) ? 'advance' : 'complete';
-                    } else {
-                        $payment_type = ($booking->payment['dues'] > 0) ? 'advance' : 'complete';
-                    }
-                    array_push($payments, [
-                        'payment_info' => $payment_type,
-                        'payment_method' => $collection['payment_type'],
-                        'amount' => $collection['amount']
-                    ]);
-                }
-                $items = ['cabin' => [], 'seat' => [], 'deck' => 0];
-                $booking->bookingItems->each(function($item, $key) use(&$items){
-                    if($item->booking_type != 'deck') {
-                        $items[$item->booking_type][] = (($item->item['cabinType']) ? $item->item['cabinType']['letter'] . '-' : '') . $item->item['cabin_no'];
-                    } else {
-                        $passenger = json_decode($item->passenger);
-                        $items['deck'] += ($passenger) ? $passenger->person : 1;
-                    }
-                });
-                array_push($data['data'], [
-                    'booking_id' => $booking->id,
-                    'order_id' => $booking->id,
-                    'pnr' => $booking->id,
-                    'booking_at' => date('Y-m-d H:i:s', strtotime($booking->created_at)),
-                    'total_payable' => round($booking->total_payable, 2),
-                    'total_paid' => round($booking->payment['paid_amount'], 2),
-                    'total_dues' => round($booking->total_payable - $booking->payment['paid_amount'], 2),
-                    'payments' => $payments,
-                    'items' => $items,
-                    'status' => ($booking->status == AppConst::BOOKING_COMPLETE) ? $bookingStatus : 'cancelled'
-                ]);
-            }
-        }
+        $data = ['success' => false, 'message' => 'No booking found', 'data' => $this->supervisor->myCart($request->all())];
 
         return response()->json($data, $this->success);
     }
 
-    public function bookingGroupWizePrint(Request $request)
+    public function sendMyCart(Request $request): JsonResponse
     {
-        $data = ['success' => false, 'message' => 'No trip found', 'data' => []];
+        $data = ['success' => true, 'message' => __('Email sent successfully')];
+        return response()->json($data);
+    }
+
+    public function bookingGroupWizePrint(Request $request): JsonResponse
+    {
+        $data = ['success' => false, 'message' => __('No trip found'), 'data' => []];
         $supervisor = Auth::user();
         $tripDate = ($request->trip_date) ? date('Y-m-d', strtotime($request->trip_date)) : date('Y-m-d');
         $launchIds = $supervisor->vehicles->map(function ($item, $key) {
@@ -190,7 +99,7 @@ class SupervisorController extends Controller
                 'info' => [
                     'name' => $supervisor->name,
                     'mobile' => $supervisor->mobile,
-                    'launch_name' => $trip->launch->name,
+                    'vehicle_name' => $trip->launch->name,
                     'route_name' => ($trip->schedule_type === 'reverse') ? $trip->endingPoint->ghat->name . ' - ' . $trip->startingPoint->ghat->name : $trip->startingPoint->ghat->name . ' - ' . $trip->endingPoint->ghat->name,
                     'leaving_at' => date('Y-m-d H:i:s', strtotime($trip->leaving_at))
                 ],
@@ -251,7 +160,7 @@ class SupervisorController extends Controller
         return response()->json($data, $this->success);
     }
 
-    public function summaryReport2(Request $request)
+    public function summaryReport2(Request $request): JsonResponse
     {
         $supervisor = Auth::user();
         $tripDate = ($request->trip_date) ? date('Y-m-d', strtotime($request->trip_date)) : date('Y-m-d');
@@ -299,7 +208,7 @@ class SupervisorController extends Controller
             'info' => [
                 'name' => $supervisor->name,
                 'mobile' => $supervisor->mobile,
-                'launch_name' => $trip->launch->name,
+                'vehicle_name' => $trip->launch->name,
                 'route_name' => ($trip->schedule_type == 'reverse') ? $trip->endingPoint['ghat']['name'] . ' - ' . $trip->startingPoint['ghat']['name'] : $trip->startingPoint['ghat']['name'] . ' - ' . $trip->endingPoint['ghat']['name'],
                 'leaving_at' => date('Y-m-d H:i:s', strtotime($trip->leaving_at))
             ],
@@ -355,140 +264,21 @@ class SupervisorController extends Controller
         return response()->json(['success' => true, 'message' => '', 'data' => $summaries], $this->success);
     }
 
-    public function summaryReport(Request $request)
+    public function summaryReport(Request $request): JsonResponse
     {
-        $supervisor = Auth::user();
-        $tripDate = ($request->trip_date) ?
-            date('Y-m-d', strtotime($request->trip_date))
-            : date('Y-m-d');
-        $launchIds = $supervisor->vehicles->map(function ($item, $key) {
-            return $item->vehicle_id;
-        });
-        $trip = VehicleSchedule::with('launch')
-            ->whereIn('vehicle_id', $launchIds)
-            ->where('schedule_date', $tripDate)->first();
-        if($trip) {
-            $bookings = Booking::with(
-                [
-                    'bookingItems' => function ($query) {
-                        $query->with(['item' => function ($q) {
-                            $q->with(['cabinType' => function ($q) {
-                                $q->select('id', 'name', 'is_ac', 'letter');
-                            }]);
-                            $q->select('id', 'type_id', 'cabin_no');
-                        }, 'deck.departureFrom', 'deck.departureTo']);
-                        $query->select('booking_id', 'cabin_id', 'booking_type', 'status', 'price', 'discount', 'discount_type', 'vat_amount', 'charge_amount', 'incentive', 'incentive_type', 'route_name', 'charge_type', 'booking_party');
-                        $query->where('status', 1);
-                    },
-                    'payment' => function ($query) {
-                        $query->select('booking_id', 'paid_amount', 'dues');
-                    },
-                    'collections' => function ($query) use ($supervisor) {
-                        $query->select('booking_id', 'supervisor_id', 'amount', 'payment_type');
-                        $query->where('supervisor_id', $supervisor->id);
-                    }
-                ])
-                ->select('id', 'total_payable')
-                ->whereHas('bookingItems', function ($q) use ($trip) {
-                    $q->where(['trip_id' => $trip->id, 'status' => 1]);
-                })
-                ->where('user_id', $supervisor->id)
-                ->get();
-            $items = [
-                'payments'  => [],
-                'cabins'    => [],
-                'seats'     => [],
-                'decks'     => [],
-                'dues'      => []
-            ];
-            if ($bookings) {
-                foreach ($bookings as $booking) {
-                    foreach ($booking->bookingItems as $bookingItem) {
-                        if ($bookingItem->booking_type == 'cabin') {
-                            $cabinType = $bookingItem['item']['cabinType']['name'];
-                            $cabinType .= ($bookingItem['item']['cabinType']['is_ac']) ? ' AC' : ' Non AC';
-                            $items['cabins'][$cabinType][] = $bookingItem;
-                        } elseif ($bookingItem->booking_type == 'seat') {
-                            $seatType = $bookingItem['item']['cabinType']['name'];
-                            $seatType .= ($bookingItem['item']['cabinType']['is_ac']) ? ' AC' : ' Non AC';
-                            $items['seats'][$seatType][] = $bookingItem;
-                        } else {
-                            $deckType = ($bookingItem['route_name'] == null) ? $bookingItem['price'] : $bookingItem['route_name'] . ' (' . $bookingItem['price'] . ')';
-                            $items['decks'][$deckType][] = $bookingItem;
-                        }
-                    }
-                    if($booking->payment['dues'] > 0) {
-                        array_push($items['dues'], ['pnr' => $booking->id, 'amount' => $booking->payment['dues']]);
-                    }
-                    $items['payments'][$booking->id] = $booking->collections;
-                }
+        if(auth()->user()->hasAnyRole(['supervisor', AppConst::AGENT_ROLE])) {
+            $summaries = $this->supervisor->getSummary($request->all());
+            if ($summaries !== null) {
+                return response()->json(['success' => true, 'message' => '', 'data' => $summaries], $this->success);
             }
-            $payments = [];
-            $summaries = [
-                'info' => [
-                    'name' => $supervisor->name,
-                    'mobile' => $supervisor->mobile,
-                    'launch_name' => $trip->launch->name,
-                    'route_name' => ($trip->schedule_type == 'reverse') ? $trip->endingPoint['ghat']['name'] . ' - ' . $trip->startingPoint['ghat']['name'] : $trip->startingPoint['ghat']['name'] . ' - ' . $trip->endingPoint['ghat']['name'],
-                    'leaving_at' => date('Y-m-d H:i:s', strtotime($trip->leaving_at))
-                ],
-                'cabins' => [],
-                'seats' => [],
-                'decks' => [],
-                'payments' => null,
-                'dues' => [],
-                'refunds' => $this->supervisor->refundSummary($supervisor->id, $trip)
-            ];
-            foreach ($items as $key => $types) {
-                if ($key == 'payments' && !empty($types)) {
-                    foreach ($types as $k => $type) {
-                        foreach ($type as $t) {
-                            $payments[$t['payment_type']][] = $t;
-                        }
-                    }
-                } elseif($key == 'dues') {
-                    $summaries['dues'] = (array) $types;
-                } else {
-                    foreach ($types as $k => $bookingItems) {
-                        $bookingItems = collect($bookingItems);
-                        $totalItems = $bookingItems->count();
-                        $totalAmount = 0;
-                        $totalDues = 0;
-                        $totalPaid = 0;
-                        $totalIncentives = 0;
-                        foreach ($bookingItems as $item) {
-                            $discount = ($item->discount_type == 'percent') ? ($item['price']) * ($item['discount'] / 100) : $item->discount;
-                            $totalAmount += $this->calculation->calculateItemTotal($item->toArray());
-                            $totalIncentives = 0;
-                            if ($item['incentive_type'] == 'percent') {
-                                $totalIncentives += abs(($item['price'] - $discount) * ($item['incentive'] / 100));
-                            } else {
-                                $totalIncentives += abs($item['incentive']);
-                            }
-                        }
-                        array_push($summaries[$key], [
-                            'type' => $k,
-                            'items' => $totalItems,
-                            'total' => $totalAmount,
-                            'incentives' => $totalIncentives
-                        ]);
-                    }
-                }
-            }
-
-            //calculate payments
-            if ($payments) {
-                foreach ($payments as $pk => $payment) {
-                    $summaries['payments'][$pk] = 0;
-                    foreach ($payment as $p) {
-                        $summaries['payments'][$pk] += $p->amount;
-                    }
-                }
-            }
-
-            return response()->json(['success' => true, 'message' => '', 'data' => $summaries], $this->success);
         }
-        return response()->json(['success' => false, 'message' => 'No trips found'], 404);
+        return response()->json(['success' => false, 'message' => __('No trip found')], 404);
+    }
+
+    public function sendSummary(Request $request): JsonResponse
+    {
+        $data = ['success' => true, 'message' => __('Email sent successfully')];
+        return response()->json($data);
     }
 
     public function scanHistory(Request $request)
@@ -570,8 +360,8 @@ class SupervisorController extends Controller
                 array_push($responseArr, [
                     'trip_id' => $schedule->id,
                     'trip_date' => $schedule->leaving_at,
-                    'launch_id' => $schedule->vehicle_id,
-                    'launch_name' => $schedule->launch['name'],
+                    'vehicle_id' => $schedule->vehicle_id,
+                    'vehicle_name' => $schedule->launch['name'],
                     'route_name' => $route
                 ]);
             }
@@ -610,8 +400,8 @@ class SupervisorController extends Controller
             foreach ($schedules as $schedule) {
                 $route = $schedule->startingPoint['ghat']['name'] . ' - ' . $schedule->endingPoint['ghat']['name'];
                 array_push($responseArr, [
-                    'launch_id' => $schedule->vehicle_id,
-                    'launch_name' => $schedule->launch['name'],
+                    'vehicle_id' => $schedule->vehicle_id,
+                    'vehicle_name' => $schedule->launch['name'],
                     'route_name' => $route
                 ]);
             }

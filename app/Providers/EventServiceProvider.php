@@ -71,30 +71,6 @@ class EventServiceProvider extends ServiceProvider
             SendEmailVerificationNotification::class,
             SendNewUserNotification::class,
         ],
-        BookingCompleteEvent::class => [
-            BookingCompleteEventListener::class
-        ],
-        BookingFailedEvent::class => [
-            BookingFailedEventListener::class
-        ],
-        BookingPendingHandleEvent::class => [
-            BookingPendingHandleEventListener::class
-        ],
-        BookingCancelledEvent::class => [
-            BookingCancelledEventListener::class
-        ],
-        WithdrawalActionEvent::class => [
-            WithdrawalActionListener::class
-        ],
-        PaymentCompleteEvent::class => [
-            PaymentSuccessListener::class
-        ],
-        VehicleInactiveEvent::class => [
-            VehicleInactiveEventListener::class
-        ],
-        CancellationRequestEvent::class => [
-            CancellationRequestEventListener::class
-        ],
         'Laravel\Passport\Events\AccessTokenCreated' => [
             'App\Listeners\RevokeOldTokens',
         ],
@@ -112,21 +88,8 @@ class EventServiceProvider extends ServiceProvider
     public function boot()
     {
         parent::boot();
-        User::observe(UserObserver::class);
         Booking::observe(BookingObserver::class);
         BookingCancellation::observe(BookingCancellationObserver::class);
-        Ghat::observe(GhatObserver::class);
-        Party::observe(PartyObserver::class);
-        Service::observe(ServiceObserver::class);
-        Merchant::observe(MerchantObserver::class);
-        Vehicle::observe(VehicleObserver::class);
-        VehicleSchedule::observe(ScheduleObserver::class);
-        Coupon::observe(CouponObserver::class);
-        VehicleSupervisor::observe(SupervisorObserver::class);
         CabinLock::observe(CabinLockObserver::class);
-        VehicleRoute::observe(VehicleRouteObserver::class);
-        Agent::observe(AgentObserver::class);
-        AgentWithdrawal::observe(AgentWithdrawalObserver::class);
-        Gateway::observe(GatewayObserver::class);
     }
 }

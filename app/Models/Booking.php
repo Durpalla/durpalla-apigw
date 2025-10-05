@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\User;
-use Venturecraft\Revisionable\RevisionableTrait;
+
 
 class Booking extends Model
 {
-    use SoftDeletes, RevisionableTrait;
+    use SoftDeletes;
     protected $fillable = ['booking_date', 'customer_id', 'user_id', 'vat_amount', 'vat_total', 'charge_amount', 'charge_total', 'booking_party', 'status', 'total_amount', 'total_discount', 'payment_status', 'total_payable', 'platform', 'ticket_blacker'];
 
     public function bookingItems()

@@ -15,7 +15,3 @@ use Illuminate\Support\Facades\Route;
 Route::group(['prefix' => 'v1', 'middleware' => ['throttle:100,1', 'appUpgrade', 'JsonResponse']], function() {
     include(__DIR__ . '/api/v1.php');
 });
-
-Route::group(['prefix' => 'v2', 'middleware' => ['throttle:100,1', 'JsonResponse']], function() {
-    include(__DIR__ . '/api/v2.php');
-});

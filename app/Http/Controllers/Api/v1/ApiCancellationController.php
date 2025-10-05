@@ -40,17 +40,17 @@ class ApiCancellationController extends Controller
      */
     public function store(Request $request)
     {
-        $data = ['success' => false, 'message' => 'Your cancellation request failed'];
+        $data = ['success' => false, 'message' => __('Your cancellation request failed')];
         try{
             DB::transaction(function() use($request, &$data) {
                 $params = [
-                    'items' => json_decode( $request->items ),
-                    'type' => $request->type,
+                    'items' => $request->items,
                     'booking_id' => $request->booking_id
                 ];
+
                 $this->cancellation->cancelBooking($params);
                 $data['success'] = true;
-                $data['message'] = 'Your cancellation request success';
+                $data['message'] = __('Your cancellation request success');
             }, 2);
         } catch( \Exception $e ) {
             $data['message'] = $e->getMessage();
@@ -79,7 +79,7 @@ class ApiCancellationController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $data = ['success' => false, 'message' => 'Cannot handle your request'];
+        $data = ['success' => false, 'message' => __('Cannot handle your request')];
         try {
             DB::transaction(function() use($request, &$data, $id) {
                 $user = auth()->user();
@@ -88,10 +88,10 @@ class ApiCancellationController extends Controller
                     $this->cancellation->confirm($cancellation);
 //                    call_user_func(array(CancellationService::class, $request->action_type), $cancellation);
                 } else {
-                    throw new \Exception('You cannot take action on other officers task / unapproved request');
+                    throw new \Exception(trans('You cannot take action on other officers task / unapproved request'));
                 }
                 $data['success'] = true;
-                $data['message'] = 'Your request has been successfully proceed';
+                $data['message'] = __('Your request has been successfully proceed');
             }, 2);
         } catch (\Exception $e) {
             $data['message'] = $e->getMessage();
@@ -104,7 +104,7 @@ class ApiCancellationController extends Controller
      * Remove the specified resource from storage.
      *
      * @param int $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy($id)
     {

@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Venturecraft\Revisionable\RevisionableTrait;
+
 
 class ScheduleCabinMapping extends Model
 {
-    use RevisionableTrait;
+
     protected $fillable = [
         'lock_id',
         'is_reserved',

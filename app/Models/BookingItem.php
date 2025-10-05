@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\User;
-use Venturecraft\Revisionable\RevisionableTrait;
+
 
 class BookingItem extends Model
 {
-    use RevisionableTrait;
+
     protected $fillable = [
         'booking_id',
         'vehicle_id',

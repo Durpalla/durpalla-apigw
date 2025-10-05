@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\User;
-use Venturecraft\Revisionable\RevisionableTrait;
+
 
 class VehicleSupervisor extends Model
 {
-    use RevisionableTrait;
+
     protected $fillable = ['vehicle_id', 'supervisor_id', 'user_id', 'supervisor_incentive', 'incentive_type', 'is_master', 'master_id'];
     public function launch(): BelongsTo
     {

@@ -3,16 +3,16 @@
 namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
-use App\Models\Support;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Support;
 
 class ApiSupportController extends Controller
 {
     public $success = 200;
     public function store( Request $request )
     {
-        $data = ['success' => false, 'message' => 'Cannot send message'];
+        $data = ['success' => false, 'message' => __('Cannot send message')];
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'email' => 'bail|required|email|string',
@@ -26,7 +26,7 @@ class ApiSupportController extends Controller
         } else {
             if(Support::create($request->all())) {
                 $data['success'] = true;
-                $data['message'] = 'Your message successfully sent';
+                $data['message'] = __('Your message successfully sent');
             }
         }
 

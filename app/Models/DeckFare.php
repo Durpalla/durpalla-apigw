@@ -4,11 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Venturecraft\Revisionable\RevisionableTrait;
+
 
 class DeckFare extends Model
 {
-    use RevisionableTrait;
+
     protected $fillable = ['route_id', 'service_charge', 'service_charge_type'];
 
     public function route(): BelongsTo

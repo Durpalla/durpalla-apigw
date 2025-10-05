@@ -1,34 +1,33 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1;
+namespace App\Http\Controllers\Api\v1;
 
-use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\BookingCancellation;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use App\Models\BookingCancellationItem;
 use App\Notifications\BookingCancelRequest;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class ApiBookingController extends Controller
 {
     protected $success = 200;
-
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function check( Request $request, $id )
     {
-        $data = ['success' => false, 'message' => 'Your PNR is not valid'];
-        $booking = Booking::with('cancellations', 'customer', 'bookingItems.item.cabinType', 'bookingItems.trip.launch', 'bookingItems.trip.route')
+        $data = ['success' => false, 'message' => __('Your PNR is not valid')];
+        $booking = Booking::with('cancellations', 'customer', 'bookingItems.item.cabinType', 'bookingItems.trip.vehicle', 'bookingItems.trip.route')
         ->where(['customer_id' => Auth::user()->id, 'id' => $id])->first();
 
         if( $booking ) {
-            $data['item'] = $booking;
+            $data['item'] = $booking->format();
             $data['success'] = true;
             $data['message'] = 'Booking found';
         }
@@ -38,7 +37,7 @@ class ApiBookingController extends Controller
 
     public function cancelBooking( Request $request )
     {
-        $data = ['success' => false, 'message' => 'Your transaction cannot be instantiate.'];
+        $data = ['success' => false, 'message' => __('Your transaction cannot be instantiate.')];
         //validation rules
         $validator = Validator::make($request->all(), [
             'booking_id' => 'bail|required|integer|exists:bookings,id',
@@ -109,18 +108,18 @@ class ApiBookingController extends Controller
                         DB::commit();
                         $data['success'] = true;
                         $data['label'] = 'success';
-                        $data['message'] = 'Your cancellation request has been sent successfully.';
+                        $data['message'] = __('Your cancellation request has been sent successfully.');
                         $cancellation->customer->notify(new BookingCancelRequest($cancellation));
                         \LogActivity::addToLog("Request to cancel tickets");
                     } else {
-                        throw new \Exception('Sorry! some items already has in cancellations');
+                        throw new \Exception(trans('Sorry! some items already has in cancellations'));
                     }
                 } catch( \Exception $e ) {
                     $data['message'] = $e->getMessage();
                     DB::rollback();
                 }
             } else {
-                $data['message'] = 'Sorry! cancellation is not eligible at this moment';
+                $data['message'] = __('Sorry! cancellation is not eligible at this moment');
             }
         }
 

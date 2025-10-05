@@ -8,21 +8,14 @@
     "require": {
         "php": "^8.2",
         "guzzlehttp/psr7": "*",
-        "intervention/image": "*",
         "kreait/firebase-php": "^7.21",
         "laravel/framework": "^12.0",
         "laravel/passport": "^13.0",
         "laravel/tinker": "^2.10.1",
-        "laravel/ui": "^4.6",
         "lcobucci/jwt": "^5.5",
-        "maatwebsite/excel": "^3.1",
-        "nwidart/laravel-modules": "^10.0",
         "predis/predis": "^3.1",
         "pusher/pusher-php-server": "^7.2",
-        "simplesoftwareio/simple-qrcode": "^4.2",
-        "spatie/laravel-permission": "^6.20",
-        "thiagoalessio/tesseract_ocr": "^2.13",
-        "venturecraft/revisionable": "^1.42"
+        "thiagoalessio/tesseract_ocr": "^2.13"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
