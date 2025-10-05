@@ -38,9 +38,8 @@ class UserCreatedJob implements ShouldQueue
      */
     public function handle()
     {
-        if($this->user->hasRole('merchant')) {
+        if($this->user->type == 'merchant') {
             $merchant = Merchant::where('user_id', $this->user->id)->first();
-            $this->user->notify(new NewMerchantNotify($merchant));
         } else {
             $this->user->notify(new UserCreatedNotification());
         }

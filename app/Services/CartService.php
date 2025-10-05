@@ -71,7 +71,7 @@ class CartService
 
     private function validTrip(VehicleSchedule $schedule): bool
     {
-        if(auth()->check() && !auth()->user()->hasRole('customer')) {
+        if(auth()->check()) {
             if(strtotime($schedule->operation_timeline) > time()) {
                 return true;
             }
@@ -113,7 +113,7 @@ class CartService
                 $incentive_type = ($supervisor->incentive_type == 'percent') ? 'percent' : 'fixed';
             }
 
-            if($user->hasRole(AppConst::AGENT_ROLE)) {
+            if($user->type == AppConst::AGENT_ROLE) {
                 $incentive = $user->incentive->incentive;
                 $incentive_type = $user->incentive->incentive_type;
             }

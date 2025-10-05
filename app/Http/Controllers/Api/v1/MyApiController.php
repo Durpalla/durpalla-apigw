@@ -33,7 +33,7 @@ class MyApiController extends Controller
     public function profile()
     {
         $user = Auth::user();
-        if($user->hasRole('customer') && $user->meta && $user->meta['nid_no']) {
+        if($user->type == 'customer' && $user->meta && $user->meta['nid_no']) {
             $user->nid = [
                 'nid_no' => $user->meta['nid_no'],
                 'front' => ($user->meta['nid_photo']) ? asset('nid/' . $user->meta['nid_photo']) : '',

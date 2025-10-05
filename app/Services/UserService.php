@@ -27,7 +27,7 @@ class UserService
         //if merchant user
         $merchant_id = null;
         if( $officer->type == 'merchant' ) {
-            if( $officer->hasRole('merchant') ) {
+            if( $officer->type == 'merchant') {
                 $merchant_id = $officer->id;
             } else {
                 $merchant_id = $officer->merchant_id;

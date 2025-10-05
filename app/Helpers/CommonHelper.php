@@ -195,7 +195,7 @@ class CommonHelper
                 }
             } else {
                 $query->where(function ($q) use ($keyword, $isSearchOnly, $user) {
-                    if ($isSearchOnly && !$user->hasRole('admin')) {
+                    if ($isSearchOnly && !$user->type != 'admin') {
                         $q->where('customerID', $keyword);
                     } else {
                         $q->where('customerID', 'LIKE', '%' . $keyword . '%');

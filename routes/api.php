@@ -12,6 +12,6 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::group(['prefix' => 'v1', 'middleware' => ['throttle:100,1', 'appUpgrade', 'JsonResponse']], function() {
+Route::group(['prefix' => 'v1', 'middleware' => ['throttle:100,1', 'JsonResponse']], function() {
     include(__DIR__ . '/api/v1.php');
 });

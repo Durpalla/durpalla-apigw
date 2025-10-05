@@ -257,7 +257,7 @@ class AuthController extends Controller
             return response()->json(['success' => false, 'message' => $validator->errors()->first()], $this->success);
 
         //check if account exist of not
-        $user = User::with(['roles'])->where(['mobile' => $request->mobile])->first();
+        $user = User::where(['mobile' => $request->mobile])->first();
 
         if (empty($user))
             return response()->json(['success' => false, 'message' => __('Account not found.')], $this->success);
@@ -309,12 +309,6 @@ class AuthController extends Controller
 
         $token = $user->createToken(config('app.name'))->accessToken;
 
-        //logout other devices for specefic role
-        if ($user->hasAnyRole(['supervisor', 'admin', 'manager'])) {
-            auth()->logoutOtherDevices(request()->password);
-        }
-
-
         //refined UserData
         $userData = array(
             'id' => $user->id,
@@ -323,9 +317,9 @@ class AuthController extends Controller
             'mobile' => $user->mobile,
             'type' => $user->type,
             'photo' => $user->profile_pic ? asset($user->profile_pic) : asset('default/avatar.png'),
-            'role' => $user->hasAnyRole(['supervisor', 'agent', 'partner']) ? $user->roles->first()->name : 'customer',
+            'role' => 'customer',
             'vat_visibility' => $user->type == 'merchant' && $user->merchant['vat_visibility'] == '1',
-            'nid_verification' => ($user->hasRole('customer') && $user->meta) ? $user->meta->nid_verified : 0,
+            'nid_verification' => ($user->meta) ? $user->meta->nid_verified : 0,
             'nid' => null,
             'vehicle_type' => 'all'
         );
@@ -335,10 +329,6 @@ class AuthController extends Controller
                 'front' => ($user->meta['nid_photo']) ? asset('nid/' . $user->meta['nid_photo']) : '',
                 'back' => ($user->meta['nid_back_side']) ? asset('nid/' . $user->meta['nid_back_side']) : ''
             ];
-        }
-
-        if ($user->hasRole('supervisor') && $user->type === AppConst::TYPE_MERCHANT) {
-            $userData['vehicle_type'] = ($user->vehicles->count()) ? $user->vehicles->first()->vehicle->vehicle_type : null;
         }
 
         //send data with success

@@ -56,7 +56,7 @@ class VehicleService
                         'designation' => $designation_name,
                         'trip_date' => date('d/m/Y', strtotime($report->shcedule_date)),
                         'officer' => $officer,
-                        'officer_id' => ($bookingItem['booking']['officer']->hasRole('customer')) ? 1 : $bookingItem->user_id,
+                        'officer_id' => ($bookingItem['booking']['officer']->type == 'customer') ? 1 : $bookingItem->user_id,
                         'officer_mobile' => $mobile,
                         'officer_designation' => $officer . '[' . $designation_name. ']',
                         'total_amount' => $this->calculation->calculateItemTotal($bookingItem->toArray()),

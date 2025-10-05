@@ -8,12 +8,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Passport\HasApiTokens;
-use Spatie\Permission\Traits\HasRoles;
 
 
 class Partner extends Model
 {
-    use HasApiTokens, HasRoles, SoftDeletes;
+    use HasApiTokens, SoftDeletes;
     protected $table = 'users';
     protected $guard_name = 'web';
     /**

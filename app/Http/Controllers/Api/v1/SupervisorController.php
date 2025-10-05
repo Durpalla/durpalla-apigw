@@ -266,7 +266,7 @@ class SupervisorController extends Controller
 
     public function summaryReport(Request $request): JsonResponse
     {
-        if(auth()->user()->hasAnyRole(['supervisor', AppConst::AGENT_ROLE])) {
+        if(in_array(auth()->user()->type, ['supervisor', AppConst::AGENT_ROLE])) {
             $summaries = $this->supervisor->getSummary($request->all());
             if ($summaries !== null) {
                 return response()->json(['success' => true, 'message' => '', 'data' => $summaries], $this->success);

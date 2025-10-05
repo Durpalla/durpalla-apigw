@@ -29,7 +29,7 @@ class PruneOldTokens
     public function handle(RefreshTokenCreated $event)
     {
         $user = User::where('id', $event->userId)->first();
-        if($user && $user->hasAnyRole(['admin', 'supervisor', 'manager'])) {
+        if($user) {
             DB::table('oauth_access_tokens')
                 ->where('id', '<>', $event->tokenId)
                 ->where('user_id', $event->userId)

@@ -15,7 +15,7 @@ class PaymentObserver
      */
     public function created(Payment $payment)
     {
-        if(auth()->user()->hasRole('customer') ) {
+        if(auth()->user()->type == 'customer') {
             PaymentCollector::create([
                 'booking_id' => $payment->booking_id,
                 'payment_id' => $payment->id,

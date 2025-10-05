@@ -61,7 +61,7 @@ class BookingService
                     if ($item->schedule['status'] !== AppConst::SCHEDULE_ACTIVE) {
                         return false;
                     }
-                    if (!auth()->user()->hasAnyRole(['customer', AppConst::AGENT_ROLE])) {
+                    if (!in_array(auth()->user()->type, ['customer', AppConst::AGENT_ROLE])) {
                         if ($item->booked || strtotime($item->schedule['operation_timeline']) < time()) {
                             array_push($data['booked'], $item->type . ' - ' . $item->cabin_no);
                         }
@@ -133,7 +133,7 @@ class BookingService
                     throw new \Exception("Cannot create or find customer");
                 }
                 $vat_amount = abs(getOption('vat_amount', 0));
-                $charge_amount = ($user->hasRole('customer')) ? abs(getOption('service_charge_web', 0)) : abs(getOption('service_charge_counter', 0));
+                $charge_amount = ($user->type == 'customer') ? abs(getOption('service_charge_web', 0)) : abs(getOption('service_charge_counter', 0));
                 $bookingItems = $this->fetchBookingItems($cartItems, $customer);
                 $vat_total = 0;
                 $charge_total = 0;
@@ -174,12 +174,12 @@ class BookingService
                     'charge_total' => $charge_total,
                     'booking_party' => ($user->type == 'merchant') ? 'merchant' : 'jolzan',
                     'platform' => (request()->input('platform')) ? request()->input('platform') : 'android',
-                    'status' => ($user->hasAnyRole(['customer', 'agent'])) ? AppConst::BOOKING_PENDING : AppConst::BOOKING_COMPLETE
+                    'status' => (in_array($user->type, ['customer', 'agent'])) ? AppConst::BOOKING_PENDING : AppConst::BOOKING_COMPLETE
                 ]);
 
                 collect($bookingItems)->each(function ($item, $k) use ($booking, $customer, $user) {
                     $item['booking_id'] = $booking->id;
-                    $item['status'] = ($user->hasAnyRole(['customer', 'agent'])) ? AppConst::BOOKING_ITEM_PENDING : AppConst::BOOKING_ITEM_ACTIVE;
+                    $item['status'] = (in_array($user->type, ['customer', 'agent'])) ? AppConst::BOOKING_ITEM_PENDING : AppConst::BOOKING_ITEM_ACTIVE;
                     $booking->bookingItems()->create($item);
                 });
 
@@ -193,7 +193,7 @@ class BookingService
                 $data['message'] = 'Your order has been confirmed.';
                 $booking->load(['bookingItems', 'customer']);
                 $data['data'] = $booking->format();
-                if($user->hasRole('supervisor')) {
+                if($user->type == 'supervisor') {
                     $data['advance'] = (bool)$payment->dues;
                     $data['token'] = [
                         'vehicle_name' => $vehicleName,
@@ -367,7 +367,7 @@ class BookingService
 
     private function getCustomer($user)
     {
-        if ($user->hasAnyRole(['supervisor', AppConst::AGENT_ROLE]) && !request()->input('agent_id')) {
+        if (in_array($user->type, ['supervisor', AppConst::AGENT_ROLE]) && !request()->input('agent_id')) {
             $customer = $user;
         } else {
             $customer = User::where(['mobile' => request()->input('customer_mobile')])->first();
@@ -379,8 +379,6 @@ class BookingService
                         'password' => Hash::make(Str::random(8))
                     ]);
 
-                    $role = Role::where('name', 'customer')->first();
-                    $customer->assignRole($role);
                     event(new UserCreated($customer, 'office'));
                 } catch (\Exception $exception) {
                     $customer = $user;
@@ -462,7 +460,7 @@ class BookingService
             'bank_tran_id' => (request()->trx_id) ? request()->trx_id : null,
             'customer_id' => $booking->customer_id,
             'payment_method' => request()->payment_method ? request()->payment_method : null,
-            'status' => auth()->user()->hasRole('customer') ? 'pending' : (($dues > 0) ? 'advance' : 'success'),
+            'status' => auth()->user()->type == 'customer' ? 'pending' : (($dues > 0) ? 'advance' : 'success'),
             'paid_amount' => request()->paid_amount ? request()->paid_amount : $booking->total_payable,
             'store_amount' => request()->paid_amount ? request()->paid_amount : 0,
             'dues' => $dues

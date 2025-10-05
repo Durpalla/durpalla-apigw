@@ -240,7 +240,7 @@ class QuickBookController extends Controller
                                 'name' => $passenger ? $passenger->name : $booking->customer->name,
                                 'mobile' => $passenger ? $passenger->mobile : $booking->customer->mobile,
                                 'person' => $passenger ? $passenger->person : 1,
-                                'for' => ($booking->officer->hasRole('supervisor')) ? 'self' : 'other'
+                                'for' => ($booking->officer->type == 'supervisor') ? 'self' : 'other'
                             ];
                             $row = [
                                 'id' => $item['id'],
@@ -408,7 +408,7 @@ class QuickBookController extends Controller
                     'name' => $passenger ? $passenger->name : $booking->customer->name,
                     'mobile' => $passenger ? $passenger->mobile : $booking->customer->mobile,
                     'person' => $passenger ? $passenger->person : 1,
-                    'for' => ($booking->officer->hasRole('supervisor')) ? 'self' : 'other'
+                    'for' => ($booking->officer->type == 'supervisor') ? 'self' : 'other'
                 ];
                 array_push($data['booking']['items'], [
                     'cabin_id' => $bookingItem->cabin_id,
@@ -582,7 +582,7 @@ class QuickBookController extends Controller
             ->where('status', AppConst::SCHEDULE_ACTIVE);
 
         $trip_date = ($request->trip_date) ? $request->trip_date : date('Y-m-d');
-        if ($user->hasRole('supervisor')) {
+        if ($user->type == 'supervisor') {
             $launchIds = [];
             if ($user->vehicles) {
                 foreach ($user->vehicles as $mapping) {
@@ -876,7 +876,7 @@ class QuickBookController extends Controller
                     'incentive_type' => 'percent'
                 ];
                 $user = Auth::user();
-                if ($user->hasRole('supervisor')) {
+                if ($user->type == 'supervisor') {
                     $mapping = collect($user->supervisorMappings)->where('vehicle_id', $item->vehicle_id)->first();
                     $data['item']['incentive'] = $mapping->supervisor_incentive;
                     $data['item']['incentive_type'] = $mapping->incentive_type;
@@ -1047,7 +1047,7 @@ class QuickBookController extends Controller
                         $passenger->person = 1;
                         $incentive = 0;
                         $incentive_type = 'percent';
-                        if ($user->hasRole('supervisor')) {
+                        if ($user->type == 'supervisor') {
                             $mapping = collect($user->supervisorMappings)->where('vehicle_id', $item->vehicle_id)->first();
                             $incentive = $mapping->supervisor_incentive;
                             $incentive_type = $mapping->incentive_type;
