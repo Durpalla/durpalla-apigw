@@ -9,21 +9,11 @@ use Illuminate\Support\ServiceProvider;
 
 class ResponseServiceProvider extends ServiceProvider
 {
-    /**
-     * Register services.
-     *
-     * @return void
-     */
     public function register()
     {
         //
     }
 
-    /**
-     * Bootstrap services.
-     *
-     * @return void
-     */
     public function boot(ResponseFactory $factory)
     {
         $factory->macro('success', function ($data = null, $message = 'Success!', $cookies = []) use ($factory) {
