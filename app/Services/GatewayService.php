@@ -3,10 +3,11 @@
 
 namespace App\Services;
 
-
 use App\Constants\AppConst;
 use Illuminate\Support\Collection;
 use App\Repository\Interfaces\GatewayRepositoryInterface;
+use Illuminate\Support\Facades\Cache;
+use App\Models\Gateway;
 
 class GatewayService
 {
@@ -15,6 +16,13 @@ class GatewayService
     public function __construct(GatewayRepositoryInterface $gatewayRepository)
     {
         $this->repository = $gatewayRepository;
+    }
+
+    public function all()
+    {
+        return Cache::remember('gateways', 3600, function () {
+            return Gateway::where('status', 1)->get();
+        });
     }
 
     public function getActive(): Collection

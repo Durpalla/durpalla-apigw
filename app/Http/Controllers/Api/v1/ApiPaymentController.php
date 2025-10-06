@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\v1;
 
 use App\Helpers\CommonHelper;
+use App\Helpers\LogHelper;
 use App\Models\Booking;
 use App\Models\BookingItem;
 use App\Http\Controllers\Controller;
@@ -10,7 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Library\SslCommerz\SslCommerzNotification;
 use App\Models\Payment;
-use Modules\Gateway\Entities\Gateway;
+use App\Models\Gateway;
 
 class ApiPaymentController extends Controller
 {
@@ -156,5 +157,33 @@ class ApiPaymentController extends Controller
         }
 
         return response()->json($data, $this->success);
+    }
+
+    public function verify(Request $request)
+    {
+        $data = ['success' => false, 'message' => __('Your payment cannot be validate')];
+
+        try {
+            $payment = Payment::with(['booking'])->where('booking_id', $request->input('booking_id'))->first();
+
+            if ($payment) {
+                $gwt = CommonHelper::purseGateway($payment->gateway);
+                $data = ['uuid' => $payment->uuid];
+                $gwt->verify($payment, $request, $data);
+
+                $payment->refresh();
+                $data['success'] = true;
+                $data['message'] = __('Your payment has been verified');
+                $data['data'] = $payment->format();
+                $data['data']['booking'] = $payment->booking->format();
+            }
+        } catch (\Exception $exception) {
+            LogHelper::error($exception->getMessage(), [
+                'keyword' => 'PAYMENT_VERIFY_EXCEPTION',
+                'request-data' => $request->all(),
+            ]);
+        }
+
+        return response()->json($data);
     }
 }

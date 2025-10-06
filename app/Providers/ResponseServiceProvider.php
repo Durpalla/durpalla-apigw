@@ -32,7 +32,7 @@ class ResponseServiceProvider extends ServiceProvider
             }
 
             $format = [
-                'status' => true,
+                'success' => true,
                 'message' => $message,
                 'data' => $data,
             ];
@@ -51,7 +51,7 @@ class ResponseServiceProvider extends ServiceProvider
 
         $factory->macro('error', function ($params = []) use ($factory){
             $format = [
-                'status' => false,
+                'success' => false,
                 'message' => $params['message'] ?? 'Error!',
                 'errors' => $params['errors'] ?? [],
             ];
@@ -61,7 +61,7 @@ class ResponseServiceProvider extends ServiceProvider
 
         $factory->macro('failed', function ($params = []) use ($factory){
             $format = [
-                'status' => false,
+                'success' => false,
                 'message' => $params['message'] ?? 'Failed!',
                 'errors' => $params['errors'] ?? [],
             ];

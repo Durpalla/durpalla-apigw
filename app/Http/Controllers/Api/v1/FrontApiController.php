@@ -99,22 +99,6 @@ class FrontApiController extends Controller
         return response()->json($data, $this->success);
     }
 
-    public function page( Request $request, $slug ): JsonResponse
-    {
-        $slug = (string) $slug;
-        $page = Page::where('slug', $slug)->first();
-
-        if(!$page) {
-            abort(404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Success',
-            'data' => $page->format()
-        ], $this->success);
-    }
-
     public function offers(): JsonResponse
     {
         $offers = Coupon::select('poster')->where('is_offer', 1)->take(6)->get();

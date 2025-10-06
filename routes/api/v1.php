@@ -1,22 +1,25 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\v1\FrontApiController;
-use App\Http\Controllers\Api\v1\ApiSupportController;
-use App\Http\Controllers\Api\v1\AuthController;
-use App\Http\Controllers\Api\v1\ApiCartController;
-use App\Http\Controllers\Api\v1\ApiPaymentController;
-use App\Http\Controllers\Api\v1\ApiOrderController;
+use App\Http\Controllers\Api\v1\ApiAgentCommissionController;
 use App\Http\Controllers\Api\v1\ApiBookingController;
 use App\Http\Controllers\Api\v1\ApiCancellationController;
+use App\Http\Controllers\Api\v1\ApiCartController;
+use App\Http\Controllers\Api\v1\ApiOrderController;
+use App\Http\Controllers\Api\v1\ApiPaymentController;
+use App\Http\Controllers\Api\v1\ApiSupportController;
+use App\Http\Controllers\Api\v1\ApiWithdrawalController;
+use App\Http\Controllers\Api\v1\ApiWithdrawalMethodController;
+use App\Http\Controllers\Api\v1\AuthController;
+use App\Http\Controllers\Api\v1\FaqController;
+use App\Http\Controllers\Api\v1\FrontApiController;
+use App\Http\Controllers\Api\v1\GatewayController;
 use App\Http\Controllers\Api\v1\MyApiController;
+use App\Http\Controllers\Api\v1\NidVerificationController;
+use App\Http\Controllers\Api\v1\PageController;
 use App\Http\Controllers\Api\v1\QuickBookController;
 use App\Http\Controllers\Api\v1\SupervisorController;
 use App\Http\Controllers\Api\v1\TestController;
-use App\Http\Controllers\Api\v1\NidVerificationController;
-use App\Http\Controllers\Api\v1\ApiWithdrawalController;
-use App\Http\Controllers\Api\v1\ApiWithdrawalMethodController;
-use App\Http\Controllers\Api\v1\ApiAgentCommissionController;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware(['JsonResponse'])->group(function () {
     Route::get('offers', [FrontApiController::class, 'offers']);
@@ -25,6 +28,12 @@ Route::middleware(['JsonResponse'])->group(function () {
     Route::get('page/{slug}', [FrontApiController::class, 'page']);
     Route::get('vehicles', [FrontApiController::class, 'vehicles']);
     Route::post('download/link', [FrontApiController::class, 'downloadLink']);
+
+    Route::prefix('page')->group(function () {
+        Route::get('{slug}', [PageController::class, 'show']);
+    });
+
+    Route::get('faq', [FaqController::class, 'index']);
 
     Route::prefix('support')->group(function () {
         Route::post('/send', [ApiSupportController::class, 'store']);
@@ -54,10 +63,7 @@ Route::middleware(['JsonResponse'])->group(function () {
         Route::get('/reset', [ApiCartController::class, 'resetLockdItems']);
     });
 
-    Route::prefix('payment')->group(function () {
-        Route::post('/make', [ApiPaymentController::class, 'make']);
-        Route::post('/validate', [ApiPaymentController::class, 'validateOrder']);
-    });
+    /*************** AUTHENTICATED API ****************/
 
     Route::middleware(['auth:api'])->group(function () {
         Route::get('test1', [TestController::class, 'test1']);
@@ -74,6 +80,16 @@ Route::middleware(['JsonResponse'])->group(function () {
         Route::prefix('booking')->group(function () {
             Route::get('check/{id}', [ApiBookingController::class, 'check']);
             Route::post('cancel', [ApiCancellationController::class, 'store']);
+        });
+
+        Route::prefix('payment')->group(function () {
+            Route::post('make', [ApiPaymentController::class, 'make']);
+            Route::post('validate', [ApiPaymentController::class, 'validateOrder']);
+            Route::get('verify', [ApiPaymentController::class, 'verify']);
+        });
+
+        Route::prefix('gateway')->group(function () {
+            Route::get('/', [GatewayController::class, 'index']);
         });
 
         Route::prefix('my')->group(function () {
