@@ -39,6 +39,7 @@ class AppConst
     const GATEWAY_PENDING = 0;
     const SUPERVISOR_ROLE = 'supervisor';
     const TYPE_MERCHANT = 'merchant';
+    const USER_TYPE_CUSTOMER = 'customer';
     const TYPE_JOLZAN = 'admin';
     const PARTNER_ROLE = 'partner';
     const PARTNER_TYPE = 'partner';
