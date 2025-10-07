@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\v1;
 
 use App\Constants\AppConst;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\App;
 use App\Http\Controllers\Controller;
@@ -41,7 +42,9 @@ class AuthController extends Controller
         if ($validator->fails()) {
             $data['message'] = $validator->errors()->first();
         } else {
-            $account = User::where('mobile', $request->mobile)->first();
+            $account = User::where('type', AppConst::USER_TYPE_CUSTOMER)
+                ->where('mobile', $request->mobile)
+                ->first();
 
             if ($account) {
                 if ($account->email_verified_at == null || $account->status == 0) {
@@ -143,7 +146,10 @@ class AuthController extends Controller
                 if (strtotime($otp->updated_at) < time() - 900) {
                     $data['message'] = 'Your otp code has been expired.';
                 } else {
-                    $user = User::firstOrNew(['mobile' => $request->mobile]);
+                    $user = User::firstOrNew([
+                        'mobile' => $request->mobile,
+                        'type' => AppConst::USER_TYPE_CUSTOMER
+                    ]);
 
                     if ($user->id) {
                         $user->email_verified_at = now();
@@ -200,12 +206,10 @@ class AuthController extends Controller
                     $user->nid = $request->nid;
                     $user->password = Hash::make($request->password);
                     $user->email_verified_at = now();
-                    $user->type = 'customer';
+                    $user->type = AppConst::USER_TYPE_CUSTOMER;
                     $user->device_id = $request->device_id;
 
                     $user->save();
-                    $role = Role::where('name', 'customer')->first();
-                    $user->assignRole($role);
                     $platform = ($request->platform) ? $request->platform : 'web';
                     event(new UserCreated($user, $platform));
                     DB::commit();
@@ -224,9 +228,9 @@ class AuthController extends Controller
                         'email' => $user->email,
                         'mobile' => $user->mobile,
                         'type' => $user->type,
-                        'role' => 'customer',
                         'photo' => $user->profile_pic ? asset($user->profile_pic) : asset('default/avatar.png')
                     );
+
                     $data['user'] = $userData;
                     $data['token'] = $token;
                     $data['success'] = true;
@@ -257,15 +261,12 @@ class AuthController extends Controller
             return response()->json(['success' => false, 'message' => $validator->errors()->first()], $this->success);
 
         //check if account exist of not
-        $user = User::where(['mobile' => $request->mobile])->first();
+        $user = User::where('type', AppConst::USER_TYPE_CUSTOMER)
+            ->where(['mobile' => $request->mobile])
+            ->first();
 
         if (empty($user))
             return response()->json(['success' => false, 'message' => __('Account not found.')], $this->success);
-        //check password is matched
-        // return Hash::make( '123456' );
-        // return $user->password;
-
-        // return response()->json( $request->password );
 
         if ($user->email_verified_at == null) {
             $code = mt_rand(100000, 999999);
@@ -317,7 +318,6 @@ class AuthController extends Controller
             'mobile' => $user->mobile,
             'type' => $user->type,
             'photo' => $user->profile_pic ? asset($user->profile_pic) : asset('default/avatar.png'),
-            'role' => 'customer',
             'vat_visibility' => $user->type == 'merchant' && $user->merchant['vat_visibility'] == '1',
             'nid_verification' => ($user->meta) ? $user->meta->nid_verified : 0,
             'nid' => null,
@@ -429,6 +429,7 @@ class AuthController extends Controller
     public function reset(Request $request)
     {
         $data = ['success' => false, 'message' => __('Cannot verify user')];
+
         //validation rules
         $validator = Validator::make($request->all(), [
             'mobile' => 'bail|required|max:14|regex:/^(01){1}[3456789]{1}(\d){8}$/|min:11|exists:users,mobile',
@@ -442,7 +443,9 @@ class AuthController extends Controller
         } else {
             DB::beginTransaction();
             try {
-                $user = User::where('mobile', $request->mobile)->first();
+                $user = User::where('type', AppConst::USER_TYPE_CUSTOMER)
+                    ->where('mobile', $request->mobile)
+                    ->first();
                 $user->password = Hash::make($request->password);
                 $user->save();
                 DB::commit();
