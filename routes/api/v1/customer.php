@@ -69,12 +69,9 @@ Route::middleware(['JsonResponse'])->group(function () {
 
         Route::post('coupon/validate', [ApiOrderController::class, 'couponValidate']);
 
-        Route::prefix('order')->group(function () {
-            Route::post('/confirm', [ApiOrderController::class, 'confirm']);
-            Route::post('/transaction', [ApiOrderController::class, 'payment']);
-        });
-
         Route::prefix('booking')->group(function () {
+            Route::post('confirm', [ApiOrderController::class, 'confirm']);
+            Route::post('payment', [ApiOrderController::class, 'payment']);
             Route::get('check/{id}', [ApiBookingController::class, 'check']);
             Route::post('cancel', [ApiCancellationController::class, 'store']);
         });

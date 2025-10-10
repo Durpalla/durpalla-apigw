@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\v1;
 
+use App\Http\Requests\BookingConfirmRequest;
 use Illuminate\Http\JsonResponse;
 use App\Jobs\BookingQrcodeGenerateJob;
 use App\Models\Booking;
@@ -28,13 +29,7 @@ class ApiOrderController extends Controller
         $this->bookingService = $bookingService;
     }
 
-    /**
-     * Confirm order.
-     *
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function confirm(Request $request): JsonResponse
+    public function confirm(BookingConfirmRequest $request): JsonResponse
     {
         $data = ['success' => false, 'message' => __('Your booking request is not valid')];
         try {

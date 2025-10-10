@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Jobs\OTPCodeSendingJob;
 use App\Models\User;
 use App\Models\UserOtp;
+use Illuminate\Support\Facades\Log;
 use Lang;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
@@ -236,8 +237,9 @@ class AuthController extends Controller
                     $data['success'] = true;
                     $data['message'] = __('You have successfully registered');
                 } catch (\Exception $e) {
+                    dd($e);
                     DB::rollback();
-//                    Log::debug( $e->getMessage());
+                    Log::debug( $e->getMessage());
                 }
             } else {
                 $data['message'] = __('Sorry! verification failed.');
