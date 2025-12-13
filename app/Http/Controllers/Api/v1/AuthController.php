@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\v1;
 
 use App\Constants\AppConst;
+use App\Http\Requests\LoginRequest;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\App;
@@ -31,76 +32,22 @@ class AuthController extends Controller
         $this->success = 200;
     }
 
-    public function check(Request $request)
+    public function check(LoginRequest $request)
     {
         $data = ['success' => false, 'message' => __('Something went wrong. Please try again.')];
-        //validation rules
-        $validator = Validator::make($request->all(), [
-            'mobile' => 'bail|required|max:14|regex:/^(01){1}[3456789]{1}(\d){8}$/|min:11'
-        ]);
 
-        //validation fails
-        if ($validator->fails()) {
-            $data['message'] = $validator->errors()->first();
-        } else {
-            $account = User::where('type', AppConst::USER_TYPE_CUSTOMER)
-                ->where('mobile', $request->mobile)
-                ->first();
+        $account = User::where('type', AppConst::USER_TYPE_CUSTOMER)
+            ->where('mobile', $request->mobile)
+            ->first();
 
-            if ($account) {
-                if ($account->email_verified_at == null || $account->status == 0) {
+        if ($account) {
+            if ($account->email_verified_at == null || $account->status == 0) {
 
-                    $code = mt_rand(100000, 999999);
-                    if (App::environment('local')) {
-                        $code = '123456';
-                    }
-                    $otp = UserOtp::firstOrNew(['mobile' => $request->mobile]);
-                    if ($otp) {
-                        if (strtotime($otp->updated_at) < (time() - 900)) {
-                            $otp->otp_code = $code;
-                            $otp->attempts = 1;
-                        } elseif ($otp->attempts >= 15) {
-                            return response()->json(['success' => false, 'message' => __('You have already tried more than 5 time.')], $this->success);
-                        } else {
-                            $otp->attempts += 1;
-                        }
-                    } else {
-                        $otp->mobile = $request->mobile;
-                        $otp->attempts = 1;
-                    }
-                    $otp->updated_at = now();
-
-                    if ($otp->save()) {
-                        $this->dispatch(new OTPCodeSendingJob($request->mobile, $otp->otp_code));
-                        sendSMS([
-                            'mobile' => $request->mobile,
-                            'message' => config('app.name') . ' verification code is ' . $otp->otp_code
-                        ]);
-                        // Log::debug('OTP Code for ' . $request->mobile . ' - ' . $otp->otp_code);
-                    }
-
-                    $data['success'] = true;
-                    $data['message'] = __('Customer account not verified');
-                    $data['step'] = 'otp';
-                } elseif ($account && $account->status == 1) {
-                    $data['success'] = true;
-                    $data['message'] = __('Customer account found');
-                    $data['step'] = 'login';
-                } else {
-                    $data['success'] = false;
-                    $data['message'] = __('Customer account is not active');
-                    $data['step'] = 'check';
-                }
-
-            } else {
-                $code = '123456';
-                if (App::environment('production')) {
-                    $code = mt_rand(100000, 999999);
+                $code = mt_rand(100000, 999999);
+                if (App::environment('local')) {
+                    $code = '123456';
                 }
                 $otp = UserOtp::firstOrNew(['mobile' => $request->mobile]);
-                $otp->mobile = $request->mobile;
-                $otp->otp_code = $code;
-                $otp->verified = 0;
                 if ($otp) {
                     if (strtotime($otp->updated_at) < (time() - 900)) {
                         $otp->otp_code = $code;
@@ -110,18 +57,63 @@ class AuthController extends Controller
                     } else {
                         $otp->attempts += 1;
                     }
+                } else {
+                    $otp->mobile = $request->mobile;
+                    $otp->attempts = 1;
                 }
                 $otp->updated_at = now();
+
                 if ($otp->save()) {
+                    $this->dispatch(new OTPCodeSendingJob($request->mobile, $otp->otp_code));
                     sendSMS([
                         'mobile' => $request->mobile,
                         'message' => config('app.name') . ' verification code is ' . $otp->otp_code
                     ]);
-//                    Log::debug('OTP Code for ' . $request->mobile . ' - ' . $otp->otp_code);
-                    $data['success'] = true;
-                    $data['message'] = __('Customer account not found');
-                    $data['step'] = 'otp';
+                    // Log::debug('OTP Code for ' . $request->mobile . ' - ' . $otp->otp_code);
                 }
+
+                $data['success'] = true;
+                $data['message'] = __('Customer account not verified');
+                $data['step'] = 'otp';
+            } elseif ($account && $account->status == 1) {
+                $data['success'] = true;
+                $data['message'] = __('Customer account found');
+                $data['step'] = 'login';
+            } else {
+                $data['success'] = false;
+                $data['message'] = __('Customer account is not active');
+                $data['step'] = 'check';
+            }
+
+        } else {
+            $code = '123456';
+            if (App::environment('production')) {
+                $code = mt_rand(100000, 999999);
+            }
+            $otp = UserOtp::firstOrNew(['mobile' => $request->mobile]);
+            $otp->mobile = $request->mobile;
+            $otp->otp_code = $code;
+            $otp->verified = 0;
+            if ($otp) {
+                if (strtotime($otp->updated_at) < (time() - 900)) {
+                    $otp->otp_code = $code;
+                    $otp->attempts = 1;
+                } elseif ($otp->attempts >= 15) {
+                    return response()->json(['success' => false, 'message' => __('You have already tried more than 5 time.')], $this->success);
+                } else {
+                    $otp->attempts += 1;
+                }
+            }
+            $otp->updated_at = now();
+            if ($otp->save()) {
+                sendSMS([
+                    'mobile' => $request->mobile,
+                    'message' => config('app.name') . ' verification code is ' . $otp->otp_code
+                ]);
+//                    Log::debug('OTP Code for ' . $request->mobile . ' - ' . $otp->otp_code);
+                $data['success'] = true;
+                $data['message'] = __('Customer account not found');
+                $data['step'] = 'otp';
             }
         }
 
@@ -233,7 +225,7 @@ class AuthController extends Controller
                     $data['message'] = __('You have successfully registered');
                 } catch (\Exception $e) {
                     DB::rollback();
-                    Log::debug( $e->getMessage());
+                    Log::debug($e->getMessage());
                 }
             } else {
                 $data['message'] = __('Sorry! verification failed.');
