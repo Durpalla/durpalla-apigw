@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\v1;
 
 use App\Helpers\CommonHelper;
 use App\Helpers\LogHelper;
+use App\Http\Requests\PaymentCreateRequest;
 use App\Models\Booking;
 use App\Models\BookingItem;
 use App\Http\Controllers\Controller;
@@ -17,19 +18,11 @@ class ApiPaymentController extends Controller
 {
     private $success = 200;
 
-    public function make(Request $request)
+    public function make(PaymentCreateRequest $request)
     {
         $data = ['success' => false, 'message' => __('Your payment cannot be processed')];
 
-        $validator = Validator::make($request->all(), [
-            'order_id' => 'bail|required|integer|exists:bookings,id',
-            'gateway_id' => 'bail|required|integer|exists:gateways,id',
-        ]);
-
-        //validation fails
-        if ($validator->fails()) {
-            $data['message'] = $validator->errors()->first();
-        } else {
+        try {
             $order = Booking::with(['payment', 'bookingItems', 'customer'])->findOrFail($request->order_id);
 
             $payment = $order->payment;
@@ -52,8 +45,9 @@ class ApiPaymentController extends Controller
             $gwt = CommonHelper::purseGateway($gateway);
 
             $gwt->create($payment, $request, $data);
+        } catch (\Exception $exception) {
+            $data['message'] = "Internal Error. Please try again later.";
         }
-
         return response()->json($data);
     }
 

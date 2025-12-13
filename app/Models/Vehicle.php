@@ -38,6 +38,13 @@ class Vehicle extends Model
         'status'
     ];
 
+    protected $casts = [
+        'registration_expiry_date' => 'datetime:Y-m-d H:i:s',
+        'fitness_expiry_date' => 'datetime:Y-m-d H:i:s',
+        'created_at' => 'datetime:Y-m-d H:i:s',
+        'updated_at' => 'datetime:Y-m-d H:i:s',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

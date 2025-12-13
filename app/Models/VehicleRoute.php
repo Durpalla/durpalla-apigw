@@ -14,6 +14,11 @@ class VehicleRoute extends Model
 
     protected $fillable = ['service_type', 'route_name', 'route_no', 'route_type'];
 
+    protected $casts = [
+        'created_at' => 'datetime:Y-m-d H:i:s',
+        'updated_at' => 'datetime:Y-m-d H:i:s',
+    ];
+
     public function vehicles(): HasManyThrough
     {
     	return $this->hasManyThrough(Vehicle::class, VehicleRouteMapping::class, 'vehicle_id', 'id');

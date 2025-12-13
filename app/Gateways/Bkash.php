@@ -2,6 +2,7 @@
 
 namespace App\Gateways;
 
+use App\Constants\AppConst;
 use App\Helpers\LogHelper;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -37,7 +38,7 @@ class Bkash implements GatewayInterface, BkashInterface
         try {
             $payload = [
                 'mode' => '0011',
-                'callbackURL' => $this->credentials['endpoints']['callback'],
+                'callbackURL' => route('gateway.callback', $payment->gateway_id),
                 'amount' => $payment->paid_amount,
                 'currency' => $this->credentials['currency'],
                 'intent' => 'sale',
@@ -53,7 +54,7 @@ class Bkash implements GatewayInterface, BkashInterface
                 $jsonData = $res->json();
 
                 if (is_array($jsonData) && array_key_exists('paymentID', $jsonData)) {
-                    $payment->update(['gateway_trx_id' => $jsonData['paymentID']]);
+                    $payment->update(['gateway_initiated_id' => $jsonData['paymentID']]);
                     $data['status'] = 'success';
                     $data['success'] = true;
                     $data['message'] = 'success';
@@ -86,17 +87,17 @@ class Bkash implements GatewayInterface, BkashInterface
                     if ($jsonData['statusCode'] == '2062') {
                         $data['status'] = true;
                         $data['message'] = __('Payment has already been succeeded.');
-                        $payment->update(['status' => 'success']);
+                        $payment->successful();
                     } else {
                         $data['message'] = $jsonData['statusMessage'];
                         if (array_key_exists('paymentID', $jsonData)) {
                             $data['status'] = true;
                             $data['message'] = __('Payment successful');
-                            $payment->update(['status' => 'success']);
+                            $payment->successful();
                         } else {
                             $data['status'] = false;
                             $data['message'] = $jsonData['statusMessage'] ?? __('Payment failed');
-                            $payment->update(['status' => 'failed']);
+                            $payment->failed();
                         }
                     }
                 }

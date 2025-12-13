@@ -11,44 +11,28 @@ use Modules\Booking\Jobs\BookingSessionReleaseJob;
 
 class BookingObserver
 {
-    /**
-     * @var CalculationService
-     */
-    private $calculation;
-
-    public function __construct(CalculationService $calculationService)
-    {
-        $this->calculation = $calculationService;
-    }
-    /**
-     * Handle the booking "created" event.
-     *
-     * @param  Booking  $booking
-     * @return void
-     */
     public function created(Booking $booking)
     {
-        dispatch(new BookingSessionReleaseJob());
-        if(in_array($booking->status, [AppConst::BOOKING_COMPLETE, AppConst::BOOKING_ADVANCE]))
+        if (in_array($booking->status, [AppConst::BOOKING_COMPLETE, AppConst::BOOKING_ADVANCE]))
             Cache::forget('daily_booking_' . $booking->booking_date);
     }
 
     /**
      * Handle the booking "updated" event.
      *
-     * @param  Booking  $booking
+     * @param Booking $booking
      * @return void
      */
     public function updated(Booking $booking)
     {
-        if(in_array($booking->status, [AppConst::BOOKING_COMPLETE, AppConst::BOOKING_ADVANCE]))
+        if (in_array($booking->status, [AppConst::BOOKING_COMPLETE, AppConst::BOOKING_ADVANCE]))
             Cache::forget('daily_booking_' . $booking->booking_date);
     }
 
     /**
      * Handle the booking "deleted" event.
      *
-     * @param  Booking  $booking
+     * @param Booking $booking
      * @return void
      */
     public function deleted(Booking $booking)
@@ -59,7 +43,7 @@ class BookingObserver
     /**
      * Handle the booking "restored" event.
      *
-     * @param  Booking  $booking
+     * @param Booking $booking
      * @return void
      */
     public function restored(Booking $booking)
@@ -70,7 +54,7 @@ class BookingObserver
     /**
      * Handle the booking "force deleted" event.
      *
-     * @param  Booking  $booking
+     * @param Booking $booking
      * @return void
      */
     public function forceDeleted(Booking $booking)

@@ -44,6 +44,12 @@ class BookingItem extends Model
         'is_locked'
     ];
 
+    protected $casts = [
+        'passenger' => 'array',
+        'booking_date' => 'datetime:Y-m-d H:i:s',
+        'trip_date' => 'datetime:Y-m-d H:i:s',
+    ];
+
     public function item(): BelongsTo
     {
     	return $this->belongsTo(Cabin::class, 'cabin_id', 'id');

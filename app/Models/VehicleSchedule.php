@@ -30,6 +30,12 @@ class VehicleSchedule extends Model
         'operation_hour',
         'operation_timeline'
     ];
+
+    protected $casts = [
+        'schedule_date' => 'datetime:Y-m-d H:i:s',
+        'created_at' => 'datetime:Y-m-d H:i:s',
+        'updated_at' => 'datetime:Y-m-d H:i:s',
+    ];
     const CANCEL = "CANCEL";
     const RESCHEDULE = "RESCHEDULE";
 

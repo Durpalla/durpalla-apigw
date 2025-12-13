@@ -13,6 +13,7 @@ class AppConst
     const BOOKING_ITEM_PENDING = 0;
     const BOOKING_ITEM_ACTIVE = 1;
     const BOOKING_ITEM_CANCELLED = 2;
+    const BOOKING_ITEM_FAILED = 9;
     const CANCELLATION_PENDING = 0;
     const CANCELLATION_APPROVED = 1;
     const CANCELLATION_PROCESSING = 2;

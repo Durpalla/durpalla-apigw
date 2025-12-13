@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Constants\AppConst;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -50,6 +51,31 @@ class Payment extends Model
     public function getNiceStatusAttribute(): string
     {
         return Str::ucfirst($this->status);
+    }
+
+    public function successful(): void
+    {
+        $this->update(['status' => 'success']);
+        if($this->booking->status != AppConst::BOOKING_PENDING) {
+            $this->booking->update(['status' => AppConst::BOOKING_COMPLETE]);
+            $this->bookingItems->each(function ($item) {
+                $item->update(['status' => AppConst::BOOKING_ITEM_ACTIVE]);
+            });
+        }
+    }
+
+    public function failed(): void
+    {
+        $this->update(['status' => 'failed']);
+
+        if($this->booking->status != AppConst::BOOKING_PENDING) {
+            $this->booking->update(['status' => AppConst::BOOKING_FAILED]);
+            $this->bookingItems->each(function ($item) {
+                $item->update(['status' => AppConst::BOOKING_ITEM_FAILED]);
+            });
+        } else {
+
+        }
     }
 
     public function format(): array

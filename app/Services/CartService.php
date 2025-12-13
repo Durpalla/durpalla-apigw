@@ -53,10 +53,24 @@ class CartService
     public function validate(ScheduleCabinMapping $item): bool
     {
         try {
+            $user = request()->user();
+
             if(!$this->validTrip($item->schedule)) {
                 throw new \Exception('Trip is not valid');
             }
+
             if ($item->is_locked || $item->booked || $item->is_reserved) {
+                throw new \Exception('Your selected item is not available');
+            }
+            if(!$user && $item->ownership == 'merchant') {
+                throw new \Exception('Your selected item is not available');
+            }
+
+            if($user && in_array($user->type, ['agent', 'customer']) && $item->ownership == 'merchant') {
+                throw new \Exception('Your selected item is not available');
+            }
+
+            if($user->type == 'supervisor' && $item->ownership != 'merchant') {
                 throw new \Exception('Your selected item is not available');
             }
 
@@ -107,7 +121,7 @@ class CartService
                 $service_charge_type = $charges['type'];
             }
 
-            if ($user->hasRole('supervisor')) {
+            if ($user->type == 'supervisor') {
                 $supervisor = collect($user->supervisorMappings)->where('vehicle_id', $item->schedule->vehicle_id)->first();
                 $incentive = $supervisor->supervisor_incentive;
                 $incentive_type = ($supervisor->incentive_type == 'percent') ? 'percent' : 'fixed';

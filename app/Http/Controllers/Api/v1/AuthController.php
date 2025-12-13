@@ -214,11 +214,6 @@ class AuthController extends Controller
                     $platform = ($request->platform) ? $request->platform : 'web';
                     event(new UserCreated($user, $platform));
                     DB::commit();
-                    //if password matched then create authenticate
-                    Auth::login($user);
-
-                    //create / Generate Access Token
-
                     $token = $user->createToken(config('app.name'))->accessToken;
                     // $token = Str::random(80);
 
@@ -237,7 +232,6 @@ class AuthController extends Controller
                     $data['success'] = true;
                     $data['message'] = __('You have successfully registered');
                 } catch (\Exception $e) {
-                    dd($e);
                     DB::rollback();
                     Log::debug( $e->getMessage());
                 }
@@ -305,13 +299,7 @@ class AuthController extends Controller
         $user->device_id = $request->device_id;
         $user->save();
 
-        //if password matched then create authenticate
-        Auth::login($user);
-
-        //create / Generate Access Token
-
         $token = $user->createToken(config('app.name'))->accessToken;
-
         //refined UserData
         $userData = array(
             'id' => $user->id,
@@ -452,11 +440,7 @@ class AuthController extends Controller
                 $user->save();
                 DB::commit();
 
-                //if password matched then create authenticate
-                Auth::login($user);
-
                 //create / Generate Access Token
-
                 $data['token'] = $user->createToken(config('app.name'))->accessToken;
                 // $token = Str::random(80);
 

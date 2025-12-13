@@ -1,13 +1,12 @@
 <?php
 
-
 namespace App\Services;
-
 
 use App\Constants\AppConst;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use App\Jobs\CabinMappingBookingJob;
 use App\Models\Booking;
@@ -22,9 +21,8 @@ use App\Repository\Interfaces\BookingItemRepositoryInterface;
 use App\Repository\Interfaces\BookingRepositoryInterface;
 use App\Models\ScheduleCabinMapping;
 use App\Models\User;
-use Modules\Booking\Events\BookingCompleteEvent;
-use Modules\Booking\Jobs\BookingChargeAdjustmentJob;
-use Spatie\Permission\Models\Role;
+use App\Events\BookingCompleteEvent;
+use App\Jobs\BookingChargeAdjustmentJob;
 
 class BookingService
 {
@@ -34,9 +32,9 @@ class BookingService
     private CancellationRepositoryInterface $cancellationRepository;
 
     public function __construct(
-        BookingRepositoryInterface $booking,
-        CalculationService $calculation,
-        BookingItemRepositoryInterface $bookingItem,
+        BookingRepositoryInterface      $booking,
+        CalculationService              $calculation,
+        BookingItemRepositoryInterface  $bookingItem,
         CancellationRepositoryInterface $cancellationRepository
     )
     {
@@ -50,18 +48,20 @@ class BookingService
     {
         $data = ['status' => true, 'message' => '', 'booked' => []];
         try {
-            if(empty($items)) {
+            if (empty($items)) {
                 throw new \Exception('No cart items provided', 404);
             }
             $mappings = ScheduleCabinMapping::with('schedule')->whereIn('id', $items)->get();
             if (count($items) !== $mappings->count()) {
                 throw new \Exception('Item does not match');
             }
+
             if (count($items) !== collect($mappings)->filter(function ($item, $k) use (&$data) {
                     if ($item->schedule['status'] !== AppConst::SCHEDULE_ACTIVE) {
                         return false;
                     }
-                    if (!in_array(auth()->user()->type, ['customer', AppConst::AGENT_ROLE])) {
+
+                    if (!in_array(auth('api')->user()->type, ['customer', AppConst::AGENT_ROLE])) {
                         if ($item->booked || strtotime($item->schedule['operation_timeline']) < time()) {
                             array_push($data['booked'], $item->type . ' - ' . $item->cabin_no);
                         }
@@ -72,14 +72,13 @@ class BookingService
                         }
                         return !$item->booked && !$item->is_reserved && $item->ownership == 'jolzan' && strtotime($item->schedule['leaving_at']) > time();
                     }
-                })->count())
-            {
+                })->count()) {
                 throw new \Exception('Some items already been booked or reserved');
             }
         } catch (\Exception $exception) {
             $data['status'] = false;
             $data['message'] = $exception->getMessage();
-            if(!empty($data['booked'])) {
+            if (!empty($data['booked'])) {
                 $data['message'] = 'Your desired ' . implode(',', $data['booked']) . ' booked by others, please choose another';
             }
         }
@@ -90,12 +89,12 @@ class BookingService
     {
         $data = ['status' => true, 'message' => ''];
         $exists = [];
-        collect($items)->each(function($item, $key) use(&$data, &$exists) {
-            if($item->cabin_type !== 'deck') {
+        collect($items)->each(function ($item, $key) use (&$data, &$exists) {
+            if ($item->cabin_type !== 'deck') {
                 $trip = VehicleSchedule::find($item->trip_id);
                 $booking = BookingItem::where(['cabin_id' => $item->cabin_id, 'trip_id' => $item->trip_id])
                     ->get()
-                    ->filter(function($item, $key) {
+                    ->filter(function ($item, $key) {
                         return in_array($item->status, [AppConst::BOOKING_ITEM_ACTIVE, AppConst::BOOKING_ITEM_PENDING]);
                     });
                 if ($trip->status !== AppConst::SCHEDULE_ACTIVE || $booking->count() > 0) {
@@ -104,7 +103,7 @@ class BookingService
                 }
             }
         });
-        if(!empty($exists)) {
+        if (!empty($exists)) {
             $data['message'] = 'Your desired ' . implode(',', $exists) . ' is not available';
         }
         return $data;
@@ -188,12 +187,16 @@ class BookingService
                 BookingCompleteEvent::dispatch($booking);
                 $data['success'] = true;
                 $data['order_id'] = $booking->id;
-                $data['invoice'] = route('invoice.download', $booking->id);
-                $data['trans_id'] = (string) $payment->transaction_id;
+                $data['invoice'] = URL::temporarySignedRoute(
+                    'invoice.download',
+                    now()->addMinutes(30),
+                    ['id' => $booking->id]
+                );
+                $data['trans_id'] = (string)$payment->transaction_id;
                 $data['message'] = 'Your order has been confirmed.';
                 $booking->load(['bookingItems', 'customer']);
                 $data['data'] = $booking->format();
-                if($user->type == 'supervisor') {
+                if ($user->type == 'supervisor') {
                     $data['advance'] = (bool)$payment->dues;
                     $data['token'] = [
                         'vehicle_name' => $vehicleName,
@@ -204,7 +207,7 @@ class BookingService
                         'leaving_at' => $leaving_time,
                         'transaction_id' => $payment->transaction_id,
                         'booking_items' => "",
-                        'items' => (object) $item_list,
+                        'items' => (object)$item_list,
                         'items_count' => $item_count,
                         'supervisor_name' => $user->name,
                         'customer_name' => $customer->name,
@@ -357,7 +360,11 @@ class BookingService
             BookingCompleteEvent::dispatch($booking);
             $data['success'] = true;
             $data['order_id'] = $booking->id;
-            $data['invoice'] = route('invoice.download', $booking->id);
+            $data['invoice'] = URL::temporarySignedRoute(
+                'invoice.download',
+                now()->addMinutes(30),
+                ['id' => $booking->id]
+            );
             $data['trans_id'] = $payment->transaction_id;
             $data['message'] = 'Your order has been confirmed.';
         }
@@ -395,9 +402,9 @@ class BookingService
         $vatAmount = getOption('vat_amount', 0);
         $platform = (request()->input('platform')) ? request()->input('platform') : 'mobile';
         return collect($cartItems)->map(function ($item, $key) use ($customer, $chargeType, $vatAmount, $platform, $user) {
-            $item = (array) $item;
+            $item = (array)$item;
             $passenger = $item['passengers'];
-            if( $item['for_self']) {
+            if ($item['for_self']) {
                 $passenger = ['type' => 'self', 'name' => $customer->name, 'mobile' => $customer->mobile, 'person' => 1];
             } else {
                 $passenger['type'] = 'other';
@@ -409,7 +416,7 @@ class BookingService
                 ];
             } else {
                 $mapping = ScheduleCabinMapping::with(['schedule.vehicle.merchant', 'cabinType'])->find($item['item_id']);
-                if( is_array($passenger) ) {
+                if (is_array($passenger)) {
                     $passenger['person'] = ($mapping->cabinType) ? $mapping->cabinType['capacity'] : 1;
                 }
                 $data = [
@@ -442,7 +449,7 @@ class BookingService
                     'incentive' => 0,
                     'incentive_type' => 'percent',
                 ];
-                if($user->hasRole(AppConst::AGENT_ROLE)) {
+                if ($user->type == AppConst::AGENT_ROLE) {
                     $data['incentive'] = $user->incentive->incentive;
                     $data['incentive_type'] = $user->incentive->incentive_type;
                 }
@@ -485,12 +492,12 @@ class BookingService
     public function cancelBooking($booking, bool $charge_refundable = false)
     {
         $user = auth()->user();
-        $cancellableItems = $booking->bookingItems->filter(function($item, $key) {
+        $cancellableItems = $booking->bookingItems->filter(function ($item, $key) {
             return $item->status === AppConst::BOOKING_ITEM_ACTIVE;
         });
 
         $cancelType = 't';
-        if($booking->bookingItems->count() < $cancellableItems->count()) {
+        if ($booking->bookingItems->count() < $cancellableItems->count()) {
             $cancelType = 'p';
         }
         $cancellation = $this->cancellationRepository->create([
@@ -500,15 +507,15 @@ class BookingService
             'user_id' => $user->id,
             'transaction_id' => uniqid(),
             'items' => $cancellableItems->implode('id', ','),
-            'vat_refundable' => (int) getOption('is_vat_refundable'),
+            'vat_refundable' => (int)getOption('is_vat_refundable'),
             'charge_refundable' => ($charge_refundable) ? 1 : 0,
-            'total_refundable' => $cancellableItems->map(function($item, $key) {
+            'total_refundable' => $cancellableItems->map(function ($item, $key) {
                 return [
                     'refundable' => $this->calculation->calculateRefundableAmount($item->toArray(), true)
                 ];
             })->sum('refundable')
         ]);
-        $cancellableItems->each(function($item, $key) use ($cancellation, $user, $booking) {
+        $cancellableItems->each(function ($item, $key) use ($cancellation, $user, $booking) {
             BookingCancellationItem::create([
                 'booking_cancellation_id' => $cancellation->id,
                 'booking_item_id' => $item->id,
