@@ -13,7 +13,7 @@ class AuthCheckRule implements ValidationRule
     {
         try {
             $user = User::where('mobile', $value)->first();
-            if($user->type != AppConst::USER_TYPE_CUSTOMER) {
+            if($user && $user->type != AppConst::USER_TYPE_CUSTOMER) {
                 $fail('mobile', __('Sorry! this mobile number is locked!'));
                 return;
             }
