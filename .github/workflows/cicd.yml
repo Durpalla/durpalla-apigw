@@ -1,0 +1,27 @@
+name: Unified CI/CD Pipeline
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy-to-apigw-durpalla-com:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      ## Step 1
+      - uses: actions/checkout@v3
+      ## Step 2
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          port: ${{ secrets.PORT }}
+          password: ${{ secrets.PASSWORD }}
+          script: |
+            cd /var/www/html/apigw.durpalla.com
+            chown -Rf nginx:nginx /var/www/html/apigw.durpalla.com
+            chmod -Rf 770 /var/www/html/apigw.durpalla.com
+            chmod +x ./.deploy/deploy.sh
+            ./.deploy/deploy.sh
