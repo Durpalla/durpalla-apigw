@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\v1;
 
 use App\Constants\AppConst;
+use App\Helpers\LogHelper;
 use App\Http\Requests\LoginRequest;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -381,28 +382,38 @@ class AuthController extends Controller
     public function forgot(Request $request)
     {
         $data = ['success' => false, 'message' => __('User account not found')];
-        //validation rules
-        $validator = Validator::make($request->all(), [
-            'mobile' => 'bail|required|max:14|regex:/^(01){1}[3456789]{1}(\d){8}$/|min:11|exists:users,mobile'
-        ]);
+        try {
+            //validation rules
+            $validator = Validator::make($request->all(), [
+                'mobile' => 'bail|required|max:14|regex:/^(01){1}[3456789]{1}(\d){8}$/|min:11|exists:users,mobile'
+            ]);
 
-        //validation fails
-        if ($validator->fails()) {
-            $data['message'] = $validator->errors()->first();
-        } else {
-            $code = mt_rand(100000, 999999);
-            $otp = UserOtp::firstOrNew(['mobile' => $request->mobile, 'type' => 'forgot']);
-            $otp->mobile = $request->mobile;
-            $otp->otp_code = $code;
-            if ($otp->save()) {
-                sendSMS([
-                    'mobile' => $request->mobile,
-                    'message' => 'Your otp code is ' . $code
-                ]);
-                $data['success'] = true;
-                $data['step'] = 'forgot_otp';
-                $data['message'] = __('An otp code has been sent to mobile.');
+            //validation fails
+            if ($validator->fails()) {
+                $data['message'] = $validator->errors()->first();
+            } else {
+                $code = AppConst::DEFAULT_OTP;
+                if (app()->environment('production')) {
+                    $code = mt_rand(100000, 999999);
+                }
+                $otp = UserOtp::firstOrNew(['mobile' => $request->mobile, 'type' => 'forgot']);
+                $otp->mobile = $request->mobile;
+                $otp->otp_code = $code;
+                if ($otp->save()) {
+                    sendSMS([
+                        'mobile' => $request->mobile,
+                        'message' => 'Your otp code is ' . $code
+                    ]);
+                    $data['success'] = true;
+                    $data['step'] = 'forgot_otp';
+                    $data['message'] = __('An otp code has been sent to mobile.');
+                }
             }
+        } catch (\Exception $exception) {
+            LogHelper::exception($exception, [
+                'keyword' => 'FORGOT_PASSWORD_EXCEPTION'
+            ]);
+            $data['message'] = __('Internal server error!');
         }
 
         return response()->json($data, $this->success);

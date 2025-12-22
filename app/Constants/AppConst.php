@@ -57,4 +57,5 @@ class AppConst
     const PAYMENT_METHOD_NAGAD = 'Nagad';
     const PAYMENT_METHOD_BKASH = 'Bkash';
     const DEFAULT_SERVICE_CHARGE_TYPE = 'percent';
+    const DEFAULT_OTP = '111111';
 }
