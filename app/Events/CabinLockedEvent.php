@@ -18,12 +18,14 @@ class CabinLockedEvent implements ShouldBroadcastNow
     use Dispatchable, InteractsWithSockets, SerializesModels, Queueable;
     public int $tripId;
     public int $itemId;
+    public array $data;
     public ?int $userId;
 
-    public function __construct(int $tripId, int $itemId, $userId = null)
+    public function __construct(int $tripId, int $itemId, array $data, $userId = null)
     {
         $this->tripId = $tripId;
         $this->itemId = $itemId;
+        $this->data = $data;
         $this->userId = $userId;
     }
 
@@ -48,6 +50,7 @@ class CabinLockedEvent implements ShouldBroadcastNow
             'trip_id' => $this->tripId,
             'item_id' => $this->itemId,
             'user_id' => $this->userId,
+            'data' => $this->data
         ];
     }
 }

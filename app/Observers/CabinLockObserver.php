@@ -20,7 +20,11 @@ class CabinLockObserver
                 ->first()
                 ->update(['is_locked' => AppConst::BOOKING_ITEM_ACTIVE]);
         }
-        broadcast(new CabinLockedEvent($cabinLock->trip_id, $cabinLock->mapping_id))->toOthers();
+        broadcast(new CabinLockedEvent(
+            $cabinLock->trip_id,
+            $cabinLock->mapping_id,
+            $cabinLock->mapping->only(['cabin_id', 'cabin_no', 'fare'])
+        ))->toOthers();
     }
 
     /**
