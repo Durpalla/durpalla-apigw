@@ -21,8 +21,7 @@ Route::get('gateway/{gateway}/callback', [GatewayCallbackController::class, 'cal
     ->name('gateway.callback');
 
 
-Route::get('payment/{payment}/success', [GatewayCallbackController::class, 'paymentStatus'])->name('payment.success');
-Route::get('payment/{payment}/failed', [GatewayCallbackController::class, 'paymentStatus'])->name('payment.failed');
+Route::get('payment/status', [GatewayCallbackController::class, 'paymentStatus'])->name('payment.status');
 
 Route::get('/download/{id}', [FrontController::class, 'downloadInvoice'])
     ->name('invoice.download')

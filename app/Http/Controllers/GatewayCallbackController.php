@@ -53,15 +53,23 @@ class GatewayCallbackController extends Controller
         }
     }
 
-    public function paymentStatus(Payment $payment)
+    public function paymentStatus(Request $request)
     {
-        return view('payment.status', compact('payment'));
+        try {
+            $payment = Payment::find($request->input('payment_id'));
+            if (!$payment) {
+                return view('payment.notfound');
+            }
+            return view('payment.status', compact('payment'));
+        } catch (\Exception $exception) {
+            return view('payment.notfound');
+        }
     }
 
     public function paymentFailed($payment, array $data): RedirectResponse
     {
         $url = config('bkash.frontend_url') . '?' . http_build_query($data);
-        return redirect()->route('payment.failed', $payment->id)
+        return redirect()->route('payment.failed', ['payment_id' => $payment->id])
             ->with('error', 'Payment failed.');
     }
 
@@ -69,7 +77,7 @@ class GatewayCallbackController extends Controller
     {
         $data['status'] = 'success';
         $url = config('bkash.frontend_url') . '?' . http_build_query($data);
-        return redirect()->route('payment.success', $payment->id)
+        return redirect()->route('payment.status', ['payment_id' => $payment->id])
             ->with('error', 'Payment failed.');
     }
 }
