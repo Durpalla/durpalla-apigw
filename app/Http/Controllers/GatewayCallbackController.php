@@ -69,7 +69,7 @@ class GatewayCallbackController extends Controller
     public function paymentFailed($payment, array $data): RedirectResponse
     {
         $url = config('bkash.frontend_url') . '?' . http_build_query($data);
-        return redirect()->route('payment.failed', ['payment_id' => $payment->id])
+        return redirect()->route('payment.status', ['payment_id' => $payment->id])
             ->with('error', 'Payment failed.');
     }
 
