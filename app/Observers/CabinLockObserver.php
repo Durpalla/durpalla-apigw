@@ -24,7 +24,7 @@ class CabinLockObserver
             $cabinLock->trip_id,
             $cabinLock->mapping_id,
             $cabinLock->mapping->only(['cabin_id', 'fare']) + [
-                'cabin_no' => strtoupper($cabinLock->mapping->type->letter). $cabinLock->mapping->cabin->cabin_no
+                'cabin_no' => strtoupper($cabinLock->mapping?->cabinType?->letter). $cabinLock->mapping?->cabin?->cabin_no
             ]
         ))->toOthers();
     }
