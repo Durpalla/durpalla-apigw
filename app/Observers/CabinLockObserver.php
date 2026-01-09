@@ -3,17 +3,12 @@
 namespace App\Observers;
 
 use App\Constants\AppConst;
+use App\Events\CabinLockedEvent;
 use App\Models\CabinLock;
 use App\Models\ScheduleCabinMapping;
 
 class CabinLockObserver
 {
-    /**
-     * Handle the cabin lock "created" event.
-     *
-     * @param  CabinLock  $cabinLock
-     * @return void
-     */
     public function created(CabinLock $cabinLock)
     {
         if($cabinLock->mapping_id) {
@@ -25,6 +20,7 @@ class CabinLockObserver
                 ->first()
                 ->update(['is_locked' => AppConst::BOOKING_ITEM_ACTIVE]);
         }
+        broadcast(new CabinLockedEvent($cabinLock->trip_id, $cabinLock->mapping_id))->toOthers();
     }
 
     /**
