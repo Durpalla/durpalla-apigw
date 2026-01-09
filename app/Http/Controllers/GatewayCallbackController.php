@@ -55,7 +55,7 @@ class GatewayCallbackController extends Controller
 
     public function paymentStatus(Payment $payment)
     {
-        return view('payment.status', [compact('payment')]);
+        return view('payment.status', compact('payment'));
     }
 
     public function paymentFailed($payment, array $data): RedirectResponse
