@@ -27,14 +27,14 @@ class GatewayCallbackController extends Controller
 
             if (!$payment) {
                 $data['status'] = 'failed';
-                return $this->paymentFailed($data);
+                return $this->paymentFailed($payment, $data);
             }
 
             $data['id'] = $payment->id;
 
             if ($payment->user_id !== auth('api')->id()) {
                 $data['status'] = 'failed';
-                return $this->paymentFailed($data);
+                return $this->paymentFailed($payment, $data);
             }
 
             $data['uuid'] = $payment->uuid;
@@ -42,29 +42,34 @@ class GatewayCallbackController extends Controller
 
             if ($data['status']) {
                 $data['status'] = 'success';
-                return $this->paymentSuccess($data);
+                return $this->paymentSuccess($payment, $data);
             } else {
                 $data['status'] = 'failed';
             }
-
-            dd($data);
+            return $this->paymentFailed($payment, $data);
         } catch (\Throwable $e) {
             $data['status'] = 'success';
             Log::error('Bkash execute error', ['e' => $e->getMessage()]);
-            return $this->paymentFailed($data);
         }
     }
 
-    public function paymentFailed(array $data): RedirectResponse
+    public function paymentStatus(Payment $payment)
     {
-        $url = config('bkash.frontend_url') . '?' . http_build_query($data);
-        return redirect()->route('payment.status')->with('error', 'Payment failed.');
+        return view('payment.status', [compact('payment')]);
     }
 
-    public function paymentSuccess(array $data): RedirectResponse
+    public function paymentFailed($payment, array $data): RedirectResponse
+    {
+        $url = config('bkash.frontend_url') . '?' . http_build_query($data);
+        return redirect()->route('payment.failed', $payment->id)
+            ->with('error', 'Payment failed.');
+    }
+
+    public function paymentSuccess($payment, array $data): RedirectResponse
     {
         $data['status'] = 'success';
         $url = config('bkash.frontend_url') . '?' . http_build_query($data);
-        return redirect()->route('payment.status')->with('error', 'Payment failed.');
+        return redirect()->route('payment.success', $payment->id)
+            ->with('error', 'Payment failed.');
     }
 }
