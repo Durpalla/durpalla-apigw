@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Constants\AppConst;
 use App\Events\CabinLockedEvent;
+use App\Events\CabinReleasedEvent;
 use App\Models\CabinLock;
 use App\Models\ScheduleCabinMapping;
 
@@ -56,6 +57,14 @@ class CabinLockObserver
                 ->first()
                 ->update(['is_locked' => AppConst::BOOKING_ITEM_PENDING]);
         }
+
+        broadcast(new CabinReleasedEvent(
+            $cabinLock->trip_id,
+            $cabinLock->mapping_id,
+            $cabinLock->mapping->only(['cabin_id', 'fare']) + [
+                'cabin_no' => strtoupper($cabinLock->mapping?->cabinType?->letter). $cabinLock->mapping?->cabin?->cabin_no
+            ]
+        ))->toOthers();
     }
 
     /**
