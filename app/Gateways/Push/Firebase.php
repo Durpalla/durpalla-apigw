@@ -22,19 +22,15 @@ class Firebase implements PushNotificationInterface
 
     public function setCredentials(): void
     {
-//        $cacheKey = Str::slug($this->gateway->name);
-//        $attributes = Cache::get($cacheKey, []);
-//        if (empty($attributes)) {
-//            $attributes = GatewayHelper::getCredentials($this->gateway);
-//
-//            Cache::put($cacheKey, $attributes);
-//        }
-//
-//        $this->attributes = $attributes;
-        $config = config('firebase');
-        if (is_array($config)) {
-            $this->attributes = $config;
+        $cacheKey = Str::slug($this->gateway->name);
+        $attributes = Cache::get($cacheKey, []);
+        if (empty($attributes)) {
+            $attributes = GatewayHelper::getCredentials($this->gateway);
+
+            Cache::put($cacheKey, $attributes);
         }
+
+        $this->attributes = $attributes;
     }
 
     public function send(array $params): bool
