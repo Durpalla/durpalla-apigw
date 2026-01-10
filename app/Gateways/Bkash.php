@@ -2,26 +2,35 @@
 
 namespace App\Gateways;
 
-use App\Constants\AppConst;
 use App\Helpers\LogHelper;
+use App\Models\Gateway;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
+use App\Helpers\GatewayHelper;
 
 class Bkash implements GatewayInterface, BkashInterface
 {
-    private array $credentials = [];
+    private Gateway $gateway;
+    private array $attributes;
 
-    public function __construct()
+    public function __construct(Gateway $gateway)
     {
+        $this->gateway = $gateway;
         $this->setCredentials();
     }
 
-    private function setCredentials(): void
+    public function setCredentials(): void
     {
-        $credentials = config('gateway.bkash');
-        if (!empty($credentials) && is_array($credentials)) {
-            $this->credentials = $credentials[$credentials['env']];
+        $cacheKey = Str::slug($this->gateway->name);
+        $attributes = Cache::get($cacheKey, []);
+        if (empty($attributes)) {
+            $attributes = GatewayHelper::getCredentials($this->gateway);
+
+            Cache::put($cacheKey, $attributes);
         }
+
+        $this->attributes = $attributes;
     }
 
     private function authHeaders(): array
@@ -29,7 +38,7 @@ class Bkash implements GatewayInterface, BkashInterface
         return [
             'Accept' => 'application/json',
             'Authorization' => $this->token(),
-            'X-App-Key' => $this->credentials['app_key'],
+            'X-App-Key' => $this->attributes['credentials']['app_key'],
         ];
     }
 
@@ -40,7 +49,7 @@ class Bkash implements GatewayInterface, BkashInterface
                 'mode' => '0011',
                 'callbackURL' => route('gateway.callback', $payment->gateway_id),
                 'amount' => $payment->paid_amount,
-                'currency' => $this->credentials['currency'],
+                'currency' => $this->attributes['params']['currency'],
                 'intent' => 'sale',
                 'merchantInvoiceNumber' => $payment->transaction_id,
                 'payerReference' => '01770618575'
@@ -48,7 +57,7 @@ class Bkash implements GatewayInterface, BkashInterface
 
             $res = Http::withHeaders($this->authHeaders())
                 ->asJson()
-                ->post($this->credentials['endpoints']['create'], $payload);
+                ->post($this->attributes['endpoints']['create'], $payload);
 
             if ($res->successful()) {
                 $jsonData = $res->json();
@@ -76,7 +85,7 @@ class Bkash implements GatewayInterface, BkashInterface
     {
         try {
             $res = Http::withHeaders($this->authHeaders())
-                ->post($this->credentials['endpoints']['execute'], [
+                ->post($this->attributes['endpoints']['execute'], [
                     'paymentID' => $request->input('paymentID')
                 ]);
 
@@ -113,7 +122,7 @@ class Bkash implements GatewayInterface, BkashInterface
     public function verify($payment, $request, &$data): void
     {
         $res = Http::withHeaders($this->authHeaders())
-            ->post($this->credentials['endpoints']['verify'], [
+            ->post($this->attributes['endpoints']['verify'], [
                 'paymentID' => $payment->gateway_trx_id,
             ]);
 
@@ -141,12 +150,12 @@ class Bkash implements GatewayInterface, BkashInterface
                 $res = Http::asJson()
 //            ->withOptions(['debug' => true])
                     ->withHeaders([
-                        'username' => $this->credentials['username'],
-                        'password' => $this->credentials['password'],
+                        'username' => $this->attributes['credentials']['username'],
+                        'password' => $this->attributes['credentials']['password'],
                     ])
-                    ->post($this->credentials['endpoints']['token'], [
-                        'app_key' => $this->credentials['app_key'],
-                        'app_secret' => $this->credentials['app_secret'],
+                    ->post($this->attributes[]['endpoints']['token'], [
+                        'app_key' => $this->attributes['credentials']['app_key'],
+                        'app_secret' => $this->attributes['credentials']['app_secret'],
                     ]);
 
                 if ($res->successful()) {
@@ -168,7 +177,7 @@ class Bkash implements GatewayInterface, BkashInterface
     public function refund($payment, $request)
     {
         $res = Http::withHeaders($this->authHeaders())
-            ->post($this->credentials['endpoints']['refund'], [
+            ->post($this->attributes['endpoints']['refund'], [
                 'paymentID' => $payment->gateway_trx_id,
                 'trxID' => $payment->uuid,
                 'amount' => $payment->amount,

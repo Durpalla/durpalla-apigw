@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\v1;
 use App\Constants\AppConst;
 use App\Helpers\LogHelper;
 use App\Http\Requests\LoginRequest;
+use App\Http\Requests\OtpVerifyRequest;
+use App\Http\Requests\RegisterRequest;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\App;
@@ -16,7 +18,6 @@ use App\Models\User;
 use App\Models\UserOtp;
 use Illuminate\Support\Facades\Log;
 use Lang;
-use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -24,12 +25,11 @@ use App\Events\UserCreated;
 
 class AuthController extends Controller
 {
-    private $status;
-    private $success;
+    private int $success;
 
     public function __construct()
     {
-        $this->status = 200;
+        parent::__construct();
         $this->success = 200;
     }
 
@@ -46,7 +46,7 @@ class AuthController extends Controller
 
                 $code = mt_rand(100000, 999999);
                 if (App::environment('local')) {
-                    $code = '123456';
+                    $code = AppConst::DEFAULT_OTP;
                 }
                 $otp = UserOtp::firstOrNew(['mobile' => $request->mobile]);
                 if ($otp) {
@@ -87,7 +87,7 @@ class AuthController extends Controller
             }
 
         } else {
-            $code = '123456';
+            $code = AppConst::DEFAULT_OTP;
             if (App::environment('production')) {
                 $code = mt_rand(100000, 999999);
             }
@@ -121,21 +121,15 @@ class AuthController extends Controller
         return response()->json($data, $this->success);
     }
 
-    public function verify(Request $request)
+    public function verify(OtpVerifyRequest $request)
     {
         $data = ['success' => false, 'message' => __('Cannot verify OTP')];
-        //validation rules
-        $validator = Validator::make($request->all(), [
-            'mobile' => 'bail|required|max:14|regex:/^(01){1}[3456789]{1}(\d){8}$/|min:11',
-            'otp' => 'bail|nullable|max:6|exists:user_otps,otp_code',
-            'type' => 'nullable'
-        ]);
 
-        //validation fails
-        if ($validator->fails()) {
-            $data['message'] = $validator->errors()->first();
-        } else {
-            $otp = UserOtp::where('mobile', $request->mobile)->where('otp_code', $request->otp_code)->latest()->first();
+        try {
+            $otp = UserOtp::where('mobile', $request->mobile)
+                ->where('otp_code', $request->otp_code)
+                ->latest()
+                ->first();
             if ($otp) {
                 if (strtotime($otp->updated_at) < time() - 900) {
                     $data['message'] = 'Your otp code has been expired.';
@@ -164,30 +158,20 @@ class AuthController extends Controller
                 $otp->verified = 1;
                 $otp->save();
             }
+        } catch (\Exception $e) {
+            LogHelper::exception($e, [
+                'keyword' => 'OTP_VERIFY_EXCEPTION'
+            ]);
+            $data['message'] = __('Internal error!');
         }
         //send data with success
         return response()->json($data, $this->success);
     }
 
-    public function register(Request $request): JsonResponse
+    public function register(RegisterRequest $request): JsonResponse
     {
         $data = ['success' => false, 'message' => __('Cannot register account.')];
-        //validation rules
-        $validator = Validator::make($request->all(), [
-            'name' => 'bail|required|max:191|min:3',
-            'email' => 'bail|required|max:191|email|unique:users,email',
-            'mobile' => 'bail|required|max:14|regex:/^(01){1}[3456789]{1}(\d){8}$/|min:11|unique:users,mobile',
-            'nid' => 'bail|required|min:10|max:17|string|unique:users,nid',
-            'password' => 'bail|required|min:8|max:20',
-            'confirm_password' => 'bail|required|min:8|max:20|same:password',
-            'platform' => 'bail|nullable',
-            'device_id' => 'bail|nullable|string'
-        ]);
-
-        //validation fails
-        if ($validator->fails()) {
-            $data['message'] = $validator->errors()->first();
-        } else {
+        try {
             $otp = UserOtp::where(['mobile' => $request->mobile, 'verified' => 1])->first();
 
             if ($otp) {
@@ -231,87 +215,88 @@ class AuthController extends Controller
             } else {
                 $data['message'] = __('Sorry! verification failed.');
             }
+        } catch (\Exception $exception) {
+            LogHelper::exception($exception, [
+                'keyword' => 'REGISTER_EXCEPTION'
+            ]);
+            $data['message'] = __('Internal server error!');
         }
 
         return response()->json($data, $this->success);
     }
 
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
-        //validation rules
-        $validator = Validator::make($request->all(), [
-            'mobile' => 'bail|nullable|max:14|regex:/^(01){1}[3456789]{1}(\d){8}$/|min:11',
-            'password' => 'bail|required|min:8|max:20',
-            'device_id' => 'bail|string|max:191'
-        ]);
+        try {
+            //check if account exist of not
+            $user = User::where('type', AppConst::USER_TYPE_CUSTOMER)
+                ->where(['mobile' => $request->mobile])
+                ->first();
 
-        //validation fails
-        if ($validator->fails())
-            return response()->json(['success' => false, 'message' => $validator->errors()->first()], $this->success);
+            if (empty($user))
+                return response()->json(['success' => false, 'message' => __('Account not found.')], $this->success);
 
-        //check if account exist of not
-        $user = User::where('type', AppConst::USER_TYPE_CUSTOMER)
-            ->where(['mobile' => $request->mobile])
-            ->first();
-
-        if (empty($user))
-            return response()->json(['success' => false, 'message' => __('Account not found.')], $this->success);
-
-        if ($user->email_verified_at == null) {
-            $code = mt_rand(100000, 999999);
-            $otp = UserOtp::firstOrNew(['mobile' => $request->mobile]);
-            if ($otp) {
-                if (strtotime($otp->updated_at) < (time() - 900)) {
-                    $otp->otp_code = $code;
-                    $otp->attempts = 1;
-                } elseif ($otp->attempts >= 15) {
-                    return response()->json(['success' => false, 'message' => __('You have already tried 5 time. please try after few times.')], $this->success);
+            if ($user->email_verified_at == null) {
+                $code = mt_rand(100000, 999999);
+                $otp = UserOtp::firstOrNew(['mobile' => $request->mobile]);
+                if ($otp) {
+                    if (strtotime($otp->updated_at) < (time() - 900)) {
+                        $otp->otp_code = $code;
+                        $otp->attempts = 1;
+                    } elseif ($otp->attempts >= 15) {
+                        return response()->json(['success' => false, 'message' => __('You have already tried 5 time. please try after few times.')], $this->success);
+                    } else {
+                        $otp->attempts += 1;
+                    }
                 } else {
-                    $otp->attempts += 1;
+                    $otp->mobile = $request->mobile;
+                    $otp->attempts = 1;
                 }
-            } else {
-                $otp->mobile = $request->mobile;
-                $otp->attempts = 1;
-            }
-            $otp->updated_at = now();
+                $otp->updated_at = now();
 
-            if ($otp->save()) {
+                if ($otp->save()) {
 //                sendSMS([
 //                    'mobile' => $request->mobile,
 //                    'message' => 'Your otp code is ' . $otp->otp_code
 //                ]);
+                }
+                return response()->json(['success' => false, 'otp_required' => true, 'message' => __('Your account need to verified')], $this->success);
             }
-            return response()->json(['success' => false, 'otp_required' => true, 'message' => __('Your account need to verified')], $this->success);
-        }
 
-        if (!Hash::check($request->password, $user->password)) {
-            return response()->json(['success' => false, 'message' => __('Your password does not match.')], $this->success);
-        }
+            if (!Hash::check($request->password, $user->password)) {
+                return response()->json(['success' => false, 'message' => __('Your password does not match.')], $this->success);
+            }
 
-        //update device id
-        $user->device_id = $request->device_id;
-        $user->save();
+            //update device id
+            $user->device_id = $request->device_id;
+            $user->save();
 
-        $token = $user->createToken(config('app.name'))->accessToken;
-        //refined UserData
-        $userData = array(
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'mobile' => $user->mobile,
-            'type' => $user->type,
-            'photo' => $user->profile_pic ? asset($user->profile_pic) : asset('default/avatar.png'),
-            'vat_visibility' => $user->type == 'merchant' && $user->merchant['vat_visibility'] == '1',
-            'nid_verification' => ($user->meta) ? $user->meta->nid_verified : 0,
-            'nid' => null,
-            'vehicle_type' => 'all'
-        );
-        if ($user->type === 'customer' && $user->meta && $user->meta['nid_no']) {
-            $userData['nid'] = [
-                'nid_no' => $user->meta['nid_no'],
-                'front' => ($user->meta['nid_photo']) ? asset('nid/' . $user->meta['nid_photo']) : '',
-                'back' => ($user->meta['nid_back_side']) ? asset('nid/' . $user->meta['nid_back_side']) : ''
-            ];
+            $token = $user->createToken(config('app.name'))->accessToken;
+            //refined UserData
+            $userData = array(
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'mobile' => $user->mobile,
+                'type' => $user->type,
+                'photo' => $user->profile_pic ? asset($user->profile_pic) : asset('default/avatar.png'),
+                'vat_visibility' => $user->type == 'merchant' && $user->merchant['vat_visibility'] == '1',
+                'nid_verification' => ($user->meta) ? $user->meta->nid_verified : 0,
+                'nid' => null,
+                'vehicle_type' => 'all'
+            );
+            if ($user->type === 'customer' && $user->meta && $user->meta['nid_no']) {
+                $userData['nid'] = [
+                    'nid_no' => $user->meta['nid_no'],
+                    'front' => ($user->meta['nid_photo']) ? asset('nid/' . $user->meta['nid_photo']) : '',
+                    'back' => ($user->meta['nid_back_side']) ? asset('nid/' . $user->meta['nid_back_side']) : ''
+                ];
+            }
+        } catch (\Exception $exception) {
+            LogHelper::exception($exception, [
+                'keyword' => 'LOGIN_EXCEPTION'
+            ]);
+            return response()->json(['success' => false, 'message' => __('Internal server error!')], $this->success);
         }
 
         //send data with success

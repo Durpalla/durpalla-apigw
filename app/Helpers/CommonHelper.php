@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 
+use App\Channels\FcmChannel;
+use App\Channels\SmsChannel;
 use App\Gateways\GatewayInterface;
 use App\Gateways\NotExist;
 use App\Models\Customer;
@@ -160,5 +162,26 @@ class CommonHelper
     public static function strtoln($string, $replace = ''): string
     {
         return str_replace(PHP_EOL, $replace, $string);
+    }
+
+
+    public static function getNotificationChannels(): array
+    {
+        $options = getOption('notification_channels', ['fcm']);
+        $channels = [];
+        foreach ($options as $key => $channel) {
+            switch ($channel) {
+                case 'mail' :
+                    $channels[] = 'mail';
+                    break;
+                case 'sms' :
+                    $channels[] = SmsChannel::class;
+                    break;
+                case 'fcm' :
+                    $channels[] = FcmChannel::class;
+                    break;
+            }
+        }
+        return $channels;
     }
 }

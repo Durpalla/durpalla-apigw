@@ -2,50 +2,75 @@
 
 namespace App\Gateways\Push;
 
+use App\Helpers\GatewayHelper;
+use App\Helpers\LogHelper;
+use App\Models\Gateway;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class Firebase implements PushNotificationInterface
 {
-    private array $credentials = [];
+    private Gateway $gateway;
+    private array $attributes;
 
-    public function __construct()
+    public function __construct(Gateway $gateway)
     {
+        $this->gateway = $gateway;
         $this->setCredentials();
     }
 
-    private function setCredentials(): void
+    public function setCredentials(): void
     {
-        $credentials = config('gateway.firebase');
-        if (!empty($credentials) && is_array($credentials)) {
-            $this->credentials = $credentials[$credentials['env']];
+//        $cacheKey = Str::slug($this->gateway->name);
+//        $attributes = Cache::get($cacheKey, []);
+//        if (empty($attributes)) {
+//            $attributes = GatewayHelper::getCredentials($this->gateway);
+//
+//            Cache::put($cacheKey, $attributes);
+//        }
+//
+//        $this->attributes = $attributes;
+        $config = config('firebase');
+        if (is_array($config)) {
+            $this->attributes = $config;
         }
     }
 
-    public function send(string $token, string $title, string $body, array $data = []): void
+    public function send(array $params): bool
     {
-        $accessToken = $this->getAccessToken();
+        try {
+            $accessToken = $this->getAccessToken();
 
-        Http::withToken($accessToken)
-            ->post(
-                "https://fcm.googleapis.com/v1/projects/" .
-                config('firebase.project_id') .
-                "/messages:send",
-                [
-                    'message' => [
-                        'token' => $token,
-                        'notification' => [
-                            'title' => $title,
-                            'body'  => $body,
-                        ],
-                        'data' => $data,
-                    ],
-                ]
-            )
-            ->throw();
+            $response = Http::withToken($accessToken)
+                ->post(
+                    $this->attributes['endpoints']['execute'],
+                    [
+                        'message' => [
+                            'token' => $params['token'],
+                            'notification' => $params['notification'],
+                            'data' => $params['data'],
+                        ]
+                    ]
+                );
+
+            // dd($response->json());
+            LogHelper::debug('FIREBASE_PUSH_NOTIFICATION_SEND_RESPONSE', [
+                'response' => $response->json()
+            ]);
+            return $response->successful();
+        } catch (\Exception $exception) {
+            LogHelper::exception($exception, [
+                'keyword' => 'FIREBASE_PUSH_NOTIFICATION_SEND_EXCEPTION'
+            ]);
+
+            // dd($exception);
+            return false;
+        }
     }
 
-    public function getAccessToken(): string
+    public
+    function getAccessToken(): string
     {
         return Cache::remember('firebase_access_token', 3500, function () {
             $credentials = json_decode(
@@ -56,24 +81,24 @@ class Firebase implements PushNotificationInterface
             $now = time();
 
             $payload = [
-                'iss'   => $credentials['client_email'],
+                'iss' => $credentials['client_email'] ?? $credentials['client_id'],
                 'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
-                'aud'   => 'https://oauth2.googleapis.com/token',
-                'iat'   => $now,
-                'exp'   => $now + 3600,
+                'aud' => 'https://oauth2.googleapis.com/token',
+                'iat' => $now,
+                'exp' => $now + 3600,
             ];
 
             $jwt = $this->encodeJwt($payload, $credentials['private_key']);
 
             $response = Http::asForm()->post(
-                'https://oauth2.googleapis.com/token',
+                $this->attributes['endpoints']['token'],
                 [
                     'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-                    'assertion'  => $jwt,
+                    'assertion' => $jwt,
                 ]
             );
 
-            if (! $response->successful()) {
+            if (!$response->successful()) {
                 throw new \RuntimeException('Firebase auth failed');
             }
 
@@ -81,7 +106,8 @@ class Firebase implements PushNotificationInterface
         });
     }
 
-    private function encodeJwt(array $payload, string $privateKey): string
+    private
+    function encodeJwt(array $payload, string $privateKey): string
     {
         $header = ['alg' => 'RS256', 'typ' => 'JWT'];
 
@@ -101,7 +127,8 @@ class Firebase implements PushNotificationInterface
         return implode('.', $segments);
     }
 
-    private function base64Url(string $data): string
+    private
+    function base64Url(string $data): string
     {
         return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
     }

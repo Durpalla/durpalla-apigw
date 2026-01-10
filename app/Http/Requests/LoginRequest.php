@@ -18,6 +18,8 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'password' => 'bail|required|min:8|max:20',
+            'device_id' => 'bail|string|max:191',
             'mobile' => [
                 'bail',
                 'required',
