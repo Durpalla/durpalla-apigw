@@ -19,7 +19,8 @@
         "pusher/pusher-php-server": "^7.2",
         "spiral/roadrunner-cli": "^2.6.0",
         "spiral/roadrunner-http": "^3.3.0",
-        "thiagoalessio/tesseract_ocr": "^2.13"
+        "thiagoalessio/tesseract_ocr": "^2.13",
+        "ext-openssl": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

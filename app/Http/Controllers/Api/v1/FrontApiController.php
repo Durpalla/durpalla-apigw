@@ -128,7 +128,7 @@ class FrontApiController extends Controller
      */
     public function search(Request $request): JsonResponse
     {
-        $schedules = $this->trip->getSearchTrip($request->all());
+        $schedules = $this->trip->getSearchTrip($request);
 
         return response()->json(['success' => true, 'data' => $schedules], $this->success);
     }
