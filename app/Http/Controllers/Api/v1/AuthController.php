@@ -129,6 +129,7 @@ class AuthController extends Controller
         try {
             $otp = UserOtp::where('mobile', $request->mobile)
                 ->where('otp_code', $request->otp_code)
+                ->where('type', $request->type ? $request->type : 'login')
                 ->latest()
                 ->first();
             if ($otp) {
