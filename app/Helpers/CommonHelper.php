@@ -8,6 +8,8 @@ use App\Gateways\GatewayInterface;
 use App\Gateways\NotExist;
 use App\Models\Customer;
 use App\Models\User;
+use Illuminate\Support\Str;
+use App\Models\Cart;
 
 class CommonHelper
 {
@@ -164,6 +166,17 @@ class CommonHelper
         return str_replace(PHP_EOL, $replace, $string);
     }
 
+    public static function generateUniqueUUID(): string
+    {
+        $uuid = (string) Str::uuid();
+        for(;;) {
+            if (Cart::where('token', $uuid)->count() == 0) {
+                break;
+            }
+            self::generateUniqueUUID();
+        }
+        return encrypt($uuid);
+    }
 
     public static function getNotificationChannels(): array
     {

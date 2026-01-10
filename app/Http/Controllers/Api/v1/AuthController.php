@@ -230,7 +230,7 @@ class AuthController extends Controller
     public function login(LoginRequest $request)
     {
         try {
-            //check if account exist of not
+            //check if an account exists or not
             $user = User::where('type', AppConst::USER_TYPE_CUSTOMER)
                 ->where(['mobile' => $request->mobile])
                 ->first();
