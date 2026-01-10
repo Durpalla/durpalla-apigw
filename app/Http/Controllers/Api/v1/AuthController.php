@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\v1;
 
 use App\Constants\AppConst;
 use App\Helpers\LogHelper;
+use App\Http\Requests\LoginCheckRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\OtpVerifyRequest;
 use App\Http\Requests\RegisterRequest;
@@ -33,7 +34,7 @@ class AuthController extends Controller
         $this->success = 200;
     }
 
-    public function check(LoginRequest $request)
+    public function check(LoginCheckRequest $request)
     {
         $data = ['success' => false, 'message' => __('Something went wrong. Please try again.')];
 
