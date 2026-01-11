@@ -359,11 +359,35 @@ class AuthController extends Controller
         return response()->json($data, $this->success);
     }
 
+    public function bindPush(Request $request)
+    {
+        $data = ['status' => false, 'message' => 'Failed'];
+        try {
+            $request->user()->deviceToken()->updateOrCreate(
+                [
+                    'platform' => $request->platform
+                ],
+                [
+                    'token' => $request->token
+                ]
+            );
+            $data['status'] = true;
+            $data['message'] = 'Success';
+        } catch (\Exception $exception) {
+            LogHelper::exception($exception, [
+                'keyword' => 'AUTH_PUSH_BIND_EXCEPTION'
+            ]);
+            $data['message'] = __('Internal server error!');
+        }
+
+        return response()->json($data, $this->success);
+    }
+
     private function _account_exist_by_mobile($mobile)
     {
         $query = User::where(['mobile' => $mobile])->first();
 
-        return (!empty($query)) ? true : false;
+        return !empty($query);
     }
 
     public function forgot(Request $request)

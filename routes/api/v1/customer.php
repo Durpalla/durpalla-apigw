@@ -46,7 +46,11 @@ Route::middleware(['JsonResponse'])->group(function () {
         Route::post('forgot', [AuthController::class, 'forgot']);
         Route::post('reset', [AuthController::class, 'reset']);
         Route::post('otp/resend', [AuthController::class, 'resendCode']);
-        Route::get('logout', [AuthController::class, 'logout']);
+    });
+
+    Route::group(['prefix' => 'auth', 'middleware' => 'auth:api'], function() {
+        Route::post('push/bind', [AuthController::class, 'bindPush']);
+        Route::post('logout', [AuthController::class, 'logout']);
     });
 
     Route::get('/search', [FrontApiController::class, 'search']);

@@ -18,6 +18,9 @@ class User extends Authenticatable
         'email',
         'mobile',
         'password',
+        'type',
+        'token',
+        'platform',
     ];
 
     protected $hidden = [
@@ -31,5 +34,10 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function deviceToken()
+    {
+        return $this->hasMany(DeviceToken::class);
     }
 }
