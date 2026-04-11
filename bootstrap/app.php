@@ -24,10 +24,25 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/payment/*/ipn'
         ]);
 
+        $middleware->api(append: [
+            \App\Http\Middleware\EnsureGuestId::class,
+        ]);
+
         $middleware->alias([
             'JsonResponse' => JsonResponse::class,
+            'guest.id' => \App\Http\Middleware\EnsureGuestId::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                $message = str_contains($request->path(), 'customer')
+                    ? 'Unauthenticated. Get a token from POST /api/v1/customer/auth/login or /api/v1/customer/auth/register, then send it as: Authorization: Bearer <token>'
+                    : 'Unauthenticated.';
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                ], 401);
+            }
+        });
     })->create();

@@ -115,7 +115,12 @@ class FrontApiController extends Controller
     {
         $vehicles = Vehicle::whereHas('merchant', function ($q) {
             $q->where('status', '1');
-        })->pluck('name', 'id');
+        })
+            ->orderBy('id')
+            ->get(['id', 'name'])
+            ->map(fn ($v) => ['id' => (string) $v->id, 'name' => $v->name])
+            ->values()
+            ->toArray();
 
         return response()->json(['success' => true, 'data' => $vehicles], $this->success);
     }

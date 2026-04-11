@@ -17,6 +17,14 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [FrontController::class, 'index'])->name('front.index');
 
+// Named route required by Laravel auth redirect; API returns JSON
+Route::get('/login', function () {
+    return response()->json([
+        'success' => false,
+        'message' => 'Unauthenticated. Use POST /api/v1/customer/auth/login or send Authorization: Bearer <token>.',
+    ], 401);
+})->name('login');
+
 Route::get('gateway/{gateway}/callback', [GatewayCallbackController::class, 'callback'])
     ->name('gateway.callback');
 

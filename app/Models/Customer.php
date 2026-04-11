@@ -2,19 +2,42 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
-class Customer extends Model
+/**
+ * Separate customer identity – not the users table.
+ * Use guard 'customer' (Sanctum) for customer API auth.
+ */
+class Customer extends Authenticatable
 {
-    use Notifiable;
-    protected $table = 'users';
+    use HasApiTokens, HasFactory, Notifiable;
 
-    protected static function booted(): void
+    protected $table = 'customers';
+
+    protected $fillable = [
+        'name',
+        'email',
+        'mobile',
+        'password',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected function casts(): array
     {
-        static::addGlobalScope('type', function (Builder $builder) {
-            $builder->where('type', 'customer');
-        });
+        return [
+            'password' => 'hashed',
+        ];
     }
+
+    /**
+     * Guard name for auth (customer).
+     */
+    protected $guard = 'customer';
 }

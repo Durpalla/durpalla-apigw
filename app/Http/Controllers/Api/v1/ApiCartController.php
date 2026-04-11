@@ -32,8 +32,9 @@ class ApiCartController extends Controller
         try {
             $item = ScheduleCabinMapping::with(['cabinType', 'schedule.startFrom', 'schedule.stopTo', 'schedule.boardingVias.ghat', 'schedule.vehicle.merchant'])->findOrFail($request->item_id);
 
-            if (!$this->cart->validate($item)) {
-                throw new \Exception(trans('Your selected item is not available or not eligible for booking'));
+            $validation = $this->cart->validate($item);
+            if ($validation !== true) {
+                throw new \Exception($validation);
             }
 
             if ($this->cart->add($item)) {
@@ -71,32 +72,41 @@ class ApiCartController extends Controller
     public function remove(Request $request): JsonResponse
     {
         $data = ['success' => false, 'message' => __('Your item cannot be unlocked')];
-        //validation rules
         $validator = Validator::make($request->all(), [
-            'lock_id' => 'bail|required|integer',
-            'item_id' => 'bail|required|integer|exists:schedule_cabin_mappings,id'
+            'item_id' => 'bail|required|integer|exists:schedule_cabin_mappings,id',
+            'lock_id' => 'bail|nullable|integer',
         ]);
-
-        //validation fails
-        if ($validator->fails())
+        if ($validator->fails()) {
             return response()->json(['success' => false, 'message' => $validator->errors()->first()], $this->success);
-
-        $item = CabinLock::find($request->input('lock_id'));
-
-        if ($item) {
-            $item->delete();
-            if(!$item->mapping->update(['is_locked' => false])) {
-                DB::table('schedule_cabin_mappings')->where('id', $request->item_id)->update(['is_locked' => 0]);
-            }
-            $data['success'] = true;
-            $data['index'] = (int) $request->index;
-            $data['message'] = __('Your item has been successfully removed');
-        } else {
-            $data['success'] = true;
-            $data['index'] = (int)$request->index;
-            $data['message'] = __('Your item has been successfully removed');
         }
 
-        return response()->json($data, $this->success);
+        $itemId = (int) $request->item_id;
+        $lockId = $request->lock_id;
+        $customerToken = $this->cart->getCurrentCustomerToken();
+
+        $query = CabinLock::where('mapping_id', $itemId);
+        if ($lockId) {
+            $query->where('id', $lockId);
+        }
+        if ($customerToken !== null) {
+            $query->where('customer_token', $customerToken);
+        }
+        $lock = $query->first();
+
+        if (!$lock) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Lock not found or you do not own this item'),
+            ], $this->success);
+        }
+
+        $lock->delete();
+        DB::table('schedule_cabin_mappings')->where('id', $itemId)->update(['is_locked' => 0, 'lock_id' => null]);
+
+        return response()->json([
+            'success' => true,
+            'message' => __('Your item has been successfully removed'),
+            'data' => ['item_id' => $itemId, 'index' => (int) $request->input('index', 0)],
+        ], $this->success);
     }
 }

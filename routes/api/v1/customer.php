@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\TransportApiController;
 use App\Http\Controllers\Api\v1\ApiAgentCommissionController;
 use App\Http\Controllers\Api\v1\ApiBookingController;
 use App\Http\Controllers\Api\v1\ApiCancellationController;
@@ -58,9 +59,17 @@ Route::middleware(['JsonResponse'])->group(function () {
     Route::get('/suggest/{term?}/{term2?}', [FrontApiController::class, 'suggest']);
     Route::get('/trip/{id}', [FrontApiController::class, 'trip']);
 
+    // Transport API (same contract as durpalla: search, lock, unlock)
+    Route::prefix('transport')->group(function () {
+        Route::get('/search', [TransportApiController::class, 'search']);
+        Route::get('/available', [TransportApiController::class, 'search']);
+        Route::post('/lock', [TransportApiController::class, 'lock']);
+        Route::post('/unlock', [TransportApiController::class, 'unlock']);
+    });
+
     Route::prefix('cart')->group(function () {
-        Route::post('/add', [ApiCartController::class, 'lock']);
-        Route::post('/lock', [ApiCartController::class, 'lock']);
+        Route::post('/add', [TransportApiController::class, 'lock']);
+        Route::post('/lock', [TransportApiController::class, 'lock']);
         Route::post('/remove', [ApiCartController::class, 'remove']);
         Route::post('/unlock', [ApiCartController::class, 'remove']);
         Route::get('/reset', [ApiCartController::class, 'resetLockdItems']);
@@ -72,6 +81,15 @@ Route::middleware(['JsonResponse'])->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
 
         Route::post('coupon/validate', [ApiOrderController::class, 'couponValidate']);
+
+        Route::prefix('order')->group(function () {
+            Route::post('/confirm', [TransportApiController::class, 'confirm']);
+            Route::post('/transaction', [ApiOrderController::class, 'payment']);
+        });
+
+        Route::prefix('transport')->middleware(['auth:api'])->group(function () {
+            Route::post('/booking/confirm', [TransportApiController::class, 'confirm']);
+        });
 
         Route::prefix('booking')->group(function () {
             Route::post('confirm', [ApiOrderController::class, 'confirm']);
@@ -166,6 +184,7 @@ Route::middleware(['JsonResponse'])->group(function () {
         });
 
         Route::prefix('supervisor')->group(function () {
+            Route::get('/', [SupervisorController::class, 'profile']);
             Route::get('/jobs', [SupervisorController::class, 'jobs']);
             Route::get('/booking/history', [SupervisorController::class, 'bookingHistory']);
             Route::get('/cart', [SupervisorController::class, 'myCart']);

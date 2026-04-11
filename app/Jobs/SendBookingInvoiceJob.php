@@ -146,6 +146,7 @@ class SendBookingInvoiceJob implements ShouldQueue
                     'message' => $message
                 ]);
             } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('SMS send failed for booking invoice', ['exception' => $e->getMessage()]);
             }
         }
     }

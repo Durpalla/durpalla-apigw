@@ -19,10 +19,14 @@ class FcmChannel
         try {
             $params = $notification->toFcm($notifiable);
             $gateway = Gateway::find(2);
+            if (!$gateway) {
+                Log::warning('FCM: Gateway id 2 not found, push notification skipped.');
+                return;
+            }
             (new Firebase($gateway))->send($params);
         } catch (\Exception $exception) {
             LogHelper::exception($exception, ['keyword' => 'FCM_SEND_EXCEPTION']);
-            dd($exception);
+            Log::error($exception);
         }
     }
 

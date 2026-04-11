@@ -12,9 +12,12 @@ class FrontController extends Controller
     {
         try {
             $customer = Customer::first();
-            $customer->notify(new TestNotification($customer));
+            if ($customer) {
+                $customer->notify(new TestNotification($customer));
+            }
+            return response('OK', 200);
         } catch (\Exception $exception) {
-            //
+            return response('OK', 200);
         }
     }
 }

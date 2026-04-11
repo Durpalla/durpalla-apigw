@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\v1;
 
 use App\Models\Booking;
+use App\Models\User;
 use App\Models\BookingCancellation;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -15,18 +16,44 @@ use Illuminate\Support\Facades\Auth;
 class ApiBookingController extends Controller
 {
     protected $success = 200;
+
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\JsonResponse
+     * Booking check for Passport (auth:api) – customer_id is User id.
      */
-    public function check( Request $request, $id )
+    public function check(Request $request, $id)
     {
         $data = ['success' => false, 'message' => __('Your PNR is not valid')];
         $booking = Booking::with('cancellations', 'customer', 'bookingItems.item.cabinType', 'bookingItems.trip.vehicle', 'bookingItems.trip.route')
-        ->where(['customer_id' => Auth::user()->id, 'id' => $id])->first();
+            ->where(['customer_id' => Auth::user()->id, 'id' => $id])->first();
 
-        if( $booking ) {
+        if ($booking) {
+            $data['item'] = $booking->format();
+            $data['success'] = true;
+            $data['message'] = 'Booking found';
+        }
+
+        return response()->json($data, $this->success);
+    }
+
+    /**
+     * Booking check for Sanctum (auth:customer). Resolves User by same mobile, then finds booking by customer_id.
+     * Use this with Bearer token from POST /api/v1/customer/auth/login.
+     */
+    public function checkAsCustomer(Request $request, $id)
+    {
+        $data = ['success' => false, 'message' => __('Your PNR is not valid')];
+        $customer = $request->user('customer');
+        if (!$customer) {
+            return response()->json($data, $this->success);
+        }
+        $user = User::where('mobile', $customer->mobile)->first();
+        if (!$user) {
+            return response()->json($data, $this->success);
+        }
+        $booking = Booking::with('cancellations', 'customer', 'bookingItems.item.cabinType', 'bookingItems.trip.vehicle', 'bookingItems.trip.route')
+            ->where(['customer_id' => $user->id, 'id' => $id])->first();
+
+        if ($booking) {
             $data['item'] = $booking->format();
             $data['success'] = true;
             $data['message'] = 'Booking found';

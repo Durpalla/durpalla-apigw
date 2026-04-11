@@ -31,6 +31,35 @@ class SupervisorController extends Controller
         $this->middleware('auth:api');
     }
 
+    /**
+     * Supervisor profile with token (display id SUP-xxx, not raw user id).
+     * GET /api/v1/supervisor
+     */
+    public function profile(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
+        }
+        $type = $user->type ?? '';
+        if ($type !== '' && $type !== 'supervisor') {
+            return response()->json(['success' => false, 'message' => 'Supervisor access required'], 403);
+        }
+        $displayId = 'SUP-' . str_pad((string) $user->id, 3, '0', STR_PAD_LEFT);
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'user' => [
+                    'id' => $displayId,
+                    'name' => $user->name,
+                    'phone' => $user->mobile,
+                    'role' => 'supervisor',
+                ],
+                'token' => $request->bearerToken(),
+            ],
+        ], $this->success);
+    }
+
     public function wallet(Request $request)
     {
         $wallet = $this->supervisor->getWallet($request->all());

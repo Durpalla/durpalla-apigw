@@ -47,10 +47,12 @@ class ScheduleRepository extends BaseRepository implements ScheduleRepositoryInt
                 ->where('leaving_at', '>=', date('Y-m-d H:i:s'))
                 ->orderBy('leaving_at', 'ASC');
         } else {
+            $tripDate = $request->input('trip_date', date('Y-m-d'));
             if ($request->filled('return_date')) {
-                $query->whereIn('schedule_date', [$data['trip_date'], $data['return_trip_date']]);
+                $returnTripDate = $request->input('return_trip_date', $tripDate);
+                $query->whereIn('schedule_date', [$tripDate, $returnTripDate]);
             } else {
-                $query->where('schedule_date', $data['trip_date']);
+                $query->where('schedule_date', $tripDate);
             }
         }
 

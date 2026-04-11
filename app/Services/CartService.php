@@ -25,9 +25,39 @@ class CartService
         $this->calculation = $calculation;
     }
 
+    /**
+     * Resolve customer token for cabin locks: auth user email (base64) or guest ID from cookie/header.
+     * Guest ID is set by EnsureGuestId middleware (encrypted in request as guest_unique_id).
+     */
+    public function getCurrentCustomerToken(): ?string
+    {
+        return $this->resolveCustomerToken();
+    }
+
+    private function resolveCustomerToken(): ?string
+    {
+        if (auth()->check()) {
+            $user = auth()->user();
+            return $user && isset($user->email) ? base64_encode($user->email) : null;
+        }
+        $encrypted = request()->input('guest_unique_id');
+        if ($encrypted) {
+            try {
+                return decrypt($encrypted);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::debug('Guest token decrypt failed', ['message' => $e->getMessage()]);
+                return null;
+            }
+        }
+        return request()->input('customer_token');
+    }
+
     public function add($item): bool
     {
-        $customerToken = (auth()->check()) ? base64_encode(auth()->user()->email) :  request()->input('customer_token');
+        $customerToken = $this->resolveCustomerToken();
+        if ($customerToken === null) {
+            return false;
+        }
         try {
             DB::transaction(function() use($item, $customerToken) {
                 $lock = CabinLock::create([
@@ -50,35 +80,38 @@ class CartService
 
     }
 
-    public function validate(ScheduleCabinMapping $item): bool
+    /**
+     * Validate item for lock. Returns true if valid, or error message string if invalid.
+     */
+    public function validate(ScheduleCabinMapping $item): bool|string
     {
         try {
             $user = request()->user();
 
-            if(!$this->validTrip($item->schedule)) {
-                throw new \Exception('Trip is not valid');
+            if (!$this->validTrip($item->schedule)) {
+                return 'Trip is not valid (past or departs within 30 minutes)';
             }
 
             if ($item->is_locked || $item->booked || $item->is_reserved) {
-                throw new \Exception('Your selected item is not available');
+                return 'Your selected item is not available (already locked, booked, or reserved)';
             }
-            if(!$user && $item->ownership == 'merchant') {
-                throw new \Exception('Your selected item is not available');
-            }
-
-            if($user && in_array($user->type, ['agent', 'customer']) && $item->ownership == 'merchant') {
-                throw new \Exception('Your selected item is not available');
+            if (!$user && ($item->ownership ?? '') == 'merchant') {
+                return 'Your selected item is not available (merchant items require login)';
             }
 
-            if($user->type == 'supervisor' && $item->ownership != 'merchant') {
-                throw new \Exception('Your selected item is not available');
+            if ($user && in_array($user->type ?? '', ['agent', 'customer']) && ($item->ownership ?? '') == 'merchant') {
+                return 'Your selected item is not available (merchant items not bookable by customer/agent)';
             }
 
-            if(BookingItem::where(['cabin_id' => $item->cabin_id, 'trip_id' => $item->schedule_id, 'status' => AppConst::BOOKING_ITEM_ACTIVE])->count()) {
-                throw new \Exception('Your selected item has already booked');
+            if ($user && ($user->type ?? '') == 'supervisor' && ($item->ownership ?? '') != 'merchant') {
+                return 'Your selected item is not available (supervisor can only book merchant items)';
+            }
+
+            if (BookingItem::where(['cabin_id' => $item->cabin_id, 'trip_id' => $item->schedule_id, 'status' => AppConst::BOOKING_ITEM_ACTIVE])->count()) {
+                return 'Your selected item has already been booked';
             }
         } catch (\Exception $exception) {
-            return false;
+            return $exception->getMessage();
         }
         return true;
     }
