@@ -241,18 +241,33 @@ class FrontApiController extends Controller
         return response()->json(['success' => true, 'data' => $layout], $this->success);
     }
 
-    public function suggest($term = '', $accept = ''): JsonResponse
+    public function suggest(Request $request, $term = '', $term2 = ''): JsonResponse
     {
-        $query = Ghat::select('name', 'id')->distinct();
+        // Prefer query params (mobile clients): ?q=...&exclude=...
+        // Legacy path: /suggest/{term}/{term2} where term2 excludes that ghat name from results.
+        $qParam = $request->query('q');
+        $excludeParam = $request->query('exclude');
+        $term = $qParam !== null ? (string) $qParam : (string) $term;
+        $exclude = $excludeParam !== null ? (string) $excludeParam : (string) $term2;
 
-        if ($term) {
+        $query = Ghat::query()
+            ->select('name', 'id')
+            ->distinct()
+            ->orderBy('name');
+
+        if ($term !== '') {
             $query->where('name', 'LIKE', '%' . $term . '%');
         }
 
-        if ($accept) {
-            $query->whereNotIn('name', [$accept]);
+        if ($exclude !== '') {
+            $query->where('name', '<>', $exclude);
         }
 
-        return response()->json(['success' => true, 'data' => $query->get()], $this->success);
+        $limit = ($term === '') ? 100 : 50;
+
+        return response()->json([
+            'success' => true,
+            'data' => $query->limit($limit)->get(),
+        ], $this->success);
     }
 }
