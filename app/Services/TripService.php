@@ -6,6 +6,7 @@ use App\Models\Vehicle;
 use App\Repository\Interfaces\ScheduleRepositoryInterface;
 use App\Models\VehicleRoute;
 use App\Models\VehicleSchedule;
+use App\Services\Search\TripFederatedSearchService;
 use Illuminate\Support\Facades\DB;
 use stdClass;
 
@@ -16,25 +17,19 @@ class TripService
 
     public function __construct(
         ScheduleRepositoryInterface $scheduleRepository,
-        CalculationService          $calculationService
-    )
-    {
+        CalculationService $calculationService,
+        private readonly TripFederatedSearchService $tripFederatedSearch,
+    ) {
         $this->repository = $scheduleRepository;
         $this->calculation = $calculationService;
     }
 
     public function getSearchTrip($request): array
     {
-        $results = $this->repository->searchTrip($request)
-            ->map(function ($trip, $key) {
-                return $this->formatTripList($trip);
-            });
-        $returnArr = [];
-        $results->each(function ($item, $key) use (&$returnArr) {
-            $returnArr[] = $item;
-        });
-
-        return $returnArr;
+        return $this->tripFederatedSearch->search(
+            $request,
+            fn ($trip) => $this->formatTripList($trip)
+        );
     }
 
     public function getSearchTrip2($request): array

@@ -134,10 +134,31 @@ class ScheduleRepository extends BaseRepository implements ScheduleRepositoryInt
     }
 
     /**
+     * Load schedules for trip list JSON with relations required by TripService::formatTripList.
+     * Preserves the order of $ids (MySQL FIELD()).
+     *
+     * @param  list<int>  $ids
+     */
+    public function findSchedulesByIdsForTripList(array $ids): Collection
+    {
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        if ($ids === []) {
+            return collect();
+        }
+        $placeholders = implode(',', $ids);
+
+        return $this->model->newQuery()
+            ->with(['vehicle', 'mappings.cabinType', 'startFrom', 'stopTo', 'route', 'launch'])
+            ->whereIn('id', $ids)
+            ->orderByRaw('FIELD(id,'.$placeholders.')')
+            ->get();
+    }
+
+    /**
      * Accept common aliases from Postman, transport API, and older clients:
      * travel_date → trip_date, vehicle_type → type, from/to_location_id → trip_from/trip_to (ghat names).
      */
-    private function normalizeTripSearchRequest($request): void
+    public function normalizeTripSearchRequest($request): void
     {
         $merge = [];
 
