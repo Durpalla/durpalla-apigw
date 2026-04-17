@@ -33,8 +33,7 @@ Artisan::command('schedule:run', function (Schedule $schedule) {
         ->everyMinute();
 
     $schedule->command('booking:pending')
-        ->everyFifteenMinutes()
-        ->environments(['staging', 'production'])
+        ->everyMinute()
         ->runInBackground()
         ->before(function () {
             Log::debug('Handling pending bookings');

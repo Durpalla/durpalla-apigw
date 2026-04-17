@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Library\SslCommerz\SslCommerzNotification;
 use App\Models\Payment;
 use App\Models\Gateway;
+use App\Services\PendingBookingPaymentWindow;
 
 class ApiPaymentController extends Controller
 {
@@ -25,6 +26,14 @@ class ApiPaymentController extends Controller
 
         try {
             $order = Booking::with(['payment', 'bookingItems', 'customer'])->findOrFail($request->order_id);
+
+            $block = PendingBookingPaymentWindow::reasonPaymentBlocked($order);
+            if ($block !== null) {
+                $data['success'] = false;
+                $data['message'] = $block;
+
+                return response()->json($data, $this->success);
+            }
 
             $payment = $order->payment;
             if (!$order->payment || !$order->payment['transaction_id']) {

@@ -49,7 +49,7 @@ class Bkash implements GatewayInterface, BkashInterface
                 'mode' => '0011',
                 'callbackURL' => route('gateway.callback', $payment->gateway_id),
                 'amount' => $payment->paid_amount,
-                'currency' => $this->attributes['params']['currency'],
+                'currency' => $this->attributes['params']['currency'] ?? 'BDT',
                 'intent' => 'sale',
                 'merchantInvoiceNumber' => $payment->transaction_id,
                 'payerReference' => '01770618575'

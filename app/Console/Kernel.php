@@ -33,8 +33,7 @@ class Kernel extends ConsoleKernel
 //            ->environments(['staging', 'production']);
 
         $schedule->command('booking:pending')
-            ->everyFifteenMinutes()
-//            ->environments(['staging', 'production'])
+            ->everyMinute()
             ->runInBackground()
             ->before(function () {
                 Log::debug('Handling pending bookings');
