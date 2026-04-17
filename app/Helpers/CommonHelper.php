@@ -19,7 +19,16 @@ class CommonHelper
         if (!class_exists($gatewayName)) {
             throw new \Exception('Gateway not properly configured', 500);
         }
-        return new $gatewayName();
+
+        // Some gateways (e.g. Bkash) require the Gateway model in the constructor;
+        // others (Nagad, Sslcom) use zero-arg constructors.
+        $ref = new \ReflectionClass($gatewayName);
+        $ctor = $ref->getConstructor();
+        if ($ctor === null || $ctor->getNumberOfRequiredParameters() === 0) {
+            return $ref->newInstance();
+        }
+
+        return $ref->newInstance($gateway);
     }
 
     public static function hasPermission(array $permissions, $roles = ['admin']): bool
