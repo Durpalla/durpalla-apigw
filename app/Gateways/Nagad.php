@@ -158,8 +158,6 @@ class Nagad implements GatewayInterface
             ->asJson()
             ->post($url . (empty($query) ? '' : ('?' . http_build_query($query))), $payload);
 
-        dd($res->json());
-
         if (!$res->successful()) {
             return ['ok' => false, 'message' => 'Initialization request failed', 'response' => $res->json()];
         }

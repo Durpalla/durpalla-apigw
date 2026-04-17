@@ -9,6 +9,7 @@ use App\Models\Booking;
 use App\Models\BookingItem;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use App\Library\SslCommerz\SslCommerzNotification;
 use App\Models\Payment;
@@ -20,7 +21,7 @@ class ApiPaymentController extends Controller
 
     public function make(PaymentCreateRequest $request)
     {
-        $data = ['success' => false, 'message' => __('Your payment cannot be processed')];
+        $data = ['success' => false, 'message' => __('Your payment cannot be processed'), 'data' => []];
 
         try {
             $order = Booking::with(['payment', 'bookingItems', 'customer'])->findOrFail($request->order_id);
@@ -40,14 +41,29 @@ class ApiPaymentController extends Controller
             $data['data']['id'] = $payment->id;
             $data['data']['booking_id'] = $payment->booking_id;
             $data['data']['transaction_id'] = $payment->transaction_id;
-            $gateway = Gateway::find($request->input('gateway_id'));
+            $gateway = Gateway::with(['credentials', 'params', 'endpoints'])
+                ->find($request->input('gateway_id'));
+            if (! $gateway) {
+                $data['message'] = __('Invalid payment gateway.');
+
+                return response()->json($data, $this->success);
+            }
 
             $gwt = CommonHelper::purseGateway($gateway);
 
             $gwt->create($payment, $request, $data);
-        } catch (\Exception $exception) {
-            $data['message'] = "Internal Error. Please try again later.";
+        } catch (\Throwable $exception) {
+            Log::error('payment.make failed', [
+                'order_id' => $request->input('order_id'),
+                'gateway_id' => $request->input('gateway_id'),
+                'exception' => $exception->getMessage(),
+                'trace' => $exception->getTraceAsString(),
+            ]);
+            $data['message'] = config('app.debug')
+                ? $exception->getMessage()
+                : 'Internal Error. Please try again later.';
         }
+
         return response()->json($data);
     }
 

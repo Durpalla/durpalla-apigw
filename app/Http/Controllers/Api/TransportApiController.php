@@ -166,7 +166,7 @@ class TransportApiController extends Controller
             'customer_mobile' => $request->input('customer_mobile', auth()->user()?->mobile ?? auth('customer')->user()?->mobile),
             'paid_amount' => $request->input('paid_amount', 0),
             'payment_method' => $request->input('payment_method', 'cash'),
-            'platform' => $request->input('platform', 'mobile'),
+            'platform' => $request->input('platform', 'android'),
         ]);
 
         $cartItems = array_map(function ($item) {

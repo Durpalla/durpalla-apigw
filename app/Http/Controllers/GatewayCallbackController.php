@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Gateways\Bkash;
-use App\Gateways\GatewayInterface;
+use App\Helpers\CommonHelper;
 use App\Models\Gateway;
 use App\Models\Payment;
 use Illuminate\Http\RedirectResponse;
@@ -12,44 +11,59 @@ use Illuminate\Support\Facades\Log;
 
 class GatewayCallbackController extends Controller
 {
-    private GatewayInterface $gateway;
-
-    public function __construct(Bkash $gateway)
-    {
-        $this->gateway = $gateway;
-    }
-
+    /**
+     * Web redirect from bKash / Nagad after customer action. Handler is chosen from the {gateway} route model (class_name).
+     */
     public function callback(Request $request, Gateway $gateway): RedirectResponse
     {
         $data = ['status' => false, 'id' => '', 'uuid' => '', 'paymentID' => $request->input('paymentID')];
+        $payment = null;
+
         try {
             $payment = Payment::where('gateway_initiated_id', $request->input('paymentID'))->first();
 
-            if (!$payment) {
-                $data['status'] = 'failed';
-                return $this->paymentFailed($payment, $data);
+            if (! $payment) {
+                return redirect()->route('payment.status', ['payment_id' => 0])
+                    ->with('error', __('Payment not found.'));
             }
 
             $data['id'] = $payment->id;
 
-            if ($payment->user_id !== auth('api')->id()) {
-                $data['status'] = 'failed';
-                return $this->paymentFailed($payment, $data);
+            if (auth('api')->check()
+                && (int) $payment->customer_id !== (int) auth('api')->id()) {
+                return redirect()->route('payment.status', ['payment_id' => $payment->id])
+                    ->with('error', __('This payment does not belong to the signed-in customer.'));
             }
 
             $data['uuid'] = $payment->uuid;
-            $this->gateway->execute($payment, $request, $data);
 
-            if ($data['status']) {
+            $gateway->load(['credentials', 'params', 'endpoints']);
+            $handler = CommonHelper::purseGateway($gateway);
+            $handler->execute($payment, $request, $data);
+
+            if (! empty($data['status'])) {
                 $data['status'] = 'success';
+
                 return $this->paymentSuccess($payment, $data);
-            } else {
-                $data['status'] = 'failed';
             }
+
+            $data['status'] = 'failed';
+
             return $this->paymentFailed($payment, $data);
         } catch (\Throwable $e) {
-            $data['status'] = 'success';
-            Log::error('Bkash execute error', ['e' => $e->getMessage()]);
+            Log::error('Gateway callback execute failed', [
+                'gateway_id' => $gateway->id,
+                'payment_id' => $payment?->id,
+                'message' => $e->getMessage(),
+            ]);
+
+            if ($payment) {
+                return redirect()->route('payment.status', ['payment_id' => $payment->id])
+                    ->with('error', __('Payment processing error.'));
+            }
+
+            return redirect()->route('payment.status', ['payment_id' => 0])
+                ->with('error', __('Payment processing error.'));
         }
     }
 
@@ -57,27 +71,25 @@ class GatewayCallbackController extends Controller
     {
         try {
             $payment = Payment::find($request->input('payment_id'));
-            if (!$payment) {
+            if (! $payment) {
                 return view('payment.notfound');
             }
+
             return view('payment.status', compact('payment'));
         } catch (\Exception $exception) {
             return view('payment.notfound');
         }
     }
 
-    public function paymentFailed($payment, array $data): RedirectResponse
+    public function paymentFailed(Payment $payment, array $data): RedirectResponse
     {
-        $url = config('bkash.frontend_url') . '?' . http_build_query($data);
         return redirect()->route('payment.status', ['payment_id' => $payment->id])
-            ->with('error', 'Payment failed.');
+            ->with('error', __('Payment failed.'));
     }
 
-    public function paymentSuccess($payment, array $data): RedirectResponse
+    public function paymentSuccess(Payment $payment, array $data): RedirectResponse
     {
-        $data['status'] = 'success';
-        $url = config('bkash.frontend_url') . '?' . http_build_query($data);
         return redirect()->route('payment.status', ['payment_id' => $payment->id])
-            ->with('error', 'Payment failed.');
+            ->with('success', __('Payment successful.'));
     }
 }

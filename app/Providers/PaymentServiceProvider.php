@@ -7,8 +7,6 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Gateways\Bkash;
 use App\Gateways\GatewayInterface;
-use App\Gateways\Nagad;
-use App\Gateways\Sslcom;
 
 class PaymentServiceProvider extends ServiceProvider
 {
@@ -26,10 +24,10 @@ class PaymentServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot(): void
     {
+        // Customer payment/make resolves the handler from gateways.class_name (Bkash / Nagad) via CommonHelper::purseGateway().
+        // This default is only for services that type-hint GatewayInterface without a concrete gateway (e.g. App\Services\Payment).
         $this->app->bind(GatewayInterface::class, Bkash::class);
-        $this->app->bind(GatewayInterface::class, Nagad::class);
-        $this->app->bind(GatewayInterface::class, Sslcom::class);
     }
 }

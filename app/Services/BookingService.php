@@ -158,7 +158,11 @@ class BookingService
                     $trip_date = $item['trip_date'];
                     $leaving_time = $item['leaving_time'];
                     $boarding_point = json_decode($item['boarding_point'], true);
-                    array_push($item_list[$item['booking_type']], ['type' => $item['booking_type'], 'cabin_no' => $item['cabin_no'], 'is_ac' => $item['is_ac']]);
+                    array_push($item_list[$item['booking_type']], [
+                        'type' => $item['booking_type'],
+                        'cabin_no' => $item['cabin_no'] ?? '',
+                        'is_ac' => $item['is_ac'] ?? 0,
+                    ]);
                 });
                 $booking = Booking::create([
                     'booking_date' => date('Y-m-d'),
@@ -172,7 +176,7 @@ class BookingService
                     'charge_amount' => $charge_amount,
                     'charge_total' => $charge_total,
                     'booking_party' => ($user->type == 'merchant') ? 'merchant' : 'jolzan',
-                    'platform' => (request()->input('platform')) ? request()->input('platform') : 'android',
+                    'platform' => $this->normalizeBookingPlatform(request()->input('platform')),
                     'status' => (in_array($user->type, ['customer', 'agent'])) ? AppConst::BOOKING_PENDING : AppConst::BOOKING_COMPLETE
                 ]);
 
@@ -395,15 +399,36 @@ class BookingService
         return $customer;
     }
 
+    /**
+     * bookings.platform ENUM includes android, web, counter, office, supervisor_app, merchant_desk, ios
+     * (see durpalla database migrations). Map informal labels to stored values.
+     */
+    private function normalizeBookingPlatform(?string $raw): string
+    {
+        $p = strtolower(trim((string) ($raw ?? '')));
+
+        return match ($p) {
+            'web' => 'web',
+            'android' => 'android',
+            'ios', 'iphone' => 'ios',
+            'counter' => 'counter',
+            'office' => 'office',
+            'supervisor_app' => 'supervisor_app',
+            'merchant_desk' => 'merchant_desk',
+            'mobile', 'flutter', 'app' => 'android',
+            default => 'android',
+        };
+    }
+
     private function fetchBookingItems($cartItems, $customer): array
     {
         $user = auth()->user();
         $chargeType = getOption('service_charge_platform', 'global');
         $vatAmount = getOption('vat_amount', 0);
-        $platform = (request()->input('platform')) ? request()->input('platform') : 'mobile';
+        $platform = $this->normalizeBookingPlatform(request()->input('platform'));
         return collect($cartItems)->map(function ($item, $key) use ($customer, $chargeType, $vatAmount, $platform, $user) {
             $item = (array)$item;
-            $passenger = $item['passengers'];
+            $passenger = $item['passengers'] ?? [];
             if ($item['for_self']) {
                 $passenger = ['type' => 'self', 'name' => $customer->name, 'mobile' => $customer->mobile, 'person' => 1];
             } else {
@@ -415,10 +440,12 @@ class BookingService
                     'booking_type' => 'deck'
                 ];
             } else {
-                $mapping = ScheduleCabinMapping::with(['schedule.vehicle.merchant', 'cabinType'])->find($item['item_id']);
+                $mapping = ScheduleCabinMapping::with(['schedule.vehicle.merchant', 'cabinType', 'cabin', 'schedule.startingPoint.ghat', 'schedule.endingPoint.ghat'])->find($item['item_id']);
                 if (is_array($passenger)) {
                     $passenger['person'] = ($mapping->cabinType) ? $mapping->cabinType['capacity'] : 1;
                 }
+                $meta = is_array($item['meta'] ?? null) ? $item['meta'] : [];
+                $rawCabinNo = $meta['cabin_no'] ?? ($item['cabin_no'] ?? null) ?? $mapping->cabin?->cabin_no ?? '';
                 $data = [
                     'customer_id' => $customer->id,
                     'mapping_id' => $mapping->id,
@@ -426,7 +453,7 @@ class BookingService
                     'is_ac' => $mapping->cabinType['is_ac'],
                     'vehicle_id' => $mapping->vehicle_id,
                     'cabin_id' => $mapping->cabin_id,
-                    'cabin_no' => ($mapping->cabinType) ? $mapping->cabinType['letter'] . '-' . $item['meta']['cabin_no'] : '',
+                    'cabin_no' => ($mapping->cabinType) ? $mapping->cabinType['letter'] . '-' . $rawCabinNo : (string) $rawCabinNo,
                     'price' => $mapping->fare,
                     'vat_visibility' => $mapping->schedule['vehicle']['merchant']['vat_visibility'],
                     'vat_applicable_to' => $mapping->schedule['vehicle']['merchant']['vat_applicable_to'],
