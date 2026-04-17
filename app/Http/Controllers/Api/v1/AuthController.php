@@ -127,48 +127,62 @@ class AuthController extends Controller
         $data = ['success' => false, 'message' => __('Cannot verify OTP')];
 
         try {
-            $otp = UserOtp::where('mobile', $request->mobile)
-                ->where('otp_code', $request->otp)
-                ->where('type', $request->type ? $request->type : 'login')
-                ->latest()
-                ->first();
-            if (!$otp) {
-                $data['message'] = 'Your OTP code is invalid.';
-                return $data;
+            $type = $request->input('type');
+            $query = UserOtp::where('mobile', $request->mobile)
+                ->where('otp_code', $request->input('otp'));
+
+            // check() stores OTP without type (null). Flutter sends type=register for sign-up flow.
+            if ($type === 'forgot') {
+                $query->where('type', 'forgot');
+            } else {
+                $query->where(function ($q) {
+                    $q->whereNull('type')
+                        ->orWhere('type', '')
+                        ->orWhere('type', 'login')
+                        ->orWhere('type', 'register');
+                });
             }
-                if (strtotime($otp->updated_at) < time() - 900) {
-                    $data['message'] = 'Your otp code has been expired.';
+
+            $otp = $query->latest()->first();
+            if (! $otp) {
+                $data['message'] = 'Your OTP code is invalid.';
+
+                return response()->json($data, $this->success);
+            }
+
+            if (strtotime($otp->updated_at) < time() - 900) {
+                $data['message'] = 'Your otp code has been expired.';
+            } else {
+                $user = User::firstOrNew([
+                    'mobile' => $request->mobile,
+                    'type' => AppConst::USER_TYPE_CUSTOMER,
+                ]);
+
+                if ($user->id) {
+                    $user->email_verified_at = now();
+                    $user->save();
+                    $data['step'] = 'login';
                 } else {
-                    $user = User::firstOrNew([
-                        'mobile' => $request->mobile,
-                        'type' => AppConst::USER_TYPE_CUSTOMER
-                    ]);
-
-                    if ($user->id) {
-                        $user->email_verified_at = now();
-                        $user->save();
-                        $data['step'] = 'login';
-                    } else {
-                        $data['step'] = 'register';
-                    }
-
-                    if ($request->type == 'forgot') {
-                        $data['step'] = 'reset';
-                    }
-
-                    $data['success'] = true;
-                    $data['message'] = __('Your otp has been verified');
+                    $data['step'] = 'register';
                 }
+
+                if ($type == 'forgot') {
+                    $data['step'] = 'reset';
+                }
+
+                $data['success'] = true;
+                $data['message'] = __('Your otp has been verified');
 
                 $otp->verified = 1;
                 $otp->save();
+            }
         } catch (\Exception $e) {
             LogHelper::exception($e, [
-                'keyword' => 'OTP_VERIFY_EXCEPTION'
+                'keyword' => 'OTP_VERIFY_EXCEPTION',
             ]);
             $data['message'] = __('Internal error!');
         }
-        //send data with success
+
         return response()->json($data, $this->success);
     }
 

@@ -48,11 +48,11 @@ class Nagad implements GatewayInterface
                 return;
             }
 
-            // Final data for frontend redirection
-            $data['success']   = true;
-            $data['status']    = 'success';
-            $data['message']   = 'success';
-            $data['paymentURL'] = $complete['callBackUrl'];
+            // Final data for frontend redirection (under `data` alongside id / transaction_id from controller)
+            $data['success'] = true;
+            $data['message'] = 'success';
+            $data['data']['status'] = 'success';
+            $data['data']['paymentURL'] = $complete['callBackUrl'];
 
         } catch (\Throwable $e) {
             $data['message'] = $e->getMessage();

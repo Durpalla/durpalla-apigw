@@ -46,6 +46,7 @@ Route::middleware(['JsonResponse'])->group(function () {
         Route::post('verify', [AuthController::class, 'verify']);
         Route::post('forgot', [AuthController::class, 'forgot']);
         Route::post('reset', [AuthController::class, 'reset']);
+        Route::post('otp/send', [AuthController::class, 'resendCode']);
         Route::post('otp/resend', [AuthController::class, 'resendCode']);
     });
 

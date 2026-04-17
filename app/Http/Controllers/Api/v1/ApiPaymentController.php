@@ -36,15 +36,29 @@ class ApiPaymentController extends Controller
             }
 
             $payment = $order->payment;
-            if (!$order->payment || !$order->payment['transaction_id']) {
+            if (! $payment || ! ($payment->transaction_id ?? null)) {
                 $payment = Payment::firstOrNew(['booking_id' => $order->id]);
-                if (!$payment->id) {
+                if (! $payment->id) {
                     $payment->booking_id = $order->id;
                     $payment->transaction_id = uniqid($order->id . '_', false);
                 }
             }
 
             $payment->gateway_id = $request->input('gateway_id');
+
+            $payable = (float) ($order->total_payable ?? 0);
+            if (($payment->paid_amount === null || (float) $payment->paid_amount <= 0) && $payable > 0) {
+                $payment->paid_amount = $payable;
+                if ($payment->dues === null) {
+                    $payment->dues = 0;
+                }
+            }
+
+            if ((float) ($payment->paid_amount ?? 0) <= 0) {
+                $data['message'] = __('Invalid payment amount for this booking.');
+
+                return response()->json($data, $this->success);
+            }
 
             $payment->save();
             $data['data']['id'] = $payment->id;

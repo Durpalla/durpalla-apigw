@@ -43,7 +43,7 @@ class Bkash implements GatewayInterface, BkashInterface
         ];
     }
 
-    public function create($payment, $request, &$data)
+    public function create($payment, $request, &$data): void
     {
         try {
             $payload = [
@@ -67,15 +67,31 @@ class Bkash implements GatewayInterface, BkashInterface
                 ]);
                 if (is_array($jsonData) && array_key_exists('paymentID', $jsonData)) {
                     $payment->update(['gateway_initiated_id' => $jsonData['paymentID']]);
-                    $data['status'] = 'success';
                     $data['success'] = true;
                     $data['message'] = 'success';
-                    $data['paymentID'] = $jsonData['paymentID'];
-                    $data['paymentURL'] = $jsonData['bkashURL'];
+                    $data['data']['status'] = 'success';
+                    $data['data']['paymentID'] = $jsonData['paymentID'];
+                    $data['data']['paymentURL'] = $jsonData['bkashURL'];
                 } else {
-                    $data['status'] = false;
+                    $data['data']['status'] = false;
                     $data['message'] = 'Gateway not initiated payment. Please try again or contact the developer for further assistance.';
                 }
+            } else {
+                $jsonData = $res->json();
+                $data['data']['status'] = false;
+                if (is_array($jsonData)) {
+                    $data['message'] = (string) ($jsonData['errorMessage']
+                        ?? $jsonData['statusMessage']
+                        ?? $jsonData['message']
+                        ?? '');
+                }
+                if (($data['message'] ?? '') === '') {
+                    $data['message'] = __('Payment gateway request failed (HTTP :status).', ['status' => $res->status()]);
+                }
+                LogHelper::debug('BKASH_CREATE_PAYMENT_HTTP_ERROR', [
+                    'status' => $res->status(),
+                    'response' => (! app()->environment('production')) ? $res->body() : null,
+                ]);
             }
         } catch (\Exception $e) {
             $data['message'] = $e->getMessage();

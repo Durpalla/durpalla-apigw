@@ -14,6 +14,18 @@ class OtpVerifyRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $code = $this->input('otp');
+        if ($code === null || $code === '') {
+            if ($this->filled('otp_code')) {
+                $this->merge(['otp' => $this->input('otp_code')]);
+            } elseif ($this->filled('code')) {
+                $this->merge(['otp' => $this->input('code')]);
+            }
+        }
+    }
+
     public function rules(): array
     {
         return [
