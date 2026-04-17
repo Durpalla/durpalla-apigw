@@ -11,15 +11,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('customers', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique()->nullable();
-            $table->string('mobile', 20)->unique()->nullable();
-            $table->string('password');
-            $table->rememberToken();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('customers')) {
+            Schema::create('customers', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('email')->unique()->nullable();
+                $table->string('mobile', 20)->unique()->nullable();
+                $table->string('password');
+                $table->rememberToken();
+                $table->timestamps();
+            });
+        }
     }
 
     public function down(): void
