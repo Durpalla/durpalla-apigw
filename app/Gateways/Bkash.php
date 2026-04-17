@@ -71,6 +71,7 @@ class Bkash implements GatewayInterface, BkashInterface
                     $data['paymentURL'] = $jsonData['bkashURL'];
                 } else {
                     $data['status'] = false;
+                    $data['message'] = 'Gateway not initiated payment. Please try again or contact the developer for further assistance.';
                 }
             }
         } catch (\Exception $e) {
