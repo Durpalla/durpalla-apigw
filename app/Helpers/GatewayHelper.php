@@ -23,8 +23,9 @@ class GatewayHelper
         }
 
         if (!app()->environment('production')) {
-            LogHelper::info('credentials', [
+            LogHelper::info('GATEWAY_CREDENTIALS', [
                 'credentials' => $credentials,
+                'keyword' => 'GATEWAY_CREDENTIALS'
             ]);
         }
         return $credentials;
