@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Constants\AppConst;
+use App\Models\Ghat;
 use App\Models\VehicleSchedule;
 use App\Repository\Interfaces\ScheduleRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -35,6 +36,8 @@ class ScheduleRepository extends BaseRepository implements ScheduleRepositoryInt
 
     public function searchTrip($request)
     {
+        $this->normalizeTripSearchRequest($request);
+
         $data = $request->all();
         $query = $this->model->with(['launch', 'route', 'startingPoint.ghat', 'endingPoint.ghat', 'boardingVias.ghat', 'cabinMappings', 'seatMappings', 'locks', 'bookingItems', 'routeProperties.ghat'])
             ->withCount('cabins')
@@ -83,10 +86,23 @@ class ScheduleRepository extends BaseRepository implements ScheduleRepositoryInt
                     WHERE rp1.route_id = {$tableName}.route_id
                     AND g1.name = ?
                     AND g2.name = ?
+                    AND rp1.ghat_id <> rp2.ghat_id
                     AND (
-                        (rp1.serial_num < rp2.serial_num AND {$tableName}.schedule_type = 'straight')
+                        (
+                            {$tableName}.schedule_type = 'straight'
+                            AND (
+                                rp1.serial_num < rp2.serial_num
+                                OR (rp1.serial_num = rp2.serial_num AND rp1.id < rp2.id)
+                            )
+                        )
                         OR
-                        (rp1.serial_num > rp2.serial_num AND {$tableName}.schedule_type = 'reverse')
+                        (
+                            {$tableName}.schedule_type = 'reverse'
+                            AND (
+                                rp1.serial_num > rp2.serial_num
+                                OR (rp1.serial_num = rp2.serial_num AND rp1.id > rp2.id)
+                            )
+                        )
                     )
                 )
             ", [$tripFrom, $tripTo]);
@@ -115,6 +131,48 @@ class ScheduleRepository extends BaseRepository implements ScheduleRepositoryInt
         }
 
         return $query->limit(10)->get();
+    }
+
+    /**
+     * Accept common aliases from Postman, transport API, and older clients:
+     * travel_date → trip_date, vehicle_type → type, from/to_location_id → trip_from/trip_to (ghat names).
+     */
+    private function normalizeTripSearchRequest($request): void
+    {
+        $merge = [];
+
+        if ($request->filled('trip_date')) {
+            $merge['trip_date'] = date('Y-m-d', strtotime((string) $request->input('trip_date')));
+        } else {
+            foreach (['travel_date', 'schedule_date', 'date'] as $key) {
+                if ($request->filled($key)) {
+                    $merge['trip_date'] = date('Y-m-d', strtotime((string) $request->input($key)));
+                    break;
+                }
+            }
+        }
+
+        if (! $request->filled('trip_from') && $request->filled('from_location_id')) {
+            $name = Ghat::query()->whereKey((int) $request->input('from_location_id'))->value('name');
+            if ($name) {
+                $merge['trip_from'] = $name;
+            }
+        }
+
+        if (! $request->filled('trip_to') && $request->filled('to_location_id')) {
+            $name = Ghat::query()->whereKey((int) $request->input('to_location_id'))->value('name');
+            if ($name) {
+                $merge['trip_to'] = $name;
+            }
+        }
+
+        if (! $request->filled('type') && ! $request->filled('service_type') && $request->filled('vehicle_type')) {
+            $merge['type'] = $request->input('vehicle_type');
+        }
+
+        if ($merge !== []) {
+            $request->merge($merge);
+        }
     }
 
     public function getSupervisorJobs(User $supervisor): LengthAwarePaginator
