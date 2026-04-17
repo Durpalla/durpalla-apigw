@@ -4,6 +4,7 @@ namespace App\Gateways;
 
 use App\Helpers\LogHelper;
 use App\Models\Gateway;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -61,7 +62,9 @@ class Bkash implements GatewayInterface, BkashInterface
 
             if ($res->successful()) {
                 $jsonData = $res->json();
-
+                LogHelper::debug('BKASH_CREATE_PAYMENT_RESPONSE', [
+                    'response' => (!app()->environment('production')) ? $jsonData : Arr::except($jsonData, ['bkashURL'])
+                ]);
                 if (is_array($jsonData) && array_key_exists('paymentID', $jsonData)) {
                     $payment->update(['gateway_initiated_id' => $jsonData['paymentID']]);
                     $data['status'] = 'success';
