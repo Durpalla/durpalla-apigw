@@ -65,8 +65,8 @@ class AuthController extends Controller
                 }
                 $otp->updated_at = now();
 
-                if ($otp->save()) {
-                    $this->dispatch(new OTPCodeSendingJob($request->mobile, $otp->otp_code));
+                if ($otp->save() && !app()->environment('local')) {
+                    dispatch(new OTPCodeSendingJob($request->mobile, $otp->otp_code));
                     sendSMS([
                         'mobile' => $request->mobile,
                         'message' => config('app.name') . ' verification code is ' . $otp->otp_code
