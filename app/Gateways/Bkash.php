@@ -153,7 +153,7 @@ class Bkash implements GatewayInterface, BkashInterface
                         'username' => $this->attributes['credentials']['username'],
                         'password' => $this->attributes['credentials']['password'],
                     ])
-                    ->post($this->attributes[]['endpoints']['token'], [
+                    ->post($this->attributes['endpoints']['token'], [
                         'app_key' => $this->attributes['credentials']['app_key'],
                         'app_secret' => $this->attributes['credentials']['app_secret'],
                     ]);
