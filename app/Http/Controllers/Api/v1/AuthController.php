@@ -128,11 +128,14 @@ class AuthController extends Controller
 
         try {
             $otp = UserOtp::where('mobile', $request->mobile)
-                ->where('otp_code', $request->otp_code)
+                ->where('otp_code', $request->otp)
                 ->where('type', $request->type ? $request->type : 'login')
                 ->latest()
                 ->first();
-            if ($otp) {
+            if (!$otp) {
+                $data['message'] = 'Your OTP code is invalid.';
+                return $data;
+            }
                 if (strtotime($otp->updated_at) < time() - 900) {
                     $data['message'] = 'Your otp code has been expired.';
                 } else {
@@ -159,7 +162,6 @@ class AuthController extends Controller
 
                 $otp->verified = 1;
                 $otp->save();
-            }
         } catch (\Exception $e) {
             LogHelper::exception($e, [
                 'keyword' => 'OTP_VERIFY_EXCEPTION'
