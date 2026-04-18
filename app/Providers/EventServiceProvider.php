@@ -13,6 +13,7 @@ use App\Listeners\WithdrawalActionListener;
 use App\Models\Agent;
 use App\Models\AgentWithdrawal;
 use App\Models\Booking;
+use App\Models\BookingItem;
 use App\Models\BookingCancellation;
 use App\Models\CabinLock;
 use App\Models\Coupon;
@@ -28,6 +29,7 @@ use App\Models\VehicleSupervisor;
 use App\Observers\AgentObserver;
 use App\Observers\AgentWithdrawalObserver;
 use App\Observers\BookingCancellationObserver;
+use App\Observers\BookingItemObserver;
 use App\Observers\BookingObserver;
 use App\Observers\CabinLockObserver;
 use App\Observers\CouponObserver;
@@ -89,6 +91,7 @@ class EventServiceProvider extends ServiceProvider
     {
         parent::boot();
         Booking::observe(BookingObserver::class);
+        BookingItem::observe(BookingItemObserver::class);
         BookingCancellation::observe(BookingCancellationObserver::class);
         CabinLock::observe(CabinLockObserver::class);
     }

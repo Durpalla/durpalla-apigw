@@ -19,13 +19,15 @@ class CabinReleasedEvent implements ShouldBroadcastNow
     public int $itemId;
     public array $data;
     public ?int $userId;
+    public ?int $merchantId;
 
-    public function __construct(int $tripId, int $itemId, array $data, $userId = null)
+    public function __construct(int $tripId, int $itemId, array $data, $userId = null, ?int $merchantId = null)
     {
         $this->tripId = $tripId;
         $this->itemId = $itemId;
         $this->data = $data;
         $this->userId = $userId;
+        $this->merchantId = $merchantId;
     }
 
     /** Channel name */
@@ -40,7 +42,7 @@ class CabinReleasedEvent implements ShouldBroadcastNow
 
     public function broadcastAs(): string
     {
-        return 'cart.item.released';
+        return 'item.released';
     }
 
     public function broadcastWith(): array
@@ -48,6 +50,7 @@ class CabinReleasedEvent implements ShouldBroadcastNow
         return [
             'trip_id' => $this->tripId,
             'item_id' => $this->itemId,
+            'merchant_id' => $this->merchantId,
             'user_id' => $this->userId,
             'data' => $this->data
         ];
