@@ -18,8 +18,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
-use Image;
 use App\Services\SupervisorService;
+use App\Support\RasterImage;
 
 class MyApiController extends Controller
 {
@@ -756,10 +756,8 @@ class MyApiController extends Controller
                 @mkdir($destinationPath, 0755, true);
             }
             $source = $image->getRealPath() ?: $image->getPathname();
-            $img = Image::make($source);
-            $img->resize(460, 340, function ($constraint) {
-                $constraint->aspectRatio();
-            })->save($destinationPath . '/' . $filename);
+            $outPath = $destinationPath . '/' . $filename;
+            RasterImage::resizeToFit($source, $outPath, 460, 340);
             $user->profile_pic = 'uploads/avatar/' . $filename;
         }
 
@@ -919,15 +917,22 @@ class MyApiController extends Controller
         $user = Auth::user();
 
         $filename = $user->name . '-' . time() . '.png';
-
-        $img = Image::make(file_get_contents($request->avatar))->save(public_path() . '/uploads/temp/' . $filename);
-        if(file_exists(public_path() . '/uploads/temp/' . $filename) ) {
-            $img->resize(300, 300, function ($constraint) {
-                $constraint->aspectRatio();
-            })->save(public_path() . '/uploads/avatar/' .$filename);
-            unlink(public_path() . '/uploads/temp/' . $filename);
+        $tempDir = public_path('uploads/temp');
+        $avatarDir = public_path('uploads/avatar');
+        @mkdir($tempDir, 0755, true);
+        @mkdir($avatarDir, 0755, true);
+        $tempPath = $tempDir . '/' . $filename;
+        $avatarPath = $avatarDir . '/' . $filename;
+        $raw = @file_get_contents($request->avatar);
+        if ($raw === false || $raw === '') {
+            return response()->json(['success' => false, 'message' => __('Invalid image data.')], $this->success);
         }
-        $user->profile_pic = "uploads/avatar/" . $filename;
+        if (@file_put_contents($tempPath, $raw) === false) {
+            return response()->json(['success' => false, 'message' => __('Could not save upload.')], $this->success);
+        }
+        RasterImage::resizeToFit($tempPath, $avatarPath, 300, 300);
+        @unlink($tempPath);
+        $user->profile_pic = 'uploads/avatar/' . $filename;
 
         if( $user->save() ) :
             return response()->json(['success' => true, 'avatar' => asset( "uploads/avatar/" . $filename ), 'message' => __('Your profile picture successfully uploaded')], $this->success);
@@ -953,10 +958,11 @@ class MyApiController extends Controller
             $image = $request->file('avatar');
             $filename = $user->id . '_' . time().'.'.$image->getClientOriginalExtension();
             $destinationPath = public_path('/uploads/avatar');
-            $img = Image::make($image->getRealPath());
-            $img->resize(460, 340, function ($constraint) {
-                $constraint->aspectRatio();
-            })->save($destinationPath.'/'.$filename);
+            if (! is_dir($destinationPath)) {
+                @mkdir($destinationPath, 0755, true);
+            }
+            $source = $image->getRealPath() ?: $image->getPathname();
+            RasterImage::resizeToFit($source, $destinationPath . '/' . $filename, 460, 340);
             $user->profile_pic = 'uploads/avatar/' . $filename;
         }
 

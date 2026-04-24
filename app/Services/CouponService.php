@@ -4,8 +4,8 @@
 namespace App\Services;
 
 
-use Intervention\Image\Facades\Image;
 use App\Models\Coupon;
+use App\Support\RasterImage;
 use App\Repository\Interfaces\CouponRepositoryInterface;
 
 class CouponService
@@ -31,10 +31,11 @@ class CouponService
             $image = request()->file('poster');
             $filename = time() . '.' . $image->getClientOriginalExtension();
             $destinationPath = public_path('uploads/banner/');
-            $img = Image::make($image->getRealPath());
-            $img->resize(460, 340, function ($constraint) {
-                $constraint->aspectRatio();
-            })->save($destinationPath . '/' . $filename);
+            if (! is_dir($destinationPath)) {
+                @mkdir($destinationPath, 0755, true);
+            }
+            $source = $image->getRealPath() ?: $image->getPathname();
+            RasterImage::resizeToFit($source, $destinationPath . '/' . $filename, 460, 340);
 
             $poster = '/uploads/banner/' . $filename;
         }
