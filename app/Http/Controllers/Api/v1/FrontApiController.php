@@ -8,6 +8,8 @@ use App\Models\Ghat;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use App\Services\Services;
 use App\Models\VehicleSchedule;
@@ -264,6 +266,38 @@ class FrontApiController extends Controller
         }
 
         $limit = ($term === '') ? 100 : 50;
+
+        return response()->json([
+            'success' => true,
+            'data' => $query->limit($limit)->get(),
+        ], $this->success);
+    }
+
+    /**
+     * Hotel / stay search: city names from `cities` (not ghats).
+     * Query: ?q=partialName — same envelope as {@see suggest} for mobile clients.
+     */
+    public function citySuggestion(Request $request): JsonResponse
+    {
+        $q = trim((string) $request->query('q', ''));
+
+        if (! Schema::hasTable('cities')) {
+            return response()->json([
+                'success' => true,
+                'data' => [],
+            ], $this->success);
+        }
+
+        $query = DB::table('cities')
+            ->select('id', 'name')
+            ->distinct()
+            ->orderBy('name');
+
+        if ($q !== '') {
+            $query->where('name', 'LIKE', '%'.$q.'%');
+        }
+
+        $limit = ($q === '') ? 100 : 50;
 
         return response()->json([
             'success' => true,

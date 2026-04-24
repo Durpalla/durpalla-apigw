@@ -113,6 +113,15 @@ class ApiPublicInitTest extends TestCase
         }
     }
 
+    public function test_city_suggestion_returns_json(): void
+    {
+        $response = $this->getJson($this->base . '/city/suggestion?q=dha');
+        $this->assertOkOrServerError($response->status());
+        if ($response->status() === 200) {
+            $response->assertJsonStructure(['success', 'data']);
+        }
+    }
+
     public function test_trip_returns_json(): void
     {
         $response = $this->getJson($this->base . '/trip/1');

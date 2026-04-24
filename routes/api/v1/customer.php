@@ -59,6 +59,7 @@ Route::middleware(['JsonResponse'])->group(function () {
     Route::get('/search', [FrontApiController::class, 'search']);
     Route::get('/available', [FrontApiController::class, 'search']);
     Route::get('/suggest/{term?}/{term2?}', [FrontApiController::class, 'suggest']);
+    Route::get('/city/suggestion', [FrontApiController::class, 'citySuggestion']);
     Route::get('/trip/{id}', [FrontApiController::class, 'trip']);
 
     // Transport API (same contract as durpalla: search, lock, unlock)
