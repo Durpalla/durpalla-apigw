@@ -13,6 +13,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 final class HotelBookingService
 {
@@ -33,7 +34,7 @@ final class HotelBookingService
         $limit = max(1, min(100, (int) config('hotel.search_default_limit', 30)));
         $radiusKm = max(1.0, min(500.0, (float) config('hotel.search_radius_km', 50)));
 
-        $q = Hotel::query()->where('status', 1);
+        $q = Hotel::query()->where('hotels.status', 1);
 
         $lat = $request->input('lat');
         $lng = $request->input('lng');
@@ -41,22 +42,58 @@ final class HotelBookingService
         if ($hasGeo) {
             $latF = (float) $lat;
             $lngF = (float) $lng;
-            $q->whereNotNull('lat')
-                ->whereNotNull('lng')
-                ->whereRaw(
-                    '(6371 * acos(least(1.0, greatest(-1.0, cos(radians(?)) * cos(radians(lat)) * cos(radians(lng) - radians(?)) + sin(radians(?)) * sin(radians(lat)))))) <= ?',
-                    [$latF, $lngF, $latF, $radiusKm]
-                );
+            if ($this->hotelsTableHasLatLng()) {
+                $q->whereNotNull('hotels.lat')
+                    ->whereNotNull('hotels.lng')
+                    ->whereRaw(
+                        '(6371 * acos(least(1.0, greatest(-1.0, cos(radians(?)) * cos(radians(hotels.lat)) * cos(radians(hotels.lng) - radians(?)) + sin(radians(?)) * sin(radians(hotels.lat)))))) <= ?',
+                        [$latF, $lngF, $latF, $radiusKm]
+                    );
+            } elseif ($this->hotelLocationsHasCoordinates()) {
+                $q->whereExists(function ($sub) use ($latF, $lngF, $radiusKm) {
+                    $sub->selectRaw('1')
+                        ->from('hotel_locations')
+                        ->whereColumn('hotel_locations.hotel_id', 'hotels.id')
+                        ->whereNotNull('hotel_locations.latitude')
+                        ->whereNotNull('hotel_locations.longitude')
+                        ->whereRaw(
+                            '(6371 * acos(least(1.0, greatest(-1.0, cos(radians(?)) * cos(radians(hotel_locations.latitude)) * cos(radians(hotel_locations.longitude) - radians(?)) + sin(radians(?)) * sin(radians(hotel_locations.latitude)))))) <= ?',
+                            [$latF, $lngF, $latF, $radiusKm]
+                        );
+                });
+            }
         }
         if ($city !== '') {
-            $q->where(function ($w) use ($city) {
-                $w->where('city', 'like', '%'.$city.'%')
-                    ->orWhere('name', 'like', '%'.$city.'%');
+            $like = '%'.addcslashes($city, '%_\\').'%';
+            $q->where(function ($w) use ($like) {
+                $w->where('hotels.name', 'like', $like);
+                if ($this->hotelsTableHasCityString()) {
+                    $w->orWhere('hotels.city', 'like', $like);
+                }
+                if ($this->hotelsTableHasCityId() && Schema::hasTable('cities')) {
+                    $w->orWhereExists(function ($sub) use ($like) {
+                        $sub->selectRaw('1')
+                            ->from('cities')
+                            ->whereColumn('cities.id', 'hotels.city_id')
+                            ->where('cities.name', 'like', $like);
+                    });
+                }
             });
         }
 
+        $hotels = $q->limit($limit)->get();
+        $cityNamesById = [];
+        if (! $this->hotelsTableHasCityString() && $this->hotelsTableHasCityId() && Schema::hasTable('cities')) {
+            $ids = $hotels->pluck('city_id')->filter()->unique()->values()->all();
+            if ($ids !== []) {
+                foreach (DB::table('cities')->whereIn('id', $ids)->get(['id', 'name']) as $row) {
+                    $cityNamesById[(int) $row->id] = (string) $row->name;
+                }
+            }
+        }
+
         $out = [];
-        foreach ($q->limit($limit)->get() as $hotel) {
+        foreach ($hotels as $hotel) {
             $min = HotelRoomType::query()
                 ->where('hotel_id', $hotel->id)
                 ->where('status', 1)
@@ -65,16 +102,18 @@ final class HotelBookingService
                 continue;
             }
             $photo = $hotel->photos()->first();
+            $cityLabel = $this->resolveHotelCityLabel($hotel, $cityNamesById);
+            $stars = $this->resolveHotelStars($hotel);
             $out[] = [
                 'id' => $hotel->id,
                 'hotel_id' => $hotel->id,
                 'name' => $hotel->name,
-                'location' => $hotel->city ?? $hotel->address ?? '',
-                'city' => $hotel->city,
+                'location' => $cityLabel ?? $hotel->address ?? '',
+                'city' => $cityLabel,
                 'photo' => $photo?->url ?? '',
-                'stars' => (int) $hotel->star_rating,
-                'rating' => (float) $hotel->aggregate_rating,
-                'reviews' => (int) $hotel->review_count,
+                'stars' => $stars,
+                'rating' => (float) ($hotel->getAttribute('aggregate_rating') ?? $hotel->getAttribute('rating') ?? 0),
+                'reviews' => (int) ($hotel->review_count ?? 0),
                 'price_per_night' => (float) $min,
                 'amenities' => [],
             ];
@@ -90,16 +129,25 @@ final class HotelBookingService
             return null;
         }
 
+        $cityNamesById = [];
+        $cid = $hotel->getAttribute('city_id');
+        if (! $this->hotelsTableHasCityString() && $this->hotelsTableHasCityId() && Schema::hasTable('cities') && $cid !== null && $cid !== '') {
+            $name = DB::table('cities')->where('id', $cid)->value('name');
+            if ($name !== null) {
+                $cityNamesById[(int) $cid] = (string) $name;
+            }
+        }
+
         return [
             'id' => $hotel->id,
             'name' => $hotel->name,
-            'city' => $hotel->city,
+            'city' => $this->resolveHotelCityLabel($hotel, $cityNamesById),
             'address' => $hotel->address,
-            'lat' => $hotel->lat,
-            'lng' => $hotel->lng,
-            'stars' => (int) $hotel->star_rating,
-            'rating' => (float) $hotel->aggregate_rating,
-            'review_count' => (int) $hotel->review_count,
+            'lat' => $hotel->lat ?? $this->firstHotelLocationLatitude($hotel->id),
+            'lng' => $hotel->lng ?? $this->firstHotelLocationLongitude($hotel->id),
+            'stars' => $this->resolveHotelStars($hotel),
+            'rating' => (float) ($hotel->getAttribute('aggregate_rating') ?? $hotel->getAttribute('rating') ?? 0),
+            'review_count' => (int) ($hotel->review_count ?? 0),
             'description' => $hotel->description,
             'policies' => $hotel->policies,
             'photos' => $hotel->photos->map(fn ($p) => ['url' => $p->url, 'caption' => $p->caption])->values()->all(),
@@ -406,5 +454,84 @@ final class HotelBookingService
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    private function hotelsTable(): string
+    {
+        return (new Hotel)->getTable();
+    }
+
+    private function hotelsTableHasCityString(): bool
+    {
+        return Schema::hasColumn($this->hotelsTable(), 'city');
+    }
+
+    private function hotelsTableHasCityId(): bool
+    {
+        return Schema::hasColumn($this->hotelsTable(), 'city_id');
+    }
+
+    private function hotelsTableHasLatLng(): bool
+    {
+        $t = $this->hotelsTable();
+
+        return Schema::hasColumn($t, 'lat') && Schema::hasColumn($t, 'lng');
+    }
+
+    private function hotelLocationsHasCoordinates(): bool
+    {
+        return Schema::hasTable('hotel_locations')
+            && Schema::hasColumn('hotel_locations', 'latitude')
+            && Schema::hasColumn('hotel_locations', 'longitude');
+    }
+
+    /**
+     * @param  array<int|string, mixed>  $cityNamesById
+     */
+    private function resolveHotelCityLabel(Hotel $hotel, array $cityNamesById): ?string
+    {
+        if ($this->hotelsTableHasCityString()) {
+            $v = $hotel->getAttribute('city');
+
+            return $v !== null && $v !== '' ? (string) $v : null;
+        }
+        $cid = $hotel->getAttribute('city_id');
+        if ($cid !== null && $cid !== '' && isset($cityNamesById[(int) $cid])) {
+            return (string) $cityNamesById[(int) $cid];
+        }
+
+        return null;
+    }
+
+    private function resolveHotelStars(Hotel $hotel): int
+    {
+        if (Schema::hasColumn($this->hotelsTable(), 'star_rating')) {
+            return (int) $hotel->getAttribute('star_rating');
+        }
+        if (Schema::hasColumn($this->hotelsTable(), 'rating')) {
+            return (int) round((float) $hotel->getAttribute('rating'));
+        }
+
+        return 0;
+    }
+
+    private function firstHotelLocationLatitude(int $hotelId): ?float
+    {
+        if (! $this->hotelLocationsHasCoordinates()) {
+            return null;
+        }
+        $v = DB::table('hotel_locations')->where('hotel_id', $hotelId)->value('latitude');
+
+        return $v !== null ? (float) $v : null;
+    }
+
+    private function firstHotelLocationLongitude(int $hotelId): ?float
+    {
+        if (! $this->hotelLocationsHasCoordinates()) {
+            return null;
+        }
+        $v = DB::table('hotel_locations')->where('hotel_id', $hotelId)->value('longitude');
+
+        return $v !== null ? (float) $v : null;
     }
 }
