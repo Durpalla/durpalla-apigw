@@ -6,6 +6,8 @@
  * and reconcile vendor holds before marking paid.
  */
 return [
+    /** When true, logs request params, SQL, candidate hotels, skips, and result count to the default log channel. */
+    'debug_search' => (bool) env('HOTEL_SEARCH_DEBUG', false),
     'hold_ttl_minutes' => (int) env('HOTEL_HOLD_TTL_MINUTES', 15),
     'payment_window_minutes' => (int) env('HOTEL_PAYMENT_WINDOW_MINUTES', 10),
     'search_default_limit' => (int) env('HOTEL_SEARCH_LIMIT', 30),

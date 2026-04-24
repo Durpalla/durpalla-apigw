@@ -13,6 +13,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 final class HotelBookingService
@@ -24,10 +25,34 @@ final class HotelBookingService
 
     public function search(Request $request): array
     {
+        $debug = (bool) config('hotel.debug_search');
         $city = trim((string) $request->input('city', $request->input('trip_to', $request->input('trip_from', ''))));
         $checkIn = $this->parseDate($request->input('check_in', $request->input('trip_date')));
         $checkOut = $this->parseDate($request->input('check_out', $request->input('return_date')));
+
+        if ($debug) {
+            Log::info('hotel.search.request', [
+                'endpoint' => 'GET /api/v1/hotel/search',
+                'query' => $request->query(),
+                'body' => $request->except(array_keys($request->query())),
+                'resolved' => [
+                    'city' => $city,
+                    'check_in' => $checkIn?->toDateString(),
+                    'check_out' => $checkOut?->toDateString(),
+                ],
+                'dates_ok' => $checkIn && $checkOut && $checkOut > $checkIn,
+            ]);
+        }
+
         if (! $checkIn || ! $checkOut || $checkOut <= $checkIn) {
+            if ($debug) {
+                Log::info('hotel.search.empty', [
+                    'reason' => 'invalid_or_missing_dates',
+                    'check_in_raw' => $request->input('check_in', $request->input('trip_date')),
+                    'check_out_raw' => $request->input('check_out', $request->input('return_date')),
+                ]);
+            }
+
             return [];
         }
 
@@ -81,6 +106,13 @@ final class HotelBookingService
             });
         }
 
+        if ($debug) {
+            Log::info('hotel.search.sql', [
+                'sql' => $q->toSql(),
+                'bindings' => $q->getBindings(),
+            ]);
+        }
+
         $hotels = $q->limit($limit)->get();
         $cityNamesById = [];
         if (! $this->hotelsTableHasCityString() && $this->hotelsTableHasCityId() && Schema::hasTable('cities')) {
@@ -93,12 +125,21 @@ final class HotelBookingService
         }
 
         $out = [];
+        $skippedNoPricedRoom = [];
         foreach ($hotels as $hotel) {
             $min = HotelRoomType::query()
                 ->where('hotel_id', $hotel->id)
                 ->where('status', 1)
                 ->min('base_price_per_night');
             if ($min === null) {
+                if ($debug) {
+                    $skippedNoPricedRoom[] = [
+                        'hotel_id' => $hotel->id,
+                        'name' => $hotel->name,
+                        'reason' => 'no_active_room_type_with_base_price_per_night',
+                    ];
+                }
+
                 continue;
             }
             $photo = $hotel->photos()->first();
@@ -117,6 +158,22 @@ final class HotelBookingService
                 'price_per_night' => (float) $min,
                 'amenities' => [],
             ];
+        }
+
+        if ($debug) {
+            Log::info('hotel.search.response', [
+                'endpoint' => 'GET /api/v1/hotel/search',
+                'candidate_hotel_count' => $hotels->count(),
+                'candidate_ids' => $hotels->pluck('id')->values()->all(),
+                'result_count' => count($out),
+                'result_ids' => array_column($out, 'id'),
+                'skipped' => $skippedNoPricedRoom,
+                'schema' => [
+                    'hotels_has_city_column' => $this->hotelsTableHasCityString(),
+                    'hotels_has_city_id' => $this->hotelsTableHasCityId(),
+                    'cities_table' => Schema::hasTable('cities'),
+                ],
+            ]);
         }
 
         return $out;
