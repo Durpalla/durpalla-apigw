@@ -31,7 +31,7 @@ final class HotelBookingService
         $checkOut = $this->parseDate($request->input('check_out', $request->input('return_date')));
 
         if ($debug) {
-            Log::info('hotel.search.request', [
+            $this->emitHotelSearchDebug('request', [
                 'endpoint' => 'GET /api/v1/hotel/search',
                 'query' => $request->query(),
                 'body' => $request->except(array_keys($request->query())),
@@ -46,7 +46,7 @@ final class HotelBookingService
 
         if (! $checkIn || ! $checkOut || $checkOut <= $checkIn) {
             if ($debug) {
-                Log::info('hotel.search.empty', [
+                $this->emitHotelSearchDebug('empty', [
                     'reason' => 'invalid_or_missing_dates',
                     'check_in_raw' => $request->input('check_in', $request->input('trip_date')),
                     'check_out_raw' => $request->input('check_out', $request->input('return_date')),
@@ -107,7 +107,7 @@ final class HotelBookingService
         }
 
         if ($debug) {
-            Log::info('hotel.search.sql', [
+            $this->emitHotelSearchDebug('sql', [
                 'sql' => $q->toSql(),
                 'bindings' => $q->getBindings(),
             ]);
@@ -161,7 +161,7 @@ final class HotelBookingService
         }
 
         if ($debug) {
-            Log::info('hotel.search.response', [
+            $this->emitHotelSearchDebug('response', [
                 'endpoint' => 'GET /api/v1/hotel/search',
                 'candidate_hotel_count' => $hotels->count(),
                 'candidate_ids' => $hotels->pluck('id')->values()->all(),
@@ -177,6 +177,17 @@ final class HotelBookingService
         }
 
         return $out;
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     */
+    private function emitHotelSearchDebug(string $phase, array $context): void
+    {
+        $context['phase'] = $phase;
+        $line = '[hotel.search] '.$phase.' '.json_encode($context, JSON_UNESCAPED_UNICODE);
+        error_log($line);
+        Log::warning($line, $context);
     }
 
     public function hotelDetails(int $hotelId): ?array
