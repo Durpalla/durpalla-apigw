@@ -697,7 +697,7 @@ final class HotelBookingService
 
     public function hotelDetails(int $hotelId): ?array
     {
-        $hotel = Hotel::query()->with(['photos', 'reviews', 'roomTypes.photos'])->find($hotelId);
+        $hotel = Hotel::query()->with(['photos', 'reviews'])->find($hotelId);
         if (! $hotel || (int) $hotel->status !== 1) {
             return null;
         }
@@ -770,7 +770,50 @@ final class HotelBookingService
                 'text' => $r->body,
                 'date' => $r->reviewed_at?->toDateString(),
             ])->values()->all(),
+            /** Published room catalog (no per-stay quote; use [GET] hotel/{id}/rooms for availability + quote). */
+            'room_types' => $this->roomTypesCatalogForHotel($hotel->id),
         ];
+    }
+
+    /**
+     * Published room type rows for hotel details (code, title, photos, base rate hint).
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function roomTypesCatalogForHotel(int $hotelId): array
+    {
+        $t = $this->roomTypesTable();
+        $typesQ = HotelRoomType::query()->where("{$t}.hotel_id", $hotelId);
+        $this->applyRoomTypePublishScope($typesQ, $t);
+        $types = $typesQ->with('photos')->orderBy("{$t}.id")->get();
+
+        $out = [];
+        foreach ($types as $rt) {
+            $roomPhotos = [];
+            foreach ($rt->photos as $p) {
+                $u = $this->normalizeHotelImageUrl((string) ($p->url ?? ''));
+                if ($u === '') {
+                    continue;
+                }
+                $roomPhotos[] = ['url' => $u];
+            }
+            $out[] = [
+                'id' => $rt->id,
+                'room_type_id' => $rt->id,
+                'code' => $rt->code,
+                'title' => $rt->title,
+                'max_occupancy' => (int) $rt->max_occupancy,
+                'bed_type' => $rt->bed_type,
+                'amenities' => $rt->amenities ?? [],
+                'photos' => $roomPhotos,
+                'base_price_per_night' => $rt->base_price_per_night !== null
+                    ? (float) $rt->base_price_per_night
+                    : null,
+                'currency' => (string) ($rt->currency ?: 'BDT'),
+            ];
+        }
+
+        return $out;
     }
 
     /**
