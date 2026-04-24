@@ -10,7 +10,7 @@ class HotelRoomType extends Model
 {
     protected $fillable = [
         'hotel_id', 'code', 'title', 'max_occupancy', 'bed_type', 'amenities',
-        'base_price_per_night', 'currency', 'status',
+        'base_price_per_night', 'currency', 'status', 'is_active',
     ];
 
     protected function casts(): array
@@ -18,6 +18,7 @@ class HotelRoomType extends Model
         return [
             'amenities' => 'array',
             'base_price_per_night' => 'decimal:2',
+            'is_active' => 'bool',
         ];
     }
 

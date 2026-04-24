@@ -790,16 +790,11 @@ final class HotelBookingService
             return;
         }
 
-        $q = DB::table('hotel_rooms')->where('hotel_id', $hotelId);
-        if (Schema::hasColumn('hotel_rooms', 'deleted_at')) {
-            $q->whereNull('deleted_at');
-        }
-        if (Schema::hasColumn('hotel_rooms', 'status')) {
-            $q->where(function ($w) {
-                $w->whereNull('status')->orWhere('status', 1)->orWhere('status', '1');
-            });
-        }
+        $q = $this->queryActiveModuleHotelRooms($hotelId, strict: true);
         $rows = $q->orderBy('id')->get();
+        if ($rows->isEmpty()) {
+            $rows = $this->queryActiveModuleHotelRooms($hotelId, strict: false)->orderBy('id')->get();
+        }
         $activeHrIds = $rows->pluck('id')->map(fn ($id) => (int) $id)->all();
 
         $roomTypeNames = [];
@@ -817,24 +812,28 @@ final class HotelBookingService
             $title = $name !== '' ? $name : ($typeName !== null && (string) $typeName !== '' ? (string) $typeName : 'Room '.$hr->id);
             $baseFloat = ($hr->base_price !== null && $hr->base_price !== '') ? (float) $hr->base_price : 0.0;
 
+            $payload = [
+                'title' => $title,
+                'max_occupancy' => max(1, (int) $hr->max_occupancy),
+                'bed_type' => null,
+                'amenities' => [],
+                'base_price_per_night' => $baseFloat,
+                'currency' => 'BDT',
+                'status' => 1,
+            ];
+            if (Schema::hasColumn($apiTable, 'is_active')) {
+                $payload['is_active'] = 1;
+            }
             HotelRoomType::query()->updateOrCreate(
                 [
                     'hotel_id' => (int) $hr->hotel_id,
                     'code' => $code,
                 ],
-                [
-                    'title' => $title,
-                    'max_occupancy' => max(1, (int) $hr->max_occupancy),
-                    'bed_type' => null,
-                    'amenities' => [],
-                    'base_price_per_night' => $baseFloat,
-                    'currency' => 'BDT',
-                    'status' => 1,
-                ],
+                $payload
             );
         }
 
-        if (! Schema::hasColumn($apiTable, 'status')) {
+        if ($rows->isEmpty() || ! Schema::hasColumn($apiTable, 'status')) {
             return;
         }
         $prefix = 'mod_hr_';
@@ -849,9 +848,35 @@ final class HotelBookingService
             }
             $hrId = (int) $suffix;
             if (! in_array($hrId, $activeHrIds, true)) {
-                $rt->update(['status' => 0]);
+                $u = ['status' => 0];
+                if (Schema::hasColumn($apiTable, 'is_active')) {
+                    $u['is_active'] = 0;
+                }
+                $rt->update($u);
             }
         }
+    }
+
+    /**
+     * @return \Illuminate\Database\Query\Builder
+     */
+    private function queryActiveModuleHotelRooms(int $hotelId, bool $strict)
+    {
+        $q = DB::table('hotel_rooms')->where('hotel_id', $hotelId);
+        if (Schema::hasColumn('hotel_rooms', 'deleted_at')) {
+            $q->whereNull('deleted_at');
+        }
+        if ($strict && Schema::hasColumn('hotel_rooms', 'status')) {
+            $q->where(function ($w) {
+                $w->whereNull('status')
+                    ->orWhere('status', 1)
+                    ->orWhere('status', '1')
+                    ->orWhere('status', true)
+                    ->orWhereIn('status', ['active', 'ACTIVE', 'enabled', 'ENABLED', 'published', 'PUBLISHED']);
+            });
+        }
+
+        return $q;
     }
 
     /**
