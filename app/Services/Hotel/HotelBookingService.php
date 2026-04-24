@@ -776,12 +776,92 @@ final class HotelBookingService
     }
 
     /**
+     * Module Hotel stores bookable rows in `hotel_rooms` (+ `room_types`); the customer API
+     * uses `hotel_room_types`. Upsert one API row per active `hotel_rooms` row so details/rooms
+     * match the admin "Rooms" tab (stable code: mod_hr_{hotel_rooms.id}).
+     */
+    private function syncModuleHotelRoomsIntoApiRoomTypes(int $hotelId): void
+    {
+        if (! Schema::hasTable('hotel_rooms')) {
+            return;
+        }
+        $apiTable = $this->roomTypesTable();
+        if (! Schema::hasTable($apiTable)) {
+            return;
+        }
+
+        $q = DB::table('hotel_rooms')->where('hotel_id', $hotelId);
+        if (Schema::hasColumn('hotel_rooms', 'deleted_at')) {
+            $q->whereNull('deleted_at');
+        }
+        if (Schema::hasColumn('hotel_rooms', 'status')) {
+            $q->where(function ($w) {
+                $w->whereNull('status')->orWhere('status', 1)->orWhere('status', '1');
+            });
+        }
+        $rows = $q->orderBy('id')->get();
+        $activeHrIds = $rows->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+        $roomTypeNames = [];
+        if (Schema::hasTable('room_types')) {
+            $ids = $rows->pluck('room_type_id')->filter()->unique()->values()->all();
+            if ($ids !== []) {
+                $roomTypeNames = DB::table('room_types')->whereIn('id', $ids)->pluck('name', 'id')->all();
+            }
+        }
+
+        foreach ($rows as $hr) {
+            $code = 'mod_hr_'.$hr->id;
+            $typeName = $roomTypeNames[$hr->room_type_id] ?? null;
+            $name = trim((string) ($hr->name ?? ''));
+            $title = $name !== '' ? $name : ($typeName !== null && (string) $typeName !== '' ? (string) $typeName : 'Room '.$hr->id);
+            $baseFloat = ($hr->base_price !== null && $hr->base_price !== '') ? (float) $hr->base_price : 0.0;
+
+            HotelRoomType::query()->updateOrCreate(
+                [
+                    'hotel_id' => (int) $hr->hotel_id,
+                    'code' => $code,
+                ],
+                [
+                    'title' => $title,
+                    'max_occupancy' => max(1, (int) $hr->max_occupancy),
+                    'bed_type' => null,
+                    'amenities' => [],
+                    'base_price_per_night' => $baseFloat,
+                    'currency' => 'BDT',
+                    'status' => 1,
+                ],
+            );
+        }
+
+        if (! Schema::hasColumn($apiTable, 'status')) {
+            return;
+        }
+        $prefix = 'mod_hr_';
+        foreach (HotelRoomType::query()->where('hotel_id', $hotelId)->where('code', 'like', $prefix.'%')->get() as $rt) {
+            $code = (string) $rt->code;
+            if (! str_starts_with($code, $prefix)) {
+                continue;
+            }
+            $suffix = substr($code, strlen($prefix));
+            if ($suffix === '' || ! ctype_digit($suffix)) {
+                continue;
+            }
+            $hrId = (int) $suffix;
+            if (! in_array($hrId, $activeHrIds, true)) {
+                $rt->update(['status' => 0]);
+            }
+        }
+    }
+
+    /**
      * Published room type rows for hotel details (code, title, photos, base rate hint).
      *
      * @return list<array<string, mixed>>
      */
     private function roomTypesCatalogForHotel(int $hotelId): array
     {
+        $this->syncModuleHotelRoomsIntoApiRoomTypes($hotelId);
         $t = $this->roomTypesTable();
         $typesQ = HotelRoomType::query()->where("{$t}.hotel_id", $hotelId);
         $this->applyRoomTypePublishScope($typesQ, $t);
@@ -825,6 +905,7 @@ final class HotelBookingService
         if (! $hotel) {
             return [];
         }
+        $this->syncModuleHotelRoomsIntoApiRoomTypes($hotelId);
         $checkIn = $this->parseDate($request->input('check_in', $request->input('trip_date')));
         $checkOut = $this->parseDate($request->input('check_out', $request->input('return_date')));
         $adults = max(1, (int) $request->input('adults', 2));
@@ -884,6 +965,7 @@ final class HotelBookingService
         if (! Hotel::query()->whereKey($hotelId)->exists()) {
             return 'Hotel not found.';
         }
+        $this->syncModuleHotelRoomsIntoApiRoomTypes($hotelId);
         $checkIn = $this->parseDate($request->input('check_in', $request->input('trip_date')));
         $checkOut = $this->parseDate($request->input('check_out', $request->input('return_date')));
         $adults = max(1, (int) $request->input('adults', 2));
