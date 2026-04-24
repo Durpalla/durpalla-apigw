@@ -637,14 +637,13 @@ final class HotelBookingService
         if ($raw === '') {
             return '';
         }
-        if (preg_match('#^https?://#i', $raw) === 1) {
-            return $raw;
-        }
         if (str_starts_with($raw, '//')) {
             $app = (string) config('app.url', '');
             $scheme = $app !== '' && str_contains($app, '://') ? (parse_url($app, PHP_URL_SCHEME) ?: 'https') : 'https';
-
-            return $scheme.':'.$raw;
+            $raw = $scheme.':'.$raw;
+        }
+        if (preg_match('#^https?://#i', $raw) === 1) {
+            return $this->rewriteHotelStorageUrlToImagePublicBase($raw);
         }
         $base = rtrim((string) config('hotel.image_public_base_url', ''), '/');
         if ($base === '') {
@@ -659,6 +658,41 @@ final class HotelBookingService
         }
 
         return $base.'/storage/'.ltrim($path, '/');
+    }
+
+    /**
+     * Panel uploads often persist full URLs using APP_URL (e.g. apigw) while the symlinked
+     * `public/storage` files are only (or also) served from the admin app. Rewrites
+     * `/storage/...` absolute URLs to `hotel.image_public_base_url` (e.g. https://admin.durpalla.com)
+     * so mobile clients request the host that actually has the file.
+     */
+    private function rewriteHotelStorageUrlToImagePublicBase(string $url): string
+    {
+        $base = rtrim((string) config('hotel.image_public_base_url', ''), '/');
+        if ($base === '') {
+            return $url;
+        }
+        $u = parse_url($url);
+        if ($u === false || empty($u['path']) || ! str_starts_with($u['path'], '/storage/')) {
+            return $url;
+        }
+        $b = parse_url($base);
+        if ($b === false || ($b['scheme'] ?? '') === '' || ($b['host'] ?? '') === '') {
+            return $url;
+        }
+        $out = $b['scheme'].'://'.$b['host'];
+        if (! empty($b['port'])) {
+            $out .= ':'.$b['port'];
+        }
+        $out .= $u['path'];
+        if (! empty($u['query'])) {
+            $out .= '?'.$u['query'];
+        }
+        if (! empty($u['fragment'])) {
+            $out .= '#'.$u['fragment'];
+        }
+
+        return $out;
     }
 
     public function hotelDetails(int $hotelId): ?array
@@ -797,6 +831,43 @@ final class HotelBookingService
         }
 
         return $out;
+    }
+
+    /**
+     * Human-readable reason when [roomsForStay] returns an empty list (for API `message` on 200).
+     */
+    public function describeEmptyHotelRooms(Request $request, int $hotelId): ?string
+    {
+        if (! Hotel::query()->whereKey($hotelId)->exists()) {
+            return 'Hotel not found.';
+        }
+        $checkIn = $this->parseDate($request->input('check_in', $request->input('trip_date')));
+        $checkOut = $this->parseDate($request->input('check_out', $request->input('return_date')));
+        $adults = max(1, (int) $request->input('adults', 2));
+        $children = max(0, (int) $request->input('children', 0));
+        $guests = $adults + $children;
+
+        if (! $checkIn || ! $checkOut || $checkOut <= $checkIn) {
+            return 'Valid check-in and check-out are required, and check-out must be after check-in.';
+        }
+
+        $t = $this->roomTypesTable();
+        $typesQ = HotelRoomType::query()->where("{$t}.hotel_id", $hotelId);
+        $this->applyRoomTypePublishScope($typesQ, $t);
+        $types = $typesQ->get();
+
+        if ($types->isEmpty()) {
+            return 'This property has no bookable room types set up yet. Try another hotel, or check back after the property adds room inventory.';
+        }
+
+        $maxOfAny = (int) $types->max('max_occupancy');
+        if ($guests > $maxOfAny) {
+            $g = $guests === 1 ? 'guest' : 'guests';
+
+            return "No room type here fits {$guests} {$g} (largest max occupancy is {$maxOfAny}). Try fewer guests or another property.";
+        }
+
+        return 'No rooms are available for this stay. Try different dates or contact the property.';
     }
 
     public function quote(Request $request): array

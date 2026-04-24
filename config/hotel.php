@@ -31,8 +31,10 @@ return [
     ),
     /**
      * Public base URL for Module Hotel `hotel_images.image_path` and storage-relative paths.
-     * Set to your admin/app origin if images are not served from the API host, e.g.
-     * `HOTEL_IMAGE_PUBLIC_BASE_URL=https://admin.durpalla.com`
+     * If uploads use `php artisan storage:link` on the **admin** host, set this to the admin
+     * origin (not the API host), e.g. `HOTEL_IMAGE_PUBLIC_BASE_URL=https://admin.durpalla.com`
+     * Full URLs in the DB that start with `/storage/...` (including when saved as apigw) are
+     * rewritten to this origin in API responses.
      */
     'image_public_base_url' => env('HOTEL_IMAGE_PUBLIC_BASE_URL', env('APP_URL', '')),
     /**

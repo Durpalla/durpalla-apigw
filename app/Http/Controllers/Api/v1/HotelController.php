@@ -46,10 +46,15 @@ class HotelController extends Controller
     {
         $rooms = $this->hotelBooking->roomsForStay($request, $hotel);
 
-        return response()->json([
+        $payload = [
             'success' => true,
             'data' => $rooms,
-        ]);
+        ];
+        if ($rooms === []) {
+            $payload['message'] = $this->hotelBooking->describeEmptyHotelRooms($request, $hotel);
+        }
+
+        return response()->json($payload);
     }
 
     public function quote(Request $request): JsonResponse
