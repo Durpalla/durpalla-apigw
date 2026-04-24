@@ -8,6 +8,7 @@ use App\Models\HotelFavorite;
 use App\Models\HotelHold;
 use App\Models\HotelReview;
 use App\Services\Hotel\HotelBookingService;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -233,16 +234,36 @@ class HotelController extends Controller
             $author = 'Guest';
         }
 
-        $review = new HotelReview([
-            'hotel_id' => $hotel,
-            'author' => $author,
-            'rating' => round((float) $request->input('rating'), 1),
-            'body' => (string) $request->input('text'),
-            'reviewed_at' => now(),
-        ]);
-        $review->save();
-        $this->refreshHotelReviewStats($hotelModel);
-        $hotelModel->refresh();
+        try {
+            $review = new HotelReview([
+                'hotel_id' => $hotel,
+                'author' => $author,
+                'rating' => round((float) $request->input('rating'), 1),
+                'body' => (string) $request->input('text'),
+                'reviewed_at' => now(),
+            ]);
+            $review->save();
+            $this->refreshHotelReviewStats($hotelModel);
+            $hotelModel->refresh();
+        } catch (QueryException $e) {
+            report($e);
+
+            return response()->json([
+                'success' => false,
+                'message' => config('app.debug')
+                    ? $e->getMessage()
+                    : __('Could not save your review. Please try again later.'),
+            ], 500);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'success' => false,
+                'message' => config('app.debug')
+                    ? $e->getMessage()
+                    : __('Could not save your review. Please try again later.'),
+            ], 500);
+        }
 
         return response()->json([
             'success' => true,
