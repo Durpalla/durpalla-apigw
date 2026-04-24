@@ -149,16 +149,17 @@ final class HotelBookingService
         $out = [];
         $skippedNoPricedRoom = [];
         foreach ($hotels as $hotel) {
-            $min = HotelRoomType::query()
-                ->where('hotel_id', $hotel->id)
-                ->where('status', 1)
-                ->min('base_price_per_night');
+            $min = $this->minNightlyListPriceForHotel((int) $hotel->id);
+            if ($min === null) {
+                $min = $this->minListPriceFromHotelRecord($hotel);
+            }
             if ($min === null) {
                 if ($debug) {
                     $skippedNoPricedRoom[] = [
                         'hotel_id' => $hotel->id,
                         'name' => $hotel->name,
-                        'reason' => 'no_active_room_type_with_base_price_per_night',
+                        'reason' => 'no_resolvable_nightly_rate',
+                        'hint' => 'Set base_price_per_night (or price) on hotel_room_types, or min_price/starting_from on hotels.',
                     ];
                 }
 
@@ -194,11 +195,145 @@ final class HotelBookingService
                     'hotels_has_city_column' => $this->hotelsTableHasCityString(),
                     'hotels_has_city_id' => $this->hotelsTableHasCityId(),
                     'cities_table' => Schema::hasTable('cities'),
+                    'room_types_nightly_coalesce' => $this->nightlyPriceCoalesceSql(),
                 ],
             ]);
         }
 
         return $out;
+    }
+
+    private function roomTypesTable(): string
+    {
+        return (new HotelRoomType)->getTable();
+    }
+
+    /**
+     * SQL fragment: COALESCE(first non-null among known nightly price columns).
+     * Legacy / panel schemas may use `price` instead of `base_price_per_night`.
+     */
+    private function nightlyPriceCoalesceSql(): ?string
+    {
+        $t = $this->roomTypesTable();
+        $cols = [];
+        foreach ([
+            'base_price_per_night',
+            'price',
+            'base_price',
+            'rate',
+            'nightly_rate',
+            'room_rate',
+            'adult_rate',
+            'b2c_price',
+            'b2b_price',
+            'rate_per_night',
+            'night_rate',
+            'per_night_price',
+            'amount',
+        ] as $col) {
+            if (Schema::hasColumn($t, $col)) {
+                $cols[] = "`{$t}`.`{$col}`";
+            }
+        }
+
+        if ($cols === []) {
+            return null;
+        }
+
+        return 'COALESCE('.implode(', ', $cols).')';
+    }
+
+    /**
+     * Lowest nightly rate for search cards. Tries published/active scope first, then any row.
+     * Returns 0.0 when room types exist but every price column is null (still list the hotel).
+     */
+    private function minNightlyListPriceForHotel(int $hotelId): ?float
+    {
+        $t = $this->roomTypesTable();
+        if (! Schema::hasTable($t)) {
+            return null;
+        }
+
+        $expr = $this->nightlyPriceCoalesceSql();
+        if ($expr === null) {
+            return null;
+        }
+
+        foreach ([true, false] as $applyPublishScope) {
+            $q = HotelRoomType::query()->where("{$t}.hotel_id", $hotelId);
+            if ($applyPublishScope) {
+                $this->applyRoomTypePublishScope($q, $t);
+            }
+            $raw = $q->selectRaw("MIN({$expr}) as __m")->value('__m');
+            if ($raw !== null) {
+                return (float) $raw;
+            }
+        }
+
+        $qAny = HotelRoomType::query()->where("{$t}.hotel_id", $hotelId);
+        if ($qAny->exists()) {
+            return 0.0;
+        }
+
+        return null;
+    }
+
+    /**
+     * List / "from" price on the `hotels` row (some admin UIs only store a banner price there).
+     */
+    private function minListPriceFromHotelRecord(Hotel $hotel): ?float
+    {
+        $t = $this->hotelsTable();
+        foreach ([
+            'min_nightly_price',
+            'min_price',
+            'starting_from_price',
+            'list_price',
+            'from_price',
+            'nightly_from',
+            'cheapest_nightly',
+            'base_nightly',
+            'b2c_min_price',
+            'per_night_from',
+        ] as $col) {
+            if (! Schema::hasColumn($t, $col)) {
+                continue;
+            }
+            $v = $hotel->getAttribute($col);
+            if ($v === null || $v === '') {
+                continue;
+            }
+            $f = (float) $v;
+            if ($f < 0) {
+                continue;
+            }
+
+            return $f;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\HotelRoomType>  $q
+     */
+    private function applyRoomTypePublishScope($q, string $t): void
+    {
+        if (Schema::hasColumn($t, 'status')) {
+            $q->where(function ($w) use ($t) {
+                $w->whereNull("{$t}.status")
+                    ->orWhere("{$t}.status", 1)
+                    ->orWhere("{$t}.status", '1')
+                    ->orWhereIn("{$t}.status", ['active', 'ACTIVE', 'published', 'PUBLISHED', 'enabled', 'ENABLED']);
+            });
+        }
+        if (Schema::hasColumn($t, 'is_active')) {
+            $q->where(function ($w) use ($t) {
+                $w->whereNull("{$t}.is_active")
+                    ->orWhere("{$t}.is_active", 1)
+                    ->orWhere("{$t}.is_active", true);
+            });
+        }
     }
 
     /**
@@ -209,7 +344,7 @@ final class HotelBookingService
         $context['phase'] = $phase;
         $line = '[hotel.search] '.$phase.' '.json_encode($context, JSON_UNESCAPED_UNICODE);
         error_log($line);
-        Log::warning($line, $context);
+        Log::warning('[hotel.search] '.$phase, $context);
     }
 
     public function hotelDetails(int $hotelId): ?array
