@@ -20,4 +20,13 @@ return [
     'search_default_limit' => (int) env('HOTEL_SEARCH_LIMIT', 30),
     /** Used when `lat` + `lng` are passed to `GET hotel/search` (kilometres). */
     'search_radius_km' => (float) env('HOTEL_SEARCH_RADIUS_KM', 50),
+    /**
+     * When `check_in` / `check_out` are both absent (e.g. client sends only `city`),
+     * use today → tomorrow so search still runs. Set `HOTEL_SEARCH_DEFAULT_DATES=false`
+     * to return empty results instead (strict API).
+     */
+    'search_default_stay_when_dates_missing' => (bool) filter_var(
+        env('HOTEL_SEARCH_DEFAULT_DATES', true),
+        FILTER_VALIDATE_BOOLEAN
+    ),
 ];

@@ -27,29 +27,51 @@ final class HotelBookingService
     {
         $debug = (bool) config('hotel.debug_search');
         $city = trim((string) $request->input('city', $request->input('trip_to', $request->input('trip_from', ''))));
-        $checkIn = $this->parseDate($request->input('check_in', $request->input('trip_date')));
-        $checkOut = $this->parseDate($request->input('check_out', $request->input('return_date')));
+        $rawIn = $request->input('check_in', $request->input('trip_date'));
+        $rawOut = $request->input('check_out', $request->input('return_date'));
+        $checkIn = $this->parseDate($rawIn);
+        $checkOut = $this->parseDate($rawOut);
+        $bothDateParamsBlank = $this->isBlankDateParam($rawIn) && $this->isBlankDateParam($rawOut);
 
         if ($debug) {
             $this->emitHotelSearchDebug('request', [
                 'endpoint' => 'GET /api/v1/hotel/search',
                 'query' => $request->query(),
                 'body' => $request->except(array_keys($request->query())),
+                'raw_dates' => [
+                    'check_in' => $rawIn,
+                    'check_out' => $rawOut,
+                ],
                 'resolved' => [
                     'city' => $city,
                     'check_in' => $checkIn?->toDateString(),
                     'check_out' => $checkOut?->toDateString(),
                 ],
                 'dates_ok' => $checkIn && $checkOut && $checkOut > $checkIn,
+                'both_date_params_blank' => $bothDateParamsBlank,
             ]);
+        }
+
+        if ((! $checkIn || ! $checkOut || $checkOut <= $checkIn)
+            && $bothDateParamsBlank
+            && (bool) config('hotel.search_default_stay_when_dates_missing', true)) {
+            $checkIn = Carbon::today()->startOfDay();
+            $checkOut = $checkIn->copy()->addDay();
+            if ($debug) {
+                $this->emitHotelSearchDebug('dates_defaulted', [
+                    'check_in' => $checkIn->toDateString(),
+                    'check_out' => $checkOut->toDateString(),
+                    'reason' => 'both_check_in_and_check_out_missing_used_today_and_tomorrow',
+                ]);
+            }
         }
 
         if (! $checkIn || ! $checkOut || $checkOut <= $checkIn) {
             if ($debug) {
                 $this->emitHotelSearchDebug('empty', [
                     'reason' => 'invalid_or_missing_dates',
-                    'check_in_raw' => $request->input('check_in', $request->input('trip_date')),
-                    'check_out_raw' => $request->input('check_out', $request->input('return_date')),
+                    'check_in_raw' => $rawIn,
+                    'check_out_raw' => $rawOut,
                 ]);
             }
 
@@ -522,6 +544,18 @@ final class HotelBookingService
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    private function isBlankDateParam(mixed $v): bool
+    {
+        if ($v === null) {
+            return true;
+        }
+        if (is_string($v)) {
+            return trim($v) === '';
+        }
+
+        return false;
     }
 
     private function hotelsTable(): string
