@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\v1\SupervisorController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['JsonResponse'])->group(function () {
+    Route::get('public/popular-upcoming-trips', [FrontApiController::class, 'popularUpcomingTrips']);
     Route::get('offers', [FrontApiController::class, 'offers']);
     Route::get('site/init', [FrontApiController::class, 'init']);
     Route::get('mobile/init', [FrontApiController::class, 'mobileInit']);
@@ -71,6 +72,7 @@ Route::middleware(['JsonResponse'])->group(function () {
     });
 
     Route::prefix('hotel')->group(function () {
+        Route::get('home/top', [HotelController::class, 'homeTop']);
         Route::get('search', [HotelController::class, 'search']);
         Route::post('quote', [HotelController::class, 'quote']);
         Route::get('{hotel}', [HotelController::class, 'show'])->whereNumber('hotel');

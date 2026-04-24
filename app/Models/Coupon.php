@@ -11,6 +11,12 @@ class Coupon extends Model
 {
     protected $fillable = [
         'name',
+        'home_title',
+        'home_subtitle',
+        'home_sort_order',
+        'link_slug',
+        'external_url',
+        'show_on_home',
         'code',
         'is_cabin',
         'is_seat',
@@ -24,7 +30,7 @@ class Coupon extends Model
         'offer_start',
         'offer_end',
         'items',
-        'status'
+        'status',
     ];
 
     public function mappings(): HasMany

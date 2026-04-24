@@ -55,12 +55,7 @@ class FrontApiController extends Controller
 
             return $item;
         });
-        $offers = Coupon::select('poster')->where('offer_end', '>=', date('Y-m-d'))->where(['is_offer' => 1, 'status' => 1])->take(6)->get();
-        // ->where('poster', '!=', null)
-        $data['offers'] = $offers->map(function ($item) {
-            $item->thumbnail = asset($item->poster);
-            return $item;
-        });
+        $data['offers'] = $this->homeOffersList(6);
         $sponsors = Sponsor::where('status', 1)->get();
         $data['sponsors'] = $sponsors->map(function ($item) {
             $item->attachment = asset($item->attachment);
@@ -103,14 +98,71 @@ class FrontApiController extends Controller
 
     public function offers(): JsonResponse
     {
-        $offers = Coupon::select('poster')->where('is_offer', 1)->take(6)->get();
-        // ->where('poster', '!=', null)
-        $offers = $offers->map(function ($item) {
-            $item->thumbnail = asset($item->poster);
-            $item->poster = asset($item->poster);
-            return $item;
-        })->toArray();
+        $offers = $this->homeOffersList(20);
         return response()->json(['success' => true, 'data' => $offers], $this->success);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function homeOffersList(int $limit): array
+    {
+        $q = Coupon::query()
+            ->where('is_offer', 1)
+            ->where('status', 1)
+            ->where('offer_end', '>=', date('Y-m-d'));
+        if (Schema::hasColumn('coupons', 'show_on_home')) {
+            $q->where('show_on_home', 1);
+        }
+        if (Schema::hasColumn('coupons', 'home_sort_order')) {
+            $q->orderByDesc('home_sort_order');
+        }
+        $rows = $q->orderByDesc('id')->limit($limit)->get();
+
+        return $rows->map(fn ($c) => $this->mapCouponForHome($c))->values()->all();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function mapCouponForHome(Coupon $coupon): array
+    {
+        $poster = $coupon->poster;
+        $abs = $poster ? asset($poster) : '';
+
+        $title = (Schema::hasColumn('coupons', 'home_title') && $coupon->getAttribute('home_title'))
+            ? (string) $coupon->getAttribute('home_title')
+            : (string) $coupon->name;
+        $subtitle = '';
+        if (Schema::hasColumn('coupons', 'home_subtitle')) {
+            $subtitle = (string) ($coupon->getAttribute('home_subtitle') ?? '');
+        }
+        $discountPercent = null;
+        if (($coupon->discount_type ?? '') === 'percent' && $coupon->discount_amount !== null) {
+            $discountPercent = (int) $coupon->discount_amount;
+        }
+
+        $payload = [
+            'id' => (int) $coupon->id,
+            'name' => (string) $coupon->name,
+            'title' => $title,
+            'subtitle' => $subtitle,
+            'thumbnail' => $abs,
+            'poster' => $abs,
+            'discount_percent' => $discountPercent,
+            'offer_end' => $coupon->offer_end,
+        ];
+        if (Schema::hasColumn('coupons', 'link_slug')) {
+            $payload['link_slug'] = $coupon->getAttribute('link_slug');
+        }
+        if (Schema::hasColumn('coupons', 'external_url')) {
+            $payload['external_url'] = $coupon->getAttribute('external_url');
+        }
+        if (Schema::hasColumn('coupons', 'home_sort_order')) {
+            $payload['home_sort_order'] = (int) $coupon->getAttribute('home_sort_order');
+        }
+
+        return $payload;
     }
 
     public function vehicles(): JsonResponse
@@ -138,6 +190,41 @@ class FrontApiController extends Controller
         $schedules = $this->trip->getSearchTrip($request);
 
         return response()->json(['success' => true, 'data' => $schedules], $this->success);
+    }
+
+    /**
+     * Public home: soonest future departures (no login). Used by the passenger app home strip.
+     */
+    public function popularUpcomingTrips(Request $request): JsonResponse
+    {
+        $limit = (int) $request->query('limit', 8);
+        $limit = max(1, min(20, $limit));
+
+        $query = VehicleSchedule::with([
+            'route', 'startingPoint.ghat', 'endingPoint.ghat', 'boardingVias.ghat', 'startFrom', 'stopTo',
+            'mappings', 'locks', 'bookingItems', 'vehicle',
+        ])
+            ->where('status', 'ACTIVE')
+            ->where(function ($q) {
+                $today = date('Y-m-d');
+                $q->where('schedule_date', '>', $today)
+                    ->orWhere(function ($q2) use ($today) {
+                        $q2->where('schedule_date', $today)
+                            ->where('leaving_at', '>=', now());
+                    });
+            });
+
+        $results = $query
+            ->orderBy('schedule_date', 'asc')
+            ->orderBy('leaving_at', 'asc')
+            ->limit($limit)
+            ->get();
+
+        $trips = $results->map(function ($trip) {
+            return $this->trip->formatTripList($trip);
+        })->values();
+
+        return response()->json(['success' => true, 'data' => $trips], $this->success);
     }
 
     public function searchAvailable(Request $request): JsonResponse

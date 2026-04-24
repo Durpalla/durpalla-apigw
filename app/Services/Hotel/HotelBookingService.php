@@ -253,6 +253,85 @@ final class HotelBookingService
     }
 
     /**
+     * Home horizontal list: top-rated visible hotels, same card shape as hotel/search.
+     */
+    public function homeTopHotels(Request $request): array
+    {
+        $limit = max(1, min(20, (int) $request->query('limit', 8)));
+
+        $q = Hotel::query();
+        $this->applyHotelsSearchVisibilityFilter($q);
+
+        if (Schema::hasColumn($this->hotelsTable(), 'aggregate_rating')) {
+            $q->orderByDesc('aggregate_rating');
+        }
+        if (Schema::hasColumn($this->hotelsTable(), 'review_count')) {
+            $q->orderByDesc('review_count');
+        }
+        $q->orderBy('name');
+        $hotels = $q->limit($limit)->get();
+
+        $cityNamesById = [];
+        if (! $this->hotelsTableHasCityString() && $this->hotelsTableHasCityId() && Schema::hasTable('cities')) {
+            $ids = $hotels->pluck('city_id')->filter()->unique()->values()->all();
+            if ($ids !== []) {
+                foreach (DB::table('cities')->whereIn('id', $ids)->get(['id', 'name']) as $row) {
+                    $cityNamesById[(int) $row->id] = (string) $row->name;
+                }
+            }
+        }
+
+        $out = [];
+        foreach ($hotels as $hotel) {
+            $bounds = $this->nightlyListMinMaxForHotel((int) $hotel->id);
+            $min = $bounds['min'];
+            $max = $bounds['max'];
+            if ($min === null) {
+                $p = $this->minListPriceFromHotelRecord($hotel);
+                if ($p !== null) {
+                    $min = $p;
+                    $max = $p;
+                }
+            }
+            if ($min === null && ! $this->hotelHasAnyRoomInventory((int) $hotel->id)) {
+                $min = 0.0;
+                $max = 0.0;
+            }
+            if ($min === null) {
+                continue;
+            }
+            if ($max === null) {
+                $max = $min;
+            }
+            if ($min > $max) {
+                $tmp = $min;
+                $min = $max;
+                $max = $tmp;
+            }
+            $photoUrl = $this->firstHotelPhotoUrlForSearch($hotel);
+            $cityLabel = $this->resolveHotelCityLabel($hotel, $cityNamesById);
+            $stars = $this->resolveHotelStars($hotel);
+            $out[] = [
+                'id' => $hotel->id,
+                'hotel_id' => $hotel->id,
+                'name' => $hotel->name,
+                'location' => $cityLabel ?? $hotel->address ?? '',
+                'city' => $cityLabel,
+                'photo' => $photoUrl,
+                'stars' => $stars,
+                'rating' => (float) ($hotel->getAttribute('aggregate_rating') ?? $hotel->getAttribute('rating') ?? 0),
+                'reviews' => (int) ($hotel->review_count ?? 0),
+                'price_per_night' => (float) $min,
+                'price_per_night_max' => (float) $max,
+                'currency' => 'BDT',
+                'amenities' => [],
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
      * Public list: typically status=1 and/or is_active=1. String statuses (active/published)
      * are only OR-ed when the `status` column is not a plain integer, to avoid MySQL
      * coercing e.g. 'active' to 0 and matching every row with status=0.

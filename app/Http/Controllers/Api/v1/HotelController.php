@@ -26,6 +26,16 @@ class HotelController extends Controller
         ]);
     }
 
+    public function homeTop(Request $request): JsonResponse
+    {
+        $rows = $this->hotelBooking->homeTopHotels($request);
+
+        return response()->json([
+            'success' => true,
+            'data' => $rows,
+        ]);
+    }
+
     public function show(int $hotel): JsonResponse
     {
         $data = $this->hotelBooking->hotelDetails($hotel);
