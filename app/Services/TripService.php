@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\LogHelper;
 use App\Models\Vehicle;
 use App\Repository\Interfaces\ScheduleRepositoryInterface;
 use App\Models\VehicleRoute;
@@ -294,6 +295,13 @@ class TripService
             $row['status'] = (($cabin->is_reserved == 1) || $cabin->booked == 1 || $cabin->is_locked == 1) ? 0 : 1;
             if ($type !== $cabin->ownership) $row['status'] = 0;
             if ($cabin->is_advance) $row['status'] = 9;
+
+            LogHelper::debug('CABIN_STATUS ' . $row['cabin_no'], [
+                'cabin_id' => $cabin->id,
+                'cabin_type' => $cabin->type,
+                'user_type' => $type,
+                'ownership' => $cabin->ownership,
+            ]);
 
             $row['cabin_class'] = $row['status'] ? 'cabin-active' : 'cabin-disable';
 
