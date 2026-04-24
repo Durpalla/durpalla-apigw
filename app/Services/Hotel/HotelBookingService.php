@@ -81,7 +81,8 @@ final class HotelBookingService
         $limit = max(1, min(100, (int) config('hotel.search_default_limit', 30)));
         $radiusKm = max(1.0, min(500.0, (float) config('hotel.search_radius_km', 50)));
 
-        $q = Hotel::query()->where('hotels.status', 1);
+        $q = Hotel::query();
+        $this->applyHotelsSearchVisibilityFilter($q);
 
         $lat = $request->input('lat');
         $lng = $request->input('lng');
@@ -112,17 +113,32 @@ final class HotelBookingService
         }
         if ($city !== '') {
             $like = '%'.addcslashes($city, '%_\\').'%';
-            $q->where(function ($w) use ($like) {
-                $w->where('hotels.name', 'like', $like);
+            $cityIdMatches = [];
+            if ($this->hotelsTableHasCityId() && Schema::hasTable('cities')) {
+                $t = (string) trim($city);
+                $cityIdMatches = DB::table('cities')
+                    ->where(function ($c) use ($like, $t) {
+                        $c->whereRaw('LOWER(cities.name) LIKE LOWER(?)', [$like])
+                            ->orWhereRaw('LOWER(TRIM(cities.name)) = LOWER(?)', [$t]);
+                    })
+                    ->pluck('id')
+                    ->all();
+            }
+
+            $q->where(function ($w) use ($like, $cityIdMatches) {
+                $w->whereRaw('LOWER(hotels.name) LIKE LOWER(?)', [$like]);
                 if ($this->hotelsTableHasCityString()) {
-                    $w->orWhere('hotels.city', 'like', $like);
+                    $w->orWhereRaw('LOWER(hotels.city) LIKE LOWER(?)', [$like]);
                 }
                 if ($this->hotelsTableHasCityId() && Schema::hasTable('cities')) {
+                    if ($cityIdMatches !== []) {
+                        $w->orWhereIn('hotels.city_id', $cityIdMatches);
+                    }
                     $w->orWhereExists(function ($sub) use ($like) {
                         $sub->selectRaw('1')
                             ->from('cities')
                             ->whereColumn('cities.id', 'hotels.city_id')
-                            ->where('cities.name', 'like', $like);
+                            ->whereRaw('LOWER(cities.name) LIKE LOWER(?)', [$like]);
                     });
                 }
             });
@@ -153,13 +169,24 @@ final class HotelBookingService
             if ($min === null) {
                 $min = $this->minListPriceFromHotelRecord($hotel);
             }
+            // Panel often creates a hotel before any room inventory rows exist — still show in search.
+            if ($min === null && ! $this->hotelHasAnyRoomInventory((int) $hotel->id)) {
+                $min = 0.0;
+                if ($debug) {
+                    $this->emitHotelSearchDebug('list_price_default', [
+                        'hotel_id' => $hotel->id,
+                        'name' => $hotel->name,
+                        'note' => 'no rows in hotel_room_types / hotel_rooms; listing with price_per_night=0',
+                    ]);
+                }
+            }
             if ($min === null) {
                 if ($debug) {
                     $skippedNoPricedRoom[] = [
                         'hotel_id' => $hotel->id,
                         'name' => $hotel->name,
                         'reason' => 'no_resolvable_nightly_rate',
-                        'hint' => 'Set base_price_per_night (or price) on hotel_room_types, or min_price/starting_from on hotels.',
+                        'hint' => 'Room types exist but all price fields are null, and no list price on hotels.',
                     ];
                 }
 
@@ -203,6 +230,33 @@ final class HotelBookingService
         return $out;
     }
 
+    /**
+     * Public list: typically status=1 and/or is_active=1. String statuses (active/published)
+     * are only OR-ed when the `status` column is not a plain integer, to avoid MySQL
+     * coercing e.g. 'active' to 0 and matching every row with status=0.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<Hotel>  $q
+     */
+    private function applyHotelsSearchVisibilityFilter($q): void
+    {
+        $t = 'hotels';
+        $q->where(function ($w) use ($t) {
+            $w->where("{$t}.status", 1)
+                ->orWhere("{$t}.status", '1');
+            if (Schema::hasColumn($t, 'is_active')) {
+                $w->orWhere("{$t}.is_active", 1);
+            }
+            if (Schema::hasColumn($t, 'status')) {
+                $ct = Schema::getColumnType($t, 'status');
+                if (! in_array($ct, ['integer', 'int', 'bigint', 'smallint', 'tinyint', 'boolean'], true)) {
+                    $w->orWhereIn("{$t}.status", [
+                        'active', 'ACTIVE', 'published', 'PUBLISHED', 'enabled', 'ENABLED', 'true', 'TRUE',
+                    ]);
+                }
+            }
+        });
+    }
+
     private function roomTypesTable(): string
     {
         return (new HotelRoomType)->getTable();
@@ -244,34 +298,79 @@ final class HotelBookingService
     }
 
     /**
-     * Lowest nightly rate for search cards. Tries published/active scope first, then any row.
-     * Returns 0.0 when room types exist but every price column is null (still list the hotel).
+     * Lowest nightly rate for search cards.
+     *
+     * 1) Phase-1 API schema: `hotel_room_types` + COALESCE of known price columns.
+     * 2) Durpalla Module/Hotel admin: `hotel_rooms` + `base_price` (separate from (1) — the panel
+     *    "Rooms" tab writes here; see `Modules/Hotel/Entities/HotelRoom`).
      */
     private function minNightlyListPriceForHotel(int $hotelId): ?float
     {
         $t = $this->roomTypesTable();
-        if (! Schema::hasTable($t)) {
+        if (Schema::hasTable($t)) {
+            $expr = $this->nightlyPriceCoalesceSql();
+            if ($expr !== null) {
+                foreach ([true, false] as $applyPublishScope) {
+                    $q = HotelRoomType::query()->where("{$t}.hotel_id", $hotelId);
+                    if ($applyPublishScope) {
+                        $this->applyRoomTypePublishScope($q, $t);
+                    }
+                    $raw = $q->selectRaw("MIN({$expr}) as __m")->value('__m');
+                    if ($raw !== null) {
+                        return (float) $raw;
+                    }
+                }
+
+                $qAny = HotelRoomType::query()->where("{$t}.hotel_id", $hotelId);
+                if ($qAny->exists()) {
+                    return 0.0;
+                }
+            }
+        }
+
+        $fromModule = $this->minPriceFromModuleHotelRooms($hotelId);
+        if ($fromModule !== null) {
+            return $fromModule;
+        }
+
+        return null;
+    }
+
+    /**
+     * Nightly "Base" price from `hotel_rooms` (Module Hotel), when `hotel_room_types` is unused.
+     */
+    private function minPriceFromModuleHotelRooms(int $hotelId): ?float
+    {
+        if (! Schema::hasTable('hotel_rooms') || ! Schema::hasColumn('hotel_rooms', 'base_price')) {
             return null;
         }
 
-        $expr = $this->nightlyPriceCoalesceSql();
-        if ($expr === null) {
-            return null;
+        $q = DB::table('hotel_rooms')->where('hotel_id', $hotelId);
+        if (Schema::hasColumn('hotel_rooms', 'deleted_at')) {
+            $q->whereNull('deleted_at');
+        }
+        if (Schema::hasColumn('hotel_rooms', 'status')) {
+            $q->where(function ($w) {
+                $w->whereNull('status')->orWhere('status', 1)->orWhere('status', '1');
+            });
         }
 
-        foreach ([true, false] as $applyPublishScope) {
-            $q = HotelRoomType::query()->where("{$t}.hotel_id", $hotelId);
-            if ($applyPublishScope) {
-                $this->applyRoomTypePublishScope($q, $t);
-            }
-            $raw = $q->selectRaw("MIN({$expr}) as __m")->value('__m');
-            if ($raw !== null) {
-                return (float) $raw;
-            }
+        $min = $q->min('base_price');
+        if ($min !== null) {
+            return (float) $min;
         }
 
-        $qAny = HotelRoomType::query()->where("{$t}.hotel_id", $hotelId);
-        if ($qAny->exists()) {
+        $q2 = DB::table('hotel_rooms')->where('hotel_id', $hotelId);
+        if (Schema::hasColumn('hotel_rooms', 'deleted_at')) {
+            $q2->whereNull('deleted_at');
+        }
+        if (Schema::hasColumn('hotel_rooms', 'status')) {
+            $q2->where(function ($w) {
+                $w->whereNull('status')->orWhere('status', 1)->orWhere('status', '1');
+            });
+        }
+
+        if ($q2->exists()) {
             return 0.0;
         }
 
@@ -312,6 +411,33 @@ final class HotelBookingService
         }
 
         return null;
+    }
+
+    private function hotelHasAnyRoomTypeRow(int $hotelId): bool
+    {
+        $t = $this->roomTypesTable();
+        if (! Schema::hasTable($t)) {
+            return false;
+        }
+
+        return HotelRoomType::query()->where("{$t}.hotel_id", $hotelId)->exists();
+    }
+
+    /** True if the hotel has inventory in API `hotel_room_types` and/or Module `hotel_rooms`. */
+    private function hotelHasAnyRoomInventory(int $hotelId): bool
+    {
+        if ($this->hotelHasAnyRoomTypeRow($hotelId)) {
+            return true;
+        }
+        if (! Schema::hasTable('hotel_rooms')) {
+            return false;
+        }
+        $q = DB::table('hotel_rooms')->where('hotel_id', $hotelId);
+        if (Schema::hasColumn('hotel_rooms', 'deleted_at')) {
+            $q->whereNull('deleted_at');
+        }
+
+        return $q->exists();
     }
 
     /**
