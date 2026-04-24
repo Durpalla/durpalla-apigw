@@ -6,7 +6,9 @@ use App\Models\HotelInventory;
 use App\Models\HotelRoomType;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 final class HotelInventoryService
 {
@@ -39,6 +41,7 @@ final class HotelInventoryService
         }
 
         foreach ($dates as $date) {
+            $this->ensureInventoryRowForDateIfRelaxed($roomType, $date);
             $row = HotelInventory::query()
                 ->where('hotel_room_type_id', $roomType->id)
                 ->whereDate('night_date', $date)
@@ -59,6 +62,7 @@ final class HotelInventoryService
     public function applyHold(HotelRoomType $roomType, Carbon $checkIn, Carbon $checkOut, int $units = 1): void
     {
         foreach (self::nightDates($checkIn, $checkOut) as $date) {
+            $this->ensureInventoryRowForDateIfRelaxed($roomType, $date);
             $row = HotelInventory::query()
                 ->where('hotel_room_type_id', $roomType->id)
                 ->whereDate('night_date', $date)
@@ -123,5 +127,59 @@ final class HotelInventoryService
                 $row->decrement('units_sold', $units);
             }
         }
+    }
+
+    /**
+     * When {@see config('hotel.rooms_treat_missing_inventory_as_available')} is true, create a
+     * `hotel_inventory` row for the night so holds/quotes can proceed without a manual seed
+     * (aligns with {@see \App\Services\Hotel\HotelBookingService::roomsForStay}).
+     */
+    private function ensureInventoryRowForDateIfRelaxed(HotelRoomType $roomType, string $date): void
+    {
+        if (! (bool) config('hotel.rooms_treat_missing_inventory_as_available', true)) {
+            return;
+        }
+        if (! Schema::hasTable('hotel_inventory')) {
+            return;
+        }
+        if (HotelInventory::query()
+            ->where('hotel_room_type_id', $roomType->id)
+            ->whereDate('night_date', $date)
+            ->exists()) {
+            return;
+        }
+
+        $total = $this->defaultUnitsTotalForRoomType($roomType);
+        try {
+            HotelInventory::query()->create([
+                'hotel_room_type_id' => $roomType->id,
+                'night_date' => $date,
+                'units_total' => $total,
+                'units_sold' => 0,
+                'units_held' => 0,
+            ]);
+        } catch (QueryException $e) {
+            $code = (int) ($e->errorInfo[1] ?? 0);
+            if ($code === 1062 || $e->getCode() === '23000' || $code === 19) {
+                // Another request inserted the same (hotel_room_type_id, night_date) row
+                return;
+            }
+            throw $e;
+        }
+    }
+
+    private function defaultUnitsTotalForRoomType(HotelRoomType $roomType): int
+    {
+        if (preg_match('/^mod_hr_(\d+)$/', (string) $roomType->code, $m) && Schema::hasTable('hotel_rooms')) {
+            $row = DB::table('hotel_rooms')->where('id', (int) $m[1])->first();
+            if ($row !== null) {
+                $tr = $row->total_rooms ?? null;
+                if ($tr !== null && (int) $tr > 0) {
+                    return (int) $tr;
+                }
+            }
+        }
+
+        return max(1, (int) config('hotel.default_inventory_units_per_night', 10));
     }
 }

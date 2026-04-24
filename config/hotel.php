@@ -46,4 +46,20 @@ return [
         env('HOTEL_ROOMS_TREAT_MISSING_INVENTORY_AS_AVAILABLE', true),
         FILTER_VALIDATE_BOOLEAN
     ),
+    /**
+     * When missing-inventory mode is on, auto-seeded `hotel_inventory` rows use this `units_total`
+     * for non–module-linked room types. Module `mod_hr_*` types use `hotel_rooms.total_rooms` when present.
+     */
+    'default_inventory_units_per_night' => (int) env('HOTEL_DEFAULT_INVENTORY_UNITS', 10),
+    /**
+     * Fallback weekday list (0=Sun..6=Sat) when no `hotel_peak_day_rules` row matches.
+     * Should match `Modules/Hotel/Config` `peak_days` (default Fri–Sat). Comma-separated, e.g. "5,6".
+     */
+    'default_peak_days' => array_values(array_filter(array_map('intval', explode(',', (string) env('HOTEL_DEFAULT_PEAK_DAYS', '5,6'))))),
+
+    /**
+     * Legacy: month-based pricing hint (not used by customer API `quoteStay` after peak-day rules);
+     * kept for possible tooling. Comma-separated months 1–12.
+     */
+    'module_peak_months' => array_filter(array_map('intval', explode(',', (string) env('HOTEL_MODULE_PEAK_MONTHS', '11,12,1')))),
 ];
