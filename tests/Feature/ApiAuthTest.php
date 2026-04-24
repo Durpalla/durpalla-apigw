@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Models\UserOtp;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
@@ -53,6 +53,12 @@ class ApiAuthTest extends TestCase
 
     public function test_verify_accepts_request(): void
     {
+        UserOtp::create([
+            'mobile' => '01700000001',
+            'otp_code' => '123456',
+            'verified' => 0,
+        ]);
+
         $response = $this->postJson($this->base . '/verify', [
             'mobile' => '01700000001',
             'code' => '123456',

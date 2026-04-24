@@ -41,3 +41,9 @@ php artisan test tests/Feature/ApiSupervisorTest.php
 | **ApiMyTest** | All `GET/POST /api/v1/my/*` (profile, bookings, cancellations, journey, notifications, etc.) – assert 401 without token |
 | **ApiQuickbookTest** | All `GET/POST /api/v1/quickbook/*` – assert 401 without token |
 | **ApiSupervisorTest** | All `GET/POST /api/v1/supervisor/*` – assert 401 without token |
+| **HotelApiTest** | `GET /api/v1/hotel/search` (skipped if DB unavailable), `POST /api/v1/hotel/hold` → 401 without token |
+| **HotelPricingServiceTest** (Unit) | Nightly quote math (single night, multi-night) |
+
+Hotel tables (`hotels`, `hotel_holds`, inventory, etc.) are created by Laravel migrations in **`/var/www/html/durpalla`** (see `database/migrations/2026_04_24_120000_create_hotel_tables.php`). Run `php artisan migrate` from **durpalla** against the DB this API uses; **durpalla-apigw** does not ship app migrations.
+
+Hotel env keys: `HOTEL_HOLD_TTL_MINUTES`, `HOTEL_PAYMENT_WINDOW_MINUTES`, `HOTEL_SEARCH_LIMIT`, `HOTEL_SEARCH_RADIUS_KM` (see `config/hotel.php`). Phase 2 vendor adapters will extend the same config.

@@ -45,6 +45,23 @@ class Bkash implements GatewayInterface, BkashInterface
 
     public function create($payment, $request, &$data): void
     {
+        $this->runCreatePayment($payment, $data);
+
+        // Stale id_token in cache often surfaces as bKash "Unauthorized"; refresh once.
+        if (empty($data['success']) && $this->wasAuthRelatedFailure((string) ($data['message'] ?? ''))) {
+            Cache::forget('bkash.token');
+            $this->runCreatePayment($payment, $data);
+        }
+
+        if (empty($data['success']) && $this->isGenericUnauthorizedMessage($data['message'] ?? '')) {
+            $data['message'] = __(
+                'bKash rejected the request (not logged out of the app). Usually the gateway token expired or sandbox/live credentials are wrong. Please try again; if it keeps happening, check bKash credentials in admin.'
+            );
+        }
+    }
+
+    private function runCreatePayment($payment, &$data): void
+    {
         try {
             $payload = [
                 'mode' => '0011',
@@ -86,7 +103,11 @@ class Bkash implements GatewayInterface, BkashInterface
                         ?? '');
                 }
                 if (($data['message'] ?? '') === '') {
-                    $data['message'] = __('Payment gateway request failed (HTTP :status).', ['status' => $res->status()]);
+                    if (in_array($res->status(), [401, 403], true)) {
+                        $data['message'] = 'Unauthorized';
+                    } else {
+                        $data['message'] = __('Payment gateway request failed (HTTP :status).', ['status' => $res->status()]);
+                    }
                 }
                 LogHelper::debug('BKASH_CREATE_PAYMENT_HTTP_ERROR', [
                     'status' => $res->status(),
@@ -99,6 +120,21 @@ class Bkash implements GatewayInterface, BkashInterface
                 'keyword' => 'BKASH_CREATE_PAYMENT_EXCEPTION',
             ]);
         }
+    }
+
+    private function wasAuthRelatedFailure(string $message): bool
+    {
+        $m = strtolower($message);
+
+        return str_contains($m, 'unauthorized')
+            || str_contains($m, 'permission denied')
+            || str_contains($m, 'invalid id token')
+            || str_contains($m, 'token expired');
+    }
+
+    private function isGenericUnauthorizedMessage(string $message): bool
+    {
+        return strtolower(trim($message)) === 'unauthorized';
     }
 
     public function execute($payment, $request, &$data)
@@ -210,6 +246,6 @@ class Bkash implements GatewayInterface, BkashInterface
 
     public function forgetToken(): void
     {
-        Cache::forget('bkash_token');
+        Cache::forget('bkash.token');
     }
 }

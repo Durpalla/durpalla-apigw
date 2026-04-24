@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Customer;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshDatabase;
 use Tests\TestCase;
 
 class ApiCustomerAuthTest extends TestCase

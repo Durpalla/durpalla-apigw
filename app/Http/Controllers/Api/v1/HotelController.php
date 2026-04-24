@@ -1,0 +1,247 @@
+<?php
+
+namespace App\Http\Controllers\Api\v1;
+
+use App\Http\Controllers\Controller;
+use App\Models\HotelHold;
+use App\Services\Hotel\HotelBookingService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+
+class HotelController extends Controller
+{
+    public function __construct(
+        private readonly HotelBookingService $hotelBooking,
+    ) {}
+
+    public function search(Request $request): JsonResponse
+    {
+        $rows = $this->hotelBooking->search($request);
+
+        return response()->json([
+            'success' => true,
+            'data' => $rows,
+        ]);
+    }
+
+    public function show(int $hotel): JsonResponse
+    {
+        $data = $this->hotelBooking->hotelDetails($hotel);
+        if ($data === null) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Hotel not found'),
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
+    }
+
+    public function rooms(Request $request, int $hotel): JsonResponse
+    {
+        $rooms = $this->hotelBooking->roomsForStay($request, $hotel);
+
+        return response()->json([
+            'success' => true,
+            'data' => $rooms,
+        ]);
+    }
+
+    public function quote(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'room_type_id' => 'required|integer|exists:hotel_room_types,id',
+            'check_in' => 'required|date',
+            'check_out' => 'required|date|after:check_in',
+            'adults' => 'nullable|integer|min:1|max:20',
+            'children' => 'nullable|integer|min:0|max:20',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        try {
+            $q = $this->hotelBooking->quote($request);
+
+            return response()->json([
+                'success' => true,
+                'data' => $q,
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    public function hold(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'room_type_id' => 'required|integer|exists:hotel_room_types,id',
+            'check_in' => 'required|date',
+            'check_out' => 'required|date|after:check_in',
+            'adults' => 'nullable|integer|min:1|max:20',
+            'children' => 'nullable|integer|min:0|max:20',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $idempotencyKey = trim((string) $request->header('Idempotency-Key', ''));
+        if ($idempotencyKey === '' || strlen($idempotencyKey) > 64) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Send a non-empty Idempotency-Key header (max 64 characters).'),
+            ], 422);
+        }
+
+        try {
+            $hold = $this->hotelBooking->createHold(
+                Auth::user(),
+                $validator->validated(),
+                $idempotencyKey,
+            );
+
+            return response()->json([
+                'success' => true,
+                'data' => $this->formatHold($hold),
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => config('app.debug') ? $e->getMessage() : __('Could not create hold. Please try again.'),
+            ], 422);
+        }
+    }
+
+    public function releaseHold(Request $request, int $hold): JsonResponse
+    {
+        $ok = $this->hotelBooking->releaseHold(Auth::user(), $hold);
+        if (! $ok) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Hold not found or already released.'),
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => __('Hold released.'),
+        ]);
+    }
+
+    /**
+     * Same as {@see releaseHold} for clients that prefer JSON body over DELETE path param.
+     */
+    public function releaseHoldPost(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'hold_id' => 'required|integer|exists:hotel_holds,id',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        return $this->releaseHold($request, (int) $request->input('hold_id'));
+    }
+
+    public function confirm(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'hold_id' => 'required|integer|exists:hotel_holds,id',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        try {
+            $result = $this->hotelBooking->confirmFromHold(
+                Auth::user(),
+                (int) $request->input('hold_id'),
+            );
+            $booking = $result['booking'];
+            $payment = $result['payment'];
+            $reservation = $result['reservation'];
+            $hotel = $reservation->hotel;
+
+            return response()->json([
+                'success' => true,
+                'message' => __('Booking created. Complete payment to confirm your stay.'),
+                'order_id' => $booking->id,
+                'booking_id' => $booking->id,
+                'booking' => [
+                    'id' => $booking->id,
+                    'status' => $booking->status,
+                    'total_payable' => (float) $booking->total_payable,
+                ],
+                'payment' => [
+                    'id' => $payment->id,
+                    'transaction_id' => $payment->transaction_id,
+                    'paid_amount' => (float) $payment->paid_amount,
+                ],
+                'hotel' => [
+                    'name' => $hotel->name,
+                    'check_in' => $reservation->check_in?->toDateString(),
+                    'check_out' => $reservation->check_out?->toDateString(),
+                    'adults' => (int) $reservation->adults,
+                    'children' => (int) $reservation->children,
+                ],
+                'trans_id' => $payment->transaction_id,
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Hold not found.'),
+            ], 404);
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => config('app.debug') ? $e->getMessage() : __('Could not confirm booking.'),
+            ], 500);
+        }
+    }
+
+    private function formatHold(HotelHold $hold): array
+    {
+        return [
+            'hold_id' => $hold->id,
+            'expires_at' => $hold->expires_at?->toIso8601String(),
+            'total' => (float) $hold->total_amount,
+            'quote' => $hold->quote_json,
+            'status' => $hold->status,
+        ];
+    }
+}

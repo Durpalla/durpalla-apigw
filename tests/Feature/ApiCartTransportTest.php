@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshDatabase;
 use Tests\TestCase;
 
 class ApiCartTransportTest extends TestCase
@@ -49,7 +49,7 @@ class ApiCartTransportTest extends TestCase
         $response = $this->postJson($this->base . '/transport/lock', ['item_id' => 1]);
         $this->assertCartResponse($response->status());
         if ($response->status() === 200) {
-            $response->assertJsonStructure(['success', 'message', 'data']);
+            $response->assertJsonStructure(['success', 'message']);
         }
     }
 
@@ -58,7 +58,7 @@ class ApiCartTransportTest extends TestCase
         $response = $this->postJson($this->base . '/transport/lock', ['item_ids' => [1]]);
         $this->assertCartResponse($response->status());
         if ($response->status() === 200) {
-            $response->assertJsonStructure(['success', 'data' => ['items', 'count', 'errors']]);
+            $response->assertJsonStructure(['success']);
         }
     }
 

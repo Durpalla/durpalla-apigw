@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\v1\AuthController;
 use App\Http\Controllers\Api\v1\FaqController;
 use App\Http\Controllers\Api\v1\FrontApiController;
 use App\Http\Controllers\Api\v1\GatewayController;
+use App\Http\Controllers\Api\v1\HotelController;
 use App\Http\Controllers\Api\v1\MyApiController;
 use App\Http\Controllers\Api\v1\NidVerificationController;
 use App\Http\Controllers\Api\v1\PageController;
@@ -68,6 +69,13 @@ Route::middleware(['JsonResponse'])->group(function () {
         Route::post('/unlock', [TransportApiController::class, 'unlock']);
     });
 
+    Route::prefix('hotel')->group(function () {
+        Route::get('search', [HotelController::class, 'search']);
+        Route::post('quote', [HotelController::class, 'quote']);
+        Route::get('{hotel}', [HotelController::class, 'show'])->whereNumber('hotel');
+        Route::get('{hotel}/rooms', [HotelController::class, 'rooms'])->whereNumber('hotel');
+    });
+
     Route::prefix('cart')->group(function () {
         Route::post('/add', [TransportApiController::class, 'lock']);
         Route::post('/lock', [TransportApiController::class, 'lock']);
@@ -90,6 +98,13 @@ Route::middleware(['JsonResponse'])->group(function () {
 
         Route::prefix('transport')->middleware(['auth:api'])->group(function () {
             Route::post('/booking/confirm', [TransportApiController::class, 'confirm']);
+        });
+
+        Route::prefix('hotel')->group(function () {
+            Route::post('hold', [HotelController::class, 'hold']);
+            Route::delete('hold/{hold}', [HotelController::class, 'releaseHold'])->whereNumber('hold');
+            Route::post('hold/release', [HotelController::class, 'releaseHoldPost']);
+            Route::post('booking/confirm', [HotelController::class, 'confirm']);
         });
 
         Route::prefix('booking')->group(function () {

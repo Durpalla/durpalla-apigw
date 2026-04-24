@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Services\Search\OpenSearchTripClient;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\RefreshDatabase;
 use Mockery;
 use Tests\TestCase;
 

@@ -41,6 +41,10 @@ class Kernel extends ConsoleKernel
             ->after(function () {
                 Log::debug('Pending booking handled');
             });
+
+        $schedule->command('hotel:maintain')
+            ->everyMinute()
+            ->runInBackground();
     }
 
     protected function commands(): void

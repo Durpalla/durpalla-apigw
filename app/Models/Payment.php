@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use App\Constants\AppConst;
+use App\Services\Hotel\HotelInventoryService;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class Payment extends Model
@@ -55,8 +58,29 @@ class Payment extends Model
 
     public function successful(): void
     {
+        $hotelRes = HotelReservation::query()
+            ->where('booking_id', $this->booking_id)
+            ->where('status', HotelReservation::STATUS_PENDING_PAYMENT)
+            ->first();
+        if ($hotelRes) {
+            DB::transaction(function () use ($hotelRes) {
+                $inv = app(HotelInventoryService::class);
+                $roomType = $hotelRes->roomType;
+                $checkIn = Carbon::parse($hotelRes->check_in);
+                $checkOut = Carbon::parse($hotelRes->check_out);
+                $inv->finalizeFromHold($roomType, $checkIn, $checkOut, 1);
+                $hotelRes->update(['status' => HotelReservation::STATUS_CONFIRMED]);
+                if ($this->booking) {
+                    $this->booking->update(['status' => AppConst::BOOKING_COMPLETE]);
+                }
+            });
+            $this->update(['status' => 'success']);
+
+            return;
+        }
+
         $this->update(['status' => 'success']);
-        if($this->booking->status != AppConst::BOOKING_PENDING) {
+        if ($this->booking && $this->booking->status != AppConst::BOOKING_PENDING) {
             $this->booking->update(['status' => AppConst::BOOKING_COMPLETE]);
             $this->bookingItems->each(function ($item) {
                 $item->update(['status' => AppConst::BOOKING_ITEM_ACTIVE]);
@@ -68,13 +92,37 @@ class Payment extends Model
     {
         $this->update(['status' => 'failed']);
 
-        if($this->booking->status != AppConst::BOOKING_PENDING) {
-            $this->booking->update(['status' => AppConst::BOOKING_FAILED]);
+        $booking = $this->booking;
+        if (! $booking) {
+            return;
+        }
+
+        $hotelRes = HotelReservation::query()
+            ->where('booking_id', $booking->id)
+            ->where('status', HotelReservation::STATUS_PENDING_PAYMENT)
+            ->first();
+
+        if ($hotelRes) {
+            DB::transaction(function () use ($hotelRes, $booking) {
+                $inv = app(HotelInventoryService::class);
+                $roomType = $hotelRes->roomType;
+                $checkIn = Carbon::parse($hotelRes->check_in);
+                $checkOut = Carbon::parse($hotelRes->check_out);
+                $inv->releaseHold($roomType, $checkIn, $checkOut, 1);
+                $hotelRes->update(['status' => HotelReservation::STATUS_FAILED]);
+                if ($booking->status === AppConst::BOOKING_PENDING) {
+                    $booking->update(['status' => AppConst::BOOKING_FAILED]);
+                }
+            });
+
+            return;
+        }
+
+        if ($booking->status != AppConst::BOOKING_PENDING) {
+            $booking->update(['status' => AppConst::BOOKING_FAILED]);
             $this->bookingItems->each(function ($item) {
                 $item->update(['status' => AppConst::BOOKING_ITEM_FAILED]);
             });
-        } else {
-
         }
     }
 

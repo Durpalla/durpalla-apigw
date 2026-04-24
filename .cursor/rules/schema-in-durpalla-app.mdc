@@ -1,0 +1,14 @@
+---
+description: Database schema — never add Laravel migrations under durpalla-apigw; add them in /var/www/html/durpalla instead.
+globs:
+  - database/migrations/**
+alwaysApply: true
+---
+
+# Schema ownership
+
+- **`/var/www/html/durpalla-apigw`** is API-only: **do not** create or edit files under `database/migrations/` here. Keep that directory empty of app migrations (Passport copies belong in the main app if needed).
+- **`/var/www/html/durpalla`** owns the database: add or change migrations under `database/migrations/` (and module migrations under `Modules/**/Database/migrations` as appropriate).
+- The API gateway expects the **same database** as the main Durpalla app after migrations are applied from **durpalla**.
+
+When hotel or other tables change, update migrations in **durpalla** only.

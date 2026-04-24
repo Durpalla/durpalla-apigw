@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Constants\AppConst;
 use App\Models\Booking;
 use App\Models\BookingItem;
+use App\Models\HotelReservation;
 use App\Models\Payment;
 use App\Models\ScheduleCabinMapping;
 use Carbon\Carbon;
@@ -52,6 +53,15 @@ final class PendingBookingPaymentWindow
         if ($booking->status !== AppConst::BOOKING_PENDING) {
             return false;
         }
+
+        $hotelRes = HotelReservation::query()
+            ->where('booking_id', $booking->id)
+            ->where('status', HotelReservation::STATUS_PENDING_PAYMENT)
+            ->first();
+        if ($hotelRes?->payment_due_at) {
+            return now()->lte($hotelRes->payment_due_at);
+        }
+
         if (self::hasNonPayableItems($booking)) {
             return false;
         }
@@ -74,6 +84,21 @@ final class PendingBookingPaymentWindow
         if ($booking->status !== AppConst::BOOKING_PENDING) {
             return __('This booking is not awaiting payment.');
         }
+
+        $hotelRes = HotelReservation::query()
+            ->where('booking_id', $booking->id)
+            ->where('status', HotelReservation::STATUS_PENDING_PAYMENT)
+            ->first();
+        if ($hotelRes?->payment_due_at) {
+            if (now()->gt($hotelRes->payment_due_at)) {
+                return __('Payment time has expired. Please book again (payment window: :minutes minutes).', [
+                    'minutes' => max(1, (int) config('hotel.payment_window_minutes', 10)),
+                ]);
+            }
+
+            return null;
+        }
+
         if (self::hasNonPayableItems($booking)) {
             return __('This booking has cancelled or released items and can no longer be paid.');
         }
@@ -98,7 +123,8 @@ final class PendingBookingPaymentWindow
         return Booking::query()
             ->with(['bookingItems'])
             ->where('status', AppConst::BOOKING_PENDING)
-            ->where('created_at', '<=', $cutoff);
+            ->where('created_at', '<=', $cutoff)
+            ->whereDoesntHave('hotelReservation');
     }
 
     /**

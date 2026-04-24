@@ -42,6 +42,11 @@ class Booking extends Model
     	return $this->belongsTo(Payment::class, 'id', 'booking_id')->orderByDesc('id');
     }
 
+    public function hotelReservation()
+    {
+        return $this->hasOne(HotelReservation::class, 'booking_id', 'id');
+    }
+
     public function cancellations()
     {
         return $this->hasMany(BookingCancellation::class, 'booking_id', 'id')->whereNotIn('status', [9]);
