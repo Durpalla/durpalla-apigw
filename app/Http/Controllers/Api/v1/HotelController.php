@@ -265,6 +265,11 @@ class HotelController extends Controller
             ], 500);
         }
 
+        $reviewCount = (int) $hotelModel->reviews()->count();
+        $aggregateRating = $reviewCount > 0
+            ? round((float) $hotelModel->reviews()->avg('rating'), 2)
+            : 0.0;
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -272,8 +277,8 @@ class HotelController extends Controller
                 'rating' => (float) $review->rating,
                 'text' => $review->body,
                 'date' => $review->reviewed_at?->toDateString(),
-                'review_count' => (int) $hotelModel->review_count,
-                'aggregate_rating' => (float) $hotelModel->getAttribute('aggregate_rating'),
+                'review_count' => $reviewCount,
+                'aggregate_rating' => $aggregateRating,
             ],
         ], 201);
     }
@@ -355,23 +360,28 @@ class HotelController extends Controller
 
     private function refreshHotelReviewStats(Hotel $hotel): void
     {
-        $q = $hotel->reviews();
-        $count = (int) $q->count();
-        if ($count === 0) {
-            $hotel->update([
-                'review_count' => 0,
-                'aggregate_rating' => 0,
-            ]);
-
+        $table = $hotel->getTable();
+        $hasReviewCount = Schema::hasColumn($table, 'review_count');
+        $hasAggregate = Schema::hasColumn($table, 'aggregate_rating');
+        if (! $hasReviewCount && ! $hasAggregate) {
             return;
         }
 
-        $avg = (float) HotelReview::query()
-            ->where('hotel_id', $hotel->id)
-            ->avg('rating');
-        $hotel->update([
-            'review_count' => $count,
-            'aggregate_rating' => round($avg, 2),
-        ]);
+        $count = (int) $hotel->reviews()->count();
+        $payload = [];
+        if ($hasReviewCount) {
+            $payload['review_count'] = $count;
+        }
+        if ($hasAggregate) {
+            $payload['aggregate_rating'] = $count === 0
+                ? 0
+                : round((float) HotelReview::query()
+                    ->where('hotel_id', $hotel->id)
+                    ->avg('rating'), 2);
+        }
+
+        if ($payload !== []) {
+            $hotel->update($payload);
+        }
     }
 }
