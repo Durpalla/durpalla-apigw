@@ -158,6 +158,9 @@ Route::middleware(['JsonResponse'])->group(function () {
             Route::post('/notifications/read', [MyApiController::class, 'deleteNotifications']);
             Route::post('/notifications/read/all', [MyApiController::class, 'readAllNotification']);
             Route::get('/favourite/vehicles', [MyApiController::class, 'favouriteVehicles']);
+            Route::get('/favourite/hotels', [MyApiController::class, 'favouriteHotels']);
+            Route::post('/favourite/hotels', [MyApiController::class, 'favouriteHotelStore']);
+            Route::delete('/favourite/hotels/{hotel}', [MyApiController::class, 'favouriteHotelDestroy'])->whereNumber('hotel');
         });
 
         Route::prefix('my')->group(function () {
@@ -181,6 +184,9 @@ Route::middleware(['JsonResponse'])->group(function () {
             Route::post('/notifications/read', [MyApiController::class, 'deleteNotifications']);
             Route::post('/notifications/read/all', [MyApiController::class, 'readAllNotification']);
             Route::get('/favourite/launches', [MyApiController::class, 'favouriteVehicles']);
+            Route::get('/favourite/hotels', [MyApiController::class, 'favouriteHotels']);
+            Route::post('/favourite/hotels', [MyApiController::class, 'favouriteHotelStore']);
+            Route::delete('/favourite/hotels/{hotel}', [MyApiController::class, 'favouriteHotelDestroy'])->whereNumber('hotel');
         });
 
         Route::prefix('quickbook')->group(function () {

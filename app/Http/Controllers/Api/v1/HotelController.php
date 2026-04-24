@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
+use App\Models\HotelFavorite;
 use App\Models\HotelHold;
 use App\Services\Hotel\HotelBookingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 
 class HotelController extends Controller
@@ -46,10 +48,27 @@ class HotelController extends Controller
             ], 404);
         }
 
+        $data['is_favourite'] = $this->hotelIsFavouriteForCurrentUser($hotel);
+
         return response()->json([
             'success' => true,
             'data' => $data,
         ]);
+    }
+
+    private function hotelIsFavouriteForCurrentUser(int $hotelId): bool
+    {
+        if (! Auth::check()) {
+            return false;
+        }
+        if (! Schema::hasTable('hotel_favorites')) {
+            return false;
+        }
+
+        return HotelFavorite::query()
+            ->where('user_id', (int) Auth::id())
+            ->where('hotel_id', $hotelId)
+            ->exists();
     }
 
     public function rooms(Request $request, int $hotel): JsonResponse

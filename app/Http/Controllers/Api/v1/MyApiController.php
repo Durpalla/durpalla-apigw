@@ -8,6 +8,8 @@ use App\Models\Booking;
 use App\Models\BookingCancellation;
 use App\Models\BookingItem;
 use App\Http\Controllers\Controller;
+use App\Models\Hotel;
+use App\Models\HotelFavorite;
 use App\Models\Vehicle;
 use App\Notifications\ProfileUpdate;
 use Illuminate\Http\Request;
@@ -15,6 +17,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Image;
 use App\Services\SupervisorService;
 
@@ -934,5 +937,68 @@ class MyApiController extends Controller
         $wallet = $this->supervisor->getWallet($request->all());
 
         return response()->json(['success' => true, 'data' => $wallet], $this->success);
+    }
+
+    /**
+     * Saved hotel IDs for the passenger app (GET …/my/favourite/hotels).
+     */
+    public function favouriteHotels(): JsonResponse
+    {
+        $user = Auth::user();
+        if (! Schema::hasTable('hotel_favorites')) {
+            return response()->json(['success' => true, 'data' => []], $this->success);
+        }
+
+        $ids = HotelFavorite::query()
+            ->where('user_id', $user->id)
+            ->orderByDesc('updated_at')
+            ->pluck('hotel_id');
+
+        return response()->json([
+            'success' => true,
+            'data' => $ids->map(fn ($id) => ['hotel_id' => (int) $id])->values()->all(),
+        ], $this->success);
+    }
+
+    public function favouriteHotelStore(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        $validator = Validator::make($request->all(), [
+            'hotel_id' => 'required|integer|min:1',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
+        }
+        if (! Schema::hasTable('hotel_favorites')) {
+            return response()->json(['success' => false, 'message' => __('Service unavailable')], 503);
+        }
+
+        $hotelId = (int) $request->input('hotel_id');
+        $hotel = Hotel::query()->whereKey($hotelId)->first();
+        if ($hotel === null || (int) ($hotel->status ?? 0) !== 1) {
+            return response()->json(['success' => false, 'message' => __('Hotel not found')], 404);
+        }
+
+        HotelFavorite::query()->firstOrCreate(
+            ['user_id' => $user->id, 'hotel_id' => $hotelId],
+            [],
+        );
+
+        return response()->json(['success' => true, 'is_favourite' => true], $this->success);
+    }
+
+    public function favouriteHotelDestroy(int $hotel): JsonResponse
+    {
+        $user = Auth::user();
+        if (! Schema::hasTable('hotel_favorites')) {
+            return response()->json(['success' => false, 'message' => __('Service unavailable')], 503);
+        }
+
+        HotelFavorite::query()
+            ->where('user_id', $user->id)
+            ->where('hotel_id', $hotel)
+            ->delete();
+
+        return response()->json(['success' => true, 'is_favourite' => false], $this->success);
     }
 }
