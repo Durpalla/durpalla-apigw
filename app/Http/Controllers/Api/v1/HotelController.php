@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Hotel;
 use App\Models\HotelFavorite;
 use App\Models\HotelHold;
+use App\Models\HotelReview;
 use App\Services\Hotel\HotelBookingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -204,6 +206,57 @@ class HotelController extends Controller
         return $this->releaseHold($request, (int) $request->input('hold_id'));
     }
 
+    public function storeReview(Request $request, int $hotel): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'rating' => 'required|numeric|min:1|max:5',
+            'text' => 'required|string|min:3|max:2000',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $hotelModel = Hotel::query()->whereKey($hotel)->first();
+        if ($hotelModel === null) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Hotel not found'),
+            ], 404);
+        }
+
+        $user = Auth::user();
+        $author = (string) ($user?->name ?? '');
+        if (trim($author) === '') {
+            $author = 'Guest';
+        }
+
+        $review = new HotelReview([
+            'hotel_id' => $hotel,
+            'author' => $author,
+            'rating' => round((float) $request->input('rating'), 1),
+            'body' => (string) $request->input('text'),
+            'reviewed_at' => now(),
+        ]);
+        $review->save();
+        $this->refreshHotelReviewStats($hotelModel);
+        $hotelModel->refresh();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'author' => $review->author,
+                'rating' => (float) $review->rating,
+                'text' => $review->body,
+                'date' => $review->reviewed_at?->toDateString(),
+                'review_count' => (int) $hotelModel->review_count,
+                'aggregate_rating' => (float) $hotelModel->getAttribute('aggregate_rating'),
+            ],
+        ], 201);
+    }
+
     public function confirm(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -277,5 +330,27 @@ class HotelController extends Controller
             'quote' => $hold->quote_json,
             'status' => $hold->status,
         ];
+    }
+
+    private function refreshHotelReviewStats(Hotel $hotel): void
+    {
+        $q = $hotel->reviews();
+        $count = (int) $q->count();
+        if ($count === 0) {
+            $hotel->update([
+                'review_count' => 0,
+                'aggregate_rating' => 0,
+            ]);
+
+            return;
+        }
+
+        $avg = (float) HotelReview::query()
+            ->where('hotel_id', $hotel->id)
+            ->avg('rating');
+        $hotel->update([
+            'review_count' => $count,
+            'aggregate_rating' => round($avg, 2),
+        ]);
     }
 }

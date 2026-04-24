@@ -726,26 +726,61 @@ class MyApiController extends Controller
      */
     public function updateProfile(Request $request)
     {
-        //validation rules
-        $validator = Validator::make($request->all(), [
+        $user = Auth::user();
+
+        $rules = [
             'name' => 'required',
-            'email' => 'required|email|unique:users,email,' . Auth::user()->id,
-            'mobile' => 'required|regex:/^(01){1}[3456789]{1}(\d){8}$/|min:11|unique:users,mobile,' . Auth::user()->id
-        ]);
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'mobile' => 'required|regex:/^(01){1}[3456789]{1}(\d){8}$/|min:11|unique:users,mobile,' . $user->id,
+        ];
+        if ($request->hasFile('avatar')) {
+            $rules['avatar'] = 'file|mimes:jpg,jpeg,png,gif,webp|max:10240';
+        }
+
+        $validator = Validator::make($request->all(), $rules);
 
         //validation fails
         if ( $validator->fails() )
             return response()->json(['success'=> false, 'message' => $validator->errors()->first()], $this->success );
 
         //update user
-        $user = Auth::user();
         $user->name = $request->name;
         $user->email = $request->email;
         $user->mobile = $request->mobile;
 
+        if ($request->hasFile('avatar')) {
+            $image = $request->file('avatar');
+            $filename = $user->id . '_' . time() . '.' . $image->getClientOriginalExtension();
+            $destinationPath = public_path('uploads/avatar');
+            if (! is_dir($destinationPath)) {
+                @mkdir($destinationPath, 0755, true);
+            }
+            $source = $image->getRealPath() ?: $image->getPathname();
+            $img = Image::make($source);
+            $img->resize(460, 340, function ($constraint) {
+                $constraint->aspectRatio();
+            })->save($destinationPath . '/' . $filename);
+            $user->profile_pic = 'uploads/avatar/' . $filename;
+        }
+
         if( $user->save() ) {
             $user->notify(new ProfileUpdate());
-            return response()->json(['success'=> true, 'user' => ['name' => $user->name, 'mobile' => $user->mobile, 'email' => $user->email], 'message' => __('Profile successfully updated')], $this->success );
+            $avatarUrl = $user->profile_pic ? asset($user->profile_pic) : null;
+            $payloadUser = [
+                'name' => $user->name,
+                'mobile' => $user->mobile,
+                'email' => $user->email,
+                'avatar' => $avatarUrl,
+                'photo' => $avatarUrl,
+                'avatar_url' => $avatarUrl,
+            ];
+
+            return response()->json([
+                'success' => true,
+                'user' => $payloadUser,
+                'data' => $payloadUser,
+                'message' => __('Profile successfully updated'),
+            ], $this->success );
         } else {
             return response()->json(['success'=> false, 'message' => __('Ops! something went wrong.')], $this->success );
         }

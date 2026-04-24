@@ -108,6 +108,7 @@ Route::middleware(['JsonResponse'])->group(function () {
             Route::delete('hold/{hold}', [HotelController::class, 'releaseHold'])->whereNumber('hold');
             Route::post('hold/release', [HotelController::class, 'releaseHoldPost']);
             Route::post('booking/confirm', [HotelController::class, 'confirm']);
+            Route::post('{hotel}/reviews', [HotelController::class, 'storeReview'])->whereNumber('hotel');
         });
 
         Route::prefix('booking')->group(function () {
