@@ -29,4 +29,19 @@ return [
         env('HOTEL_SEARCH_DEFAULT_DATES', true),
         FILTER_VALIDATE_BOOLEAN
     ),
+    /**
+     * Public base URL for Module Hotel `hotel_images.image_path` and storage-relative paths.
+     * Set to your admin/app origin if images are not served from the API host, e.g.
+     * `HOTEL_IMAGE_PUBLIC_BASE_URL=https://admin.durpalla.com`
+     */
+    'image_public_base_url' => env('HOTEL_IMAGE_PUBLIC_BASE_URL', env('APP_URL', '')),
+    /**
+     * When per-night `hotel_inventories` rows are missing, `assertAvailability` throws and the
+     * API would mark the room as unavailable. Set to true to treat that as available so clients
+     * (and ops without seeded inventory) can still proceed; set to false in production with full inventory.
+     */
+    'rooms_treat_missing_inventory_as_available' => (bool) filter_var(
+        env('HOTEL_ROOMS_TREAT_MISSING_INVENTORY_AS_AVAILABLE', true),
+        FILTER_VALIDATE_BOOLEAN
+    ),
 ];

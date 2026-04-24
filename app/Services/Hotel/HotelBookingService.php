@@ -165,13 +165,20 @@ final class HotelBookingService
         $out = [];
         $skippedNoPricedRoom = [];
         foreach ($hotels as $hotel) {
-            $min = $this->minNightlyListPriceForHotel((int) $hotel->id);
+            $bounds = $this->nightlyListMinMaxForHotel((int) $hotel->id);
+            $min = $bounds['min'];
+            $max = $bounds['max'];
             if ($min === null) {
-                $min = $this->minListPriceFromHotelRecord($hotel);
+                $p = $this->minListPriceFromHotelRecord($hotel);
+                if ($p !== null) {
+                    $min = $p;
+                    $max = $p;
+                }
             }
             // Panel often creates a hotel before any room inventory rows exist — still show in search.
             if ($min === null && ! $this->hotelHasAnyRoomInventory((int) $hotel->id)) {
                 $min = 0.0;
+                $max = 0.0;
                 if ($debug) {
                     $this->emitHotelSearchDebug('list_price_default', [
                         'hotel_id' => $hotel->id,
@@ -192,7 +199,15 @@ final class HotelBookingService
 
                 continue;
             }
-            $photo = $hotel->photos()->first();
+            if ($max === null) {
+                $max = $min;
+            }
+            if ($min > $max) {
+                $tmp = $min;
+                $min = $max;
+                $max = $tmp;
+            }
+            $photoUrl = $this->firstHotelPhotoUrlForSearch($hotel);
             $cityLabel = $this->resolveHotelCityLabel($hotel, $cityNamesById);
             $stars = $this->resolveHotelStars($hotel);
             $out[] = [
@@ -201,14 +216,21 @@ final class HotelBookingService
                 'name' => $hotel->name,
                 'location' => $cityLabel ?? $hotel->address ?? '',
                 'city' => $cityLabel,
-                'photo' => $photo?->url ?? '',
+                'photo' => $photoUrl,
                 'stars' => $stars,
                 'rating' => (float) ($hotel->getAttribute('aggregate_rating') ?? $hotel->getAttribute('rating') ?? 0),
                 'reviews' => (int) ($hotel->review_count ?? 0),
                 'price_per_night' => (float) $min,
+                'price_per_night_max' => (float) $max,
+                'currency' => 'BDT',
                 'amenities' => [],
             ];
         }
+
+        usort($out, function (array $a, array $b) {
+            return ($a['price_per_night'] <=> $b['price_per_night'])
+                ?: (strcmp((string) $a['name'], (string) $b['name']));
+        });
 
         if ($debug) {
             $this->emitHotelSearchDebug('response', [
@@ -298,13 +320,14 @@ final class HotelBookingService
     }
 
     /**
-     * Lowest nightly rate for search cards.
+     * Nightly min/max for search list (low → high within each hotel) and `price_per_night` (min) sorting.
      *
-     * 1) Phase-1 API schema: `hotel_room_types` + COALESCE of known price columns.
-     * 2) Durpalla Module/Hotel admin: `hotel_rooms` + `base_price` (separate from (1) — the panel
-     *    "Rooms" tab writes here; see `Modules/Hotel/Entities/HotelRoom`).
+     * 1) Phase-1 API: `hotel_room_types` + COALESCE of known price columns.
+     * 2) Module: `hotel_rooms` + `base_price`.
+     *
+     * @return array{min: ?float, max: ?float}
      */
-    private function minNightlyListPriceForHotel(int $hotelId): ?float
+    private function nightlyListMinMaxForHotel(int $hotelId): array
     {
         $t = $this->roomTypesTable();
         if (Schema::hasTable($t)) {
@@ -315,36 +338,43 @@ final class HotelBookingService
                     if ($applyPublishScope) {
                         $this->applyRoomTypePublishScope($q, $t);
                     }
-                    $raw = $q->selectRaw("MIN({$expr}) as __m")->value('__m');
-                    if ($raw !== null) {
-                        return (float) $raw;
+                    $row = $q->selectRaw("MIN({$expr}) as __min, MAX({$expr}) as __max")->first();
+                    if ($row !== null && $row->__min !== null) {
+                        $lo = (float) $row->__min;
+                        $hi = $row->__max !== null ? (float) $row->__max : $lo;
+
+                        return ['min' => $lo, 'max' => $hi];
                     }
                 }
 
                 $qAny = HotelRoomType::query()->where("{$t}.hotel_id", $hotelId);
                 if ($qAny->exists()) {
-                    return 0.0;
+                    $row2 = (clone $qAny)->selectRaw("MAX({$expr}) as __max")->first();
+                    $hi = $row2 && $row2->__max !== null ? (float) $row2->__max : 0.0;
+
+                    return ['min' => 0.0, 'max' => $hi];
                 }
             }
         }
 
-        $fromModule = $this->minPriceFromModuleHotelRooms($hotelId);
-        if ($fromModule !== null) {
-            return $fromModule;
+        $m = $this->minMaxPriceFromModuleHotelRooms($hotelId);
+        if ($m !== null) {
+            return ['min' => $m['min'], 'max' => $m['max']];
         }
 
-        return null;
+        return ['min' => null, 'max' => null];
     }
 
     /**
-     * Nightly "Base" price from `hotel_rooms` (Module Hotel), when `hotel_room_types` is unused.
+     * Min and max of `base_price` on `hotel_rooms` (Module Hotel) with the same scope as the old min-only helper.
+     *
+     * @return array{min: float, max: float}|null
      */
-    private function minPriceFromModuleHotelRooms(int $hotelId): ?float
+    private function minMaxPriceFromModuleHotelRooms(int $hotelId): ?array
     {
         if (! Schema::hasTable('hotel_rooms') || ! Schema::hasColumn('hotel_rooms', 'base_price')) {
             return null;
         }
-
         $q = DB::table('hotel_rooms')->where('hotel_id', $hotelId);
         if (Schema::hasColumn('hotel_rooms', 'deleted_at')) {
             $q->whereNull('deleted_at');
@@ -354,12 +384,13 @@ final class HotelBookingService
                 $w->whereNull('status')->orWhere('status', 1)->orWhere('status', '1');
             });
         }
+        $row = $q->selectRaw('MIN(base_price) as __min, MAX(base_price) as __max')->first();
+        if ($row !== null && $row->__min !== null) {
+            $lo = (float) $row->__min;
+            $hi = $row->__max !== null ? (float) $row->__max : $lo;
 
-        $min = $q->min('base_price');
-        if ($min !== null) {
-            return (float) $min;
+            return ['min' => $lo, 'max' => $hi];
         }
-
         $q2 = DB::table('hotel_rooms')->where('hotel_id', $hotelId);
         if (Schema::hasColumn('hotel_rooms', 'deleted_at')) {
             $q2->whereNull('deleted_at');
@@ -369,9 +400,8 @@ final class HotelBookingService
                 $w->whereNull('status')->orWhere('status', 1)->orWhere('status', '1');
             });
         }
-
         if ($q2->exists()) {
-            return 0.0;
+            return ['min' => 0.0, 'max' => 0.0];
         }
 
         return null;
@@ -473,6 +503,164 @@ final class HotelBookingService
         Log::warning('[hotel.search] '.$phase, $context);
     }
 
+    private function hotelImagesTableHasTypeColumn(): bool
+    {
+        return Schema::hasTable('hotel_images') && Schema::hasColumn('hotel_images', 'type');
+    }
+
+    private function isModuleHotelImageCoverType(?string $type): bool
+    {
+        if ($type === null || trim($type) === '') {
+            return false;
+        }
+
+        return in_array(strtolower(trim($type)), ['cover', 'hero', 'header'], true);
+    }
+
+    /**
+     * List thumbnail: `hotel_images` rows typed cover/hero/header, else legacy `hotel_photos`, else any module image.
+     */
+    private function firstHotelPhotoUrlForSearch(Hotel $hotel): string
+    {
+        if (Schema::hasTable('hotel_images') && $this->hotelImagesTableHasTypeColumn()) {
+            $row = DB::table('hotel_images')
+                ->where('hotel_id', $hotel->id)
+                ->whereNotNull('type')
+                ->whereRaw("LOWER(TRIM(type)) IN ('cover', 'hero', 'header')")
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->first();
+            if ($row !== null) {
+                $u = $this->normalizeHotelImageUrl((string) ($row->image_path ?? ''));
+                if ($u !== '') {
+                    return $u;
+                }
+            }
+        }
+
+        $p = $hotel->photos()->orderBy('sort_order')->orderBy('id')->first();
+        if ($p !== null) {
+            $u = $this->normalizeHotelImageUrl((string) ($p->url ?? ''));
+            if ($u !== '') {
+                return $u;
+            }
+        }
+        if (Schema::hasTable('hotel_images')) {
+            if ($this->hotelImagesTableHasTypeColumn()) {
+                $row = DB::table('hotel_images')
+                    ->where('hotel_id', $hotel->id)
+                    ->where(function ($w) {
+                        $w->whereNull('type')
+                            ->orWhere('type', '')
+                            ->orWhereRaw("LOWER(TRIM(type)) NOT IN ('cover', 'hero', 'header')");
+                    })
+                    ->orderBy('sort_order')
+                    ->orderBy('id')
+                    ->first();
+            } else {
+                $row = DB::table('hotel_images')
+                    ->where('hotel_id', $hotel->id)
+                    ->orderBy('sort_order')
+                    ->orderBy('id')
+                    ->first();
+            }
+            if ($row !== null) {
+                $u = $this->normalizeHotelImageUrl((string) ($row->image_path ?? ''));
+                if ($u !== '') {
+                    return $u;
+                }
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * @return list<array{url: string, caption: ?string}>
+     */
+    private function moduleHotelGalleryAsApiPhotos(int $hotelId, bool $excludeCoverTypes): array
+    {
+        if (! Schema::hasTable('hotel_images')) {
+            return [];
+        }
+        $q = DB::table('hotel_images')
+            ->where('hotel_id', $hotelId)
+            ->orderBy('sort_order')
+            ->orderBy('id');
+        if ($excludeCoverTypes && $this->hotelImagesTableHasTypeColumn()) {
+            $q->where(function ($w) {
+                $w->whereNull('type')
+                    ->orWhere('type', '')
+                    ->orWhereRaw("LOWER(TRIM(type)) NOT IN ('cover', 'hero', 'header')");
+            });
+        }
+        $out = [];
+        foreach ($q->get() as $row) {
+            if ($this->isModuleHotelImageCoverType(
+                is_string($row->type ?? null) ? (string) $row->type : (isset($row->type) ? (string) $row->type : null)
+            )) {
+                continue;
+            }
+            $u = $this->normalizeHotelImageUrl((string) ($row->image_path ?? ''));
+            if ($u === '') {
+                continue;
+            }
+            $out[] = ['url' => $u, 'caption' => null];
+        }
+
+        return $out;
+    }
+
+    private function firstModuleCoverImageUrlForHotel(int $hotelId): string
+    {
+        if (! Schema::hasTable('hotel_images') || ! $this->hotelImagesTableHasTypeColumn()) {
+            return '';
+        }
+        $row = DB::table('hotel_images')
+            ->where('hotel_id', $hotelId)
+            ->whereNotNull('type')
+            ->whereRaw("LOWER(TRIM(type)) IN ('cover', 'hero', 'header')")
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->first();
+        if ($row === null) {
+            return '';
+        }
+        $u = $this->normalizeHotelImageUrl((string) ($row->image_path ?? ''));
+
+        return $u;
+    }
+
+    private function normalizeHotelImageUrl(string $raw): string
+    {
+        $raw = trim($raw);
+        if ($raw === '') {
+            return '';
+        }
+        if (preg_match('#^https?://#i', $raw) === 1) {
+            return $raw;
+        }
+        if (str_starts_with($raw, '//')) {
+            $app = (string) config('app.url', '');
+            $scheme = $app !== '' && str_contains($app, '://') ? (parse_url($app, PHP_URL_SCHEME) ?: 'https') : 'https';
+
+            return $scheme.':'.$raw;
+        }
+        $base = rtrim((string) config('hotel.image_public_base_url', ''), '/');
+        if ($base === '') {
+            $base = rtrim((string) config('app.url', ''), '/');
+        }
+        $path = str_replace('\\', '/', $raw);
+        if (str_starts_with($path, '/')) {
+            return $base.$path;
+        }
+        if (preg_match('#^storage/#i', $path) === 1) {
+            return $base.'/'.ltrim($path, '/');
+        }
+
+        return $base.'/storage/'.ltrim($path, '/');
+    }
+
     public function hotelDetails(int $hotelId): ?array
     {
         $hotel = Hotel::query()->with(['photos', 'reviews', 'roomTypes.photos'])->find($hotelId);
@@ -489,6 +677,43 @@ final class HotelBookingService
             }
         }
 
+        $legacyPhotos = [];
+        foreach ($hotel->photos as $p) {
+            $u = $this->normalizeHotelImageUrl((string) ($p->url ?? ''));
+            if ($u !== '') {
+                $legacyPhotos[] = ['url' => $u, 'caption' => $p->caption];
+            }
+        }
+
+        $hasImgType = $this->hotelImagesTableHasTypeColumn();
+        $moduleCover = $hasImgType ? $this->firstModuleCoverImageUrlForHotel($hotel->id) : '';
+        $moduleGallery = $this->moduleHotelGalleryAsApiPhotos($hotel->id, $hasImgType);
+
+        if ($hasImgType) {
+            $galleryPhotos = $moduleGallery;
+            foreach ($legacyPhotos as $item) {
+                $u = (string) ($item['url'] ?? '');
+                if ($u === '') {
+                    continue;
+                }
+                foreach ($galleryPhotos as $g) {
+                    if (($g['url'] ?? '') === $u) {
+                        continue 2;
+                    }
+                }
+                $galleryPhotos[] = $item;
+            }
+            if ($galleryPhotos === [] && $legacyPhotos !== []) {
+                $galleryPhotos = $legacyPhotos;
+            }
+            $hero = $moduleCover !== '' ? $moduleCover : (($legacyPhotos[0]['url'] ?? '') !== '' ? $legacyPhotos[0]['url'] : (string) ($moduleGallery[0]['url'] ?? ''));
+        } else {
+            $galleryPhotos = $legacyPhotos !== [] ? $legacyPhotos : $this->moduleHotelGalleryAsApiPhotos($hotel->id, false);
+            $hero = ($legacyPhotos[0]['url'] ?? '') !== ''
+                ? (string) $legacyPhotos[0]['url']
+                : (string) ($galleryPhotos[0]['url'] ?? '');
+        }
+
         return [
             'id' => $hotel->id,
             'name' => $hotel->name,
@@ -501,7 +726,10 @@ final class HotelBookingService
             'review_count' => (int) ($hotel->review_count ?? 0),
             'description' => $hotel->description,
             'policies' => $hotel->policies,
-            'photos' => $hotel->photos->map(fn ($p) => ['url' => $p->url, 'caption' => $p->caption])->values()->all(),
+            'photo' => $hero,
+            'cover_photo' => $hero,
+            'gallery' => $galleryPhotos,
+            'photos' => $galleryPhotos,
             'reviews' => $hotel->reviews->map(fn ($r) => [
                 'author' => $r->author,
                 'rating' => (float) $r->rating,
@@ -528,13 +756,13 @@ final class HotelBookingService
             return [];
         }
 
-        $types = HotelRoomType::query()
-            ->where('hotel_id', $hotelId)
-            ->where('status', 1)
-            ->with('photos')
-            ->get();
+        $t = $this->roomTypesTable();
+        $typesQ = HotelRoomType::query()->where("{$t}.hotel_id", $hotelId);
+        $this->applyRoomTypePublishScope($typesQ, $t);
+        $types = $typesQ->with('photos')->get();
 
         $out = [];
+        $relaxInv = (bool) config('hotel.rooms_treat_missing_inventory_as_available', true);
         foreach ($types as $rt) {
             if ($adults + $children > (int) $rt->max_occupancy) {
                 continue;
@@ -543,9 +771,17 @@ final class HotelBookingService
                 $this->inventory->assertAvailability($rt, $checkIn, $checkOut, 1);
                 $available = true;
             } catch (\Throwable) {
-                $available = false;
+                $available = $relaxInv;
             }
             $quote = $this->pricing->quoteStay($rt, $checkIn, $checkOut, $adults, $children);
+            $roomPhotos = [];
+            foreach ($rt->photos as $p) {
+                $u = $this->normalizeHotelImageUrl((string) ($p->url ?? ''));
+                if ($u === '') {
+                    continue;
+                }
+                $roomPhotos[] = ['url' => $u];
+            }
             $out[] = [
                 'id' => $rt->id,
                 'room_type_id' => $rt->id,
@@ -554,7 +790,7 @@ final class HotelBookingService
                 'max_occupancy' => (int) $rt->max_occupancy,
                 'bed_type' => $rt->bed_type,
                 'amenities' => $rt->amenities ?? [],
-                'photos' => $rt->photos->map(fn ($p) => ['url' => $p->url])->values()->all(),
+                'photos' => $roomPhotos,
                 'available' => $available,
                 'quote' => $quote,
             ];
