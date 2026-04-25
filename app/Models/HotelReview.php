@@ -9,7 +9,7 @@ class HotelReview extends Model
 {
     public $timestamps = false;
 
-    protected $fillable = ['hotel_id', 'author', 'rating', 'body', 'reviewed_at'];
+    protected $fillable = ['hotel_id', 'user_id', 'author', 'rating', 'body', 'reviewed_at'];
 
     protected function casts(): array
     {

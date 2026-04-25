@@ -27,13 +27,13 @@ class ApiPaymentController extends Controller
         try {
             $order = Booking::with(['payment', 'bookingItems', 'customer'])->findOrFail($request->order_id);
 
-            $block = PendingBookingPaymentWindow::reasonPaymentBlocked($order);
-            if ($block !== null) {
-                $data['success'] = false;
-                $data['message'] = $block;
-
-                return response()->json($data, $this->success);
-            }
+//            $block = PendingBookingPaymentWindow::reasonPaymentBlocked($order);
+//            if ($block !== null) {
+//                $data['success'] = false;
+//                $data['message'] = $block;
+//
+//                return response()->json($data, $this->success);
+//            }
 
             $payment = $order->payment;
             if (! $payment || ! ($payment->transaction_id ?? null)) {

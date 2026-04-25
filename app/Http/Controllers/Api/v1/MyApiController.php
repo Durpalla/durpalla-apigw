@@ -66,7 +66,15 @@ class MyApiController extends Controller
     public function getBookings( Request $request )
     {
         $user = Auth::user();
-        $query = Booking::with(['bookingItems.trip.route', 'cancellations', 'bookingItems.item.cabinType', 'bookingItems.trip.launch', 'payment'])
+        $query = Booking::with([
+            'bookingItems.trip.route',
+            'cancellations',
+            'bookingItems.item.cabinType',
+            'bookingItems.trip.launch',
+            'payment',
+            'hotelReservation.hotel',
+            'hotelReservation.roomType',
+        ])
             ->where('customer_id', $user->id)->orderBy('created_at', 'desc');
 
         if( $request->date_from ) {
@@ -112,6 +120,9 @@ class MyApiController extends Controller
             }
 
             foreach( $booking->bookingItems as $item ) {
+                if (empty($item['trip'])) {
+                    continue;
+                }
                 $irow = [
                     'id' => $item['id'],
                     'cabin_id' => $item['cabin_id'],
@@ -141,6 +152,13 @@ class MyApiController extends Controller
             if( !getOption('is_cancellation_enabled') ) {
                 $row['cancellable'] = false;
             }
+            $hotelItem = $this->hotelStayAsAndroidBookingItem($booking);
+            if ($hotelItem !== null) {
+                $row['items'][] = $hotelItem;
+                if (! $row['downloadable'] && $this->bookingPaymentLooksPaid($booking)) {
+                    $row['downloadable'] = true;
+                }
+            }
             $responseArr[] = $row;
         }
 
@@ -164,7 +182,15 @@ class MyApiController extends Controller
     public function bookings( Request $request )
     {
         $user = Auth::user();
-        $query = Booking::with(['bookingItems.trip.route', 'cancellations', 'bookingItems.item.cabinType', 'bookingItems.trip.launch', 'payment'])
+        $query = Booking::with([
+            'bookingItems.trip.route',
+            'cancellations',
+            'bookingItems.item.cabinType',
+            'bookingItems.trip.launch',
+            'payment',
+            'hotelReservation.hotel',
+            'hotelReservation.roomType',
+        ])
             ->where('customer_id', $user->id)->orderBy('created_at', 'desc');
 
         if( $request->date_from ) {
@@ -205,6 +231,9 @@ class MyApiController extends Controller
             }
 
             foreach( $booking->bookingItems as $item ) {
+                if (empty($item['trip'])) {
+                    continue;
+                }
                 $irow = [
                     'id' => $item['id'],
                     'cabin_id' => $item['cabin_id'],
@@ -234,6 +263,13 @@ class MyApiController extends Controller
             if( !getOption('is_cancellation_enabled') ) {
                 $row['cancellable'] = false;
             }
+            $hotelItem = $this->hotelStayAsAndroidBookingItem($booking);
+            if ($hotelItem !== null) {
+                $row['items'][] = $hotelItem;
+                if (! $row['downloadable'] && $this->bookingPaymentLooksPaid($booking)) {
+                    $row['downloadable'] = true;
+                }
+            }
             $responseArr[] = $row;
         }
 
@@ -250,7 +286,16 @@ class MyApiController extends Controller
     public function bookingAndroid( Request $request, $id ): JsonResponse
     {
         $user = Auth::user();
-        $booking = Booking::with(['customer', 'bookingItems.trip.route', 'cancellations', 'bookingItems.item.cabinType', 'bookingItems.trip.launch', 'payment'])
+        $booking = Booking::with([
+            'customer',
+            'bookingItems.trip.route',
+            'cancellations',
+            'bookingItems.item.cabinType',
+            'bookingItems.trip.launch',
+            'payment',
+            'hotelReservation.hotel',
+            'hotelReservation.roomType',
+        ])
             ->where('customer_id', $user->id)->orderBy('booking_date', 'desc')->findOrFail($id);
 
         $responseArr = [];
@@ -261,6 +306,8 @@ class MyApiController extends Controller
             $responseArr['qr_code'] = $booking->payment['transaction_id'];
             $responseArr['qr'] = asset('qrs/' . $booking->id . '.png');
             $responseArr['booking_date'] = date('Y-m-d H:i:s', strtotime( $booking->created_at ) );
+            $responseArr['booking_date_formated'] = date('d M, Y h:i A', strtotime( $booking->created_at ) );
+            $responseArr['downloadable'] = false;
             $responseArr['payment_status'] = $booking->payment['status'];
             $responseArr['total_amount'] = $booking->total_amount;
             $responseArr['total_discount'] = $booking->total_discount;
@@ -290,6 +337,9 @@ class MyApiController extends Controller
             // $responseArr['status'] = $booking->status;
 
             foreach( $booking->bookingItems as $item ) {
+                if (empty($item['trip'])) {
+                    continue;
+                }
                 $row = [
                     'id' => $item['id'],
                     'cabin_no' => ( $item['item'] ) ? $item['item']['cabinType']['letter'] . '-' . $item['item']['cabin_no'] : '',
@@ -314,8 +364,17 @@ class MyApiController extends Controller
                 }
                 if( $item['status'] == 1 && $item['trip_date'] >= date('Y-m-d') ) {
                     $responseArr['cancellable'] = true;
+                    $responseArr['downloadable'] = true;
                 }
                 array_push($responseArr['items'], $row);
+            }
+
+            $hotelRow = $this->hotelStayAsAndroidBookingItem($booking);
+            if ($hotelRow !== null) {
+                $responseArr['items'][] = $hotelRow;
+                if (! $responseArr['downloadable'] && $this->bookingPaymentLooksPaid($booking)) {
+                    $responseArr['downloadable'] = true;
+                }
             }
 
             if( !getOption('is_cancellation_enabled') ) {
@@ -1041,5 +1100,63 @@ class MyApiController extends Controller
             ->delete();
 
         return response()->json(['success' => true, 'is_favourite' => false], $this->success);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function hotelStayAsAndroidBookingItem(Booking $booking): ?array
+    {
+        if (! Schema::hasTable('hotel_reservations')) {
+            return null;
+        }
+        $hr = $booking->relationLoaded('hotelReservation')
+            ? $booking->hotelReservation
+            : $booking->hotelReservation()->with(['hotel', 'roomType'])->first();
+        if ($hr === null) {
+            return null;
+        }
+        $hotel = $hr->hotel;
+        $room = $hr->roomType;
+        $checkIn = $hr->check_in?->toDateString() ?? '';
+        $checkOut = $hr->check_out?->toDateString() ?? '';
+
+        return [
+            'id' => (int) $hr->id,
+            'item_type' => 'hotel',
+            'hotel_name' => $hotel?->name ?? 'Hotel',
+            'room_type_title' => $room?->title ?? $room?->code ?? 'Room',
+            'check_in' => $checkIn,
+            'check_out' => $checkOut,
+            'adults' => (int) $hr->adults,
+            'children' => (int) $hr->children,
+            'fare' => (float) $hr->total_payable,
+            'cancellable' => false,
+            'status' => 1,
+            'cabin_no' => '',
+            'cabin_type' => 'hotel',
+            'is_ac' => false,
+            'vehicle_name' => $hotel?->name ?? '',
+            'route_name' => $hotel?->city ?? '',
+            'schedule_date' => $checkIn,
+            'leaving_time' => $checkOut,
+            'leaving_time_formated' => '',
+            'boarding_point' => null,
+            'passenger' => null,
+        ];
+    }
+
+    private function bookingPaymentLooksPaid(Booking $booking): bool
+    {
+        $p = $booking->payment;
+        if ($p === null) {
+            return false;
+        }
+        $status = is_array($p) ? ($p['status'] ?? '') : ($p->status ?? '');
+        $st = strtoupper((string) $status);
+
+        return str_contains($st, 'PAID')
+            || str_contains($st, 'COMPLETE')
+            || str_contains($st, 'SUCCESS');
     }
 }

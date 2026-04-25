@@ -52,6 +52,7 @@ class HotelController extends Controller
         }
 
         $data['is_favourite'] = $this->hotelIsFavouriteForCurrentUser($hotel);
+        $data['viewer_has_submitted_review'] = $this->viewerHasSubmittedHotelReview($hotel);
 
         return response()->json([
             'success' => true,
@@ -71,6 +72,21 @@ class HotelController extends Controller
         return HotelFavorite::query()
             ->where('user_id', (int) Auth::id())
             ->where('hotel_id', $hotelId)
+            ->exists();
+    }
+
+    private function viewerHasSubmittedHotelReview(int $hotelId): bool
+    {
+        if (! Auth::check()) {
+            return false;
+        }
+        if (! Schema::hasColumn((new HotelReview)->getTable(), 'user_id')) {
+            return false;
+        }
+
+        return HotelReview::query()
+            ->where('hotel_id', $hotelId)
+            ->where('user_id', (int) Auth::id())
             ->exists();
     }
 
@@ -234,19 +250,43 @@ class HotelController extends Controller
             $author = 'Guest';
         }
 
+        if (Schema::hasColumn((new HotelReview)->getTable(), 'user_id')) {
+            $already = HotelReview::query()
+                ->where('hotel_id', $hotel)
+                ->where('user_id', (int) $user->id)
+                ->exists();
+            if ($already) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('You have already submitted a review for this hotel.'),
+                ], 422);
+            }
+        }
+
         try {
-            $review = new HotelReview([
+            $attrs = [
                 'hotel_id' => $hotel,
                 'author' => $author,
                 'rating' => round((float) $request->input('rating'), 1),
                 'body' => (string) $request->input('text'),
                 'reviewed_at' => now(),
-            ]);
+            ];
+            if (Schema::hasColumn((new HotelReview)->getTable(), 'user_id')) {
+                $attrs['user_id'] = (int) $user->id;
+            }
+            $review = new HotelReview($attrs);
             $review->save();
             $this->refreshHotelReviewStats($hotelModel);
             $hotelModel->refresh();
         } catch (QueryException $e) {
             report($e);
+            $msg = strtolower($e->getMessage());
+            if (str_contains($msg, 'duplicate') || ($e->errorInfo[1] ?? null) === 1062) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('You have already submitted a review for this hotel.'),
+                ], 422);
+            }
 
             return response()->json([
                 'success' => false,
