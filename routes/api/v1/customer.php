@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\v1\ApiSupportController;
 use App\Http\Controllers\Api\v1\ApiWithdrawalController;
 use App\Http\Controllers\Api\v1\ApiWithdrawalMethodController;
 use App\Http\Controllers\Api\v1\AuthController;
+use App\Http\Controllers\Api\v1\CityController;
 use App\Http\Controllers\Api\v1\FaqController;
 use App\Http\Controllers\Api\v1\FrontApiController;
 use App\Http\Controllers\Api\v1\GatewayController;
@@ -30,6 +31,10 @@ Route::middleware(['JsonResponse'])->group(function () {
     Route::get('page/{slug}', [FrontApiController::class, 'page']);
     Route::get('vehicles', [FrontApiController::class, 'vehicles']);
     Route::post('download/link', [FrontApiController::class, 'downloadLink']);
+
+    // Cities list (used by merchant desk & dashboards)
+    Route::get('cities', [CityController::class, 'index']);
+    Route::get('meta/cities', [CityController::class, 'index']);
 
     Route::prefix('page')->group(function () {
         Route::get('{slug}', [PageController::class, 'show']);

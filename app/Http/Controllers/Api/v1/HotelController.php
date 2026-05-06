@@ -144,7 +144,10 @@ class HotelController extends Controller
     public function hold(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'room_type_id' => 'required|integer|exists:hotel_room_types,id',
+            'room_type_id' => 'required_without:lines|integer|exists:hotel_room_types,id',
+            'lines' => 'nullable|array|min:1|max:20',
+            'lines.*.room_type_id' => 'required_with:lines|integer|exists:hotel_room_types,id',
+            'lines.*.quantity' => 'required_with:lines|integer|min:1|max:20',
             'check_in' => 'required|date',
             'check_out' => 'required|date|after:check_in',
             'adults' => 'nullable|integer|min:1|max:20',
@@ -165,10 +168,19 @@ class HotelController extends Controller
             ], 422);
         }
 
+        $payload = $validator->validated();
+        $lines = $payload['lines'] ?? null;
+        if (! is_array($lines) || $lines === []) {
+            $payload['lines'] = [
+                ['room_type_id' => (int) $payload['room_type_id'], 'quantity' => 1],
+            ];
+        }
+        unset($payload['room_type_id']);
+
         try {
             $hold = $this->hotelBooking->createHold(
                 Auth::user(),
-                $validator->validated(),
+                $payload,
                 $idempotencyKey,
             );
 

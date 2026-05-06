@@ -1127,7 +1127,6 @@ final class HotelBookingService
             return $existing;
         }
 
-        $roomType = HotelRoomType::query()->findOrFail((int) $input['room_type_id']);
         $checkIn = $this->parseDate($input['check_in'] ?? null);
         $checkOut = $this->parseDate($input['check_out'] ?? null);
         $adults = max(1, (int) ($input['adults'] ?? 2));
@@ -1136,15 +1135,100 @@ final class HotelBookingService
             throw new \InvalidArgumentException('Invalid dates');
         }
 
-        $quote = $this->pricing->quoteStay($roomType, $checkIn, $checkOut, $adults, $children);
-        $ttl = max(5, (int) config('hotel.hold_ttl_minutes', 15));
+        $rawLines = $input['lines'] ?? null;
+        if (! is_array($rawLines) || $rawLines === []) {
+            throw new \InvalidArgumentException('Provide lines or room_type_id');
+        }
 
-        return DB::transaction(function () use ($user, $roomType, $checkIn, $checkOut, $adults, $children, $idempotencyKey, $quote, $ttl) {
-            $this->inventory->applyHold($roomType, $checkIn, $checkOut, 1);
+        $mergedQty = [];
+        foreach ($rawLines as $row) {
+            if (! is_array($row)) {
+                throw new \InvalidArgumentException('Invalid lines payload');
+            }
+            $rid = (int) ($row['room_type_id'] ?? 0);
+            $qty = max(1, min(20, (int) ($row['quantity'] ?? 1)));
+            if ($rid <= 0) {
+                throw new \InvalidArgumentException('Invalid room_type_id in lines');
+            }
+            $mergedQty[$rid] = ($mergedQty[$rid] ?? 0) + $qty;
+        }
+        foreach ($mergedQty as $rid => $qty) {
+            $mergedQty[$rid] = min(20, $qty);
+        }
+        if (count($mergedQty) > 20) {
+            throw new \InvalidArgumentException('Too many distinct room types');
+        }
+
+        $hotelId = null;
+        $resolved = [];
+        foreach ($mergedQty as $roomTypeId => $quantity) {
+            $rt = HotelRoomType::query()->findOrFail($roomTypeId);
+            $hid = (int) $rt->hotel_id;
+            if ($hotelId === null) {
+                $hotelId = $hid;
+            } elseif ($hid !== $hotelId) {
+                throw new \InvalidArgumentException('All rooms must belong to the same hotel');
+            }
+            $resolved[] = ['room_type' => $rt, 'quantity' => $quantity];
+        }
+
+        usort($resolved, fn (array $a, array $b): int => $a['room_type']->id <=> $b['room_type']->id);
+
+        $lineOutputs = [];
+        $grandTotal = 0.0;
+        $sumVat = 0.0;
+        $sumCharge = 0.0;
+        $sumSub = 0.0;
+        $currency = 'BDT';
+        $nights = 0;
+        foreach ($resolved as $entry) {
+            /** @var HotelRoomType $rt */
+            $rt = $entry['room_type'];
+            $qty = $entry['quantity'];
+            $q = $this->pricing->quoteStay($rt, $checkIn, $checkOut, $adults, $children);
+            $unitTotal = (float) ($q['total'] ?? 0);
+            $lineTotal = round($unitTotal * $qty, 2);
+            $grandTotal += $lineTotal;
+            $sumVat += round((float) ($q['vat_amount'] ?? 0) * $qty, 2);
+            $sumCharge += round((float) ($q['charge_amount'] ?? 0) * $qty, 2);
+            $sumSub += round((float) ($q['room_subtotal'] ?? 0) * $qty, 2);
+            $currency = (string) ($q['currency'] ?? $currency);
+            $nights = max($nights, (int) ($q['nights'] ?? 0));
+            $lineOutputs[] = [
+                'room_type_id' => $rt->id,
+                'quantity' => $qty,
+                'code' => $rt->code,
+                'title' => $rt->title,
+                'quote' => $q,
+                'line_total' => $lineTotal,
+            ];
+        }
+
+        $aggregateQuote = [
+            'multi_room' => count($lineOutputs) > 1 || ($lineOutputs[0]['quantity'] ?? 1) > 1,
+            'lines' => $lineOutputs,
+            'total' => round($grandTotal, 2),
+            'room_subtotal' => round($sumSub, 2),
+            'vat_amount' => round($sumVat, 2),
+            'charge_amount' => round($sumCharge, 2),
+            'currency' => $currency,
+            'nights' => $nights,
+            'adults' => $adults,
+            'children' => $children,
+        ];
+
+        $ttl = max(5, (int) config('hotel.hold_ttl_minutes', 15));
+        /** @var HotelRoomType $primaryRoomType */
+        $primaryRoomType = $resolved[0]['room_type'];
+
+        return DB::transaction(function () use ($user, $resolved, $checkIn, $checkOut, $adults, $children, $idempotencyKey, $aggregateQuote, $ttl, $primaryRoomType) {
+            foreach ($resolved as $entry) {
+                $this->inventory->applyHold($entry['room_type'], $checkIn, $checkOut, $entry['quantity']);
+            }
 
             return HotelHold::create([
                 'user_id' => $user->id,
-                'hotel_room_type_id' => $roomType->id,
+                'hotel_room_type_id' => $primaryRoomType->id,
                 'check_in' => $checkIn->toDateString(),
                 'check_out' => $checkOut->toDateString(),
                 'adults' => $adults,
@@ -1152,10 +1236,87 @@ final class HotelBookingService
                 'idempotency_key' => $idempotencyKey,
                 'expires_at' => now()->addMinutes($ttl),
                 'status' => HotelHold::STATUS_PENDING,
-                'total_amount' => $quote['total'],
-                'quote_json' => $quote,
+                'total_amount' => $aggregateQuote['total'],
+                'quote_json' => $aggregateQuote,
             ]);
         });
+    }
+
+    /**
+     * Release inventory held for a quote shape (multi-line or legacy single-room quote).
+     */
+    public function releaseInventoryForStoredQuote(
+        ?array $quoteJson,
+        Carbon $checkIn,
+        Carbon $checkOut,
+        ?HotelRoomType $legacyRoomType,
+    ): void {
+        $lines = $this->inventoryLinesFromQuoteJson($quoteJson);
+        if ($lines !== []) {
+            foreach ($lines as $ln) {
+                $rt = HotelRoomType::query()->find($ln['room_type_id']);
+                if ($rt) {
+                    $this->inventory->releaseHold($rt, $checkIn, $checkOut, $ln['quantity']);
+                }
+            }
+
+            return;
+        }
+        if ($legacyRoomType !== null) {
+            $this->inventory->releaseHold($legacyRoomType, $checkIn, $checkOut, 1);
+        }
+    }
+
+    /**
+     * Finalize inventory after payment for a quote shape (multi-line or legacy).
+     */
+    public function finalizeInventoryForStoredQuote(
+        ?array $quoteJson,
+        Carbon $checkIn,
+        Carbon $checkOut,
+        ?HotelRoomType $legacyRoomType,
+    ): void {
+        $lines = $this->inventoryLinesFromQuoteJson($quoteJson);
+        if ($lines !== []) {
+            foreach ($lines as $ln) {
+                $rt = HotelRoomType::query()->find($ln['room_type_id']);
+                if ($rt) {
+                    $this->inventory->finalizeFromHold($rt, $checkIn, $checkOut, $ln['quantity']);
+                }
+            }
+
+            return;
+        }
+        if ($legacyRoomType !== null) {
+            $this->inventory->finalizeFromHold($legacyRoomType, $checkIn, $checkOut, 1);
+        }
+    }
+
+    /**
+     * @return list<array{room_type_id: int, quantity: int}>
+     */
+    private function inventoryLinesFromQuoteJson(?array $quoteJson): array
+    {
+        if (! is_array($quoteJson)) {
+            return [];
+        }
+        $lines = $quoteJson['lines'] ?? null;
+        if (! is_array($lines)) {
+            return [];
+        }
+        $out = [];
+        foreach ($lines as $line) {
+            if (! is_array($line)) {
+                continue;
+            }
+            $rid = (int) ($line['room_type_id'] ?? 0);
+            $qty = max(1, (int) ($line['quantity'] ?? 1));
+            if ($rid > 0) {
+                $out[] = ['room_type_id' => $rid, 'quantity' => $qty];
+            }
+        }
+
+        return $out;
     }
 
     public function releaseHold(User $user, int $holdId): bool
@@ -1166,10 +1327,14 @@ final class HotelBookingService
         }
 
         return DB::transaction(function () use ($hold) {
-            $roomType = $hold->roomType;
             $checkIn = Carbon::parse($hold->check_in);
             $checkOut = Carbon::parse($hold->check_out);
-            $this->inventory->releaseHold($roomType, $checkIn, $checkOut, 1);
+            $this->releaseInventoryForStoredQuote(
+                is_array($hold->quote_json) ? $hold->quote_json : null,
+                $checkIn,
+                $checkOut,
+                $hold->roomType,
+            );
             $hold->update(['status' => HotelHold::STATUS_CANCELLED]);
 
             return true;
@@ -1287,10 +1452,14 @@ final class HotelBookingService
         foreach ($stale as $hold) {
             try {
                 DB::transaction(function () use ($hold, &$n) {
-                    $roomType = $hold->roomType;
                     $checkIn = Carbon::parse($hold->check_in);
                     $checkOut = Carbon::parse($hold->check_out);
-                    $this->inventory->releaseHold($roomType, $checkIn, $checkOut, 1);
+                    $this->releaseInventoryForStoredQuote(
+                        is_array($hold->quote_json) ? $hold->quote_json : null,
+                        $checkIn,
+                        $checkOut,
+                        $hold->roomType,
+                    );
                     $hold->update(['status' => HotelHold::STATUS_EXPIRED]);
                     $n++;
                 });
@@ -1313,10 +1482,14 @@ final class HotelBookingService
         foreach ($rows as $res) {
             try {
                 DB::transaction(function () use ($res, &$n) {
-                    $roomType = $res->roomType;
                     $checkIn = Carbon::parse($res->check_in);
                     $checkOut = Carbon::parse($res->check_out);
-                    $this->inventory->releaseHold($roomType, $checkIn, $checkOut, 1);
+                    $this->releaseInventoryForStoredQuote(
+                        is_array($res->quote_json) ? $res->quote_json : null,
+                        $checkIn,
+                        $checkOut,
+                        $res->roomType,
+                    );
                     $res->update(['status' => HotelReservation::STATUS_FAILED]);
                     if ($res->booking) {
                         $res->booking->update(['status' => AppConst::BOOKING_FAILED]);

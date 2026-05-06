@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Constants\AppConst;
-use App\Services\Hotel\HotelInventoryService;
+use App\Services\Hotel\HotelBookingService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -64,11 +64,15 @@ class Payment extends Model
             ->first();
         if ($hotelRes) {
             DB::transaction(function () use ($hotelRes) {
-                $inv = app(HotelInventoryService::class);
-                $roomType = $hotelRes->roomType;
+                $hotelBooking = app(HotelBookingService::class);
                 $checkIn = Carbon::parse($hotelRes->check_in);
                 $checkOut = Carbon::parse($hotelRes->check_out);
-                $inv->finalizeFromHold($roomType, $checkIn, $checkOut, 1);
+                $hotelBooking->finalizeInventoryForStoredQuote(
+                    is_array($hotelRes->quote_json) ? $hotelRes->quote_json : null,
+                    $checkIn,
+                    $checkOut,
+                    $hotelRes->roomType,
+                );
                 $hotelRes->update(['status' => HotelReservation::STATUS_CONFIRMED]);
                 if ($this->booking) {
                     $this->booking->update(['status' => AppConst::BOOKING_COMPLETE]);
@@ -104,11 +108,15 @@ class Payment extends Model
 
         if ($hotelRes) {
             DB::transaction(function () use ($hotelRes, $booking) {
-                $inv = app(HotelInventoryService::class);
-                $roomType = $hotelRes->roomType;
+                $hotelBooking = app(HotelBookingService::class);
                 $checkIn = Carbon::parse($hotelRes->check_in);
                 $checkOut = Carbon::parse($hotelRes->check_out);
-                $inv->releaseHold($roomType, $checkIn, $checkOut, 1);
+                $hotelBooking->releaseInventoryForStoredQuote(
+                    is_array($hotelRes->quote_json) ? $hotelRes->quote_json : null,
+                    $checkIn,
+                    $checkOut,
+                    $hotelRes->roomType,
+                );
                 $hotelRes->update(['status' => HotelReservation::STATUS_FAILED]);
                 if ($booking->status === AppConst::BOOKING_PENDING) {
                     $booking->update(['status' => AppConst::BOOKING_FAILED]);
