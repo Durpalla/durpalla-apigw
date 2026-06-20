@@ -81,6 +81,21 @@ jobs:
     if: github.ref == 'refs/heads/master'
 
     steps:
+      - name: Validate deploy secrets
+        run: |
+          set -euo pipefail
+          missing=0
+          [[ -n "${{ secrets.DEPLOY_HOST }}" ]] || { echo "::error::Missing secret DEPLOY_HOST"; missing=1; }
+          [[ -n "${{ secrets.DEPLOY_USER }}" ]] || { echo "::error::Missing secret DEPLOY_USER"; missing=1; }
+          [[ -n "${{ secrets.DEPLOY_SSH_KEY }}" ]] || { echo "::error::Missing secret DEPLOY_SSH_KEY"; missing=1; }
+          [[ -n "${{ secrets.GHCR_PULL_TOKEN }}" ]] || { echo "::error::Missing secret GHCR_PULL_TOKEN"; missing=1; }
+          if [[ "$missing" -ne 0 ]]; then
+            echo ""
+            echo "Add secrets under Settings → Secrets and variables → Actions."
+            echo "GHCR_PULL_TOKEN: GitHub PAT with read:packages (reuse billman/larabill token)."
+            exit 1
+          fi
+
       - name: Pull image and restart app container
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
@@ -105,6 +120,7 @@ jobs:
 
           PORT="${DEPLOY_PORT:-22}"
           PATH_ON_SERVER="${DEPLOY_PATH:-/opt/durpalla-apigw}"
+          GHCR_TOKEN_B64="$(printf '%s' "$GHCR_TOKEN" | base64 -w0 2>/dev/null || printf '%s' "$GHCR_TOKEN" | base64)"
 
           ssh -i "$KEY_FILE" \
             -o StrictHostKeyChecking=accept-new \
@@ -112,10 +128,21 @@ jobs:
             -o IdentitiesOnly=yes \
             -p "$PORT" \
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "export DEPLOY_PATH='${PATH_ON_SERVER}' IMAGE='${IMAGE}' GHCR_TOKEN='${GHCR_TOKEN}' GHCR_USER='${GHCR_USER}'; bash -s" <<'EOF'
+            "export DEPLOY_PATH='${PATH_ON_SERVER}' IMAGE='${IMAGE}' GHCR_TOKEN_B64='${GHCR_TOKEN_B64}' GHCR_USER='${GHCR_USER}'; bash -s" <<'EOF'
           set -euo pipefail
           DEPLOY_PATH="${DEPLOY_PATH:-/opt/durpalla-apigw}"
           APIGW_FPM_PORT="${APIGW_FPM_PORT:-9005}"
+
+          if [[ -z "${GHCR_TOKEN_B64:-}" ]]; then
+            echo "ERROR: GHCR token is empty on server."
+            exit 1
+          fi
+
+          GHCR_TOKEN="$(printf '%s' "$GHCR_TOKEN_B64" | base64 -d 2>/dev/null || printf '%s' "$GHCR_TOKEN_B64" | base64 -D)"
+          if [[ -z "$GHCR_TOKEN" ]]; then
+            echo "ERROR: Failed to decode GHCR token."
+            exit 1
+          fi
 
           if [[ ! -d "$DEPLOY_PATH" ]]; then
             echo "ERROR: $DEPLOY_PATH does not exist."
@@ -147,7 +174,11 @@ jobs:
           fi
           sed -i '/^DB_SOCKET=/d' "$DEPLOY_PATH/.env"
 
-          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+          if ! printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin; then
+            echo "ERROR: docker login ghcr.io failed."
+            echo "Check GHCR_PULL_TOKEN secret (PAT with read:packages) and package visibility for ${IMAGE%%:*}."
+            exit 1
+          fi
 
           docker volume inspect apigw-storage >/dev/null 2>&1 || docker volume create apigw-storage
           docker volume inspect apigw-bootstrap-cache >/dev/null 2>&1 || docker volume create apigw-bootstrap-cache
