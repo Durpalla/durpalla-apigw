@@ -23,6 +23,9 @@ RUN apk add --no-cache --virtual .build-deps \
         oniguruma-dev \
     && apk add --no-cache \
         curl \
+        libxml2 \
+        libzip \
+        oniguruma \
         procps \
         supervisor \
         tesseract-ocr \
