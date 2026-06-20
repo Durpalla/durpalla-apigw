@@ -25,6 +25,7 @@ RUN apk add --no-cache --virtual .build-deps \
         curl \
         libxml2 \
         libzip \
+        nginx \
         oniguruma \
         procps \
         supervisor \
@@ -41,7 +42,8 @@ RUN apk add --no-cache --virtual .build-deps \
     && pecl install redis mongodb-1.21.0 \
     && docker-php-ext-enable redis mongodb \
     && apk del .build-deps \
-    && rm -rf /tmp/pear /var/cache/apk/*
+    && rm -rf /tmp/pear /var/cache/apk/* \
+    && rm -f /etc/nginx/http.d/default.conf
 
 WORKDIR /var/www/html
 
@@ -59,11 +61,13 @@ RUN APP_KEY=base64:ZHVtcHlrZXlmb3Jkb2NrZXJidWlsZG9ubHl5ZWFoCg= \
 COPY docker/php/php.ini /usr/local/etc/php/conf.d/99-apigw.ini
 COPY docker/php/entrypoint.sh /usr/local/bin/entrypoint
 COPY docker/php/zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
+COPY docker/nginx/app.conf /etc/nginx/http.d/default.conf
 COPY docker/supervisor/supervisord.conf /etc/supervisord.conf
+COPY docker/supervisor/supervisord-web.conf /etc/supervisord-web.conf
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && chmod +x /usr/local/bin/entrypoint
 
-EXPOSE 9000
+EXPOSE 80
 
 ENTRYPOINT ["entrypoint"]
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]

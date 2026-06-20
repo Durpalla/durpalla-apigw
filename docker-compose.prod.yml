@@ -1,26 +1,58 @@
-# Production on shared server (same host as billman / larabill).
-# Host nginx -> 127.0.0.1:9005 (see docker/nginx/host.conf.example)
-# MySQL Router, MongoDB, Redis on host via host.docker.internal
+# Production: 4 HTTP containers for host nginx proxy_pass (ports 8001–8004).
+# Host nginx upstream -> 127.0.0.1:8001..8004
+# Queue + scheduler run only on apigw-1 (APIGW_PRIMARY=1).
+# MySQL, MongoDB, Redis on host via host.docker.internal.
 #
-# Run: docker compose -f docker-compose.prod.yml up -d --build
+# Build & run:
+#   cp .env.docker.example .env
+#   docker compose -f docker-compose.prod.yml up -d --build
+
+x-apigw-common: &apigw-common
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: durpalla-apigw-app:local
+  restart: unless-stopped
+  env_file:
+    - ${APIGW_ENV_FILE:-.env}
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  volumes:
+    - apigw-storage:/var/www/html/storage
+    - apigw-bootstrap-cache:/var/www/html/bootstrap/cache
+  healthcheck:
+    test: ["CMD-SHELL", "curl -fsS http://127.0.0.1/up || exit 1"]
+    interval: 30s
+    timeout: 5s
+    retries: 3
+    start_period: 40s
 
 services:
-  durpalla-apigw-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: durpalla-apigw-app:local
-    container_name: durpalla-apigw-app
-    restart: unless-stopped
+  apigw-1:
+    <<: *apigw-common
+    container_name: durpalla-apigw-1
+    environment:
+      APIGW_PRIMARY: "1"
     ports:
-      - "${APIGW_FPM_PORT:-9005}:9000"
-    env_file:
-      - ${APIGW_ENV_FILE:-.env}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    volumes:
-      - apigw-storage:/var/www/html/storage
-      - apigw-bootstrap-cache:/var/www/html/bootstrap/cache
+      - "${APIGW_PORT_1:-8001}:80"
+
+  apigw-2:
+    <<: *apigw-common
+    container_name: durpalla-apigw-2
+    ports:
+      - "${APIGW_PORT_2:-8002}:80"
+
+  apigw-3:
+    <<: *apigw-common
+    container_name: durpalla-apigw-3
+    ports:
+      - "${APIGW_PORT_3:-8003}:80"
+
+  apigw-4:
+    <<: *apigw-common
+    container_name: durpalla-apigw-4
+    ports:
+      - "${APIGW_PORT_4:-8004}:80"
 
 volumes:
   apigw-storage:

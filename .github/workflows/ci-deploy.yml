@@ -131,7 +131,6 @@ jobs:
             "export DEPLOY_PATH='${PATH_ON_SERVER}' IMAGE='${IMAGE}' GHCR_TOKEN_B64='${GHCR_TOKEN_B64}' GHCR_USER='${GHCR_USER}'; bash -s" <<'EOF'
           set -euo pipefail
           DEPLOY_PATH="${DEPLOY_PATH:-/opt/durpalla-apigw}"
-          APIGW_FPM_PORT="${APIGW_FPM_PORT:-9005}"
 
           if [[ -z "${GHCR_TOKEN_B64:-}" ]]; then
             echo "ERROR: GHCR token is empty on server."
@@ -186,31 +185,32 @@ jobs:
           docker pull "$IMAGE"
           docker tag "$IMAGE" durpalla-apigw-app:local
 
-          for c in apigw-public-tmp durpalla-apigw-app; do
+          for c in durpalla-apigw-1 durpalla-apigw-2 durpalla-apigw-3 durpalla-apigw-4; do
             docker rm -f "$c" >/dev/null 2>&1 || true
           done
 
-          docker run -d --name durpalla-apigw-app --restart unless-stopped \
-            -p "${APIGW_FPM_PORT}:9000" \
-            --add-host=host.docker.internal:host-gateway \
-            --env-file "$DEPLOY_PATH/.env" \
-            -v apigw-storage:/var/www/html/storage \
-            -v apigw-bootstrap-cache:/var/www/html/bootstrap/cache \
+          common_run=(
+            -d --restart unless-stopped
+            --add-host=host.docker.internal:host-gateway
+            --env-file "$DEPLOY_PATH/.env"
+            -v apigw-storage:/var/www/html/storage
+            -v apigw-bootstrap-cache:/var/www/html/bootstrap/cache
             durpalla-apigw-app:local
+          )
 
-          docker create --name apigw-public-tmp "$IMAGE"
-          rm -rf "$DEPLOY_PATH/public"
-          docker cp apigw-public-tmp:/var/www/html/public "$DEPLOY_PATH/public"
-          docker rm -f apigw-public-tmp
+          docker run --name durpalla-apigw-1 -e APIGW_PRIMARY=1 -p 8001:80 "${common_run[@]}"
+          docker run --name durpalla-apigw-2 -p 8002:80 "${common_run[@]}"
+          docker run --name durpalla-apigw-3 -p 8003:80 "${common_run[@]}"
+          docker run --name durpalla-apigw-4 -p 8004:80 "${common_run[@]}"
 
-          docker exec durpalla-apigw-app php artisan config:clear
-          docker exec durpalla-apigw-app php artisan route:clear
-          docker exec durpalla-apigw-app php artisan view:clear
-          docker exec durpalla-apigw-app php artisan config:cache
-          docker exec durpalla-apigw-app php artisan route:cache
-          docker exec durpalla-apigw-app php artisan view:cache
-          docker exec durpalla-apigw-app php artisan cache:clear || true
+          docker exec durpalla-apigw-1 php artisan config:clear
+          docker exec durpalla-apigw-1 php artisan route:clear
+          docker exec durpalla-apigw-1 php artisan view:clear
+          docker exec durpalla-apigw-1 php artisan config:cache
+          docker exec durpalla-apigw-1 php artisan route:cache
+          docker exec durpalla-apigw-1 php artisan view:cache
+          docker exec durpalla-apigw-1 php artisan cache:clear || true
 
           docker image prune -f
-          echo "Deployed ${IMAGE} on port ${APIGW_FPM_PORT}"
+          echo "Deployed ${IMAGE} on ports 8001-8004"
           EOF
