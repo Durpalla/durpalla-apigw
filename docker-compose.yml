@@ -1,0 +1,23 @@
+# Production — same as docker-compose.prod.yml (host nginx + FPM on port 9005).
+
+services:
+  durpalla-apigw-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: durpalla-apigw-app:local
+    container_name: durpalla-apigw-app
+    restart: unless-stopped
+    ports:
+      - "${APIGW_FPM_PORT:-9005}:9000"
+    env_file:
+      - ${APIGW_ENV_FILE:-.env}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - apigw-storage:/var/www/html/storage
+      - apigw-bootstrap-cache:/var/www/html/bootstrap/cache
+
+volumes:
+  apigw-storage:
+  apigw-bootstrap-cache:

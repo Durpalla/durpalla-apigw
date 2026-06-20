@@ -1,0 +1,38 @@
+# Host nginx — PHP runs in durpalla-apigw-app; static files from /opt/durpalla-apigw/public
+# Container app path: /var/www/html (not on host disk)
+#
+# Port map on shared server:
+#   billman           -> 127.0.0.1:9001
+#   larabill          -> 127.0.0.1:9002
+#   durpalla          -> 127.0.0.1:9003
+#   durpalla-merchant -> 127.0.0.1:9004
+#   durpalla-apigw    -> 127.0.0.1:9005
+
+server {
+    listen 80;
+    server_name apigw.durpalla.com;
+
+    root /opt/durpalla-apigw/public;
+    index index.php index.html;
+
+    client_max_body_size 32M;
+
+    access_log /var/log/nginx/apigw.durpalla.com.access.log;
+    error_log /var/log/nginx/apigw.durpalla.com.error.log;
+
+    location / {
+        try_files $uri $uri/ @laravel;
+    }
+
+    location @laravel {
+        fastcgi_pass 127.0.0.1:9005;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME /var/www/html/public/index.php;
+        fastcgi_param DOCUMENT_ROOT /var/www/html/public;
+        fastcgi_read_timeout 300;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}

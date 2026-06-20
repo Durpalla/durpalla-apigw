@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Wrapper for docker compose / docker-compose with a helpful error when missing.
+set -euo pipefail
+
+if docker compose version >/dev/null 2>&1; then
+  exec docker compose "$@"
+fi
+
+if command -v docker-compose >/dev/null 2>&1; then
+  exec docker-compose "$@"
+fi
+
+cat >&2 <<'EOF'
+Docker Compose is not installed.
+
+On Ubuntu (docker.io from apt), install the standalone package:
+
+  sudo apt update
+  sudo apt install -y docker-compose
+
+Or add Docker's official repo for the plugin:
+
+  sudo apt install -y docker-compose-plugin   # requires Docker CE apt repo
+
+Then re-run your command (./bin/compose ...).
+EOF
+exit 1

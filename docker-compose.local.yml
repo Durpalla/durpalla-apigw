@@ -1,0 +1,30 @@
+# Local single-container test (same image as production).
+# Host nginx is not included — map FPM port only.
+#
+# Usage:
+#   cp .env.docker.example .env
+#   docker compose -f docker-compose.local.yml up --build
+
+services:
+  durpalla-apigw-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: durpalla-apigw-local
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      DB_HOST: ${DB_HOST:-host.docker.internal}
+      DB_PORT: ${DB_PORT:-6446}
+      REDIS_HOST: ${REDIS_HOST:-host.docker.internal}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${APIGW_FPM_PORT:-9005}:9000"
+    volumes:
+      - ./storage:/var/www/html/storage
+      - ./bootstrap/cache:/var/www/html/bootstrap/cache

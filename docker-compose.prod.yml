@@ -1,0 +1,27 @@
+# Production on shared server (same host as billman / larabill).
+# Host nginx -> 127.0.0.1:9005 (see docker/nginx/host.conf.example)
+# MySQL Router, MongoDB, Redis on host via host.docker.internal
+#
+# Run: docker compose -f docker-compose.prod.yml up -d --build
+
+services:
+  durpalla-apigw-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: durpalla-apigw-app:local
+    container_name: durpalla-apigw-app
+    restart: unless-stopped
+    ports:
+      - "${APIGW_FPM_PORT:-9005}:9000"
+    env_file:
+      - ${APIGW_ENV_FILE:-.env}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - apigw-storage:/var/www/html/storage
+      - apigw-bootstrap-cache:/var/www/html/bootstrap/cache
+
+volumes:
+  apigw-storage:
+  apigw-bootstrap-cache:

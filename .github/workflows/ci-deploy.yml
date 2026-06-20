@@ -1,0 +1,185 @@
+name: CI — Build & Deploy
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: jewel-rana/durpalla-apigw
+
+concurrency:
+  group: deploy-apigw-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-push:
+    name: Build Docker Image & Push to GHCR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      image_tag: ${{ steps.meta.outputs.version }}
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=dev-{{date 'YYYYMMDD'}}-{{sha}},enable=true
+            type=raw,value=dev-latest,enable=true
+          labels: |
+            org.opencontainers.image.title=${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push app image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build summary
+        run: |
+          echo "### Image pushed to GHCR" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Key | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Digest** | ${{ steps.build.outputs.digest }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Tag** | \`${{ steps.meta.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+
+  deploy:
+    name: Deploy to Server
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Pull image and restart app container
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-latest
+          GHCR_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+          GHCR_USER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          KEY_FILE=~/.ssh/deploy_key
+          echo "$DEPLOY_SSH_KEY" > "$KEY_FILE"
+          chmod 600 "$KEY_FILE"
+
+          if ! ssh-keygen -y -f "$KEY_FILE" > /dev/null 2>&1; then
+            echo "ERROR: DEPLOY_SSH_KEY is invalid."
+            exit 1
+          fi
+
+          PORT="${DEPLOY_PORT:-22}"
+          PATH_ON_SERVER="${DEPLOY_PATH:-/opt/durpalla-apigw}"
+
+          ssh -i "$KEY_FILE" \
+            -o StrictHostKeyChecking=accept-new \
+            -o UserKnownHostsFile=~/.ssh/known_hosts \
+            -o IdentitiesOnly=yes \
+            -p "$PORT" \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "export DEPLOY_PATH='${PATH_ON_SERVER}' IMAGE='${IMAGE}' GHCR_TOKEN='${GHCR_TOKEN}' GHCR_USER='${GHCR_USER}'; bash -s" <<'EOF'
+          set -euo pipefail
+          DEPLOY_PATH="${DEPLOY_PATH:-/opt/durpalla-apigw}"
+          APIGW_FPM_PORT="${APIGW_FPM_PORT:-9005}"
+
+          if [[ ! -d "$DEPLOY_PATH" ]]; then
+            echo "ERROR: $DEPLOY_PATH does not exist."
+            echo "Bootstrap once: sudo mkdir -p $DEPLOY_PATH && sudo chown -R \$(whoami):\$(whoami) $DEPLOY_PATH"
+            exit 1
+          fi
+
+          if [[ ! -w "$DEPLOY_PATH" ]]; then
+            echo "ERROR: $DEPLOY_PATH is not writable by $(whoami)"
+            exit 1
+          fi
+
+          cd "$DEPLOY_PATH"
+
+          if [[ ! -f .env ]]; then
+            echo "Missing $DEPLOY_PATH/.env — create it before first deploy"
+            exit 1
+          fi
+
+          if grep -q 'host\.docker\.internal' "$DEPLOY_PATH/.env"; then
+            :
+          else
+            sed -i 's/^DB_HOST=localhost$/DB_HOST=host.docker.internal/' "$DEPLOY_PATH/.env"
+            sed -i 's/^DB_HOST=127.0.0.1$/DB_HOST=host.docker.internal/' "$DEPLOY_PATH/.env"
+            sed -i 's/^REDIS_HOST=localhost$/REDIS_HOST=host.docker.internal/' "$DEPLOY_PATH/.env"
+            sed -i 's/^REDIS_HOST=127.0.0.1$/REDIS_HOST=host.docker.internal/' "$DEPLOY_PATH/.env"
+            sed -i 's/^MONGODB_HOST=localhost$/MONGODB_HOST=host.docker.internal/' "$DEPLOY_PATH/.env"
+            sed -i 's/^MONGODB_HOST=127.0.0.1$/MONGODB_HOST=host.docker.internal/' "$DEPLOY_PATH/.env"
+          fi
+          sed -i '/^DB_SOCKET=/d' "$DEPLOY_PATH/.env"
+
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+
+          docker volume inspect apigw-storage >/dev/null 2>&1 || docker volume create apigw-storage
+          docker volume inspect apigw-bootstrap-cache >/dev/null 2>&1 || docker volume create apigw-bootstrap-cache
+
+          docker pull "$IMAGE"
+          docker tag "$IMAGE" durpalla-apigw-app:local
+
+          for c in apigw-public-tmp durpalla-apigw-app; do
+            docker rm -f "$c" >/dev/null 2>&1 || true
+          done
+
+          docker run -d --name durpalla-apigw-app --restart unless-stopped \
+            -p "${APIGW_FPM_PORT}:9000" \
+            --add-host=host.docker.internal:host-gateway \
+            --env-file "$DEPLOY_PATH/.env" \
+            -v apigw-storage:/var/www/html/storage \
+            -v apigw-bootstrap-cache:/var/www/html/bootstrap/cache \
+            durpalla-apigw-app:local
+
+          docker create --name apigw-public-tmp "$IMAGE"
+          rm -rf "$DEPLOY_PATH/public"
+          docker cp apigw-public-tmp:/var/www/html/public "$DEPLOY_PATH/public"
+          docker rm -f apigw-public-tmp
+
+          docker exec durpalla-apigw-app php artisan config:clear
+          docker exec durpalla-apigw-app php artisan route:clear
+          docker exec durpalla-apigw-app php artisan view:clear
+          docker exec durpalla-apigw-app php artisan config:cache
+          docker exec durpalla-apigw-app php artisan route:cache
+          docker exec durpalla-apigw-app php artisan view:cache
+          docker exec durpalla-apigw-app php artisan cache:clear || true
+
+          docker image prune -f
+          echo "Deployed ${IMAGE} on port ${APIGW_FPM_PORT}"
+          EOF

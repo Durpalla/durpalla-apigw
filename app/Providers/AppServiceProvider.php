@@ -6,7 +6,6 @@ use App\Models\VehicleSchedule;
 use App\Observers\VehicleScheduleObserver;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
-use Laravel\Octane\RoadRunner\ServerProcessInspector as OctaneRoadRunnerServerProcessInspector;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,13 +14,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        if (class_exists(OctaneRoadRunnerServerProcessInspector::class)) {
-            $this->app->bind(
-                OctaneRoadRunnerServerProcessInspector::class,
-                \App\Octane\RoadRunner\ServerProcessInspector::class
-            );
-        }
-
         $this->registerDurpallaMigrationsForTesting();
     }
 
