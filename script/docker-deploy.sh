@@ -2,6 +2,7 @@
 # Deploy 4 HTTP containers for host nginx proxy_pass (8001–8004).
 set -euo pipefail
 
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DEPLOY_PATH="${DEPLOY_PATH:-/opt/durpalla-apigw}"
 IMAGE="${IMAGE:-durpalla-apigw-app:local}"
 
@@ -21,17 +22,12 @@ if [[ ! -f .env ]]; then
   exit 1
 fi
 
-if grep -q 'host\.docker\.internal' "$DEPLOY_PATH/.env"; then
-  :
-else
-  sed -i 's/^DB_HOST=localhost$/DB_HOST=host.docker.internal/' "$DEPLOY_PATH/.env"
-  sed -i 's/^DB_HOST=127.0.0.1$/DB_HOST=host.docker.internal/' "$DEPLOY_PATH/.env"
-  sed -i 's/^REDIS_HOST=localhost$/REDIS_HOST=host.docker.internal/' "$DEPLOY_PATH/.env"
-  sed -i 's/^REDIS_HOST=127.0.0.1$/REDIS_HOST=host.docker.internal/' "$DEPLOY_PATH/.env"
-  sed -i 's/^MONGODB_HOST=localhost$/MONGODB_HOST=host.docker.internal/' "$DEPLOY_PATH/.env"
-  sed -i 's/^MONGODB_HOST=127.0.0.1$/MONGODB_HOST=host.docker.internal/' "$DEPLOY_PATH/.env"
+bash "$ROOT/script/normalize-docker-env.sh" "$DEPLOY_PATH"
+
+docker_redis_env=()
+if ! grep -q '^REDIS_SENTINEL_ENABLED=true' "$DEPLOY_PATH/.env"; then
+  docker_redis_env+=( -e REDIS_HOST=host.docker.internal )
 fi
-sed -i '/^DB_SOCKET=/d' "$DEPLOY_PATH/.env"
 
 docker volume inspect apigw-storage >/dev/null 2>&1 || docker volume create apigw-storage
 docker volume inspect apigw-bootstrap-cache >/dev/null 2>&1 || docker volume create apigw-bootstrap-cache
@@ -51,6 +47,7 @@ common_run=(
   -d --restart unless-stopped
   --add-host=host.docker.internal:host-gateway
   --env-file "$DEPLOY_PATH/.env"
+  "${docker_redis_env[@]}"
   -v apigw-storage:/var/www/html/storage
   -v apigw-bootstrap-cache:/var/www/html/bootstrap/cache
   durpalla-apigw-app:local

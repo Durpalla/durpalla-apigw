@@ -138,14 +138,31 @@ jobs:
 
           echo "Deploying to ${DEPLOY_USER}@${DEPLOY_HOST}:${PORT} (${PATH_ON_SERVER})"
 
+          REMOTE_DIR="/tmp/durpalla-apigw-deploy-$$"
           ssh -i "$KEY_FILE" \
             -o StrictHostKeyChecking=accept-new \
             -o UserKnownHostsFile=~/.ssh/known_hosts \
             -o IdentitiesOnly=yes \
             -p "$PORT" \
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "export DEPLOY_PATH='${PATH_ON_SERVER}' IMAGE='${IMAGE}' GHCR_TOKEN_B64='${GHCR_TOKEN_B64}' GHCR_USER='${GHCR_USER}'; bash -s" \
-            < script/ci-deploy-remote.sh
+            "mkdir -p '${REMOTE_DIR}'"
+
+          scp -i "$KEY_FILE" \
+            -o StrictHostKeyChecking=accept-new \
+            -o UserKnownHostsFile=~/.ssh/known_hosts \
+            -o IdentitiesOnly=yes \
+            -P "$PORT" \
+            script/ci-deploy-remote.sh \
+            script/normalize-docker-env.sh \
+            "${DEPLOY_USER}@${DEPLOY_HOST}:${REMOTE_DIR}/"
+
+          ssh -i "$KEY_FILE" \
+            -o StrictHostKeyChecking=accept-new \
+            -o UserKnownHostsFile=~/.ssh/known_hosts \
+            -o IdentitiesOnly=yes \
+            -p "$PORT" \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "export DEPLOY_PATH='${PATH_ON_SERVER}' IMAGE='${IMAGE}' GHCR_TOKEN_B64='${GHCR_TOKEN_B64}' GHCR_USER='${GHCR_USER}' DEPLOY_SCRIPT_DIR='${REMOTE_DIR}'; bash '${REMOTE_DIR}/ci-deploy-remote.sh'"
 
       - name: Deploy summary
         run: |
