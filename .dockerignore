@@ -3,7 +3,6 @@
 .cursor
 .env
 .env.*
-!.env.docker.example
 node_modules
 vendor
 storage/logs/*

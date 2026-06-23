@@ -43,7 +43,7 @@ class PredisSentinelConnector implements Connector
         }
 
         $formattedOptions = array_merge(
-            ['timeout' => 10.0],
+            ['timeout' => (float) env('REDIS_TIMEOUT', 2.0)],
             Arr::except($options, ['replication', 'cluster']),
             [
                 'replication' => 'sentinel',

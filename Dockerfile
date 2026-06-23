@@ -16,6 +16,15 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --no-script
 
 FROM php:8.4-fpm-alpine AS runtime
 
+# Never contact Redis/MySQL during image build (no .env / no network to sentinels).
+ENV APP_ENV=local \
+    APP_DEBUG=false \
+    CACHE_STORE=array \
+    SESSION_DRIVER=array \
+    QUEUE_CONNECTION=sync \
+    REDIS_SENTINEL_ENABLED=false \
+    REDIS_HOST=127.0.0.1
+
 RUN apk add --no-cache --virtual .build-deps \
         $PHPIZE_DEPS \
         libxml2-dev \
@@ -56,6 +65,10 @@ RUN mkdir -p bootstrap/cache \
     storage/logs
 
 RUN APP_KEY=base64:ZHVtcHlrZXlmb3Jkb2NrZXJidWlsZG9ubHl5ZWFoCg= \
+    CACHE_STORE=array \
+    SESSION_DRIVER=array \
+    QUEUE_CONNECTION=sync \
+    REDIS_SENTINEL_ENABLED=false \
     php artisan package:discover --ansi
 
 COPY docker/php/php.ini /usr/local/etc/php/conf.d/99-apigw.ini
