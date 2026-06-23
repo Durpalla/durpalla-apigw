@@ -89,7 +89,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Redis::extend('predis', static fn () => new PredisSentinelConnector);
+        Redis::extend('predis', fn () => new PredisSentinelConnector);
 
         Schema::defaultStringLength(191);
         VehicleSchedule::observe(VehicleScheduleObserver::class);
