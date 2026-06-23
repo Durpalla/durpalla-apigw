@@ -61,9 +61,6 @@ run_artisan() {
 run_artisan php artisan config:clear
 run_artisan php artisan route:clear
 run_artisan php artisan view:clear
-run_artisan php artisan config:cache
-run_artisan php artisan route:cache
-run_artisan php artisan view:cache
 
 echo "Clearing app cache (array driver — skip Redis during deploy)..."
 if command -v timeout >/dev/null 2>&1; then
@@ -71,6 +68,10 @@ if command -v timeout >/dev/null 2>&1; then
 else
   docker exec -T -e CACHE_STORE=array durpalla-apigw-1 php artisan cache:clear || true
 fi
+
+run_artisan php artisan config:cache
+run_artisan php artisan route:cache
+run_artisan php artisan view:cache
 
 docker image prune -f >/dev/null 2>&1 || true
 

@@ -136,33 +136,31 @@ jobs:
           PATH_ON_SERVER="${DEPLOY_PATH:-/opt/durpalla-apigw}"
           GHCR_TOKEN_B64="$(printf '%s' "$GHCR_TOKEN" | base64 -w0 2>/dev/null || printf '%s' "$GHCR_TOKEN" | base64)"
 
+          SSH_COMMON=(
+            -i "$KEY_FILE"
+            -o StrictHostKeyChecking=accept-new
+            -o UserKnownHostsFile=~/.ssh/known_hosts
+            -o IdentitiesOnly=yes
+            -o TCPKeepAlive=yes
+            -o ServerAliveInterval=15
+            -o ServerAliveCountMax=40
+          )
+
           echo "Deploying to ${DEPLOY_USER}@${DEPLOY_HOST}:${PORT} (${PATH_ON_SERVER})"
 
           REMOTE_DIR="/tmp/durpalla-apigw-deploy-$$"
-          ssh -i "$KEY_FILE" \
-            -o StrictHostKeyChecking=accept-new \
-            -o UserKnownHostsFile=~/.ssh/known_hosts \
-            -o IdentitiesOnly=yes \
-            -p "$PORT" \
+          ssh "${SSH_COMMON[@]}" -p "$PORT" \
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "mkdir -p '${REMOTE_DIR}'"
 
-          scp -i "$KEY_FILE" \
-            -o StrictHostKeyChecking=accept-new \
-            -o UserKnownHostsFile=~/.ssh/known_hosts \
-            -o IdentitiesOnly=yes \
-            -P "$PORT" \
+          scp "${SSH_COMMON[@]}" -P "$PORT" \
             script/ci-deploy-remote.sh \
             script/normalize-docker-env.sh \
             "${DEPLOY_USER}@${DEPLOY_HOST}:${REMOTE_DIR}/"
 
-          ssh -i "$KEY_FILE" \
-            -o StrictHostKeyChecking=accept-new \
-            -o UserKnownHostsFile=~/.ssh/known_hosts \
-            -o IdentitiesOnly=yes \
-            -p "$PORT" \
+          ssh "${SSH_COMMON[@]}" -p "$PORT" \
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "export DEPLOY_PATH='${PATH_ON_SERVER}' IMAGE='${IMAGE}' GHCR_TOKEN_B64='${GHCR_TOKEN_B64}' GHCR_USER='${GHCR_USER}' DEPLOY_SCRIPT_DIR='${REMOTE_DIR}'; bash '${REMOTE_DIR}/ci-deploy-remote.sh'"
+            "export DEPLOY_PATH='${PATH_ON_SERVER}' IMAGE='${IMAGE}' GHCR_TOKEN_B64='${GHCR_TOKEN_B64}' GHCR_USER='${GHCR_USER}' DEPLOY_SCRIPT_DIR='${REMOTE_DIR}'; bash '${REMOTE_DIR}/ci-deploy-remote.sh'; rm -rf '${REMOTE_DIR}'"
 
       - name: Deploy summary
         run: |

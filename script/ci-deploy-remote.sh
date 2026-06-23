@@ -52,8 +52,10 @@ docker volume inspect apigw-storage >/dev/null 2>&1 || docker volume create apig
 docker volume inspect apigw-bootstrap-cache >/dev/null 2>&1 || docker volume create apigw-bootstrap-cache
 
 docker pull "$IMAGE"
+echo "Image pulled: $IMAGE"
 docker tag "$IMAGE" durpalla-apigw-app:local
 
+echo "Recreating containers..."
 for c in durpalla-apigw-1 durpalla-apigw-2 durpalla-apigw-3 durpalla-apigw-4; do
   docker rm -f "$c" >/dev/null 2>&1 || true
 done
@@ -73,6 +75,7 @@ docker run --name durpalla-apigw-2 -p 8002:80 "${common_run[@]}"
 docker run --name durpalla-apigw-3 -p 8003:80 "${common_run[@]}"
 docker run --name durpalla-apigw-4 -p 8004:80 "${common_run[@]}"
 
+echo "Warming Laravel caches..."
 artisan() {
   docker exec -T durpalla-apigw-1 "$@"
 }
@@ -80,17 +83,18 @@ artisan() {
 artisan php artisan config:clear
 artisan php artisan route:clear
 artisan php artisan view:clear
-artisan php artisan config:cache
-artisan php artisan route:cache
-artisan php artisan view:cache
 
-# cache:clear uses CACHE_STORE from .env (redis) and blocks on unreachable Sentinel.
+# Must run before config:cache — cached config ignores CACHE_STORE env overrides.
 echo "Clearing app cache (array driver — skip Redis during deploy)..."
 if command -v timeout >/dev/null 2>&1; then
   timeout 30 docker exec -T -e CACHE_STORE=array durpalla-apigw-1 php artisan cache:clear || true
 else
   docker exec -T -e CACHE_STORE=array durpalla-apigw-1 php artisan cache:clear || true
 fi
+
+artisan php artisan config:cache
+artisan php artisan route:cache
+artisan php artisan view:cache
 
 echo "Pruning unused Docker images..."
 if command -v timeout >/dev/null 2>&1; then
