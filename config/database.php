@@ -174,10 +174,9 @@ return [
         'options' => array_filter([
             'cluster' => $redisSentinelEnabled ? null : env('REDIS_CLUSTER', 'redis'),
             'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
-            'parameters' => [
+            'parameters' => array_filter([
                 'password' => env('REDIS_PASSWORD'),
-            ],
-            'replication' => $redisSentinelEnabled ? 'sentinel' : null,
+            ], static fn ($value) => $value !== null && $value !== '' && $value !== 'null'),
         ], static fn ($value) => $value !== null),
 
         'default' => $redisConnection((int) env('REDIS_DB', 0)),

@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Models\VehicleSchedule;
 use App\Observers\VehicleScheduleObserver;
+use App\Redis\PredisSentinelConnector;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
@@ -87,6 +89,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Redis::extend('predis', static fn () => new PredisSentinelConnector);
+
         Schema::defaultStringLength(191);
         VehicleSchedule::observe(VehicleScheduleObserver::class);
     }
