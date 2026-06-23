@@ -6,10 +6,6 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DEPLOY_PATH="${DEPLOY_PATH:-/opt/durpalla-apigw}"
 IMAGE="${IMAGE:-durpalla-apigw-app:local}"
 
-run_artisan() {
-  docker exec durpalla-apigw-1 "$@"
-}
-
 if [[ ! -d "$DEPLOY_PATH" ]]; then
   echo "ERROR: $DEPLOY_PATH does not exist. Create it and add .env first." >&2
   exit 1
@@ -58,13 +54,23 @@ docker run --name durpalla-apigw-2 -p 8002:80 "${common_run[@]}"
 docker run --name durpalla-apigw-3 -p 8003:80 "${common_run[@]}"
 docker run --name durpalla-apigw-4 -p 8004:80 "${common_run[@]}"
 
+run_artisan() {
+  docker exec -T durpalla-apigw-1 "$@"
+}
+
 run_artisan php artisan config:clear
 run_artisan php artisan route:clear
 run_artisan php artisan view:clear
 run_artisan php artisan config:cache
 run_artisan php artisan route:cache
 run_artisan php artisan view:cache
-run_artisan php artisan cache:clear || true
+
+echo "Clearing app cache (array driver — skip Redis during deploy)..."
+if command -v timeout >/dev/null 2>&1; then
+  timeout 30 docker exec -T -e CACHE_STORE=array durpalla-apigw-1 php artisan cache:clear || true
+else
+  docker exec -T -e CACHE_STORE=array durpalla-apigw-1 php artisan cache:clear || true
+fi
 
 docker image prune -f >/dev/null 2>&1 || true
 

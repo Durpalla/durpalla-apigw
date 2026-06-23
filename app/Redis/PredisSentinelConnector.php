@@ -42,8 +42,13 @@ class PredisSentinelConnector implements Connector
             $password = null;
         }
 
+        $timeout = (float) env('REDIS_TIMEOUT', 2.0);
+
         $formattedOptions = array_merge(
-            ['timeout' => (float) env('REDIS_TIMEOUT', 2.0)],
+            [
+                'timeout' => $timeout,
+                'read_write_timeout' => $timeout,
+            ],
             Arr::except($options, ['replication', 'cluster']),
             [
                 'replication' => 'sentinel',

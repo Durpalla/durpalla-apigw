@@ -73,13 +73,30 @@ docker run --name durpalla-apigw-2 -p 8002:80 "${common_run[@]}"
 docker run --name durpalla-apigw-3 -p 8003:80 "${common_run[@]}"
 docker run --name durpalla-apigw-4 -p 8004:80 "${common_run[@]}"
 
-docker exec durpalla-apigw-1 php artisan config:clear
-docker exec durpalla-apigw-1 php artisan route:clear
-docker exec durpalla-apigw-1 php artisan view:clear
-docker exec durpalla-apigw-1 php artisan config:cache
-docker exec durpalla-apigw-1 php artisan route:cache
-docker exec durpalla-apigw-1 php artisan view:cache
-docker exec durpalla-apigw-1 php artisan cache:clear || true
+artisan() {
+  docker exec -T durpalla-apigw-1 "$@"
+}
 
-docker image prune -f
+artisan php artisan config:clear
+artisan php artisan route:clear
+artisan php artisan view:clear
+artisan php artisan config:cache
+artisan php artisan route:cache
+artisan php artisan view:cache
+
+# cache:clear uses CACHE_STORE from .env (redis) and blocks on unreachable Sentinel.
+echo "Clearing app cache (array driver — skip Redis during deploy)..."
+if command -v timeout >/dev/null 2>&1; then
+  timeout 30 docker exec -T -e CACHE_STORE=array durpalla-apigw-1 php artisan cache:clear || true
+else
+  docker exec -T -e CACHE_STORE=array durpalla-apigw-1 php artisan cache:clear || true
+fi
+
+echo "Pruning unused Docker images..."
+if command -v timeout >/dev/null 2>&1; then
+  timeout 120 docker image prune -f || true
+else
+  docker image prune -f || true
+fi
+
 echo "Deployed ${IMAGE} on $(hostname) ports 8001-8004"
