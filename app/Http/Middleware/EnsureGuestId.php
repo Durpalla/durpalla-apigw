@@ -17,6 +17,10 @@ class EnsureGuestId
 {
     public function handle(Request $request, Closure $next): Response
     {
+        if ($request->is('up')) {
+            return $next($request);
+        }
+
         $cookieName = config('guest.cookie.name', 'guest_unique_id');
         $headerName = config('guest.header_name', 'X-Guest-Id');
 

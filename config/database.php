@@ -2,15 +2,36 @@
 
 use Illuminate\Support\Str;
 
+$normalizeHost = static fn (?string $host, string $default = '127.0.0.1'): string => ($host === null || $host === '')
+    ? $default
+    : $host;
+
+$redisPassword = env('REDIS_PASSWORD');
+$redisPassword = ($redisPassword === null || $redisPassword === '' || $redisPassword === 'null')
+    ? null
+    : trim((string) $redisPassword, '"\'');
+
+$redisHost = $normalizeHost(env('REDIS_HOST'));
+
+$redisUrl = env('REDIS_URL');
+if (! is_string($redisUrl) || $redisUrl === '') {
+    $redisUrl = null;
+} else {
+    $parsedRedisUrl = parse_url($redisUrl);
+    if (! isset($parsedRedisUrl['host']) || $parsedRedisUrl['host'] === '') {
+        $redisUrl = null;
+    }
+}
+
 $redisSentinelEnabled = filter_var(env('REDIS_SENTINEL_ENABLED', false), FILTER_VALIDATE_BOOL);
 
 $redisSentinels = [
-    ['host' => env('REDIS_SENTINEL_1_HOST', '127.0.0.1'), 'port' => (int) env('REDIS_SENTINEL_1_PORT', 26379)],
-    ['host' => env('REDIS_SENTINEL_2_HOST', '127.0.0.1'), 'port' => (int) env('REDIS_SENTINEL_2_PORT', 26379)],
-    ['host' => env('REDIS_SENTINEL_3_HOST', '127.0.0.1'), 'port' => (int) env('REDIS_SENTINEL_3_PORT', 26379)],
+    ['host' => $normalizeHost(env('REDIS_SENTINEL_1_HOST')), 'port' => (int) env('REDIS_SENTINEL_1_PORT', 26379)],
+    ['host' => $normalizeHost(env('REDIS_SENTINEL_2_HOST')), 'port' => (int) env('REDIS_SENTINEL_2_PORT', 26379)],
+    ['host' => $normalizeHost(env('REDIS_SENTINEL_3_HOST')), 'port' => (int) env('REDIS_SENTINEL_3_PORT', 26379)],
 ];
 
-$redisConnection = static function (int $database) use ($redisSentinelEnabled, $redisSentinels): array {
+$redisConnection = static function (int $database) use ($redisSentinelEnabled, $redisSentinels, $redisUrl, $redisHost, $redisPassword): array {
     if ($redisSentinelEnabled) {
         return [
             'sentinels' => $redisSentinels,
@@ -20,10 +41,10 @@ $redisConnection = static function (int $database) use ($redisSentinelEnabled, $
     }
 
     return [
-        'url' => env('REDIS_URL'),
-        'host' => env('REDIS_HOST', '127.0.0.1'),
+        'url' => $redisUrl,
+        'host' => $redisHost,
         'username' => env('REDIS_USERNAME'),
-        'password' => env('REDIS_PASSWORD'),
+        'password' => $redisPassword,
         'port' => (int) env('REDIS_PORT', 6379),
         'database' => $database,
     ];
@@ -89,6 +110,7 @@ return [
                 PDO::MYSQL_ATTR_SSL_CA => env('DB_SSL_CA'),
                 PDO::MYSQL_ATTR_SSL_CERT => env('DB_SSL_CERT'),
                 PDO::MYSQL_ATTR_SSL_KEY => env('DB_SSL_KEY'),
+                PDO::MYSQL_ATTR_CONNECT_TIMEOUT => (int) env('DB_CONNECT_TIMEOUT', 5),
 //                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
             ]) : [],
             'dump' => [
@@ -175,7 +197,7 @@ return [
             'cluster' => $redisSentinelEnabled ? null : env('REDIS_CLUSTER', 'redis'),
             'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
             'parameters' => array_filter([
-                'password' => env('REDIS_PASSWORD'),
+                'password' => $redisPassword,
             ], static fn ($value) => $value !== null && $value !== '' && $value !== 'null'),
         ], static fn ($value) => $value !== null),
 

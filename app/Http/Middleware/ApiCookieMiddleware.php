@@ -18,6 +18,10 @@ class ApiCookieMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        if ($request->is('up')) {
+            return $next($request);
+        }
+
         $guestId = $request->cookie('guest_unique_id', $request->header('X-GUEST-ID'));
 
         if ($guestId && auth('customer')->check()) {
