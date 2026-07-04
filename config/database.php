@@ -33,11 +33,17 @@ $redisSentinels = [
 
 $redisConnection = static function (int $database) use ($redisSentinelEnabled, $redisSentinels, $redisUrl, $redisHost, $redisPassword): array {
     if ($redisSentinelEnabled) {
-        return [
+        $config = [
             'sentinels' => $redisSentinels,
             'service' => env('REDIS_SENTINEL_SERVICE', 'mymaster'),
             'database' => $database,
         ];
+
+        if ($redisPassword !== null) {
+            $config['password'] = $redisPassword;
+        }
+
+        return $config;
     }
 
     return [
@@ -110,7 +116,7 @@ return [
                 PDO::MYSQL_ATTR_SSL_CA => env('DB_SSL_CA'),
                 PDO::MYSQL_ATTR_SSL_CERT => env('DB_SSL_CERT'),
                 PDO::MYSQL_ATTR_SSL_KEY => env('DB_SSL_KEY'),
-                PDO::MYSQL_ATTR_CONNECT_TIMEOUT => (int) env('DB_CONNECT_TIMEOUT', 5),
+                (defined('PDO::MYSQL_ATTR_CONNECT_TIMEOUT') ? PDO::MYSQL_ATTR_CONNECT_TIMEOUT : 1002) => (int) env('DB_CONNECT_TIMEOUT', 5),
 //                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
             ]) : [],
             'dump' => [

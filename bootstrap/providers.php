@@ -2,6 +2,7 @@
 
 return [
     App\Providers\AppServiceProvider::class,
+    App\Providers\OpenTelemetryServiceProvider::class,
     \App\Providers\PaymentServiceProvider::class,
     \App\Providers\RepositoryServiceProvider::class,
     App\Providers\EventServiceProvider::class,

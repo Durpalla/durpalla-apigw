@@ -17,6 +17,9 @@
         "laravel/sanctum": "^4.3",
         "laravel/tinker": "^2.10.1",
         "lcobucci/jwt": "^5.5",
+        "open-telemetry/exporter-otlp": "^1.4",
+        "open-telemetry/sdk": "^1.14",
+        "php-http/guzzle7-adapter": "^1.1",
         "predis/predis": "^3.1",
         "pusher/pusher-php-server": "^7.2",
         "thiagoalessio/tesseract_ocr": "^2.13"
