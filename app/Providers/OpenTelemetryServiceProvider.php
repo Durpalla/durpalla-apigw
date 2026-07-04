@@ -19,6 +19,10 @@ use OpenTelemetry\SemConv\ResourceAttributes;
 
 class OpenTelemetryServiceProvider extends ServiceProvider
 {
+    private ?TracerProvider $tracerProvider = null;
+
+    private ?MeterProvider $meterProvider = null;
+
     public function register(): void
     {
         if (! config('opentelemetry.enabled')) {
@@ -26,35 +30,32 @@ class OpenTelemetryServiceProvider extends ServiceProvider
         }
 
         $this->app->singleton('opentelemetry.tracer', function () {
-            $resource = $this->resource();
             $transport = (new OtlpHttpTransportFactory())->create(
-                config('opentelemetry.collector_endpoint'),
+                config('opentelemetry.collector_endpoint').'/v1/traces',
                 'application/x-protobuf'
             );
 
-            $exporter = new SpanExporter($transport);
-            $provider = TracerProvider::builder()
-                ->addSpanProcessor(new BatchSpanProcessor($exporter))
-                ->setResource($resource)
+            $this->tracerProvider = TracerProvider::builder()
+                ->addSpanProcessor(BatchSpanProcessor::builder(new SpanExporter($transport))->build())
+                ->setResource($this->resource())
                 ->build();
 
-            return $provider->getTracer(config('opentelemetry.service_name'));
+            return $this->tracerProvider->getTracer(config('opentelemetry.service_name'));
         });
 
         $this->app->singleton('opentelemetry.meter', function () {
-            $resource = $this->resource();
             $transport = (new OtlpHttpTransportFactory())->create(
-                config('opentelemetry.collector_endpoint'),
+                config('opentelemetry.collector_endpoint').'/v1/metrics',
                 'application/x-protobuf'
             );
 
             $reader = new ExportingReader(new MetricExporter($transport));
-            $provider = MeterProvider::builder()
-                ->setResource($resource)
+            $this->meterProvider = MeterProvider::builder()
+                ->setResource($this->resource())
                 ->addReader($reader)
                 ->build();
 
-            return $provider->getMeter(config('opentelemetry.service_name'));
+            return $this->meterProvider->getMeter(config('opentelemetry.service_name'));
         });
     }
 
@@ -66,13 +67,20 @@ class OpenTelemetryServiceProvider extends ServiceProvider
 
         $kernel = $this->app->make(Kernel::class);
         $kernel->pushMiddleware(OpenTelemetryMiddleware::class);
+
+        // Batch processors buffer spans/metrics in memory; force export before the
+        // PHP-FPM worker or console command exits so nothing is dropped.
+        $this->app->terminating(function () {
+            $this->tracerProvider?->forceFlush();
+            $this->meterProvider?->forceFlush();
+        });
     }
 
     private function resource(): ResourceInfo
     {
         return ResourceInfoFactory::emptyResource()->merge(ResourceInfo::create(Attributes::create([
             ResourceAttributes::SERVICE_NAME => config('opentelemetry.service_name'),
-            ResourceAttributes::DEPLOYMENT_ENVIRONMENT => config('app.env'),
+            ResourceAttributes::DEPLOYMENT_ENVIRONMENT_NAME => config('app.env'),
             ResourceAttributes::SERVICE_VERSION => (string) config('app.version', '1.0.0'),
         ])));
     }

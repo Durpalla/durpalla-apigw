@@ -4,6 +4,7 @@ namespace App\Logging;
 
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\LogRecord;
+use OpenTelemetry\API\Common\Time\Clock;
 use OpenTelemetry\API\Logs\LogRecord as OtlpLogRecord;
 use OpenTelemetry\Contrib\Otlp\LogsExporter;
 use OpenTelemetry\Contrib\Otlp\OtlpHttpTransportFactory;
@@ -18,9 +19,9 @@ class OpenTelemetryLogHandler extends AbstractProcessingHandler
 {
     private static ?LoggerProvider $provider = null;
 
-    public function __construct(int|string $level = \Monolog\Level::Debug)
+    public function __construct(int|string|\Monolog\Level $level = \Monolog\Level::Debug, bool $bubble = true)
     {
-        parent::__construct($level);
+        parent::__construct($level, $bubble);
     }
 
     protected function write(LogRecord $record): void
@@ -37,6 +38,10 @@ class OpenTelemetryLogHandler extends AbstractProcessingHandler
             ->setAttributes(array_merge($record->context, ['channel' => $record->channel]));
 
         $logger->emit($logRecord);
+
+        // PHP-FPM never calls the batch processor's shutdown, so flush each record
+        // to guarantee delivery to the collector.
+        self::$provider?->forceFlush();
     }
 
     private function provider(): LoggerProvider
@@ -46,18 +51,18 @@ class OpenTelemetryLogHandler extends AbstractProcessingHandler
         }
 
         $transport = (new OtlpHttpTransportFactory())->create(
-            config('opentelemetry.collector_endpoint'),
+            config('opentelemetry.collector_endpoint').'/v1/logs',
             'application/x-protobuf'
         );
 
         $resource = ResourceInfoFactory::emptyResource()->merge(ResourceInfo::create(Attributes::create([
             ResourceAttributes::SERVICE_NAME => config('opentelemetry.service_name'),
-            ResourceAttributes::DEPLOYMENT_ENVIRONMENT => config('app.env'),
+            ResourceAttributes::DEPLOYMENT_ENVIRONMENT_NAME => config('app.env'),
         ])));
 
         self::$provider = LoggerProvider::builder()
             ->setResource($resource)
-            ->addLogRecordProcessor(new BatchLogRecordProcessor(new LogsExporter($transport)))
+            ->addLogRecordProcessor(new BatchLogRecordProcessor(new LogsExporter($transport), Clock::getDefault()))
             ->build();
 
         return self::$provider;
