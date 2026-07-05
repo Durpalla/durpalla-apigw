@@ -39,8 +39,8 @@ class MyApiController extends Controller
         if($user->type == 'customer' && $user->meta && $user->meta['nid_no']) {
             $user->nid = [
                 'nid_no' => $user->meta['nid_no'],
-                'front' => ($user->meta['nid_photo']) ? asset('nid/' . $user->meta['nid_photo']) : '',
-                'back' => ($user->meta['nid_back_side']) ? asset('nid/' . $user->meta['nid_back_side']) : ''
+                'front' => ($user->meta['nid_photo']) ? upload_asset('nid/' . $user->meta['nid_photo']) : '',
+                'back' => ($user->meta['nid_back_side']) ? upload_asset('nid/' . $user->meta['nid_back_side']) : ''
             ];
         }
         return response()->json(['success' => true, 'user' => $user ], $this->success );
@@ -304,7 +304,7 @@ class MyApiController extends Controller
             $responseArr['id'] = $booking->id;
             $responseArr['pnr'] = $booking->id;
             $responseArr['qr_code'] = $booking->payment['transaction_id'];
-            $responseArr['qr'] = asset('qrs/' . $booking->id . '.png');
+            $responseArr['qr'] = upload_asset('qrs/' . $booking->id . '.png');
             $responseArr['booking_date'] = date('Y-m-d H:i:s', strtotime( $booking->created_at ) );
             $responseArr['booking_date_formated'] = date('d M, Y h:i A', strtotime( $booking->created_at ) );
             $responseArr['downloadable'] = false;
@@ -396,7 +396,7 @@ class MyApiController extends Controller
             $responseArr['id'] = $booking->id;
             $responseArr['pnr'] = $booking->id;
             $responseArr['qr_code'] = $booking->payment['transaction_id'];
-            $responseArr['qr'] = asset('qrs/' . $booking->id . '.png');
+            $responseArr['qr'] = upload_asset('qrs/' . $booking->id . '.png');
             $responseArr['booking_date'] = date('Y-m-d H:i:s', strtotime( $booking->created_at ) );
             $responseArr['booking_date_formated'] = date('d M, Y h:i A', strtotime( $booking->created_at ) );
             $responseArr['payment_status'] = $booking->payment['status'];
@@ -497,7 +497,7 @@ class MyApiController extends Controller
                     'leaving_at' => date('Y-m-d H:i:s', strtotime($nearestTrip->leaving_at)),
                     'total_booked' => $launch->booking_items_count,
                     'vehicle_name' => $launch->name,
-                    'vehicle_photo' => ($launch->photo) ? asset('vehicles/'. $launch->photo) : asset('default/launch.png')
+                    'vehicle_photo' => ($launch->photo) ? upload_asset('vehicles/'. $launch->photo) : asset('default/launch.png')
                 ];
             });
         return response()->json(['success' => true, 'vehicles' => $vehicles, 'message' => ''], $this->success);
@@ -822,7 +822,7 @@ class MyApiController extends Controller
 
         if( $user->save() ) {
             $user->notify(new ProfileUpdate());
-            $avatarUrl = $user->profile_pic ? asset($user->profile_pic) : null;
+            $avatarUrl = $user->profile_pic ? upload_asset($user->profile_pic) : null;
             $payloadUser = [
                 'name' => $user->name,
                 'mobile' => $user->mobile,
@@ -994,7 +994,7 @@ class MyApiController extends Controller
         $user->profile_pic = 'uploads/avatar/' . $filename;
 
         if( $user->save() ) :
-            return response()->json(['success' => true, 'avatar' => asset( "uploads/avatar/" . $filename ), 'message' => __('Your profile picture successfully uploaded')], $this->success);
+            return response()->json(['success' => true, 'avatar' => upload_asset( "uploads/avatar/" . $filename ), 'message' => __('Your profile picture successfully uploaded')], $this->success);
         else :
             return response()->json(['success' => false, 'message' => __('Sorry! upload fail.') ] );
         endif;
@@ -1026,7 +1026,7 @@ class MyApiController extends Controller
         }
 
         if( $user->save() ) :
-            return response()->json(['success' => true, 'avatar' => asset( $user->profile_pic ), 'message' => __('Your profile picture successfully uploaded')], $this->success);
+            return response()->json(['success' => true, 'avatar' => upload_asset( $user->profile_pic ), 'message' => __('Your profile picture successfully uploaded')], $this->success);
         else :
             return response()->json(['success' => false, 'message' => __('Sorry! upload fail.') ] );
         endif;

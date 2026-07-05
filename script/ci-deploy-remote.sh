@@ -51,6 +51,19 @@ fi
 docker volume inspect apigw-storage >/dev/null 2>&1 || docker volume create apigw-storage
 docker volume inspect apigw-bootstrap-cache >/dev/null 2>&1 || docker volume create apigw-bootstrap-cache
 
+SHARED_ASSETS_ROOT="${SHARED_ASSETS_ROOT:-/mnt/durpalla-assets}"
+shared_public_mounts=()
+if [[ -d "${SHARED_ASSETS_ROOT}/uploads" ]]; then
+  echo "Using shared assets at ${SHARED_ASSETS_ROOT}"
+  for dir in uploads nid vehicles qrs images temp; do
+    if [[ -d "${SHARED_ASSETS_ROOT}/${dir}" ]]; then
+      shared_public_mounts+=( -v "${SHARED_ASSETS_ROOT}/${dir}:/var/www/html/public/${dir}" )
+    fi
+  done
+else
+  echo "Shared assets not mounted — apigw public uploads stay in container filesystem"
+fi
+
 docker pull "$IMAGE"
 echo "Image pulled: $IMAGE"
 docker tag "$IMAGE" durpalla-apigw-app:local
@@ -67,6 +80,7 @@ common_run=(
   "${docker_redis_env[@]}"
   -v apigw-storage:/var/www/html/storage
   -v apigw-bootstrap-cache:/var/www/html/bootstrap/cache
+  "${shared_public_mounts[@]}"
   durpalla-apigw-app:local
 )
 
@@ -103,4 +117,15 @@ else
   docker image prune -f || true
 fi
 
+# Remove stale GHCR apigw tags (keep the image the running containers use).
+IN_USE_ID="$(docker inspect -f '{{.Image}}' durpalla-apigw-1 2>/dev/null || true)"
+docker images "${IMAGE%%:*}" --format '{{.ID}} {{.Repository}}:{{.Tag}}' \
+  | while read -r img_id img_ref; do
+      if [[ -n "$IN_USE_ID" && "$img_id" != "$IN_USE_ID" ]]; then
+        docker rmi -f "$img_ref" 2>/dev/null || true
+      fi
+    done
+docker image prune -f || true
+
 echo "Deployed ${IMAGE} on $(hostname) ports 8001-8004"
+df -h /

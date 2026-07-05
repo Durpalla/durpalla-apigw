@@ -72,8 +72,8 @@ class CouponService
         $offers = Coupon::select('poster')->where('is_offer', 1)->take(6)->get();
         // ->where('poster', '!=', null)
         return $offers->map(function ($item) {
-            $item->thumbnail = asset($item->poster);
-            $item->poster = asset($item->poster);
+            $item->thumbnail = upload_asset($item->poster);
+            $item->poster = upload_asset($item->poster);
             return $item;
         })->toArray();
     }

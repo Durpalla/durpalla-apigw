@@ -36,7 +36,10 @@ return [
      * Full URLs in the DB that start with `/storage/...` (including when saved as apigw) are
      * rewritten to this origin in API responses.
      */
-    'image_public_base_url' => env('HOTEL_IMAGE_PUBLIC_BASE_URL', env('APP_URL', '')),
+    'image_public_base_url' => env(
+        'HOTEL_IMAGE_PUBLIC_BASE_URL',
+        env('UPLOADS_PUBLIC_BASE_URL', env('APP_URL', ''))
+    ),
     /**
      * When per-night `hotel_inventories` rows are missing, `assertAvailability` throws and the
      * API would mark the room as unavailable. Set to true to treat that as available so clients

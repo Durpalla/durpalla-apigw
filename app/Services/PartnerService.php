@@ -56,7 +56,7 @@ class PartnerService
                     'email' => $item->email,
                     'mobile' => $item->mobile,
                     'address' => ($item->meta) ? $item->meta['address'] : null,
-                    'photo' => ($item->profile_pic) ? asset($item->profile_pic) : asset('default/avatar.png'),
+                    'photo' => ($item->profile_pic) ? upload_asset($item->profile_pic) : asset('default/avatar.png'),
                     'incentive' => ($item->incentive) ? $item->incentive->incentive . '(' . $incentive_types[$item->incentive->incentive_type] . ')' : 0,
                     'created_at' => $item->created_at->format('d/m/Y h:ia'),
                     'status' => $statuses[$item->status]

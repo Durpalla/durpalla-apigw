@@ -51,14 +51,14 @@ class FrontApiController extends Controller
             });
         $partners = Merchant::select('merchant_name', 'logo', 'id')->orderBy('merchant_name', 'asc')->where('status', 1)->limit(10)->get();
         $data['partners'] = $partners->map(function ($item) {
-            $item->logo = ($item->logo) ? asset('images/' . $item->logo) : asset('default/avatar.png');
+            $item->logo = ($item->logo) ? upload_asset('images/' . $item->logo) : asset('default/avatar.png');
 
             return $item;
         });
         $data['offers'] = $this->homeOffersList(6);
         $sponsors = Sponsor::where('status', 1)->get();
         $data['sponsors'] = $sponsors->map(function ($item) {
-            $item->attachment = asset($item->attachment);
+            $item->attachment = upload_asset($item->attachment);
             return $item;
         });
         $data['cabin_types'] = CabinType::where('type', 'cabin')->pluck('name', 'id');
@@ -128,7 +128,7 @@ class FrontApiController extends Controller
     private function mapCouponForHome(Coupon $coupon): array
     {
         $poster = $coupon->poster;
-        $abs = $poster ? asset($poster) : '';
+        $abs = $poster ? upload_asset($poster) : '';
 
         $title = (Schema::hasColumn('coupons', 'home_title') && $coupon->getAttribute('home_title'))
             ? (string) $coupon->getAttribute('home_title')
