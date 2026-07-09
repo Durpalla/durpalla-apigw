@@ -15,6 +15,21 @@ DOCKER_HOST_GATEWAY="${DOCKER_HOST_GATEWAY:-$(
 
 sed -i '/^DB_SOCKET=/d' "$ENV_FILE"
 
+# MySQL Router read/write primary is 6446; 6450/6447 are read-only and break API writes.
+if grep -q '^DB_PORT=6450$' "$ENV_FILE"; then
+  sed -i 's/^DB_PORT=6450$/DB_PORT=6446/' "$ENV_FILE"
+fi
+if ! grep -q '^DB_WRITE_PORT=' "$ENV_FILE"; then
+  echo 'DB_WRITE_PORT=6446' >> "$ENV_FILE"
+else
+  sed -i 's/^DB_WRITE_PORT=.*/DB_WRITE_PORT=6446/' "$ENV_FILE"
+fi
+if ! grep -q '^DB_READ_PORT=' "$ENV_FILE"; then
+  echo 'DB_READ_PORT=6447' >> "$ENV_FILE"
+else
+  sed -i 's/^DB_READ_PORT=.*/DB_READ_PORT=6447/' "$ENV_FILE"
+fi
+
 for var in DB_HOST MONGODB_HOST; do
   sed -i "s/^${var}=localhost$/${var}=${DOCKER_HOST_GATEWAY}/" "$ENV_FILE"
   sed -i "s/^${var}=127.0.0.1$/${var}=${DOCKER_HOST_GATEWAY}/" "$ENV_FILE"

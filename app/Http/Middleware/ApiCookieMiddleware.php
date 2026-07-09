@@ -25,7 +25,14 @@ class ApiCookieMiddleware
         $guestId = $request->cookie('guest_unique_id', $request->header('X-GUEST-ID'));
 
         if ($guestId && auth('customer')->check()) {
-            Cart::where('token', decrypt($guestId))->update(['customer_id' => auth('customer')->id()]);
+            try {
+                Cart::query()
+                    ->useWritePdo()
+                    ->where('token', decrypt($guestId))
+                    ->update(['customer_id' => auth('customer')->id()]);
+            } catch (\Throwable $e) {
+                Log::warning('Cart guest merge skipped', ['message' => $e->getMessage()]);
+            }
         }
 
         if (!$guestId) {
