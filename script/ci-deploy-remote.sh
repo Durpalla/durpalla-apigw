@@ -35,11 +35,15 @@ if [[ ! -f .env ]]; then
   exit 1
 fi
 
-bash "${DEPLOY_SCRIPT_DIR:-$(dirname "$0")}/normalize-docker-env.sh" "$DEPLOY_PATH"
+SCRIPT_DIR="${DEPLOY_SCRIPT_DIR:-$(dirname "$0")}"
+export DOCKER_HOST_GATEWAY="$(bash "${SCRIPT_DIR}/docker-host-gateway.sh")"
+echo "Docker host gateway: ${DOCKER_HOST_GATEWAY}"
+
+bash "${SCRIPT_DIR}/normalize-docker-env.sh" "$DEPLOY_PATH"
 
 docker_redis_env=()
 if ! grep -q '^REDIS_SENTINEL_ENABLED=true' "$DEPLOY_PATH/.env"; then
-  docker_redis_env+=( -e REDIS_HOST=host.docker.internal )
+  docker_redis_env+=( -e "REDIS_HOST=${DOCKER_HOST_GATEWAY}" )
 fi
 
 if ! printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin; then
@@ -75,7 +79,7 @@ done
 
 common_run=(
   -d --restart unless-stopped
-  --add-host=host.docker.internal:host-gateway
+  --add-host="host.docker.internal:${DOCKER_HOST_GATEWAY}"
   # Bind-mount .env so multiline PASSPORT_*_KEY values work (docker --env-file cannot parse them).
   -v "$DEPLOY_PATH/.env:/var/www/html/.env:ro"
   "${docker_redis_env[@]}"
@@ -89,6 +93,11 @@ docker run --name durpalla-apigw-1 -e APIGW_PRIMARY=1 -p 8001:80 "${common_run[@
 docker run --name durpalla-apigw-2 -p 8002:80 "${common_run[@]}"
 docker run --name durpalla-apigw-3 -p 8003:80 "${common_run[@]}"
 docker run --name durpalla-apigw-4 -p 8004:80 "${common_run[@]}"
+
+if ! docker exec -T durpalla-apigw-1 getent hosts host.docker.internal >/dev/null 2>&1; then
+  echo "ERROR: host.docker.internal is not resolvable inside durpalla-apigw-1"
+  exit 1
+fi
 
 echo "Warming Laravel caches..."
 artisan() {

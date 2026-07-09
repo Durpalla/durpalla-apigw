@@ -18,11 +18,14 @@ if [[ ! -f .env ]]; then
   exit 1
 fi
 
+export DOCKER_HOST_GATEWAY="$(bash "$ROOT/script/docker-host-gateway.sh")"
+echo "Docker host gateway: ${DOCKER_HOST_GATEWAY}"
+
 bash "$ROOT/script/normalize-docker-env.sh" "$DEPLOY_PATH"
 
 docker_redis_env=()
 if ! grep -q '^REDIS_SENTINEL_ENABLED=true' "$DEPLOY_PATH/.env"; then
-  docker_redis_env+=( -e REDIS_HOST=host.docker.internal )
+  docker_redis_env+=( -e "REDIS_HOST=${DOCKER_HOST_GATEWAY}" )
 fi
 
 docker volume inspect apigw-storage >/dev/null 2>&1 || docker volume create apigw-storage
@@ -41,7 +44,7 @@ done
 
 common_run=(
   -d --restart unless-stopped
-  --add-host=host.docker.internal:host-gateway
+  --add-host="host.docker.internal:${DOCKER_HOST_GATEWAY}"
   # Bind-mount .env so multiline PASSPORT_*_KEY values work (docker --env-file cannot parse them).
   -v "$DEPLOY_PATH/.env:/var/www/html/.env:ro"
   "${docker_redis_env[@]}"
