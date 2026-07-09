@@ -120,6 +120,20 @@ artisan php artisan config:cache
 artisan php artisan route:cache
 artisan php artisan view:cache
 
+# Route/config caches are loaded by PHP-FPM workers; restart so opcache picks up new files.
+echo "Restarting containers to apply route/config cache..."
+for c in durpalla-apigw-1 durpalla-apigw-2 durpalla-apigw-3 durpalla-apigw-4; do
+  docker restart "$c" >/dev/null
+done
+sleep 2
+for port in 8001 8002 8003 8004; do
+  if curl -fsS "http://127.0.0.1:${port}/up" >/dev/null 2>&1; then
+    echo "  OK 127.0.0.1:${port}/up"
+  else
+    echo "  WARN 127.0.0.1:${port}/up not responding after restart"
+  fi
+done
+
 echo "Pruning unused Docker images..."
 if command -v timeout >/dev/null 2>&1; then
   timeout 120 docker image prune -f || true
