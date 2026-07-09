@@ -42,7 +42,8 @@ done
 common_run=(
   -d --restart unless-stopped
   --add-host=host.docker.internal:host-gateway
-  --env-file "$DEPLOY_PATH/.env"
+  # Bind-mount .env so multiline PASSPORT_*_KEY values work (docker --env-file cannot parse them).
+  -v "$DEPLOY_PATH/.env:/var/www/html/.env:ro"
   "${docker_redis_env[@]}"
   -v apigw-storage:/var/www/html/storage
   -v apigw-bootstrap-cache:/var/www/html/bootstrap/cache
