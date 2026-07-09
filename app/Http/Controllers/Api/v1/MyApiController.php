@@ -538,6 +538,13 @@ class MyApiController extends Controller
                         $title = 'Booking cancellation refunded';
                         $description .= 'Your booking cancellation amount has been refunded.';
                         break;
+                    case 'hotel_review_prompt':
+                        $title = 'How was your stay?';
+                        $hotelName = (string) ($notification->data['hotel_name'] ?? '');
+                        $description = $hotelName !== ''
+                            ? __('Share your experience at :hotel.', ['hotel' => $hotelName])
+                            : __('Tap to share your experience and help other travellers.');
+                        break;
                 }
                 array_push($responseArr, [
                     'id' => $notification->id,

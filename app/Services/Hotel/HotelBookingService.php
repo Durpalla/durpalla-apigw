@@ -887,8 +887,7 @@ final class HotelBookingService
         foreach ($rows as $hr) {
             $code = 'mod_hr_'.$hr->id;
             $typeName = $roomTypeNames[$hr->room_type_id] ?? null;
-            $name = trim((string) ($hr->name ?? ''));
-            $title = $name !== '' ? $name : ($typeName !== null && (string) $typeName !== '' ? (string) $typeName : 'Room '.$hr->id);
+            $title = $this->resolveModuleHotelRoomTitle($hr, $typeName);
             $baseFloat = ($hr->base_price !== null && $hr->base_price !== '') ? (float) $hr->base_price : 0.0;
 
             $payload = [
@@ -936,9 +935,32 @@ final class HotelBookingService
         }
     }
 
-    /**
-     * @return \Illuminate\Database\Query\Builder
-     */
+    private function resolveModuleHotelRoomTitle(object $hr, ?string $typeName): string
+    {
+        $type = $typeName !== null ? trim((string) $typeName) : '';
+        $name = trim((string) ($hr->name ?? ''));
+
+        if ($name !== '') {
+            if (preg_match('/^Room\s+(.+)$/i', $name, $m)) {
+                $rest = trim($m[1]);
+                if ($rest !== '') {
+                    return $rest;
+                }
+            }
+            if (strcasecmp($name, 'Room') === 0 && $type !== '') {
+                return $type;
+            }
+
+            return $name;
+        }
+
+        if ($type !== '') {
+            return $type;
+        }
+
+        return 'Type '.$hr->id;
+    }
+
     private function queryActiveModuleHotelRooms(int $hotelId, bool $strict)
     {
         $q = DB::table('hotel_rooms')->where('hotel_id', $hotelId);

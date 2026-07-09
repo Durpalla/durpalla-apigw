@@ -65,4 +65,7 @@ return [
      * kept for possible tooling. Comma-separated months 1–12.
      */
     'module_peak_months' => array_filter(array_map('intval', explode(',', (string) env('HOTEL_MODULE_PEAK_MONTHS', '11,12,1')))),
+
+    /** Days after checkout to send a one-time in-app / push review prompt. */
+    'review_prompt_window_days' => (int) env('HOTEL_REVIEW_PROMPT_WINDOW_DAYS', 14),
 ];

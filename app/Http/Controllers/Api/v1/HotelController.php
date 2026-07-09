@@ -8,6 +8,7 @@ use App\Models\HotelFavorite;
 use App\Models\HotelHold;
 use App\Models\HotelReview;
 use App\Services\Hotel\HotelBookingService;
+use App\Services\Hotel\HotelReviewEligibilityService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,6 +20,7 @@ class HotelController extends Controller
 {
     public function __construct(
         private readonly HotelBookingService $hotelBooking,
+        private readonly HotelReviewEligibilityService $reviewEligibility,
     ) {}
 
     public function search(Request $request): JsonResponse
@@ -53,6 +55,8 @@ class HotelController extends Controller
 
         $data['is_favourite'] = $this->hotelIsFavouriteForCurrentUser($hotel);
         $data['viewer_has_submitted_review'] = $this->viewerHasSubmittedHotelReview($hotel);
+        $data['viewer_can_submit_review'] = Auth::check()
+            && $this->reviewEligibility->userCanReviewHotel((int) Auth::id(), $hotel);
 
         return response()->json([
             'success' => true,
@@ -80,14 +84,8 @@ class HotelController extends Controller
         if (! Auth::check()) {
             return false;
         }
-        if (! Schema::hasColumn((new HotelReview)->getTable(), 'user_id')) {
-            return false;
-        }
 
-        return HotelReview::query()
-            ->where('hotel_id', $hotelId)
-            ->where('user_id', (int) Auth::id())
-            ->exists();
+        return $this->reviewEligibility->userHasSubmittedReview((int) Auth::id(), $hotelId);
     }
 
     public function rooms(Request $request, int $hotel): JsonResponse
@@ -257,6 +255,13 @@ class HotelController extends Controller
         }
 
         $user = Auth::user();
+        if (! $this->reviewEligibility->userCanReviewHotel((int) $user->id, $hotel)) {
+            return response()->json([
+                'success' => false,
+                'message' => __('You can review this hotel after you complete a paid stay.'),
+            ], 422);
+        }
+
         $author = (string) ($user?->name ?? '');
         if (trim($author) === '') {
             $author = 'Guest';
