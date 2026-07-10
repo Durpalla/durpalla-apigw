@@ -181,12 +181,17 @@ class CommonHelper
         if (app()->environment('testing')) {
             return encrypt($uuid);
         }
-        for(;;) {
-            if (Cart::where('token', $uuid)->count() == 0) {
-                break;
+        try {
+            for (;;) {
+                if (Cart::where('token', $uuid)->count() === 0) {
+                    break;
+                }
+                $uuid = (string) Str::uuid();
             }
-            $uuid = (string) Str::uuid();
+        } catch (\Throwable) {
+            // DB unavailable: still return a guest id (EnsureGuestId uses the same pattern).
         }
+
         return encrypt($uuid);
     }
 

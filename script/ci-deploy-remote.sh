@@ -104,6 +104,14 @@ artisan() {
   docker exec -T durpalla-apigw-1 "$@"
 }
 
+echo "Ensuring Passport OAuth keys on persistent storage..."
+if ! artisan php script/ensure-passport-keys.php; then
+  echo "ERROR: Passport keys are missing or invalid."
+  echo "Set PASSPORT_PRIVATE_KEY and PASSPORT_PUBLIC_KEY in $DEPLOY_PATH/.env"
+  echo "or restore storage/oauth-*.key on the apigw-storage Docker volume."
+  exit 1
+fi
+
 artisan php artisan config:clear
 artisan php artisan route:clear
 artisan php artisan view:clear
@@ -119,6 +127,30 @@ fi
 artisan php artisan config:cache
 artisan php artisan route:cache
 artisan php artisan view:cache
+
+echo "Verifying Passport can load OAuth keys..."
+if ! artisan php -r "
+require 'vendor/autoload.php';
+\$app = require 'bootstrap/app.php';
+\$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+\$private = storage_path('oauth-private.key');
+\$public = storage_path('oauth-public.key');
+if (!is_readable(\$private) || !is_readable(\$public)) {
+    fwrite(STDERR, 'oauth key files not readable after config:cache'.PHP_EOL);
+    exit(1);
+}
+if (!openssl_pkey_get_private(file_get_contents(\$private))) {
+    fwrite(STDERR, 'invalid oauth-private.key'.PHP_EOL);
+    exit(1);
+}
+if (!openssl_pkey_get_public(file_get_contents(\$public))) {
+    fwrite(STDERR, 'invalid oauth-public.key'.PHP_EOL);
+    exit(1);
+}
+"; then
+  echo "ERROR: Passport key verification failed after config:cache."
+  exit 1
+fi
 
 # Route/config caches are loaded by PHP-FPM workers; restart so opcache picks up new files.
 echo "Restarting containers to apply route/config cache..."
