@@ -32,6 +32,7 @@ class EnsureGuestId
                 $request->merge(['guest_unique_id' => $encrypted]);
                 $response = $next($request);
                 $this->attachCookie($response, $encrypted);
+                $response->headers->set($headerName, $encrypted);
                 return $response;
             } catch (\Throwable $e) {
                 // Invalid or tampered value; generate new. Log at debug so PHPUnit does not mark tests as risky.
@@ -45,6 +46,7 @@ class EnsureGuestId
 
         $response = $next($request);
         $this->attachCookie($response, $encrypted);
+        $response->headers->set($headerName, $encrypted);
         return $response;
     }
 

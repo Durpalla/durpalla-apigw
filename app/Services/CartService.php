@@ -130,6 +130,63 @@ class CartService
 
     public function save($item): array
     {
+        $cartItem = $this->buildCartItem($item);
+
+        if (!session()->has('user.carts')) {
+            session()->put('user.carts', []);
+        }
+        session()->push('user.carts', $cartItem);
+        return $cartItem;
+    }
+
+    /**
+     * Active cart rows for the current guest or authenticated customer.
+     */
+    public function listItems(): array
+    {
+        $customerToken = $this->resolveCustomerToken();
+        if ($customerToken === null) {
+            return [];
+        }
+
+        $locks = CabinLock::with([
+            'mapping.cabinType',
+            'mapping.schedule.startFrom',
+            'mapping.schedule.stopTo',
+            'mapping.schedule.boardingVias.ghat',
+            'mapping.schedule.vehicle.merchant',
+            'mapping.schedule.discounts',
+            'mapping.schedule.launch',
+        ])
+            ->where('customer_token', (string) $customerToken)
+            ->where('expire_at', '>', now())
+            ->get();
+
+        $items = [];
+        foreach ($locks as $lock) {
+            $item = $lock->mapping;
+            if (! $item) {
+                continue;
+            }
+            $item->lock_id = $lock->id;
+            $payload = $this->buildCartItem($item);
+            $payload['expires_at'] = $lock->expire_at?->toIso8601String();
+            $payload['price'] = $payload['fare'];
+            $payload['meta'] = [
+                'cabin_no' => $payload['cabin_no'] ?? null,
+                'vehicle_name' => $payload['vehicle_name'] ?? null,
+                'route_name' => $payload['route_name'] ?? null,
+                'trip_date' => $payload['trip_date'] ?? null,
+                'fare' => $payload['fare'] ?? null,
+            ];
+            $items[] = $payload;
+        }
+
+        return $items;
+    }
+
+    private function buildCartItem($item): array
+    {
         $platform = (request()->platform !== null && request()->platform !== 'android') ? request()->platform : 'mobile';
         $vat_applicable_to = $item->schedule->launch['merchant']['vat_applicable_to'];
         $vat_amount = abs(getOption('vat_amount', 0));
@@ -227,10 +284,6 @@ class CartService
             'incentive_type' => $incentive_type
         ];
 
-        if (!session()->has('user.carts')) {
-            session()->put('user.carts', []);
-        }
-        session()->push('user.carts', $cartItem);
         return $cartItem;
     }
 }
