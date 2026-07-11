@@ -57,11 +57,14 @@ resolve_mysql_router_host() {
   fi
 
   current_host="$(get_kv DB_HOST "")"
+  # Never keep a stale docker-gateway DB_HOST when Router is not reachable there.
+  if [[ "$current_host" == "$DOCKER_HOST_GATEWAY" || "$current_host" == "host.docker.internal" ]]; then
+    current_host=""
+  fi
+
   if [[ -n "$current_host" \
         && "$current_host" != "127.0.0.1" \
-        && "$current_host" != "localhost" \
-        && "$current_host" != "host.docker.internal" \
-        && "$current_host" != "$DOCKER_HOST_GATEWAY" ]]; then
+        && "$current_host" != "localhost" ]]; then
     if port_open "$current_host" "$db_port"; then
       echo "$current_host"
       return 0
