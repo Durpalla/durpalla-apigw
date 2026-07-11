@@ -168,3 +168,31 @@ jobs:
           echo "### Deployed to ${{ matrix.server.name }}" >> $GITHUB_STEP_SUMMARY
           echo "- Host: \`${{ matrix.server.host }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- Image: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Note: CI deploys containers only (no nginx/SSL changes)" >> $GITHUB_STEP_SUMMARY
+
+  smoke-test:
+    name: Public health check
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Check https://apigw.durpalla.com/up
+        run: |
+          set -euo pipefail
+          URL="${APIGW_HEALTH_URL:-https://apigw.durpalla.com/up}"
+          echo "Checking ${URL} ..."
+          for attempt in 1 2 3 4 5; do
+            code="$(curl -sS -o /dev/null -w '%{http_code}' --connect-timeout 15 --max-time 30 "$URL" || echo 000)"
+            if [[ "$code" -ge 200 && "$code" -lt 400 ]]; then
+              echo "OK HTTP ${code}"
+              echo "### Public smoke test passed (HTTP ${code})" >> $GITHUB_STEP_SUMMARY
+              exit 0
+            fi
+            echo "Attempt ${attempt}/5: HTTP ${code}, retrying in 10s..."
+            sleep 10
+          done
+          echo "::warning::Public health check failed (last HTTP ${code}). Containers may be OK — check Cloudflare DNS/SSL and host nginx."
+          echo "### Public smoke test warning (HTTP ${code})" >> $GITHUB_STEP_SUMMARY
+          echo "Deploy may have succeeded on servers; verify nginx/Cloudflare if the site still returns 500." >> $GITHUB_STEP_SUMMARY
+          exit 0

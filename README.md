@@ -54,3 +54,75 @@ Tests use a separate database (`apigw_test`). The test bootstrap creates the DB 
 ```bash
 php artisan test
 ```
+
+## Production deploy
+
+CI (`.github/workflows/ci-deploy.yml`) **only** builds the Docker image and runs `script/ci-deploy-remote.sh` on each server. It does **not** change host nginx, SSL, or `.env`.
+
+### One-time server bootstrap (per app server)
+
+```bash
+sudo mkdir -p /opt/durpalla-apigw
+sudo chown -R $USER:$USER /opt/durpalla-apigw
+# Copy .env.docker.example → /opt/durpalla-apigw/.env and fill in secrets
+
+# Host nginx (HTTP proxy to Docker ports 8001–8004)
+sudo bash script/setup-host-nginx.sh
+```
+
+### Cloudflare SSL (recommended — no certbot renewals)
+
+1. Add `apigw.durpalla.com` in Cloudflare DNS → **Proxied** (orange cloud) → A record to your server IP.
+2. Choose one mode:
+
+**Option A — Flexible (simplest, no origin cert files)**
+
+- Cloudflare → SSL/TLS → **Flexible**
+- Origin stays HTTP on port 80 (`setup-host-nginx.sh` is enough)
+- Laravel receives `X-Forwarded-Proto: https` via `cloudflare-real-ip.conf`
+
+**Option B — Full (strict) with Cloudflare Origin Certificate**
+
+Shared wildcard cert for all `*.durpalla.com` services on every server:
+
+```text
+/opt/durpalla/durpalla-cert.pem
+/opt/durpalla/durpalla-key.pem
+```
+
+- Cloudflare Dashboard → SSL/TLS → **Origin Server** → **Create Certificate**
+- Hostnames: `*.durpalla.com`, `durpalla.com`
+- Copy the **Origin Certificate** and **Private Key** (shown once)
+
+Install on one server:
+
+```bash
+sudo bash script/install-durpalla-cert.sh /path/to/cert.pem /path/to/key.pem
+sudo bash script/setup-apigw-cloudflare-ssl.sh   # host nginx
+# Docker host-network (.94): certs auto-mount when both files exist
+sudo bash script/setup-host-network-nginx.sh
+```
+
+Sync to all servers from dev machine:
+
+```bash
+# Place files locally (gitignored):
+#   .local/durpalla-cert.pem
+#   .local/durpalla-key.pem
+bash script/sync-durpalla-cert-to-servers.sh
+```
+
+- Cloudflare → SSL/TLS → **Full (strict)**
+
+You cannot export Cloudflare’s edge certificate — only create **Origin Certificates** for your server. Edge HTTPS is automatic when DNS is proxied.
+
+### Every deploy (automatic via GitHub Actions)
+
+Push to `master` → image pushed to GHCR → SSH → pull image → recreate 4 containers → Passport key check → Laravel cache → `/up` health check.
+
+To redeploy manually on a server:
+
+```bash
+cd /opt/durpalla-apigw
+IMAGE=ghcr.io/jewel-rana/durpalla-apigw:dev-latest bash script/docker-deploy.sh
+```

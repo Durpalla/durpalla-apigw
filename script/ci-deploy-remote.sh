@@ -35,6 +35,21 @@ if [[ ! -f .env ]]; then
   exit 1
 fi
 
+if ! grep -qE '^APP_KEY=base64:.+' "$DEPLOY_PATH/.env"; then
+  echo "ERROR: APP_KEY is missing or invalid in $DEPLOY_PATH/.env"
+  echo "Generate once on the server: php artisan key:generate --show"
+  exit 1
+fi
+
+uses_redis_cache="$(grep -E '^CACHE_STORE=redis$|^QUEUE_CONNECTION=redis$|^SESSION_DRIVER=redis$' "$DEPLOY_PATH/.env" || true)"
+if [[ -n "$uses_redis_cache" ]]; then
+  redis_password="$(grep -E '^REDIS_PASSWORD=' "$DEPLOY_PATH/.env" | cut -d= -f2- || true)"
+  if [[ -z "$redis_password" || "$redis_password" == "null" ]]; then
+    echo "ERROR: REDIS_PASSWORD must be set when CACHE_STORE, QUEUE_CONNECTION, or SESSION_DRIVER uses redis."
+    exit 1
+  fi
+fi
+
 SCRIPT_DIR="${DEPLOY_SCRIPT_DIR:-$(dirname "$0")}"
 export DOCKER_HOST_GATEWAY="$(bash "${SCRIPT_DIR}/docker-host-gateway.sh")"
 echo "Docker host gateway: ${DOCKER_HOST_GATEWAY}"
@@ -158,13 +173,31 @@ for c in durpalla-apigw-1 durpalla-apigw-2 durpalla-apigw-3 durpalla-apigw-4; do
   docker restart "$c" >/dev/null
 done
 sleep 2
+health_ok=0
 for port in 8001 8002 8003 8004; do
   if curl -fsS "http://127.0.0.1:${port}/up" >/dev/null 2>&1; then
     echo "  OK 127.0.0.1:${port}/up"
+    health_ok=1
   else
-    echo "  WARN 127.0.0.1:${port}/up not responding after restart"
+    echo "  FAIL 127.0.0.1:${port}/up not responding after restart"
   fi
 done
+
+if [[ "$health_ok" -ne 1 ]]; then
+  echo "ERROR: No apigw container responded on /up"
+  echo "--- durpalla-apigw-1 logs (last 60 lines) ---"
+  docker logs durpalla-apigw-1 --tail 60 2>&1 || true
+  echo "--- laravel.log (last 40 lines) ---"
+  docker exec -T durpalla-apigw-1 sh -c 'tail -40 storage/logs/laravel.log 2>/dev/null || echo "(no laravel.log)"' || true
+  exit 1
+fi
+
+# Host nginx is configured once on the server — CI only deploys containers.
+if curl -fsS -H 'Host: apigw.durpalla.com' 'http://127.0.0.1/up' >/dev/null 2>&1; then
+  echo "  OK host nginx -> apigw upstream"
+else
+  echo "  WARN host nginx not proxying apigw.durpalla.com (run setup-host-nginx.sh once if needed)"
+fi
 
 echo "Pruning unused Docker images..."
 if command -v timeout >/dev/null 2>&1; then
