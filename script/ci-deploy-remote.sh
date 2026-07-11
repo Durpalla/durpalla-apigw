@@ -109,6 +109,12 @@ docker run --name durpalla-apigw-2 -p 8002:80 "${common_run[@]}"
 docker run --name durpalla-apigw-3 -p 8003:80 "${common_run[@]}"
 docker run --name durpalla-apigw-4 -p 8004:80 "${common_run[@]}"
 
+if ! docker exec -T durpalla-apigw-1 test -f app/Providers/OpenTelemetryServiceProvider.php; then
+  echo "ERROR: app/Providers/OpenTelemetryServiceProvider.php missing in ${IMAGE}."
+  echo "Pull/rebuild the latest apigw image (OpenTelemetry support requires a current build)."
+  exit 1
+fi
+
 if ! docker exec -T durpalla-apigw-1 getent hosts host.docker.internal >/dev/null 2>&1; then
   echo "ERROR: host.docker.internal is not resolvable inside durpalla-apigw-1"
   exit 1
@@ -130,6 +136,7 @@ fi
 artisan php artisan config:clear
 artisan php artisan route:clear
 artisan php artisan view:clear
+artisan sh -c 'rm -f bootstrap/cache/services.php bootstrap/cache/packages.php 2>/dev/null || true'
 
 # Must run before config:cache — cached config ignores CACHE_STORE env overrides.
 echo "Clearing app cache (array driver — skip Redis during deploy)..."
@@ -142,6 +149,27 @@ fi
 artisan php artisan config:cache
 artisan php artisan route:cache
 artisan php artisan view:cache
+
+echo "Verifying MySQL..."
+mysql_ok="$(artisan php -r "
+require 'vendor/autoload.php';
+\$app = require 'bootstrap/app.php';
+\$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+try {
+  Illuminate\Support\Facades\DB::connection()->getPdo();
+  echo 'OK';
+} catch (Throwable \$e) {
+  echo 'ERR:'.\$e->getMessage();
+}
+" 2>/dev/null | grep -oE '^OK$|^ERR:.+' | tail -1 || true)"
+if [[ "$mysql_ok" != "OK" ]]; then
+  echo "ERROR: MySQL check failed after deploy: ${mysql_ok:-empty}"
+  echo "DB settings from .env:"
+  grep -E '^(DB_HOST|DB_PORT|DB_ROUTER_HOST)=' "$DEPLOY_PATH/.env" || true
+  echo "Re-run: bash ${DEPLOY_PATH}/script/normalize-docker-env.sh ${DEPLOY_PATH}"
+  exit 1
+fi
+echo "MySQL OK"
 
 echo "Verifying Passport can load OAuth keys..."
 if ! artisan php -r "

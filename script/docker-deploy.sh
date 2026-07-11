@@ -58,6 +58,12 @@ docker run --name durpalla-apigw-2 -p 8002:80 "${common_run[@]}"
 docker run --name durpalla-apigw-3 -p 8003:80 "${common_run[@]}"
 docker run --name durpalla-apigw-4 -p 8004:80 "${common_run[@]}"
 
+if ! docker exec -T durpalla-apigw-1 test -f app/Providers/OpenTelemetryServiceProvider.php; then
+  echo "ERROR: app/Providers/OpenTelemetryServiceProvider.php missing in ${IMAGE}." >&2
+  echo "Pull/rebuild the latest apigw image." >&2
+  exit 1
+fi
+
 run_artisan() {
   docker exec -T durpalla-apigw-1 "$@"
 }
