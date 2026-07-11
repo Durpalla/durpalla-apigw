@@ -83,7 +83,7 @@ resolve_mysql_router_host() {
   local candidates_raw
   candidates_raw="$(get_kv MYSQL_ROUTER_CANDIDATES "")"
   if [[ -z "$candidates_raw" ]]; then
-    candidates_raw="103.60.204.94 103.60.204.200 103.60.204.238 103.60.204.202 103.97.160.218 103.97.160.195"
+    candidates_raw="103.60.204.94 103.60.204.200 103.60.204.238"
   fi
 
   for host in $candidates_raw; do
