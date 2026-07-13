@@ -81,12 +81,13 @@ jobs:
     if: github.ref == 'refs/heads/master'
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         server:
           - name: server-1
-            host: 103.60.204.94
-          - name: server-2
             host: 103.60.204.200
+          - name: server-2
+            host: 103.60.204.94
           - name: server-3
             host: 103.60.204.238
 
