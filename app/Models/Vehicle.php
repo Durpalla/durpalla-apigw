@@ -77,7 +77,7 @@ class Vehicle extends Model
 
     public function merchant()
     {
-    	return $this->belongsTo(Merchant::class, 'merchant_id', 'user_id')->withTrashed();
+        return $this->belongsTo(Merchant::class, 'merchant_id', 'id')->withTrashed();
     }
 
     public function supervisors(): HasMany

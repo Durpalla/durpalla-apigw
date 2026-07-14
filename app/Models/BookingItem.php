@@ -122,7 +122,7 @@ class BookingItem extends Model
 
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Customer::class, 'customer_id', 'id');
     }
 
     public function format(): array

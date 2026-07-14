@@ -53,7 +53,7 @@ class CancellationService
                 if(!$bookingItem) {
                     throw new \Exception('Booking item ' . $item . ' is not valid.');
                 }
-                if(!$user->type == 'customer') {
+                if (! ($user instanceof \App\Models\Customer)) {
                     if ((strtotime($bookingItem['trip']['leaving_at']) + ($bookingItem['trip']['operation_hour'] * 60 * 60)) < $currentTime) {
                         $itemValidity = false;
                     }

@@ -8,6 +8,7 @@ use App\Repository\Interfaces\ScheduleRepositoryInterface;
 use App\Models\VehicleRoute;
 use App\Models\VehicleSchedule;
 use App\Services\Search\TripFederatedSearchService;
+use App\Support\AuthActor;
 use Illuminate\Support\Facades\DB;
 use stdClass;
 
@@ -119,7 +120,7 @@ class TripService
 
                 if ($result->cabinMappings) {
                     foreach ($result->cabinMappings as $cabin) {
-                        if (in_array($cabin['cabin_id'], $books) || in_array($cabin['cabin_id'], $locks) || ($cabin['ownership'] != 'jolzan') || ($cabin['is_reserved'])) {
+                        if (in_array($cabin['cabin_id'], $books) || in_array($cabin['cabin_id'], $locks) || ($cabin['ownership'] != 'durpalla') || ($cabin['is_reserved'])) {
                             $row['cabin_available'] -= 1;
                         }
                     }
@@ -128,7 +129,7 @@ class TripService
                 if ($result->seatMappings) {
 //                     dd( $result->seatMappings );
                     foreach ($result->seatMappings as $seat) {
-                        if (in_array($seat['cabin_id'], $books) || in_array($seat['cabin_id'], $locks) || ($seat['ownership'] != 'jolzan') || ($seat['is_reserved'])) {
+                        if (in_array($seat['cabin_id'], $books) || in_array($seat['cabin_id'], $locks) || ($seat['ownership'] != 'durpalla') || ($seat['is_reserved'])) {
                             $row['seat_available'] -= 1;
                         }
                     }
@@ -218,10 +219,7 @@ class TripService
                 if ($item->is_reserved || $item->is_locked || $item->booked) {
                     $status = false;
                 }
-                $type = 'jolzan';
-                if ($user !== null) {
-                    $type = (in_array($user->type, ['customer', 'admin'])) ? 'jolzan' : $user->type;
-                }
+                $type = AuthActor::ownershipType($user);
                 if ($type !== $item->ownership) {
                     $status = false;
                 }
@@ -232,10 +230,7 @@ class TripService
                 if ($item->is_reserved || $item->is_locked || $item->booked) {
                     $status = false;
                 }
-                $type = 'jolzan';
-                if ($user != null) {
-                    $type = (in_array($user->type, ['customer', 'admin'])) ? 'jolzan' : $user->type;
-                }
+                $type = AuthActor::ownershipType($user);
                 if ($type !== $item->ownership) {
                     $status = false;
                 }
@@ -291,7 +286,7 @@ class TripService
             $row['service_charge'] = $cabin->service_charge;
 
             // status gating
-            $type = $user ? (in_array($user->type, ['customer', 'admin', 'agent']) ? 'jolzan' : $user->type) : 'jolzan';
+            $type = AuthActor::ownershipType($user);
             $row['status'] = (($cabin->is_reserved == 1) || $cabin->booked == 1 || $cabin->is_locked == 1) ? 0 : 1;
             if ($type !== $cabin->ownership) $row['status'] = 0;
             if ($cabin->is_advance) $row['status'] = 9;

@@ -43,7 +43,7 @@ class Payment extends Model
 
     public function customer(): BelongsTo
     {
-    	return $this->belongsTo(User::class, 'customer_id', 'id');
+    	return $this->belongsTo(Customer::class, 'customer_id', 'id');
     }
 
     public function gateway(): BelongsTo

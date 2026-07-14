@@ -3,14 +3,38 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\User;
-
 
 class Booking extends Model
 {
     use SoftDeletes;
-    protected $fillable = ['booking_date', 'customer_id', 'user_id', 'vat_amount', 'vat_total', 'charge_amount', 'charge_total', 'booking_party', 'status', 'total_amount', 'total_discount', 'payment_status', 'total_payable', 'platform', 'ticket_blacker'];
+
+    protected $fillable = [
+        'booking_date',
+        'customer_id',
+        'user_id', // maps to booked_by_id via mutator for mass assignment
+        'booked_by_type',
+        'booked_by_id',
+        'vat_amount',
+        'vat_total',
+        'charge_amount',
+        'charge_total',
+        'booking_party',
+        'status',
+        'total_amount',
+        'total_discount',
+        'payment_status',
+        'total_payable',
+        'platform',
+        'ticket_blacker',
+        // Multi-service support
+        'service_type',
+        'from_date',
+        'to_date',
+        'supplier_id',
+        'supplier_booking_reference',
+    ];
 
     public function bookingItems()
     {
@@ -24,22 +48,54 @@ class Booking extends Model
 
     public function customer()
     {
-    	return $this->belongsTo(User::class, 'customer_id', 'id');
+        return $this->belongsTo(Customer::class, 'customer_id', 'id');
     }
 
+    /**
+     * Legacy alias: actor who created the booking (via bookedBy morph).
+     */
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id');
+        return $this->bookedBy();
     }
 
+    /**
+     * Legacy alias: officer who created the booking (via bookedBy morph).
+     */
     public function officer()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id');
+        return $this->bookedBy();
     }
 
-    public function payment()
+    /**
+     * Polymorphic actor who created the booking (admin, merchant, staff, agent, etc.).
+     */
+    public function bookedBy()
     {
-    	return $this->belongsTo(Payment::class, 'id', 'booking_id')->orderByDesc('id');
+        return $this->morphTo(__FUNCTION__, 'booked_by_type', 'booked_by_id');
+    }
+
+    /**
+     * Legacy user_id reads booked_by_id.
+     */
+    public function getUserIdAttribute(): ?int
+    {
+        $id = $this->attributes['booked_by_id'] ?? null;
+
+        return $id !== null ? (int) $id : null;
+    }
+
+    /**
+     * Legacy user_id writes booked_by_id (booked_by_type left for AuthActor when empty).
+     */
+    public function setUserIdAttribute($value): void
+    {
+        $this->attributes['booked_by_id'] = $value;
+    }
+
+    public function payment(): HasOne
+    {
+        return $this->hasOne(Payment::class, 'booking_id', 'id')->latestOfMany();
     }
 
     public function hotelReservation()
@@ -54,7 +110,7 @@ class Booking extends Model
 
     public function cancelled()
     {
-        return $this->hasMany(BookingCancellation::class, 'booking_id', 'id')->whereNotIn('status', [9,0]);
+        return $this->hasMany(BookingCancellation::class, 'booking_id', 'id')->whereNotIn('status', [9, 0]);
     }
 
     public function cancelledItems()
@@ -79,7 +135,7 @@ class Booking extends Model
             'customer_id' => $this->booking->customer_id,
             'customer_name' => $this->booking->customer->name,
             'customer_mobile' => $this->booking->customer->mobile,
-            'booking_date' => $this->booking->booking_date
+            'booking_date' => $this->booking->booking_date,
         ];
     }
 
@@ -91,13 +147,14 @@ class Booking extends Model
                 'items' => $this->bookingItems->map(function ($item) {
                     return $item->format();
                 }),
-                'qr' => $responseArr['qr'] = upload_asset('qrs/' . $this->id . '.png')
+                'qr' => upload_asset('qrs/' . $this->id . '.png'),
             ];
     }
 
-    public static function boot() {
+    public static function boot()
+    {
         parent::boot();
-        static::deleting(function($booking) {
+        static::deleting(function ($booking) {
             $booking->bookingItems()->delete();
             $booking->cancellations()->delete();
             $booking->cancelationRequests()->delete();

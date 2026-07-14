@@ -1437,7 +1437,7 @@ final class HotelBookingService
                 'vat_total' => (float) ($quote['vat_amount'] ?? 0),
                 'charge_amount' => (float) ($quote['charge_percent'] ?? 0),
                 'charge_total' => (float) ($quote['charge_amount'] ?? 0),
-                'booking_party' => 'jolzan',
+                'booking_party' => 'durpalla',
                 'platform' => 'android',
                 'status' => AppConst::BOOKING_PENDING,
             ]);

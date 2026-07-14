@@ -3,27 +3,28 @@
 namespace App\Http\Controllers\Api\v1;
 
 use App\Constants\AppConst;
+use App\Events\UserCreated;
 use App\Helpers\LogHelper;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginCheckRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\OtpVerifyRequest;
 use App\Http\Requests\RegisterRequest;
+use App\Models\Customer;
+use App\Models\UserOtp;
 use Exception;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\App;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
-use App\Jobs\OTPCodeSendingJob;
-use App\Models\User;
-use App\Models\UserOtp;
-use Illuminate\Support\Facades\Log;
-use Lang;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
-use App\Events\UserCreated;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
+/**
+ * Customer auth for mobile/web apps – Customer model + Sanctum (guard: customer).
+ */
 class AuthController extends Controller
 {
     private int $success;
@@ -34,21 +35,23 @@ class AuthController extends Controller
         $this->success = 200;
     }
 
+    /** OTP code: fixed in non-production, random in production. */
+    private function getOtpCode(): string
+    {
+        return App::environment('production')
+            ? (string) mt_rand(100000, 999999)
+            : (string) AppConst::DEFAULT_OTP;
+    }
+
     public function check(LoginCheckRequest $request)
     {
         $data = ['success' => false, 'message' => __('Something went wrong. Please try again.')];
 
-        $account = User::where('type', AppConst::USER_TYPE_CUSTOMER)
-            ->where('mobile', $request->mobile)
-            ->first();
+        $account = Customer::where('mobile', $request->mobile)->first();
 
         if ($account) {
             if ($account->email_verified_at == null || $account->status == 0) {
-
-                $code = mt_rand(100000, 999999);
-                if (App::environment('local')) {
-                    $code = AppConst::DEFAULT_OTP;
-                }
+                $code = $this->getOtpCode();
                 $otp = UserOtp::firstOrNew(['mobile' => $request->mobile]);
                 if ($otp) {
                     if (strtotime($otp->updated_at) < (time() - 900)) {
@@ -65,19 +68,17 @@ class AuthController extends Controller
                 }
                 $otp->updated_at = now();
 
-                if ($otp->save() && !app()->environment('local')) {
-                    dispatch(new OTPCodeSendingJob($request->mobile, $otp->otp_code));
+                if ($otp->save() && ! app()->environment('local')) {
                     sendSMS([
                         'mobile' => $request->mobile,
-                        'message' => config('app.name') . ' verification code is ' . $otp->otp_code
+                        'message' => config('app.name') . ' verification code is ' . $otp->otp_code,
                     ]);
-                    // Log::debug('OTP Code for ' . $request->mobile . ' - ' . $otp->otp_code);
                 }
 
                 $data['success'] = true;
                 $data['message'] = __('Customer account not verified');
                 $data['step'] = 'otp';
-            } elseif ($account && $account->status == 1) {
+            } elseif ($account->status == 1) {
                 $data['success'] = true;
                 $data['message'] = __('Customer account found');
                 $data['step'] = 'login';
@@ -86,12 +87,8 @@ class AuthController extends Controller
                 $data['message'] = __('Customer account is not active');
                 $data['step'] = 'check';
             }
-
         } else {
-            $code = AppConst::DEFAULT_OTP;
-            if (App::environment('production')) {
-                $code = mt_rand(100000, 999999);
-            }
+            $code = $this->getOtpCode();
             $otp = UserOtp::firstOrNew(['mobile' => $request->mobile]);
             $otp->mobile = $request->mobile;
             $otp->otp_code = $code;
@@ -110,9 +107,8 @@ class AuthController extends Controller
             if ($otp->save()) {
                 sendSMS([
                     'mobile' => $request->mobile,
-                    'message' => config('app.name') . ' verification code is ' . $otp->otp_code
+                    'message' => config('app.name') . ' verification code is ' . $otp->otp_code,
                 ]);
-//                    Log::debug('OTP Code for ' . $request->mobile . ' - ' . $otp->otp_code);
                 $data['success'] = true;
                 $data['message'] = __('Customer account not found');
                 $data['step'] = 'otp';
@@ -153,10 +149,7 @@ class AuthController extends Controller
             if (strtotime($otp->updated_at) < time() - 900) {
                 $data['message'] = 'Your otp code has been expired.';
             } else {
-                $user = User::firstOrNew([
-                    'mobile' => $request->mobile,
-                    'type' => AppConst::USER_TYPE_CUSTOMER,
-                ]);
+                $user = Customer::firstOrNew(['mobile' => $request->mobile]);
 
                 if ($user->id) {
                     $user->email_verified_at = now();
@@ -195,32 +188,35 @@ class AuthController extends Controller
             if ($otp) {
                 DB::beginTransaction();
                 try {
-                    $user = new User;
+                    $user = new Customer;
                     $user->name = $request->name;
                     $user->email = $request->email;
                     $user->mobile = $request->mobile;
-                    $user->nid = $request->nid;
                     $user->password = Hash::make($request->password);
                     $user->email_verified_at = now();
-                    $user->type = AppConst::USER_TYPE_CUSTOMER;
-                    $user->device_id = $request->device_id;
+                    $user->status = 1;
 
                     $user->save();
                     $platform = ($request->platform) ? $request->platform : 'web';
-                    event(new UserCreated($user, $platform));
+                    try {
+                        event(new UserCreated($user, $platform));
+                    } catch (\Throwable $e) {
+                        // UserCreated historically typed for User; customers are separate now.
+                    }
                     DB::commit();
-                    $token = $user->createToken(config('app.name'))->accessToken;
-                    // $token = Str::random(80);
 
-                    //refined UserData
-                    $userData = array(
+                    Auth::guard('customer')->setUser($user);
+                    $token = $user->createToken(config('app.name'))->plainTextToken;
+
+                    $userData = [
                         'id' => $user->id,
                         'name' => $user->name,
                         'email' => $user->email,
                         'mobile' => $user->mobile,
-                        'type' => $user->type,
-                        'photo' => $user->profile_pic ? upload_asset($user->profile_pic) : asset('default/avatar.png')
-                    );
+                        'type' => 'customer',
+                        'role' => 'customer',
+                        'photo' => $user->profile_pic ? upload_asset($user->profile_pic) : asset('default/avatar.png'),
+                    ];
 
                     $data['user'] = $userData;
                     $data['token'] = $token;
@@ -235,7 +231,7 @@ class AuthController extends Controller
             }
         } catch (\Exception $exception) {
             LogHelper::exception($exception, [
-                'keyword' => 'REGISTER_EXCEPTION'
+                'keyword' => 'REGISTER_EXCEPTION',
             ]);
             $data['message'] = __('Internal server error!');
         }
@@ -246,16 +242,14 @@ class AuthController extends Controller
     public function login(LoginRequest $request)
     {
         try {
-            //check if an account exists or not
-            $user = User::where('type', AppConst::USER_TYPE_CUSTOMER)
-                ->where(['mobile' => $request->mobile])
-                ->first();
+            $user = Customer::where(['mobile' => $request->mobile])->first();
 
-            if (empty($user))
+            if (empty($user)) {
                 return response()->json(['success' => false, 'message' => __('Account not found.')], $this->success);
+            }
 
             if ($user->email_verified_at == null) {
-                $code = mt_rand(100000, 999999);
+                $code = $this->getOtpCode();
                 $otp = UserOtp::firstOrNew(['mobile' => $request->mobile]);
                 if ($otp) {
                     if (strtotime($otp->updated_at) < (time() - 900)) {
@@ -271,71 +265,62 @@ class AuthController extends Controller
                     $otp->attempts = 1;
                 }
                 $otp->updated_at = now();
+                $otp->save();
 
-                if ($otp->save()) {
-//                sendSMS([
-//                    'mobile' => $request->mobile,
-//                    'message' => 'Your otp code is ' . $otp->otp_code
-//                ]);
-                }
                 return response()->json(['success' => false, 'otp_required' => true, 'message' => __('Your account need to verified')], $this->success);
             }
 
-            if (!Hash::check($request->password, $user->password)) {
+            if (! Hash::check($request->password, $user->password)) {
                 return response()->json(['success' => false, 'message' => __('Your password does not match.')], $this->success);
             }
 
-            //update device id
-            $user->device_id = $request->device_id;
-            $user->save();
+            Auth::guard('customer')->setUser($user);
+            $token = $user->createToken(config('app.name'))->plainTextToken;
 
-            $token = $user->createToken(config('app.name'))->accessToken;
-            //refined UserData
-            $userData = array(
+            $userData = [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
                 'mobile' => $user->mobile,
-                'type' => $user->type,
+                'type' => 'customer',
                 'photo' => $user->profile_pic ? upload_asset($user->profile_pic) : asset('default/avatar.png'),
-                'vat_visibility' => $user->type == 'merchant' && $user->merchant['vat_visibility'] == '1',
+                'role' => 'customer',
+                'vat_visibility' => false,
                 'nid_verification' => ($user->meta) ? $user->meta->nid_verified : 0,
                 'nid' => null,
-                'vehicle_type' => 'all'
-            );
-            if ($user->type === 'customer' && $user->meta && $user->meta['nid_no']) {
+                'vehicle_type' => 'all',
+            ];
+            if ($user->meta && $user->meta['nid_no']) {
                 $userData['nid'] = [
                     'nid_no' => $user->meta['nid_no'],
                     'front' => ($user->meta['nid_photo']) ? upload_asset('nid/' . $user->meta['nid_photo']) : '',
-                    'back' => ($user->meta['nid_back_side']) ? upload_asset('nid/' . $user->meta['nid_back_side']) : ''
+                    'back' => ($user->meta['nid_back_side']) ? upload_asset('nid/' . $user->meta['nid_back_side']) : '',
                 ];
             }
         } catch (\Exception $exception) {
             LogHelper::exception($exception, [
-                'keyword' => 'LOGIN_EXCEPTION'
+                'keyword' => 'LOGIN_EXCEPTION',
             ]);
+
             return response()->json(['success' => false, 'message' => __('Internal server error!')], $this->success);
         }
 
-        //send data with success
         return response()->json(['success' => true, 'message' => __('Login success'), 'token' => $token, 'user' => $userData], $this->success);
     }
 
     public function resendCode(Request $request)
     {
         $data = ['success' => false, 'message' => __('Cannot re-send code')];
-        //validation rules
         $validator = Validator::make($request->all(), [
-            'mobile' => 'bail|required|max:14|regex:/^(01){1}[3456789]{1}(\d){8}$/|min:11|exists:user_otps,mobile'
+            'mobile' => 'bail|required|max:14|regex:/^(01){1}[3456789]{1}(\d){8}$/|min:11|exists:user_otps,mobile',
         ]);
 
-        //validation fails
         if ($validator->fails()) {
             $data['message'] = $validator->errors()->first();
         } else {
             DB::beginTransaction();
             try {
-                $code = mt_rand(100000, 999999);
+                $code = $this->getOtpCode();
                 $otps = UserOtp::where(['mobile' => $request->mobile])->first();
                 if (strtotime($otps->updated_at) > time() - 900) {
                     $otps->otp_code = $code;
@@ -344,9 +329,8 @@ class AuthController extends Controller
                     $otps->save();
                     sendSMS([
                         'mobile' => $request->mobile,
-                        'message' => 'Your otp code is ' . $otps->otp_code
+                        'message' => 'Your otp code is ' . $otps->otp_code,
                     ]);
-//                    Log::debug('Your otp code is ' . $otps->otp_code);
                     $data['success'] = true;
                     $data['message'] = __('OTP code successfully sent');
                 } elseif ($otps->attempts >= 5) {
@@ -359,14 +343,13 @@ class AuthController extends Controller
 
                     sendSMS([
                         'mobile' => $request->mobile,
-                        'message' => 'Your otp code is ' . $otps->otp_code
+                        'message' => 'Your otp code is ' . $otps->otp_code,
                     ]);
                     $data['success'] = true;
                     $data['message'] = __('OTP code successfully sent');
                 }
 
                 DB::commit();
-
             } catch (\Exception $e) {
                 DB::rollback();
             }
@@ -381,17 +364,17 @@ class AuthController extends Controller
         try {
             $request->user()->deviceToken()->updateOrCreate(
                 [
-                    'platform' => $request->platform
+                    'platform' => $request->platform,
                 ],
                 [
-                    'token' => $request->token
+                    'token' => $request->token,
                 ]
             );
             $data['status'] = true;
             $data['message'] = 'Success';
         } catch (\Exception $exception) {
             LogHelper::exception($exception, [
-                'keyword' => 'AUTH_PUSH_BIND_EXCEPTION'
+                'keyword' => 'AUTH_PUSH_BIND_EXCEPTION',
             ]);
             $data['message'] = __('Internal server error!');
         }
@@ -399,37 +382,25 @@ class AuthController extends Controller
         return response()->json($data, $this->success);
     }
 
-    private function _account_exist_by_mobile($mobile)
-    {
-        $query = User::where(['mobile' => $mobile])->first();
-
-        return !empty($query);
-    }
-
     public function forgot(Request $request)
     {
         $data = ['success' => false, 'message' => __('User account not found')];
         try {
-            //validation rules
             $validator = Validator::make($request->all(), [
-                'mobile' => 'bail|required|max:14|regex:/^(01){1}[3456789]{1}(\d){8}$/|min:11|exists:users,mobile'
+                'mobile' => 'bail|required|max:14|regex:/^(01){1}[3456789]{1}(\d){8}$/|min:11|exists:customers,mobile',
             ]);
 
-            //validation fails
             if ($validator->fails()) {
                 $data['message'] = $validator->errors()->first();
             } else {
-                $code = AppConst::DEFAULT_OTP;
-                if (app()->environment('production')) {
-                    $code = mt_rand(100000, 999999);
-                }
+                $code = $this->getOtpCode();
                 $otp = UserOtp::firstOrNew(['mobile' => $request->mobile, 'type' => 'forgot']);
                 $otp->mobile = $request->mobile;
                 $otp->otp_code = $code;
                 if ($otp->save()) {
                     sendSMS([
                         'mobile' => $request->mobile,
-                        'message' => 'Your otp code is ' . $code
+                        'message' => 'Your otp code is ' . $code,
                     ]);
                     $data['success'] = true;
                     $data['step'] = 'forgot_otp';
@@ -438,7 +409,7 @@ class AuthController extends Controller
             }
         } catch (\Exception $exception) {
             LogHelper::exception($exception, [
-                'keyword' => 'FORGOT_PASSWORD_EXCEPTION'
+                'keyword' => 'FORGOT_PASSWORD_EXCEPTION',
             ]);
             $data['message'] = __('Internal server error!');
         }
@@ -450,40 +421,34 @@ class AuthController extends Controller
     {
         $data = ['success' => false, 'message' => __('Cannot verify user')];
 
-        //validation rules
         $validator = Validator::make($request->all(), [
-            'mobile' => 'bail|required|max:14|regex:/^(01){1}[3456789]{1}(\d){8}$/|min:11|exists:users,mobile',
+            'mobile' => 'bail|required|max:14|regex:/^(01){1}[3456789]{1}(\d){8}$/|min:11|exists:customers,mobile',
             'password' => 'bail|nullable|min:8|max:20',
-            'confirm_password' => 'bail|required|min:8|max:20|same:password'
+            'confirm_password' => 'bail|required|min:8|max:20|same:password',
         ]);
 
-        //validation fails
         if ($validator->fails()) {
             $data['message'] = $validator->errors()->first();
         } else {
             DB::beginTransaction();
             try {
-                $user = User::where('type', AppConst::USER_TYPE_CUSTOMER)
-                    ->where('mobile', $request->mobile)
-                    ->first();
+                $user = Customer::where('mobile', $request->mobile)->first();
                 $user->password = Hash::make($request->password);
                 $user->save();
                 DB::commit();
 
-                //create / Generate Access Token
-                $data['token'] = $user->createToken(config('app.name'))->accessToken;
-                // $token = Str::random(80);
+                Auth::guard('customer')->setUser($user);
+                $data['token'] = $user->createToken(config('app.name'))->plainTextToken;
 
-                //refined UserData
-                $data['user'] = array(
+                $data['user'] = [
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
                     'mobile' => $user->mobile,
-                    'type' => $user->type,
+                    'type' => 'customer',
                     'photo' => $user->profile_pic ? upload_asset($user->profile_pic) : asset('default/avatar.png'),
-                    'role' => ($user->roles != null) ? $user->roles[0]->name : 'unknown'
-                );
+                    'role' => 'customer',
+                ];
 
                 $data['success'] = true;
                 $data['message'] = __('Your password has been reset.');
@@ -493,14 +458,17 @@ class AuthController extends Controller
             }
         }
 
-        //send data with success
         return response()->json($data, $this->success);
     }
 
     public function logout(Request $request)
     {
-        $user = Auth::user();
-        $user->token()->revoke();
+        $user = $request->user('customer') ?? $request->user() ?? Auth::user();
+        if ($user && method_exists($user, 'currentAccessToken') && $user->currentAccessToken()) {
+            $user->currentAccessToken()->delete();
+        } elseif ($user && method_exists($user, 'token') && $user->token()) {
+            $user->token()->revoke();
+        }
 
         return response()->json(['success' => true, 'message' => __('You are successfully logout')], $this->success);
     }

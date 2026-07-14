@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\v1;
 
 use App\Models\Booking;
-use App\Models\User;
 use App\Models\BookingCancellation;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -18,13 +17,14 @@ class ApiBookingController extends Controller
     protected $success = 200;
 
     /**
-     * Booking check for Passport (auth:api) – customer_id is User id.
+     * Booking check for customer guard – customer_id is customers.id.
      */
     public function check(Request $request, $id)
     {
         $data = ['success' => false, 'message' => __('Your PNR is not valid')];
+        $customerId = Auth::guard('customer')->id() ?? Auth::id();
         $booking = Booking::with('cancellations', 'customer', 'bookingItems.item.cabinType', 'bookingItems.trip.vehicle', 'bookingItems.trip.route')
-            ->where(['customer_id' => Auth::user()->id, 'id' => $id])->first();
+            ->where(['customer_id' => $customerId, 'id' => $id])->first();
 
         if ($booking) {
             $data['item'] = $booking->format();
@@ -36,22 +36,18 @@ class ApiBookingController extends Controller
     }
 
     /**
-     * Booking check for Sanctum (auth:customer). Resolves User by same mobile, then finds booking by customer_id.
-     * Use this with Bearer token from POST /api/v1/customer/auth/login.
+     * Booking check for Sanctum (auth:customer).
+     * bookings.customer_id is customers.id – no User mobile bridge.
      */
     public function checkAsCustomer(Request $request, $id)
     {
         $data = ['success' => false, 'message' => __('Your PNR is not valid')];
-        $customer = $request->user('customer');
-        if (!$customer) {
-            return response()->json($data, $this->success);
-        }
-        $user = User::where('mobile', $customer->mobile)->first();
-        if (!$user) {
+        $customerId = Auth::guard('customer')->id();
+        if (! $customerId) {
             return response()->json($data, $this->success);
         }
         $booking = Booking::with('cancellations', 'customer', 'bookingItems.item.cabinType', 'bookingItems.trip.vehicle', 'bookingItems.trip.route')
-            ->where(['customer_id' => $user->id, 'id' => $id])->first();
+            ->where(['customer_id' => $customerId, 'id' => $id])->first();
 
         if ($booking) {
             $data['item'] = $booking->format();

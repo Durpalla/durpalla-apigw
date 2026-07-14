@@ -21,7 +21,7 @@ class Discount extends Model
 
     public function merchant(): BelongsTo
     {
-    	return $this->belongsTo(Merchant::class, 'merchant_id', 'user_id');
+    	return $this->belongsTo(Merchant::class, 'merchant_id', 'id');
     }
 
     public function launch(): BelongsTo
