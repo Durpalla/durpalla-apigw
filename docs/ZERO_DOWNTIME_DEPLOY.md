@@ -22,9 +22,9 @@ Enable origin health monitors for `apigw.durpalla.com` on `/up` so restarting se
 
 ```bash
 export DEPLOY_PATH=/opt/durpalla-apigw
-export IMAGE=ghcr.io/jewel-rana/durpalla-apigw:dev-latest
+export IMAGE=ghcr.io/durpalla/durpalla-apigw:dev-latest
 export GHCR_TOKEN_B64="$(echo -n "$TOKEN" | base64 -w0)"
-export GHCR_USER=jewel-rana
+export GHCR_USER=durpalla
 export DEPLOY_SCRIPT_DIR=/opt/durpalla-apigw/script
 bash /opt/durpalla-apigw/script/ci-deploy-remote.sh
 ```
@@ -34,8 +34,8 @@ bash /opt/durpalla-apigw/script/ci-deploy-remote.sh
 Re-pull and run deploy with a known-good image tag, or on one server:
 
 ```bash
-docker pull ghcr.io/jewel-rana/durpalla-apigw:dev-YYYYMMDD-<sha>
-export IMAGE=ghcr.io/jewel-rana/durpalla-apigw:dev-YYYYMMDD-<sha>
+docker pull ghcr.io/durpalla/durpalla-apigw:dev-YYYYMMDD-<sha>
+export IMAGE=ghcr.io/durpalla/durpalla-apigw:dev-YYYYMMDD-<sha>
 # ... run ci-deploy-remote.sh
 ```
 

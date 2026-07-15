@@ -133,5 +133,5 @@ To redeploy manually on a server:
 
 ```bash
 cd /opt/durpalla-apigw
-IMAGE=ghcr.io/jewel-rana/durpalla-apigw:dev-latest bash script/docker-deploy.sh
+IMAGE=ghcr.io/durpalla/durpalla-apigw:dev-latest bash script/docker-deploy.sh
 ```

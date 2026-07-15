@@ -8,7 +8,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: jewel-rana/durpalla-apigw
 
 concurrency:
   group: deploy-apigw-build-${{ github.ref }}
@@ -24,16 +23,26 @@ jobs:
 
     outputs:
       image_tag: ${{ steps.meta.outputs.version }}
+      image_ref: ${{ steps.image.outputs.ref }}
 
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
 
+      # Must match the GitHub repo owner (Durpalla/…), not a personal jewel-rana namespace —
+      # GITHUB_TOKEN cannot push packages under another user → 403 on ghcr.io.
+      - name: Normalize GHCR image coordinates
+        id: image
+        shell: bash
+        run: |
+          echo "ref=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+          echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ steps.image.outputs.ref }}
           tags: |
             type=raw,value=dev-{{date 'YYYYMMDD'}}-{{sha}},enable=true
             type=raw,value=dev-latest,enable=true
@@ -49,8 +58,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ steps.image.outputs.owner }}
+          password: ${{ secrets.GHCR_PUSH_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Build and push app image
         id: build
@@ -71,6 +80,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Key | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|-----|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Image** | \`${{ env.REGISTRY }}/${{ steps.image.outputs.ref }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Digest** | ${{ steps.build.outputs.digest }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Tag** | \`${{ steps.meta.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
@@ -119,7 +129,7 @@ jobs:
           DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-latest
+          IMAGE: ${{ env.REGISTRY }}/${{ needs.build-and-push.outputs.image_ref }}:dev-latest
           GHCR_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
           GHCR_USER: ${{ github.repository_owner }}
         run: |
@@ -149,6 +159,7 @@ jobs:
           )
 
           echo "Deploying to ${DEPLOY_USER}@${DEPLOY_HOST}:${PORT} (${PATH_ON_SERVER})"
+          echo "Image: ${IMAGE}"
 
           REMOTE_DIR="/tmp/durpalla-apigw-deploy-$$"
           ssh "${SSH_COMMON[@]}" -p "$PORT" \
@@ -169,7 +180,7 @@ jobs:
         run: |
           echo "### Deployed to ${{ matrix.server.name }}" >> $GITHUB_STEP_SUMMARY
           echo "- Host: \`${{ matrix.server.host }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Image: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev-latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Image: \`${{ env.REGISTRY }}/${{ needs.build-and-push.outputs.image_ref }}:dev-latest\`" >> $GITHUB_STEP_SUMMARY
           echo "- Note: CI deploys containers only (no nginx/SSL changes)" >> $GITHUB_STEP_SUMMARY
 
   smoke-test:
