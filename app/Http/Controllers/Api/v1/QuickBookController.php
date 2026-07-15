@@ -157,14 +157,14 @@ class QuickBookController extends Controller
                         if($booking->customer['meta'] && $booking->customer['meta']['nid_no'] && $user->meta && $user->meta['nid_visible_until'] >= now()) {
                             $nid = [
                                 'nid_no' => $booking->customer['meta']['nid_no'],
-                                'front' => ($booking->customer['meta']['nid_photo']) ? asset('nid/' . $booking->customer['meta']['nid_photo']) : '',
-                                'back' => ($booking->customer['meta']['nid_back_side']) ? asset('nid/' . $booking->customer['meta']['nid_back_side']) : ''
+                                'front' => ($booking->customer['meta']['nid_photo']) ? upload_asset('nid/' . $booking->customer['meta']['nid_photo']) : '',
+                                'back' => ($booking->customer['meta']['nid_back_side']) ? upload_asset('nid/' . $booking->customer['meta']['nid_back_side']) : ''
                             ];
                         }
                         array_push($responseArr, [
                             'id' => $booking->id,
                             'pnr' => $booking->id,
-                            'qr' => asset('qrs/' . $booking->id . '.png'),
+                            'qr' => upload_asset('qrs/' . $booking->id . '.png'),
                             'booking_date' => date('Y-m-d H:i:s', strtotime($booking->created_at)),
                             'payment_status' => $booking->payment['status'],
                             'total_amount' => $booking->total_amount,
@@ -295,7 +295,7 @@ class QuickBookController extends Controller
                     } else {
                         $responseArr['id'] = $booking->id;
                         $responseArr['pnr'] = $booking->id;
-                        $responseArr['qr'] = asset('qrs/' . $booking->id . '.png');
+                        $responseArr['qr'] = upload_asset('qrs/' . $booking->id . '.png');
                         $responseArr['booking_date'] = date('Y-m-d H:i:s', strtotime($booking->created_at));
                         $responseArr['payment_status'] = $booking->payment['status'];
                         $responseArr['total_amount'] = $booking->total_amount;
@@ -1143,7 +1143,7 @@ class QuickBookController extends Controller
             $dues = round(($booking->total_payable - $booking->payment->paid_amount), 2);
             $responseArr['id'] = $booking->id;
             $responseArr['pnr'] = $booking->id;
-            $responseArr['qr'] = asset('qrs/' . $booking->id . '.png');
+            $responseArr['qr'] = upload_asset('qrs/' . $booking->id . '.png');
             $responseArr['booking_date'] = date('Y-m-d H:i:s', strtotime($booking->created_at));
             $responseArr['booking_date_formated'] = date('d M, Y h:i A', strtotime($booking->created_at));
             $responseArr['payment_status'] = $booking->payment['status'];

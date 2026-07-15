@@ -47,4 +47,23 @@ class PublicHomeApiTest extends TestCase
             ->assertJson(['success' => true])
             ->assertJsonStructure(['success', 'data']);
     }
+
+    public function test_public_app_config_returns_json(): void
+    {
+        $this->getJson('/api/v1/public/app-config?platform=android')
+            ->assertStatus(200)
+            ->assertJson(['success' => true])
+            ->assertJsonStructure([
+                'success',
+                'data' => [
+                    'version' => ['min', 'latest', 'force_update', 'store_url'],
+                    'sections' => [
+                        'my_offers',
+                        'my_trips',
+                        'upcoming_trips',
+                        'gallery_slider',
+                    ],
+                ],
+            ]);
+    }
 }

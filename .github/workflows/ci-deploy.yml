@@ -156,6 +156,7 @@ jobs:
           scp "${SSH_COMMON[@]}" -P "$PORT" \
             script/ci-deploy-remote.sh \
             script/normalize-docker-env.sh \
+            script/docker-host-gateway.sh \
             "${DEPLOY_USER}@${DEPLOY_HOST}:${REMOTE_DIR}/"
 
           ssh "${SSH_COMMON[@]}" -p "$PORT" \

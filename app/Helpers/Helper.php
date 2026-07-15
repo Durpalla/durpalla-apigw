@@ -621,3 +621,32 @@ use App\Services\OptionService;
             exit;
         }
     }
+
+    /**
+     * Public URL for user-uploaded files. Uses UPLOADS_PUBLIC_BASE_URL (CDN) when configured.
+     */
+    if (! function_exists('upload_asset')) {
+        function upload_asset(?string $path): ?string
+        {
+            if ($path === null || $path === '') {
+                return $path;
+            }
+
+            if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+                return $path;
+            }
+
+            $normalized = ltrim(str_replace('\\', '/', $path), '/');
+            $base = (string) config('uploads.public_base_url', '');
+
+            if ($base !== '') {
+                foreach ((array) config('uploads.cdn_path_prefixes', []) as $prefix) {
+                    if (str_starts_with($normalized, ltrim($prefix, '/'))) {
+                        return $base.'/'.$normalized;
+                    }
+                }
+            }
+
+            return asset($path);
+        }
+    }

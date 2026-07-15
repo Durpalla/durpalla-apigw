@@ -39,19 +39,19 @@ class FrontApiController2 extends Controller
         $data['suggestions'] = Ghat::select('name', 'id')->orderBy('name', 'asc')->distinct()->get();
         $partners = Merchant::select('merchant_name', 'logo', 'id')->orderBy('merchant_name', 'asc')->where('status', 1)->limit(10)->get();
         $data['partners'] = $partners->map(function ($item) {
-            $item->logo = ($item->logo) ? asset('images/' . $item->logo) : asset('default/avatar.png');
+            $item->logo = ($item->logo) ? upload_asset('images/' . $item->logo) : asset('default/avatar.png');
 
             return $item;
         });
         $offers = Coupon::select('poster')->where('is_offer', 1)->take(6)->get();
         // ->where('poster', '!=', null)
         $data['offers'] = $offers->map(function ($item) {
-            $item->thumbnail = asset($item->poster);
+            $item->thumbnail = upload_asset($item->poster);
             return $item;
         });
         $sponsors = Sponsor::where('status', 1)->get();
         $data['sponsors'] = $sponsors->map(function ($item) {
-            $item->attachment = asset($item->attachment);
+            $item->attachment = upload_asset($item->attachment);
             return $item;
         });
         $data['cabin_types'] = CabinType::where('type', 'cabin')->pluck('name', 'id');
@@ -101,8 +101,8 @@ class FrontApiController2 extends Controller
         $offers = Coupon::select('poster')->where('is_offer', 1)->take(6)->get();
         // ->where('poster', '!=', null)
         $offers = $offers->map(function ($item) {
-            $item->thumbnail = asset($item->poster);
-            $item->poster = asset($item->poster);
+            $item->thumbnail = upload_asset($item->poster);
+            $item->poster = upload_asset($item->poster);
             return $item;
         })->toArray();
         return response()->json(['success' => true, 'data' => $offers], $this->success);
@@ -220,7 +220,7 @@ class FrontApiController2 extends Controller
                 }
                 $row['vehicle_id'] = $result->vehicle_id;
                 $row['vehicle_name'] = $result->launch['name'];
-                $row['vehicle_photo'] = ($result->launch['photo'] != null) ? asset('vehicles/' . $result->launch['photo']) : asset('default/launch.png');
+                $row['vehicle_photo'] = ($result->launch['photo'] != null) ? upload_asset('vehicles/' . $result->launch['photo']) : asset('default/launch.png');
                 $row['schedule_date'] = $result->schedule_date;
                 $row['schedule_type'] = $result->schedule_type;
                 $row['leaving_at'] = date('Y-m-d H:i:s', strtotime($result->leaving_at));

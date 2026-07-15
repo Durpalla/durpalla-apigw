@@ -64,7 +64,7 @@ class TripService
                 }
                 $row['vehicle_id'] = $result->vehicle_id;
                 $row['launch_name'] = $result->launch['name'];
-                $row['launch_photo'] = ($result->launch['photo'] != null) ? asset('vehicles/' . $result->launch['photo']) : asset('default/launch.png');
+                $row['launch_photo'] = ($result->launch['photo'] != null) ? upload_asset('vehicles/' . $result->launch['photo']) : asset('default/launch.png');
                 $row['schedule_date'] = $result->schedule_date;
                 $row['schedule_type'] = $result->schedule_type;
                 $row['leaving_at'] = date('Y-m-d H:i:s', strtotime($result->leaving_at));
@@ -204,7 +204,7 @@ class TripService
             'vehicle_name' => $trip->vehicle['name'],
             'nid_check' => $trip->vehicle['nid_verification_check'],
             'is_ac' => $trip->vehicle['ac_available'],
-            'vehicle_photo' => ($trip->vehicle['photo']) ? asset('vehicles/' . $trip->vehicle['photo']) : asset('default/launch.png'),
+            'vehicle_photo' => ($trip->vehicle['photo']) ? upload_asset('vehicles/' . $trip->vehicle['photo']) : asset('default/launch.png'),
             'schedule_date' => $trip->schedule_date,
             'schedule_type' => $trip->schedule_type,
             'leaving_at' => date('Y-m-d H:i:s', strtotime($trip->leaving_at)),

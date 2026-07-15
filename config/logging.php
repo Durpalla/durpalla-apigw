@@ -127,6 +127,12 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'openobserve' => [
+            'driver' => 'monolog',
+            'handler' => App\Logging\OpenTelemetryLogHandler::class,
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
+
     ],
 
 ];

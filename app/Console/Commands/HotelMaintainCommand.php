@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Services\Hotel\HotelBookingService;
+use App\Services\Hotel\HotelReviewEligibilityService;
 use Illuminate\Console\Command;
 
 class HotelMaintainCommand extends Command
@@ -15,8 +16,9 @@ class HotelMaintainCommand extends Command
     {
         $holds = $hotelBooking->expireStaleHolds();
         $res = $hotelBooking->failUnpaidReservations();
-        if ($holds > 0 || $res > 0) {
-            $this->info("Hotel maintenance: expired holds={$holds}, failed unpaid reservations={$res}");
+        $prompts = app(HotelReviewEligibilityService::class)->dispatchCheckoutReviewPrompts();
+        if ($holds > 0 || $res > 0 || $prompts > 0) {
+            $this->info("Hotel maintenance: expired holds={$holds}, failed unpaid reservations={$res}, review prompts={$prompts}");
         }
 
         return self::SUCCESS;

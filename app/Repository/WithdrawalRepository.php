@@ -47,7 +47,7 @@ class WithdrawalRepository extends BaseRepository implements WithdrawalRepositor
                     'id' => $item->id,
                     'user_id' => $item->user_id,
                     'name' => $item->user['name'],
-                    'photo' => $item->user['profile_pic'] ? asset($item->user['profile_pic']) : asset('default/avatar.png'),
+                    'photo' => $item->user['profile_pic'] ? upload_asset($item->user['profile_pic']) : asset('default/avatar.png'),
                     'date' => $item->created_at->format('d/m/Y'),
                     'method' => ($item->agentPaymentMethod) ? $item->agentPaymentMethod['type'] : '---',
                     'balance' => $item->balance,

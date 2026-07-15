@@ -91,7 +91,7 @@ class Booking extends Model
                 'items' => $this->bookingItems->map(function ($item) {
                     return $item->format();
                 }),
-                'qr' => $responseArr['qr'] = asset('qrs/' . $this->id . '.png')
+                'qr' => $responseArr['qr'] = upload_asset('qrs/' . $this->id . '.png')
             ];
     }
 

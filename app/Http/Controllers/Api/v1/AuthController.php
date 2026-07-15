@@ -219,7 +219,7 @@ class AuthController extends Controller
                         'email' => $user->email,
                         'mobile' => $user->mobile,
                         'type' => $user->type,
-                        'photo' => $user->profile_pic ? asset($user->profile_pic) : asset('default/avatar.png')
+                        'photo' => $user->profile_pic ? upload_asset($user->profile_pic) : asset('default/avatar.png')
                     );
 
                     $data['user'] = $userData;
@@ -297,7 +297,7 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'mobile' => $user->mobile,
                 'type' => $user->type,
-                'photo' => $user->profile_pic ? asset($user->profile_pic) : asset('default/avatar.png'),
+                'photo' => $user->profile_pic ? upload_asset($user->profile_pic) : asset('default/avatar.png'),
                 'vat_visibility' => $user->type == 'merchant' && $user->merchant['vat_visibility'] == '1',
                 'nid_verification' => ($user->meta) ? $user->meta->nid_verified : 0,
                 'nid' => null,
@@ -306,8 +306,8 @@ class AuthController extends Controller
             if ($user->type === 'customer' && $user->meta && $user->meta['nid_no']) {
                 $userData['nid'] = [
                     'nid_no' => $user->meta['nid_no'],
-                    'front' => ($user->meta['nid_photo']) ? asset('nid/' . $user->meta['nid_photo']) : '',
-                    'back' => ($user->meta['nid_back_side']) ? asset('nid/' . $user->meta['nid_back_side']) : ''
+                    'front' => ($user->meta['nid_photo']) ? upload_asset('nid/' . $user->meta['nid_photo']) : '',
+                    'back' => ($user->meta['nid_back_side']) ? upload_asset('nid/' . $user->meta['nid_back_side']) : ''
                 ];
             }
         } catch (\Exception $exception) {
@@ -481,7 +481,7 @@ class AuthController extends Controller
                     'email' => $user->email,
                     'mobile' => $user->mobile,
                     'type' => $user->type,
-                    'photo' => $user->profile_pic ? asset($user->profile_pic) : asset('default/avatar.png'),
+                    'photo' => $user->profile_pic ? upload_asset($user->profile_pic) : asset('default/avatar.png'),
                     'role' => ($user->roles != null) ? $user->roles[0]->name : 'unknown'
                 );
 
