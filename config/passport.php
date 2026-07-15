@@ -24,11 +24,20 @@ return [
     | your application. By default, the keys are stored as local files but
     | can be set via environment variables when that is more convenient.
     |
+    | In Docker deploys, keys live on the apigw-storage volume as
+    | storage/oauth-*.key (see script/ensure-passport-keys.php). When those
+    | files exist we intentionally leave these null so config:cache does not
+    | bake multiline .env values that may be truncated or malformed.
+    |
     */
 
-    'private_key' => env('PASSPORT_PRIVATE_KEY'),
+    'private_key' => (is_readable(storage_path('oauth-private.key')))
+        ? null
+        : env('PASSPORT_PRIVATE_KEY'),
 
-    'public_key' => env('PASSPORT_PUBLIC_KEY'),
+    'public_key' => (is_readable(storage_path('oauth-public.key')))
+        ? null
+        : env('PASSPORT_PUBLIC_KEY'),
 
     /*
     |--------------------------------------------------------------------------

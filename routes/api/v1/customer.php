@@ -87,6 +87,7 @@ Route::middleware(['JsonResponse'])->group(function () {
     });
 
     Route::prefix('cart')->group(function () {
+        Route::get('/', [ApiCartController::class, 'index']);
         Route::post('/add', [TransportApiController::class, 'lock']);
         Route::post('/lock', [TransportApiController::class, 'lock']);
         Route::post('/remove', [ApiCartController::class, 'remove']);

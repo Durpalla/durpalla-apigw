@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Passport\Passport;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -93,6 +94,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (is_readable(storage_path('oauth-private.key'))
+            && is_readable(storage_path('oauth-public.key'))) {
+            Passport::loadKeysFrom(storage_path());
+        }
+
         Redis::extend('predis', fn () => new PredisSentinelConnector);
 
         Schema::defaultStringLength(191);

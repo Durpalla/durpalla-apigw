@@ -52,6 +52,14 @@ class ApiCartController extends Controller
         return response()->json($data, $this->success);
     }
 
+    public function index(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => $this->cart->listItems(),
+        ], $this->success);
+    }
+
     /**
      * Reset cabin locks for the current guest/auth token only (never global wipe).
      */

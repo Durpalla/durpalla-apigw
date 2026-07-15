@@ -100,11 +100,20 @@ return [
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DATABASE_URL'),
+            // MySQL Router: 6446 read/write primary, 6447 read-only (see durpalla/docs/mysql-innodb-cluster.md).
             'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '3306'),
+            'port' => env('DB_PORT', '6446'),
             'database' => env('DB_DATABASE', 'forge'),
             'username' => env('DB_USERNAME', 'forge'),
             'password' => env('DB_PASSWORD', ''),
+            'read' => [
+                'host' => [env('DB_HOST', '127.0.0.1')],
+                'port' => env('DB_READ_PORT', env('DB_PORT', '6446')),
+            ],
+            'write' => [
+                'host' => [env('DB_HOST', '127.0.0.1')],
+                'port' => env('DB_WRITE_PORT', env('DB_PORT', '6446')),
+            ],
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
@@ -116,7 +125,7 @@ return [
                 PDO::MYSQL_ATTR_SSL_CA => env('DB_SSL_CA'),
                 PDO::MYSQL_ATTR_SSL_CERT => env('DB_SSL_CERT'),
                 PDO::MYSQL_ATTR_SSL_KEY => env('DB_SSL_KEY'),
-                (defined('PDO::MYSQL_ATTR_CONNECT_TIMEOUT') ? PDO::MYSQL_ATTR_CONNECT_TIMEOUT : 1002) => (int) env('DB_CONNECT_TIMEOUT', 5),
+                // Do not set MYSQL_ATTR_CONNECT_TIMEOUT here — MySQL Router rejects it (SQL syntax error).
 //                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
             ]) : [],
             'dump' => [

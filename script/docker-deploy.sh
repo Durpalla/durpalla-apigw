@@ -58,9 +58,23 @@ docker run --name durpalla-apigw-2 -p 8002:80 "${common_run[@]}"
 docker run --name durpalla-apigw-3 -p 8003:80 "${common_run[@]}"
 docker run --name durpalla-apigw-4 -p 8004:80 "${common_run[@]}"
 
+if ! docker exec -T durpalla-apigw-1 test -f app/Providers/OpenTelemetryServiceProvider.php; then
+  echo "ERROR: app/Providers/OpenTelemetryServiceProvider.php missing in ${IMAGE}." >&2
+  echo "Pull/rebuild the latest apigw image." >&2
+  exit 1
+fi
+
 run_artisan() {
   docker exec -T durpalla-apigw-1 "$@"
 }
+
+echo "Ensuring Passport OAuth keys on persistent storage..."
+if ! run_artisan php script/ensure-passport-keys.php; then
+  echo "ERROR: Passport keys are missing or invalid." >&2
+  echo "Set PASSPORT_PRIVATE_KEY and PASSPORT_PUBLIC_KEY in $DEPLOY_PATH/.env" >&2
+  echo "or restore storage/oauth-*.key on the apigw-storage Docker volume." >&2
+  exit 1
+fi
 
 run_artisan php artisan config:clear
 run_artisan php artisan route:clear
@@ -76,6 +90,22 @@ fi
 run_artisan php artisan config:cache
 run_artisan php artisan route:cache
 run_artisan php artisan view:cache
+
+echo "Verifying Passport can load OAuth keys..."
+if ! run_artisan php -r "
+require 'vendor/autoload.php';
+\$app = require 'bootstrap/app.php';
+\$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+\$private = storage_path('oauth-private.key');
+\$public = storage_path('oauth-public.key');
+if (!is_readable(\$private) || !is_readable(\$public)) {
+    fwrite(STDERR, 'oauth key files not readable after config:cache'.PHP_EOL);
+    exit(1);
+}
+"; then
+  echo "ERROR: Passport key verification failed after config:cache." >&2
+  exit 1
+fi
 
 docker image prune -f >/dev/null 2>&1 || true
 

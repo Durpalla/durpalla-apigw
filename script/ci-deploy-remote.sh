@@ -35,6 +35,21 @@ if [[ ! -f .env ]]; then
   exit 1
 fi
 
+if ! grep -qE '^APP_KEY=base64:.+' "$DEPLOY_PATH/.env"; then
+  echo "ERROR: APP_KEY is missing or invalid in $DEPLOY_PATH/.env"
+  echo "Generate once on the server: php artisan key:generate --show"
+  exit 1
+fi
+
+uses_redis_cache="$(grep -E '^CACHE_STORE=redis$|^QUEUE_CONNECTION=redis$|^SESSION_DRIVER=redis$' "$DEPLOY_PATH/.env" || true)"
+if [[ -n "$uses_redis_cache" ]]; then
+  redis_password="$(grep -E '^REDIS_PASSWORD=' "$DEPLOY_PATH/.env" | cut -d= -f2- || true)"
+  if [[ -z "$redis_password" || "$redis_password" == "null" ]]; then
+    echo "ERROR: REDIS_PASSWORD must be set when CACHE_STORE, QUEUE_CONNECTION, or SESSION_DRIVER uses redis."
+    exit 1
+  fi
+fi
+
 SCRIPT_DIR="${DEPLOY_SCRIPT_DIR:-$(dirname "$0")}"
 export DOCKER_HOST_GATEWAY="$(bash "${SCRIPT_DIR}/docker-host-gateway.sh")"
 echo "Docker host gateway: ${DOCKER_HOST_GATEWAY}"
@@ -72,15 +87,9 @@ docker pull "$IMAGE"
 echo "Image pulled: $IMAGE"
 docker tag "$IMAGE" durpalla-apigw-app:local
 
-echo "Recreating containers..."
-for c in durpalla-apigw-1 durpalla-apigw-2 durpalla-apigw-3 durpalla-apigw-4; do
-  docker rm -f "$c" >/dev/null 2>&1 || true
-done
-
 common_run=(
   -d --restart unless-stopped
   --add-host="host.docker.internal:${DOCKER_HOST_GATEWAY}"
-  # Bind-mount .env so multiline PASSPORT_*_KEY values work (docker --env-file cannot parse them).
   -v "$DEPLOY_PATH/.env:/var/www/html/.env:ro"
   "${docker_redis_env[@]}"
   -v apigw-storage:/var/www/html/storage
@@ -89,26 +98,65 @@ common_run=(
   durpalla-apigw-app:local
 )
 
-docker run --name durpalla-apigw-1 -e APIGW_PRIMARY=1 -p 8001:80 "${common_run[@]}"
-docker run --name durpalla-apigw-2 -p 8002:80 "${common_run[@]}"
-docker run --name durpalla-apigw-3 -p 8003:80 "${common_run[@]}"
-docker run --name durpalla-apigw-4 -p 8004:80 "${common_run[@]}"
+replace_apigw_container() {
+  local idx="$1"
+  local port="$2"
+  local name="durpalla-apigw-${idx}"
+  local primary_env=()
+
+  if [[ "$idx" == "1" ]]; then
+    primary_env=( -e APIGW_PRIMARY=1 )
+  fi
+
+  echo "Rolling replace ${name} on port ${port} (other backends keep serving)..."
+  docker rm -f "$name" >/dev/null 2>&1 || true
+
+  # shellcheck disable=SC2068
+  docker run --name "$name" -p "${port}:80" "${primary_env[@]}" "${common_run[@]}"
+
+  for attempt in $(seq 1 30); do
+    if curl -fsS "http://127.0.0.1:${port}/up" >/dev/null 2>&1; then
+      echo "  OK ${name} — http://127.0.0.1:${port}/up"
+      return 0
+    fi
+    echo "  Waiting for ${name} (attempt ${attempt}/30)..."
+    sleep 2
+  done
+
+  echo "ERROR: ${name} failed health check on port ${port}"
+  docker logs "$name" --tail 60 2>&1 || true
+  exit 1
+}
+
+echo "Rolling deploy: replace one container at a time on ports 8001-8004..."
+replace_apigw_container 1 8001
+
+if ! docker exec -T durpalla-apigw-1 test -f app/Providers/OpenTelemetryServiceProvider.php; then
+  echo "ERROR: app/Providers/OpenTelemetryServiceProvider.php missing in ${IMAGE}."
+  exit 1
+fi
 
 if ! docker exec -T durpalla-apigw-1 getent hosts host.docker.internal >/dev/null 2>&1; then
   echo "ERROR: host.docker.internal is not resolvable inside durpalla-apigw-1"
   exit 1
 fi
 
-echo "Warming Laravel caches..."
+echo "Warming Laravel caches on primary (shared bootstrap volume)..."
 artisan() {
   docker exec -T durpalla-apigw-1 "$@"
 }
 
+echo "Ensuring Passport OAuth keys on persistent storage..."
+if ! artisan php script/ensure-passport-keys.php; then
+  echo "ERROR: Passport keys are missing or invalid."
+  exit 1
+fi
+
 artisan php artisan config:clear
 artisan php artisan route:clear
 artisan php artisan view:clear
+artisan sh -c 'rm -f bootstrap/cache/services.php bootstrap/cache/packages.php 2>/dev/null || true'
 
-# Must run before config:cache — cached config ignores CACHE_STORE env overrides.
 echo "Clearing app cache (array driver — skip Redis during deploy)..."
 if command -v timeout >/dev/null 2>&1; then
   timeout 30 docker exec -T -e CACHE_STORE=array durpalla-apigw-1 php artisan cache:clear || true
@@ -120,19 +168,74 @@ artisan php artisan config:cache
 artisan php artisan route:cache
 artisan php artisan view:cache
 
-# Route/config caches are loaded by PHP-FPM workers; restart so opcache picks up new files.
-echo "Restarting containers to apply route/config cache..."
-for c in durpalla-apigw-1 durpalla-apigw-2 durpalla-apigw-3 durpalla-apigw-4; do
-  docker restart "$c" >/dev/null
-done
-sleep 2
+replace_apigw_container 2 8002
+replace_apigw_container 3 8003
+replace_apigw_container 4 8004
+
+echo "Verifying MySQL..."
+mysql_ok="$(artisan php -r "
+require 'vendor/autoload.php';
+\$app = require 'bootstrap/app.php';
+\$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+try {
+  Illuminate\Support\Facades\DB::connection()->getPdo();
+  echo 'OK';
+} catch (Throwable \$e) {
+  echo 'ERR:'.\$e->getMessage();
+}
+" 2>/dev/null | grep -oE '^OK$|^ERR:.+' | tail -1 || true)"
+if [[ "$mysql_ok" != "OK" ]]; then
+  echo "ERROR: MySQL check failed after deploy: ${mysql_ok:-empty}"
+  exit 1
+fi
+echo "MySQL OK"
+
+echo "Verifying Passport can load OAuth keys..."
+if ! artisan php -r "
+require 'vendor/autoload.php';
+\$app = require 'bootstrap/app.php';
+\$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+\$private = storage_path('oauth-private.key');
+\$public = storage_path('oauth-public.key');
+if (!is_readable(\$private) || !is_readable(\$public)) {
+    fwrite(STDERR, 'oauth key files not readable after config:cache'.PHP_EOL);
+    exit(1);
+}
+if (!openssl_pkey_get_private(file_get_contents(\$private))) {
+    fwrite(STDERR, 'invalid oauth-private.key'.PHP_EOL);
+    exit(1);
+}
+if (!openssl_pkey_get_public(file_get_contents(\$public))) {
+    fwrite(STDERR, 'invalid oauth-public.key'.PHP_EOL);
+    exit(1);
+}
+"; then
+  echo "ERROR: Passport key verification failed after config:cache."
+  exit 1
+fi
+
+health_ok=0
 for port in 8001 8002 8003 8004; do
   if curl -fsS "http://127.0.0.1:${port}/up" >/dev/null 2>&1; then
     echo "  OK 127.0.0.1:${port}/up"
+    health_ok=1
   else
-    echo "  WARN 127.0.0.1:${port}/up not responding after restart"
+    echo "  FAIL 127.0.0.1:${port}/up"
   fi
 done
+
+if [[ "$health_ok" -ne 1 ]]; then
+  echo "ERROR: No apigw container responded on /up"
+  docker logs durpalla-apigw-1 --tail 60 2>&1 || true
+  exit 1
+fi
+
+# Host nginx is configured once on the server — CI only deploys containers.
+if curl -fsS -H 'Host: apigw.durpalla.com' 'http://127.0.0.1/up' >/dev/null 2>&1; then
+  echo "  OK host nginx -> apigw upstream"
+else
+  echo "  WARN host nginx not proxying apigw.durpalla.com (run setup-host-nginx.sh once if needed)"
+fi
 
 echo "Pruning unused Docker images..."
 if command -v timeout >/dev/null 2>&1; then

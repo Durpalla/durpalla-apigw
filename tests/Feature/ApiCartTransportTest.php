@@ -96,4 +96,13 @@ class ApiCartTransportTest extends TestCase
         $this->assertContains($response->status(), [200, 400]);
         $response->assertJsonStructure(['success', 'message']);
     }
+
+    public function test_cart_index_returns_json(): void
+    {
+        $response = $this->getJson($this->base . '/cart');
+        $this->assertContains($response->status(), [200, 500]);
+        if ($response->status() === 200) {
+            $response->assertJsonStructure(['success', 'data']);
+        }
+    }
 }

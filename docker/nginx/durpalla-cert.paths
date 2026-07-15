@@ -1,0 +1,6 @@
+# Shared Cloudflare Origin Certificate paths (wildcard *.durpalla.com).
+# Install once per server: script/install-durpalla-cert.sh
+# Used by apigw, assets, and other durpalla.com nginx sites.
+
+/opt/durpalla/durpalla-cert.pem
+/opt/durpalla/durpalla-key.pem

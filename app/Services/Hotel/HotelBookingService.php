@@ -210,6 +210,7 @@ final class HotelBookingService
             $photoUrl = $this->firstHotelPhotoUrlForSearch($hotel);
             $cityLabel = $this->resolveHotelCityLabel($hotel, $cityNamesById);
             $stars = $this->resolveHotelStars($hotel);
+            $amenities = $this->facilityNamesForHotel((int) $hotel->id);
             $out[] = [
                 'id' => $hotel->id,
                 'hotel_id' => $hotel->id,
@@ -223,7 +224,8 @@ final class HotelBookingService
                 'price_per_night' => (float) $min,
                 'price_per_night_max' => (float) $max,
                 'currency' => 'BDT',
-                'amenities' => [],
+                'amenities' => $amenities,
+                'facilities' => $amenities,
             ];
         }
 
@@ -311,6 +313,7 @@ final class HotelBookingService
             $photoUrl = $this->firstHotelPhotoUrlForSearch($hotel);
             $cityLabel = $this->resolveHotelCityLabel($hotel, $cityNamesById);
             $stars = $this->resolveHotelStars($hotel);
+            $amenities = $this->facilityNamesForHotel((int) $hotel->id);
             $out[] = [
                 'id' => $hotel->id,
                 'hotel_id' => $hotel->id,
@@ -324,7 +327,8 @@ final class HotelBookingService
                 'price_per_night' => (float) $min,
                 'price_per_night_max' => (float) $max,
                 'currency' => 'BDT',
-                'amenities' => [],
+                'amenities' => $amenities,
+                'facilities' => $amenities,
             ];
         }
 
@@ -655,6 +659,28 @@ final class HotelBookingService
     }
 
     /**
+     * Module Hotel facility names linked via hotel_facility_hotel (admin Facilities tab).
+     *
+     * @return list<string>
+     */
+    private function facilityNamesForHotel(int $hotelId): array
+    {
+        if (! Schema::hasTable('hotel_facility_hotel') || ! Schema::hasTable('hotel_facilities')) {
+            return [];
+        }
+
+        return DB::table('hotel_facility_hotel as pivot')
+            ->join('hotel_facilities as f', 'f.id', '=', 'pivot.hotel_facility_id')
+            ->where('pivot.hotel_id', $hotelId)
+            ->orderBy('f.name')
+            ->pluck('f.name')
+            ->map(fn ($name) => trim((string) $name))
+            ->filter(fn ($name) => $name !== '')
+            ->values()
+            ->all();
+    }
+
+    /**
      * @return list<array{url: string, caption: ?string}>
      */
     private function moduleHotelGalleryAsApiPhotos(int $hotelId, bool $excludeCoverTypes): array
@@ -827,6 +853,8 @@ final class HotelBookingService
                 : (string) ($galleryPhotos[0]['url'] ?? '');
         }
 
+        $facilityNames = $this->facilityNamesForHotel($hotel->id);
+
         return [
             'id' => $hotel->id,
             'name' => $hotel->name,
@@ -843,6 +871,8 @@ final class HotelBookingService
             'cover_photo' => $hero,
             'gallery' => $galleryPhotos,
             'photos' => $galleryPhotos,
+            'amenities' => $facilityNames,
+            'facilities' => $facilityNames,
             'reviews' => $hotel->reviews->map(fn ($r) => [
                 'author' => $r->author,
                 'rating' => (float) $r->rating,

@@ -14,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Cloudflare / nginx terminate TLS — honor X-Forwarded-* for HTTPS cookies and HSTS.
+        // Cloudflare / host nginx terminate TLS — honor X-Forwarded-* for HTTPS cookies, HSTS, and client IP.
         $middleware->trustProxies(
             at: '*',
             headers: \Illuminate\Http\Request::HEADER_X_FORWARDED_FOR
