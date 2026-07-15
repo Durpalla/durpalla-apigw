@@ -25,8 +25,8 @@ refresh_container() {
     return 0
   fi
   echo "Refreshing config in $c..."
-  docker exec -T "$c" php artisan config:clear --no-interaction
-  docker exec -T "$c" php -d memory_limit=512M artisan config:cache --no-interaction
+  docker exec "$c" php artisan config:clear --no-interaction
+  docker exec "$c" php -d memory_limit=512M artisan config:cache --no-interaction
 }
 
 for c in durpalla-apigw-1 durpalla-apigw-2 durpalla-apigw-3 durpalla-apigw-4; do
@@ -34,7 +34,7 @@ for c in durpalla-apigw-1 durpalla-apigw-2 durpalla-apigw-3 durpalla-apigw-4; do
 done
 
 echo "Verifying MySQL from durpalla-apigw-1..."
-if docker exec -T durpalla-apigw-1 php artisan db:show --no-interaction; then
+if docker exec durpalla-apigw-1 php artisan db:show --no-interaction; then
   echo "Done."
 else
   echo "ERROR: still cannot connect. Check Router on 6446:" >&2

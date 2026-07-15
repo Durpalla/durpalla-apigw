@@ -131,19 +131,21 @@ replace_apigw_container() {
 echo "Rolling deploy: replace one container at a time on ports 8001-8004..."
 replace_apigw_container 1 8001
 
-if ! docker exec -T durpalla-apigw-1 test -f app/Providers/OpenTelemetryServiceProvider.php; then
+if ! docker exec durpalla-apigw-1 test -f /var/www/html/app/Providers/OpenTelemetryServiceProvider.php; then
   echo "ERROR: app/Providers/OpenTelemetryServiceProvider.php missing in ${IMAGE}."
+  echo "Debug: docker exec durpalla-apigw-1 ls -la /var/www/html/app/Providers/ | head -40"
+  docker exec durpalla-apigw-1 ls -la /var/www/html/app/Providers/ 2>&1 | head -40 || true
   exit 1
 fi
 
-if ! docker exec -T durpalla-apigw-1 getent hosts host.docker.internal >/dev/null 2>&1; then
+if ! docker exec durpalla-apigw-1 getent hosts host.docker.internal >/dev/null 2>&1; then
   echo "ERROR: host.docker.internal is not resolvable inside durpalla-apigw-1"
   exit 1
 fi
 
 echo "Warming Laravel caches on primary (shared bootstrap volume)..."
 artisan() {
-  docker exec -T durpalla-apigw-1 "$@"
+  docker exec durpalla-apigw-1 "$@"
 }
 
 echo "Ensuring Passport OAuth keys on persistent storage..."
@@ -159,9 +161,9 @@ artisan sh -c 'rm -f bootstrap/cache/services.php bootstrap/cache/packages.php 2
 
 echo "Clearing app cache (array driver — skip Redis during deploy)..."
 if command -v timeout >/dev/null 2>&1; then
-  timeout 30 docker exec -T -e CACHE_STORE=array durpalla-apigw-1 php artisan cache:clear || true
+  timeout 30 docker exec -e CACHE_STORE=array durpalla-apigw-1 php artisan cache:clear || true
 else
-  docker exec -T -e CACHE_STORE=array durpalla-apigw-1 php artisan cache:clear || true
+  docker exec -e CACHE_STORE=array durpalla-apigw-1 php artisan cache:clear || true
 fi
 
 artisan php artisan config:cache

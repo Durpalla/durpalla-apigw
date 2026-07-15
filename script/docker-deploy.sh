@@ -58,14 +58,14 @@ docker run --name durpalla-apigw-2 -p 8002:80 "${common_run[@]}"
 docker run --name durpalla-apigw-3 -p 8003:80 "${common_run[@]}"
 docker run --name durpalla-apigw-4 -p 8004:80 "${common_run[@]}"
 
-if ! docker exec -T durpalla-apigw-1 test -f app/Providers/OpenTelemetryServiceProvider.php; then
+if ! docker exec durpalla-apigw-1 test -f /var/www/html/app/Providers/OpenTelemetryServiceProvider.php; then
   echo "ERROR: app/Providers/OpenTelemetryServiceProvider.php missing in ${IMAGE}." >&2
   echo "Pull/rebuild the latest apigw image." >&2
   exit 1
 fi
 
 run_artisan() {
-  docker exec -T durpalla-apigw-1 "$@"
+  docker exec durpalla-apigw-1 "$@"
 }
 
 echo "Ensuring Passport OAuth keys on persistent storage..."
@@ -82,9 +82,9 @@ run_artisan php artisan view:clear
 
 echo "Clearing app cache (array driver — skip Redis during deploy)..."
 if command -v timeout >/dev/null 2>&1; then
-  timeout 30 docker exec -T -e CACHE_STORE=array durpalla-apigw-1 php artisan cache:clear || true
+  timeout 30 docker exec -e CACHE_STORE=array durpalla-apigw-1 php artisan cache:clear || true
 else
-  docker exec -T -e CACHE_STORE=array durpalla-apigw-1 php artisan cache:clear || true
+  docker exec -e CACHE_STORE=array durpalla-apigw-1 php artisan cache:clear || true
 fi
 
 run_artisan php artisan config:cache
