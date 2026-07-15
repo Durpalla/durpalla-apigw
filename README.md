@@ -35,3 +35,12 @@ Tests use a separate database (`apigw_test`). The test bootstrap creates the DB 
 ```bash
 php artisan test
 ```
+
+## Load tests (booking ≥5 TPS)
+
+k6 open-loop and closed-loop scripts live in [`loadtests/`](loadtests/README.md). Seed trip/seat inventory from the main Durpalla app:
+
+```bash
+cd ../durpalla && php artisan db:seed --class=TransportLoadTestSeeder
+cd ../durpalla-apigw && ./loadtests/run.sh open
+```
