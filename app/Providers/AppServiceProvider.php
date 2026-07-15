@@ -5,8 +5,12 @@ namespace App\Providers;
 use App\Models\VehicleSchedule;
 use App\Observers\VehicleScheduleObserver;
 use App\Redis\PredisSentinelConnector;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -93,5 +97,25 @@ class AppServiceProvider extends ServiceProvider
 
         Schema::defaultStringLength(191);
         VehicleSchedule::observe(VehicleScheduleObserver::class);
+
+        if ($this->app->environment('production', 'staging')) {
+            $appUrl = rtrim((string) config('app.url'), '/');
+            if (str_starts_with($appUrl, 'https://')) {
+                URL::forceScheme('https');
+                URL::forceRootUrl($appUrl);
+            }
+        }
+
+        RateLimiter::for('auth', function (Request $request) {
+            $key = $request->ip().'|'.strtolower((string) $request->input('mobile', $request->input('email', '')));
+
+            return Limit::perMinute(10)->by($key);
+        });
+
+        RateLimiter::for('otp', function (Request $request) {
+            $key = $request->ip().'|'.strtolower((string) $request->input('mobile', ''));
+
+            return Limit::perMinute(5)->by($key);
+        });
     }
 }

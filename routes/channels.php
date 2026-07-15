@@ -1,14 +1,11 @@
 <?php
 
+use Illuminate\Support\Facades\Broadcast;
+
 /*
 |--------------------------------------------------------------------------
 | Broadcast Channels
 |--------------------------------------------------------------------------
-|
-| Here you may register all of the event broadcasting channels that your
-| application supports. The given channel authorization callbacks are
-| used to check if an authenticated user can listen to the channel.
-|
 */
 
 Broadcast::channel('App.User.{id}', function ($user, $id) {
@@ -16,14 +13,13 @@ Broadcast::channel('App.User.{id}', function ($user, $id) {
 });
 
 Broadcast::channel('user.{toUserId}', function ($user, $toUserId) {
-    return $user->id == $toUserId;
+    return (int) $user->id === (int) $toUserId;
 });
 
-Broadcast::channel('New.Notification', function ($post) {
-    // return (int) auth()->user()->id != (int) $post->user_id;
-    return true;
+Broadcast::channel('New.Notification', function ($user, $post) {
+    return (int) $user->id === (int) ($post->user_id ?? 0);
 });
-Broadcast::channel('notification', function ($notification) {
-	dd('test');
-    return true;
+
+Broadcast::channel('notification.{userId}', function ($user, $userId) {
+    return (int) $user->id === (int) $userId;
 });

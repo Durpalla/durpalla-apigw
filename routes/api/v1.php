@@ -9,8 +9,8 @@ include(__DIR__ . '/v1/customer.php');
 
 // Customer API (Sanctum) – /api/v1/customer/auth/register, login, logout, me, booking/check
 Route::prefix('customer')->group(function () {
-    Route::post('auth/register', [CustomerAuthController::class, 'register']);
-    Route::post('auth/login', [CustomerAuthController::class, 'login']);
+    Route::post('auth/register', [CustomerAuthController::class, 'register'])->middleware('throttle:auth');
+    Route::post('auth/login', [CustomerAuthController::class, 'login'])->middleware('throttle:auth');
     Route::middleware(['auth:customer'])->group(function () {
         Route::post('auth/logout', [CustomerAuthController::class, 'logout']);
         Route::get('auth/me', [CustomerAuthController::class, 'me']);

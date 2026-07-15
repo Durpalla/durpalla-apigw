@@ -29,6 +29,22 @@ class CancellationService
     {
         $user = auth()->user();
         $booking = Booking::find($params['booking_id']);
+        if (! $booking) {
+            throw new \Exception('Booking not found.');
+        }
+
+        $staffTypes = [
+            AppConst::SUPERVISOR_ROLE,
+            AppConst::AGENT_TYPE,
+            AppConst::TYPE_MERCHANT,
+            AppConst::TYPE_JOLZAN,
+            AppConst::PARTNER_TYPE,
+        ];
+        $isStaff = in_array((string) ($user->type ?? ''), $staffTypes, true);
+        if (! $isStaff && (int) $booking->customer_id !== (int) $user->id) {
+            throw new \Exception('You are not allowed to cancel this booking.');
+        }
+
         $cancellations = [];
         if( $booking->cancellations ) {
             foreach( $booking->cancellations as $cancellation ) {

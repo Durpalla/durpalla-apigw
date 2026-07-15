@@ -49,14 +49,14 @@ Route::middleware(['JsonResponse'])->group(function () {
     });
 
     Route::prefix('auth')->group(function () {
-        Route::post('login', [AuthController::class, 'login']);
-        Route::post('register', [AuthController::class, 'register']);
-        Route::post('check', [AuthController::class, 'check']);
-        Route::post('verify', [AuthController::class, 'verify']);
-        Route::post('forgot', [AuthController::class, 'forgot']);
-        Route::post('reset', [AuthController::class, 'reset']);
-        Route::post('otp/send', [AuthController::class, 'resendCode']);
-        Route::post('otp/resend', [AuthController::class, 'resendCode']);
+        Route::post('login', [AuthController::class, 'login'])->middleware('throttle:auth');
+        Route::post('register', [AuthController::class, 'register'])->middleware('throttle:auth');
+        Route::post('check', [AuthController::class, 'check'])->middleware('throttle:otp');
+        Route::post('verify', [AuthController::class, 'verify'])->middleware('throttle:otp');
+        Route::post('forgot', [AuthController::class, 'forgot'])->middleware('throttle:otp');
+        Route::post('reset', [AuthController::class, 'reset'])->middleware('throttle:auth');
+        Route::post('otp/send', [AuthController::class, 'resendCode'])->middleware('throttle:otp');
+        Route::post('otp/resend', [AuthController::class, 'resendCode'])->middleware('throttle:otp');
     });
 
     Route::group(['prefix' => 'auth', 'middleware' => 'auth:api'], function() {
@@ -197,7 +197,7 @@ Route::middleware(['JsonResponse'])->group(function () {
             Route::delete('/favourite/hotels/{hotel}', [MyApiController::class, 'favouriteHotelDestroy'])->whereNumber('hotel');
         });
 
-        Route::prefix('quickbook')->group(function () {
+        Route::prefix('quickbook')->middleware(['user.type:agent,supervisor,merchant,partner,admin'])->group(function () {
             Route::get('/booking/{id}', [QuickBookController::class, 'getBookingByID']);
             Route::get('/routes', [QuickBookController::class, 'routes']);
             Route::get('/search', [QuickBookController::class, 'search']);
@@ -216,7 +216,7 @@ Route::middleware(['JsonResponse'])->group(function () {
             Route::post('/deck', [QuickBookController::class, 'quickPrint']);
         });
 
-        Route::prefix('supervisor')->group(function () {
+        Route::prefix('supervisor')->middleware(['user.type:supervisor,admin'])->group(function () {
             Route::get('/', [SupervisorController::class, 'profile']);
             Route::get('/jobs', [SupervisorController::class, 'jobs']);
             Route::get('/booking/history', [SupervisorController::class, 'bookingHistory']);

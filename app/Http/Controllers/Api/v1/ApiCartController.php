@@ -52,18 +52,39 @@ class ApiCartController extends Controller
         return response()->json($data, $this->success);
     }
 
-    public function resetLockdItems(): JsonResponse
+    /**
+     * Reset cabin locks for the current guest/auth token only (never global wipe).
+     */
+    public function resetLockdItems(Request $request): JsonResponse
     {
         $data = ['success' => false, 'message' => __('Cannot reset items')];
         try {
-            CabinLock::get()
-                ->each(function ($item, $key) {
-                    $item->delete();
-                });
+            $customerToken = $this->cart->getCurrentCustomerToken();
+            if ($customerToken === null) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Guest session required'),
+                ], 400);
+            }
+
+            $locks = CabinLock::where('customer_token', (string) $customerToken)->get();
+            $mappingIds = $locks->pluck('mapping_id')->filter()->values()->all();
+
+            foreach ($locks as $lock) {
+                $lock->delete();
+            }
+
+            if ($mappingIds !== []) {
+                DB::table('schedule_cabin_mappings')
+                    ->whereIn('id', $mappingIds)
+                    ->update(['is_locked' => 0, 'lock_id' => null]);
+            }
+
             $data['success'] = true;
             $data['message'] = __('successfully reset items');
         } catch (\Exception $exception) {
-            $data['message'] = $exception->getMessage();
+            $data['message'] = __('Cannot reset items');
+            report($exception);
         }
 
         return response()->json($data, $this->success);

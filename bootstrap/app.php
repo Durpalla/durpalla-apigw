@@ -14,14 +14,23 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Cloudflare / nginx terminate TLS — honor X-Forwarded-* for HTTPS cookies and HSTS.
+        $middleware->trustProxies(
+            at: '*',
+            headers: \Illuminate\Http\Request::HEADER_X_FORWARDED_FOR
+                | \Illuminate\Http\Request::HEADER_X_FORWARDED_HOST
+                | \Illuminate\Http\Request::HEADER_X_FORWARDED_PORT
+                | \Illuminate\Http\Request::HEADER_X_FORWARDED_PROTO
+        );
+
         $middleware->use([
             \Illuminate\Http\Middleware\HandleCors::class,
-            \App\Http\Middleware\ApiCookieMiddleware::class,
+            \App\Http\Middleware\SecurityHeaders::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [
             'ipn/*',
-            'api/payment/*/ipn'
+            'api/payment/*/ipn',
         ]);
 
         $middleware->api(append: [
@@ -31,6 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'JsonResponse' => JsonResponse::class,
             'guest.id' => \App\Http\Middleware\EnsureGuestId::class,
+            'user.type' => \App\Http\Middleware\EnsureUserType::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

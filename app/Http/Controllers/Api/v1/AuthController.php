@@ -450,50 +450,69 @@ class AuthController extends Controller
     {
         $data = ['success' => false, 'message' => __('Cannot verify user')];
 
-        //validation rules
         $validator = Validator::make($request->all(), [
             'mobile' => 'bail|required|max:14|regex:/^(01){1}[3456789]{1}(\d){8}$/|min:11|exists:users,mobile',
-            'password' => 'bail|nullable|min:8|max:20',
-            'confirm_password' => 'bail|required|min:8|max:20|same:password'
+            'password' => 'bail|required|min:8|max:20',
+            'confirm_password' => 'bail|required|min:8|max:20|same:password',
         ]);
 
-        //validation fails
         if ($validator->fails()) {
             $data['message'] = $validator->errors()->first();
-        } else {
-            DB::beginTransaction();
-            try {
-                $user = User::where('type', AppConst::USER_TYPE_CUSTOMER)
-                    ->where('mobile', $request->mobile)
-                    ->first();
-                $user->password = Hash::make($request->password);
-                $user->save();
-                DB::commit();
 
-                //create / Generate Access Token
-                $data['token'] = $user->createToken(config('app.name'))->accessToken;
-                // $token = Str::random(80);
-
-                //refined UserData
-                $data['user'] = array(
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'mobile' => $user->mobile,
-                    'type' => $user->type,
-                    'photo' => $user->profile_pic ? upload_asset($user->profile_pic) : asset('default/avatar.png'),
-                    'role' => ($user->roles != null) ? $user->roles[0]->name : 'unknown'
-                );
-
-                $data['success'] = true;
-                $data['message'] = __('Your password has been reset.');
-            } catch (Exception $e) {
-                DB::rollback();
-                $data['content'] = __('Your password cannot be changed.');
-            }
+            return response()->json($data, $this->success);
         }
 
-        //send data with success
+        $otp = UserOtp::where([
+            'mobile' => $request->mobile,
+            'type' => 'forgot',
+            'verified' => 1,
+        ])->latest()->first();
+
+        if (! $otp || strtotime($otp->updated_at) < time() - 900) {
+            $data['message'] = __('OTP verification required. Complete forgot + verify first.');
+
+            return response()->json($data, $this->success);
+        }
+
+        DB::beginTransaction();
+        try {
+            $user = User::where('type', AppConst::USER_TYPE_CUSTOMER)
+                ->where('mobile', $request->mobile)
+                ->first();
+
+            if (! $user) {
+                DB::rollBack();
+                $data['message'] = __('Cannot verify user');
+
+                return response()->json($data, $this->success);
+            }
+
+            $user->password = Hash::make($request->password);
+            $user->save();
+
+            // One-time use: prevent replay of the same verified forgot OTP.
+            $otp->delete();
+
+            DB::commit();
+
+            $data['token'] = $user->createToken(config('app.name'))->accessToken;
+            $data['user'] = [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'mobile' => $user->mobile,
+                'type' => $user->type,
+                'photo' => $user->profile_pic ? upload_asset($user->profile_pic) : asset('default/avatar.png'),
+                'role' => ($user->roles != null) ? $user->roles[0]->name : 'unknown',
+            ];
+            $data['success'] = true;
+            $data['message'] = __('Your password has been reset.');
+        } catch (Exception $e) {
+            DB::rollBack();
+            LogHelper::exception($e, ['keyword' => 'PASSWORD_RESET_EXCEPTION']);
+            $data['message'] = __('Your password cannot be changed.');
+        }
+
         return response()->json($data, $this->success);
     }
 
