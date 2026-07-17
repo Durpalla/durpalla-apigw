@@ -1,0 +1,142 @@
+{
+  "info": {
+    "name": "Durpalla Reseller Booking API",
+    "description": "Machine-to-machine booking API for API-partner (reseller) parties. Authenticate with Passport client-credentials, then sell from Durpalla public quota settled against the reseller's prepaid wallet (net of commission).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "base_url", "value": "https://apigw.durpalla.com" },
+    { "key": "client_id", "value": "" },
+    { "key": "client_secret", "value": "" },
+    { "key": "access_token", "value": "" },
+    { "key": "trip_id", "value": "" },
+    { "key": "item_id", "value": "" },
+    { "key": "booking_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "OAuth - Get client-credentials token",
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "POST",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            { "key": "grant_type", "value": "client_credentials" },
+            { "key": "client_id", "value": "{{client_id}}" },
+            { "key": "client_secret", "value": "{{client_secret}}" }
+          ]
+        },
+        "url": { "raw": "{{base_url}}/oauth/token", "host": ["{{base_url}}"], "path": ["oauth", "token"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var json = pm.response.json();",
+              "if (json.access_token) { pm.collectionVariables.set('access_token', json.access_token); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": { "raw": "{{base_url}}/api/reseller/v1/profile", "host": ["{{base_url}}"], "path": ["api", "reseller", "v1", "profile"] }
+      }
+    },
+    {
+      "name": "Wallet - Balance",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": { "raw": "{{base_url}}/api/reseller/v1/wallet", "host": ["{{base_url}}"], "path": ["api", "reseller", "v1", "wallet"] }
+      }
+    },
+    {
+      "name": "Wallet - Transactions",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": { "raw": "{{base_url}}/api/reseller/v1/wallet/transactions?per_page=20", "host": ["{{base_url}}"], "path": ["api", "reseller", "v1", "wallet", "transactions"], "query": [{ "key": "per_page", "value": "20" }] }
+      }
+    },
+    {
+      "name": "Trips - List",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": { "raw": "{{base_url}}/api/reseller/v1/trips?date=&from=&to=", "host": ["{{base_url}}"], "path": ["api", "reseller", "v1", "trips"], "query": [{ "key": "date", "value": "" }, { "key": "from", "value": "" }, { "key": "to", "value": "" }] }
+      }
+    },
+    {
+      "name": "Trips - Show (with available items)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": { "raw": "{{base_url}}/api/reseller/v1/trips/{{trip_id}}", "host": ["{{base_url}}"], "path": ["api", "reseller", "v1", "trips", "{{trip_id}}"] }
+      }
+    },
+    {
+      "name": "Bookings - List",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": { "raw": "{{base_url}}/api/reseller/v1/bookings?per_page=20", "host": ["{{base_url}}"], "path": ["api", "reseller", "v1", "bookings"], "query": [{ "key": "per_page", "value": "20" }] }
+      }
+    },
+    {
+      "name": "Bookings - Create (settled from wallet)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customer_name\": \"John Doe\",\n  \"customer_mobile\": \"01700000000\",\n  \"customer_email\": \"john@example.com\",\n  \"items\": [\n    { \"item_id\": {{item_id}} }\n  ]\n}"
+        },
+        "url": { "raw": "{{base_url}}/api/reseller/v1/bookings", "host": ["{{base_url}}"], "path": ["api", "reseller", "v1", "bookings"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var json = pm.response.json();",
+              "if (json.data && json.data.id) { pm.collectionVariables.set('booking_id', json.data.id); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings - Show",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": { "raw": "{{base_url}}/api/reseller/v1/bookings/{{booking_id}}", "host": ["{{base_url}}"], "path": ["api", "reseller", "v1", "bookings", "{{booking_id}}"] }
+      }
+    },
+    {
+      "name": "Bookings - Cancel (tiered refund to wallet)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": { "raw": "{{base_url}}/api/reseller/v1/bookings/{{booking_id}}/cancel", "host": ["{{base_url}}"], "path": ["api", "reseller", "v1", "bookings", "{{booking_id}}", "cancel"] }
+      }
+    }
+  ]
+}

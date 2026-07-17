@@ -20,3 +20,8 @@ Route::group(['prefix' => 'v1', 'middleware' => ['throttle:100,1', 'JsonResponse
 Route::group(['prefix' => 'v2', 'middleware' => ['throttle:100,1', 'JsonResponse']], function () {
     include(__DIR__ . '/api/v1.php');
 });
+
+// Reseller booking API (Passport client-credentials) — /api/reseller/v1/*
+Route::group(['middleware' => ['throttle:100,1', 'JsonResponse']], function () {
+    include(__DIR__ . '/api/reseller.php');
+});

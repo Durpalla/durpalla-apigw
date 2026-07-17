@@ -21,6 +21,7 @@ class Booking extends Model
         'charge_amount',
         'charge_total',
         'booking_party',
+        'party_id',
         'status',
         'total_amount',
         'total_discount',
@@ -34,7 +35,19 @@ class Booking extends Model
         'to_date',
         'supplier_id',
         'supplier_booking_reference',
+        // Reseller channel
+        'payment_token',
+        'payment_deadline',
+        'platform_commission_amount',
+        'reseller_commission_amount',
+        'commission_share_percent',
+        'wallet_debit_amount',
     ];
+
+    public function party()
+    {
+        return $this->belongsTo(Party::class, 'party_id');
+    }
 
     public function bookingItems()
     {

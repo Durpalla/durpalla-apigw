@@ -39,6 +39,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'JsonResponse' => JsonResponse::class,
             'guest.id' => \App\Http\Middleware\EnsureGuestId::class,
+            'client' => \Laravel\Passport\Http\Middleware\EnsureClientIsResourceOwner::class,
+            'resolve.api.partner' => \App\Http\Middleware\ResolveApiPartner::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
