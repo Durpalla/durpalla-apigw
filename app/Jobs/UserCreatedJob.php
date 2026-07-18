@@ -4,13 +4,12 @@ namespace App\Jobs;
 
 use App\Models\Merchant;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use App\Notifications\NewMerchantNotify;
 use App\Notifications\UserCreatedNotification;
-use App\Models\User;
 
 class UserCreatedJob implements ShouldQueue
 {
@@ -20,27 +19,20 @@ class UserCreatedJob implements ShouldQueue
     public $tries = 5;
     public $maxExceptions = 3;
 
-    private $user;
-    /**
-     * Create a new job instance.
-     *
-     * @return void
-     */
-    public function __construct( User $user)
+    private Authenticatable $user;
+
+    public function __construct(Authenticatable $user)
     {
         $this->user = $user;
     }
 
-    /**
-     * Execute the job.
-     *
-     * @return void
-     */
     public function handle()
     {
-        if($this->user->type == 'merchant') {
-            $merchant = Merchant::where('user_id', $this->user->id)->first();
-        } else {
+        if ($this->user instanceof Merchant) {
+            return;
+        }
+
+        if (method_exists($this->user, 'notify')) {
             $this->user->notify(new UserCreatedNotification());
         }
     }

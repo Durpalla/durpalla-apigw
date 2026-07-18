@@ -5,6 +5,10 @@ namespace App\Services;
 
 
 use App\Constants\AppConst;
+use App\Models\Agent;
+use App\Models\Customer;
+use App\Models\Merchant;
+use App\Models\MerchantStaff;
 use Illuminate\Support\Facades\DB;
 use App\Models\BookingItem;
 use App\Models\CabinLock;
@@ -99,11 +103,11 @@ class CartService
                 return 'Your selected item is not available (merchant items require login)';
             }
 
-            if ($user && in_array($user->type ?? '', ['agent', 'customer']) && ($item->ownership ?? '') == 'merchant') {
+            if ($user && \App\Support\AuthActor::isCustomerOrAgent($user) && ($item->ownership ?? '') == 'merchant') {
                 return 'Your selected item is not available (merchant items not bookable by customer/agent)';
             }
 
-            if ($user && ($user->type ?? '') == 'supervisor' && ($item->ownership ?? '') != 'merchant') {
+            if ($user && \App\Support\AuthActor::isSupervisor($user) && ($item->ownership ?? '') != 'merchant') {
                 return 'Your selected item is not available (supervisor can only book merchant items)';
             }
 
@@ -204,32 +208,32 @@ class CartService
         $honorium_charge = 0;
         if(auth()->check()) {
             $user = auth()->user();
-            if ($user->type != 'merchant') {
+            if (! ($user instanceof Merchant || $user instanceof MerchantStaff)) {
                 $charges = $this->calculation->getCharges($item->toArray(), $platform);
                 $service_charge_counter = $charges['amount'];
                 $service_charge = $charges['total'];
                 $service_charge_type = $charges['type'];
             }
 
-            if ($user->type == 'supervisor') {
+            if (($user instanceof MerchantStaff && $user->isSupervisor()) || (isset($user->type) && $user->type == 'supervisor')) {
                 $supervisor = collect($user->supervisorMappings)->where('vehicle_id', $item->schedule->vehicle_id)->first();
                 $incentive = $supervisor->supervisor_incentive;
                 $incentive_type = ($supervisor->incentive_type == 'percent') ? 'percent' : 'fixed';
             }
 
-            if($user->type == AppConst::AGENT_ROLE) {
+            if ($user instanceof Agent) {
                 $incentive = $user->incentive->incentive;
                 $incentive_type = $user->incentive->incentive_type;
             }
 
-            if ($user->type == 'merchant' && $item->honorium) {
+            if (($user instanceof Merchant || $user instanceof MerchantStaff) && $item->honorium) {
                 $is_honorium = 1;
                 $honorium_charge = $item->launch['merchant']['honorium_service_charge'];
             }
 
             if ($item->schedule->discounts) {
-                if (in_array($user->type, [AppConst::AGENT_TYPE, 'admin'])) {
-                    $userType = 'jolzan';
+                if ($user instanceof Agent || (isset($user->type) && in_array($user->type, [AppConst::AGENT_TYPE, 'admin'], true))) {
+                    $userType = 'durpalla';
                 } else {
                     $userType = 'merchant';
                 }

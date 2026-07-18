@@ -90,7 +90,7 @@ class VehicleSchedule extends Model
 
     public function merchant(): BelongsTo
     {
-        return $this->belongsTo(Merchant::class, 'merchant_id', 'user_id');
+        return $this->belongsTo(Merchant::class, 'merchant_id', 'id');
     }
 
     public function routeProperties(): HasMany

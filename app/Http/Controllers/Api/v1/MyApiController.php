@@ -8,6 +8,7 @@ use App\Models\Booking;
 use App\Models\BookingCancellation;
 use App\Models\BookingItem;
 use App\Http\Controllers\Controller;
+use App\Models\Customer;
 use App\Models\Hotel;
 use App\Models\HotelFavorite;
 use App\Models\Vehicle;
@@ -36,7 +37,7 @@ class MyApiController extends Controller
     public function profile()
     {
         $user = Auth::user();
-        if($user->type == 'customer' && $user->meta && $user->meta['nid_no']) {
+        if($user instanceof Customer && $user->meta && $user->meta['nid_no']) {
             $user->nid = [
                 'nid_no' => $user->meta['nid_no'],
                 'front' => ($user->meta['nid_photo']) ? upload_asset('nid/' . $user->meta['nid_photo']) : '',

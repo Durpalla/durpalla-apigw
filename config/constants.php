@@ -12,7 +12,7 @@ return [
         0 => 'pending'
     ],
     'owners' => [
-        'jolzan' => 'Jolzan',
+        'durpalla' => 'Durpalla',
         'merchant' => 'Merchant'
     ],
     'floors' => [
@@ -43,7 +43,7 @@ return [
     ],
     'default_parties' => [
         'merchant' => 'Merchant',
-        'jolzan' => 'Jolzan'
+        'durpalla' => 'Durpalla'
     ],
     'incentive_types' => [
         'percent' => '%',

@@ -44,11 +44,13 @@ class AppConst
     const TYPE_JOLZAN = 'admin';
     const PARTNER_ROLE = 'partner';
     const PARTNER_TYPE = 'partner';
-    const PARTY_JOLZAN = 'jolzan';
+    const PARTY_DURPALLA = 'durpalla';
+    /** @deprecated Use PARTY_DURPALLA */
+    const PARTY_JOLZAN = 'durpalla';
     const PARTY_MARCHANT = 'merchant';
     const CUSTOMER_ACTIVE = 1;
     const VEHICLE_INACTIVE = 2;
-    const OWNER = 'jolzan';
+    const OWNER = 'durpalla';
     const BKASH_PAYMENT_COMPLETED = 'Completed';
     const GATEWAY_TYPE_REQUEST = 'request';
     const GATEWAY_TYPE_CALLBACK = 'callback';

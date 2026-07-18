@@ -8,8 +8,11 @@ use App\Models\Booking;
 use App\Models\BookingItem;
 use App\Models\Cabin;
 use App\Models\CabinLock;
+use App\Models\Customer;
 use App\Models\DeckFare;
 use App\Http\Controllers\Controller;
+use App\Models\Merchant;
+use App\Models\MerchantStaff;
 use App\Services\TripService;
 use App\Models\VehicleRoute;
 use App\Models\VehicleSchedule;
@@ -17,6 +20,7 @@ use App\Models\PaymentCollector;
 use App\Models\ScanLog;
 use App\Services\CalculationService;
 use App\Models\TicketPrint;
+use App\Support\AuthActor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -822,7 +826,7 @@ class QuickBookController extends Controller
                 $vat = ($vat_applicable_to == 'customer') ? abs(($item->fare * $request->passengers) * ($vat_amount / 100)) : 0;
                 $service_charge_counter = abs(getOption('service_charge_counter'));
                 $service_charge = 0;
-                if (Auth::user()->type != 'merchant') {
+                if (! (Auth::user() instanceof Merchant || Auth::user() instanceof MerchantStaff)) {
                     $service_charge = abs(($item->fare * $request->passengers) * ($service_charge_counter / 100));
                 }
                 $discounted = 0;
@@ -1026,20 +1030,21 @@ class QuickBookController extends Controller
 
                         $booking = Booking::create([
                             'booking_date' => date('Y-m-d'),
-                            'customer_id' => $user->id,
-                            'user_id' => $user->id,
+                            'customer_id' => $user instanceof Customer ? $user->id : ($user->id ?? null),
                             'total_amount' => $fare,
                             'total_discount' => $discounted,
                             'vat_amount' => $vat_amount,
                             'charge_amount' => $charge_amount,
                             'total_payable' => $fare + $vat_total + $charge_total - $discounted,
                             'vat_total' => ($vat_applicable_to == 'customer') ? $vat_total : 0,
-                            'charge_total' => ($user->type != 'merchant') ? $charge_total : 0,
-                            'booking_party' => ($user->type == 'merchant') ? 'merchant' : AppConst::OWNER,
+                            'charge_total' => (! ($user instanceof Merchant || $user instanceof MerchantStaff)) ? $charge_total : 0,
+                            'booking_party' => ($user instanceof Merchant || $user instanceof MerchantStaff) ? 'merchant' : AppConst::OWNER,
                             'status' => 'COMPLETE',
                             'platform' => 'android',
                             'payment_status' => 1
                         ]);
+                        AuthActor::setBookedBy($booking, $user);
+                        $booking->save();
 
                         $passenger = new \stdClass();
                         $passenger->name = $user->name;
@@ -1047,7 +1052,7 @@ class QuickBookController extends Controller
                         $passenger->person = 1;
                         $incentive = 0;
                         $incentive_type = 'percent';
-                        if ($user->type == 'supervisor') {
+                        if (($user instanceof MerchantStaff && $user->isSupervisor()) || (isset($user->type) && $user->type == 'supervisor')) {
                             $mapping = collect($user->supervisorMappings)->where('vehicle_id', $item->vehicle_id)->first();
                             $incentive = $mapping->supervisor_incentive;
                             $incentive_type = $mapping->incentive_type;

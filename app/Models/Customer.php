@@ -2,9 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Http\Request;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
@@ -13,7 +18,7 @@ use Laravel\Sanctum\HasApiTokens;
  */
 class Customer extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     protected $table = 'customers';
 
@@ -22,6 +27,9 @@ class Customer extends Authenticatable
         'email',
         'mobile',
         'password',
+        'status',
+        'profile_pic',
+        'email_verified_at',
     ];
 
     protected $hidden = [
@@ -33,11 +41,61 @@ class Customer extends Authenticatable
     {
         return [
             'password' => 'hashed',
+            'email_verified_at' => 'datetime',
         ];
     }
 
-    /**
-     * Guard name for auth (customer).
-     */
+    /** @var string Guard name for auth (customer). */
     protected $guard = 'customer';
+
+    public function getProfilePicUrlAttribute(): string
+    {
+        if (empty($this->profile_pic)) {
+            return asset('default/avatar.png');
+        }
+        $path = $this->profile_pic;
+        if (str_starts_with($path, 'avatars/') || str_starts_with($path, 'uploads/')) {
+            return asset($path);
+        }
+        $disk = config('filesystems.profile_disk', 'public');
+
+        return Storage::disk($disk)->url($path);
+    }
+
+    /**
+     * Legacy user_metas still keyed by user_id until customer_metas exist.
+     */
+    public function meta(): HasOne
+    {
+        return $this->hasOne(UserMeta::class, 'user_id', 'id');
+    }
+
+    public function deviceToken()
+    {
+        return $this->hasMany(DeviceToken::class, 'user_id', 'id');
+    }
+
+    public function scopeFilter(Builder $query, Request $request): Builder
+    {
+        $keyword = $request->input('search.value') ?: $request->input('keyword');
+        if ($keyword !== null && $keyword !== '') {
+            $query->where(function ($q) use ($keyword) {
+                $q->where('name', 'like', "%{$keyword}%")
+                    ->orWhere('mobile', 'like', "%{$keyword}%")
+                    ->orWhere('email', 'like', "%{$keyword}%");
+            });
+        }
+
+        $status = $request->input('status');
+        if ($status !== null && $status !== '') {
+            $status = (int) $status;
+            if ($status === 9) {
+                $query->onlyTrashed();
+            } else {
+                $query->where('status', $status);
+            }
+        }
+
+        return $query;
+    }
 }

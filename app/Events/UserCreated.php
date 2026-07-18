@@ -3,22 +3,21 @@
 namespace App\Events;
 
 use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use App\Models\User;
 
 class UserCreated
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
+
     public $user;
     public $type;
 
     /**
-     * Create a new event instance.
-     *
-     * @return void
+     * @param  Authenticatable  $user  User, Customer, or other authenticatable
      */
-    public function __construct(User $user, $type = 'web')
+    public function __construct(Authenticatable $user, $type = 'web')
     {
         $this->user = $user;
         $this->type = $type;

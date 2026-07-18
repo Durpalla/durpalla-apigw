@@ -135,7 +135,7 @@ class CalculationService
 
     public function getAgentIncentive($order, $user)
     {
-        if($user->type == AppConst::AGENT_ROLE) {
+        if ($user instanceof \App\Models\Agent) {
             return $order->bookingItems->map(function ($item, $key) {
                 return [
                     'incentive' => ($item->incentive_type === 'percent') ? ($item->price * ($item->incentive / 100)) : $item->incentive

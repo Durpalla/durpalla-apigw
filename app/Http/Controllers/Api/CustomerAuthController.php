@@ -23,6 +23,7 @@ class CustomerAuthController extends Controller
             'email' => $request->email,
             'mobile' => $request->mobile,
             'password' => $request->password, // hashed by Customer model cast
+            'status' => 1,
         ]);
 
         $token = $customer->createToken('customer-api')->plainTextToken;

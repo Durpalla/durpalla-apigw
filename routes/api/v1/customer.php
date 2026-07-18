@@ -59,7 +59,7 @@ Route::middleware(['JsonResponse'])->group(function () {
         Route::post('otp/resend', [AuthController::class, 'resendCode'])->middleware('throttle:otp');
     });
 
-    Route::group(['prefix' => 'auth', 'middleware' => 'auth:api'], function() {
+    Route::group(['prefix' => 'auth', 'middleware' => 'auth:customer'], function() {
         Route::post('push/bind', [AuthController::class, 'bindPush']);
         Route::post('logout', [AuthController::class, 'logout']);
     });
@@ -97,7 +97,7 @@ Route::middleware(['JsonResponse'])->group(function () {
 
     /*************** AUTHENTICATED API ****************/
 
-    Route::middleware(['auth:api'])->group(function () {
+    Route::middleware(['auth:customer,api'])->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
 
         Route::post('coupon/validate', [ApiOrderController::class, 'couponValidate']);
@@ -107,7 +107,7 @@ Route::middleware(['JsonResponse'])->group(function () {
             Route::post('/transaction', [ApiOrderController::class, 'payment']);
         });
 
-        Route::prefix('transport')->middleware(['auth:api'])->group(function () {
+        Route::prefix('transport')->middleware(['auth:customer,api'])->group(function () {
             Route::post('/booking/confirm', [TransportApiController::class, 'confirm']);
         });
 

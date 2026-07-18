@@ -41,7 +41,9 @@ class BookingItem extends Model
         'route_name',
         'deck_fare_id',
         'mapping_id',
-        'is_locked'
+        'is_locked',
+        'party_id',
+        'item_type',
     ];
 
     protected $casts = [
@@ -122,7 +124,7 @@ class BookingItem extends Model
 
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Customer::class, 'customer_id', 'id');
     }
 
     public function format(): array

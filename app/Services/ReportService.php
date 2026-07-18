@@ -185,7 +185,12 @@ class ReportService
             $booking['seat_sell_amount'] = 0;
             $booking['deck_sell_amount'] = 0;
             $booking['collections'] = [];
-            $booking['officer'] = ($result->customer_id !== $result->user_id) ? $result->officer['name'] : (($result->officer->type == 'supervisor') ? $result->officer['name'] : 'merchant');
+            $officer = $result->officer;
+            $isSupervisor = ($officer instanceof \App\Models\MerchantStaff && $officer->isSupervisor())
+                || (isset($officer->type) && $officer->type == 'supervisor');
+            $booking['officer'] = ($result->customer_id !== $result->user_id)
+                ? ($officer['name'] ?? '')
+                : ($isSupervisor ? ($officer['name'] ?? '') : 'merchant');
             $booking['officer_designation'] = 'merchant';
             $booking['officer_mobile'] = '';
             $booking['officer_role'] = $result->officer['roles']->first()->name;

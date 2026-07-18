@@ -650,3 +650,23 @@ use App\Services\OptionService;
             return asset($path);
         }
     }
+
+    if (! function_exists('merchant_auth_user')) {
+        /**
+         * Merchant owner or staff from merchant / merchant_staff session or API guards.
+         */
+        function merchant_auth_user(): \App\Models\Merchant|\App\Models\MerchantStaff|null
+        {
+            return \App\Support\MerchantContext::user();
+        }
+    }
+
+    if (! function_exists('current_merchant_id')) {
+        /**
+         * Resolved merchants.id for the current merchant owner or staff member.
+         */
+        function current_merchant_id(): ?int
+        {
+            return \App\Support\MerchantContext::currentMerchantId();
+        }
+    }
