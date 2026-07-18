@@ -14,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Behind Cloudflare / host nginx — honor X-Forwarded-* for HTTPS URLs and client IP.
+        // Cloudflare / nginx terminate TLS — honor X-Forwarded-* for HTTPS cookies and HSTS.
         $middleware->trustProxies(
             at: '*',
             headers: \Illuminate\Http\Request::HEADER_X_FORWARDED_FOR
@@ -25,11 +25,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->use([
             \Illuminate\Http\Middleware\HandleCors::class,
+            \App\Http\Middleware\SecurityHeaders::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [
             'ipn/*',
-            'api/payment/*/ipn'
+            'api/payment/*/ipn',
         ]);
 
         $middleware->api(append: [
@@ -39,6 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'JsonResponse' => JsonResponse::class,
             'guest.id' => \App\Http\Middleware\EnsureGuestId::class,
+            'user.type' => \App\Http\Middleware\EnsureUserType::class,
             'client' => \Laravel\Passport\Http\Middleware\EnsureClientIsResourceOwner::class,
             'resolve.api.partner' => \App\Http\Middleware\ResolveApiPartner::class,
         ]);
