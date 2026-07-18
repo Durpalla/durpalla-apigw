@@ -907,10 +907,17 @@ final class HotelBookingService
         $activeHrIds = $rows->pluck('id')->map(fn ($id) => (int) $id)->all();
 
         $roomTypeNames = [];
+        $roomTypeCategories = [];
         if (Schema::hasTable('room_types')) {
             $ids = $rows->pluck('room_type_id')->filter()->unique()->values()->all();
             if ($ids !== []) {
-                $roomTypeNames = DB::table('room_types')->whereIn('id', $ids)->pluck('name', 'id')->all();
+                $typeRows = DB::table('room_types')->whereIn('id', $ids)->get();
+                foreach ($typeRows as $typeRow) {
+                    $roomTypeNames[$typeRow->id] = $typeRow->name;
+                    $roomTypeCategories[$typeRow->id] = Schema::hasColumn('room_types', 'category')
+                        ? ($typeRow->category ?? HotelRoomType::CATEGORY_ROOM)
+                        : $this->inferRoomCategory((string) $typeRow->name);
+                }
             }
         }
 
@@ -929,6 +936,10 @@ final class HotelBookingService
                 'currency' => 'BDT',
                 'status' => 1,
             ];
+            if (Schema::hasColumn($apiTable, 'category')) {
+                $payload['category'] = $roomTypeCategories[$hr->room_type_id]
+                    ?? $this->inferRoomCategory($title);
+            }
             if (Schema::hasColumn($apiTable, 'is_active')) {
                 $payload['is_active'] = 1;
             }
@@ -974,21 +985,42 @@ final class HotelBookingService
             if (preg_match('/^Room\s+(.+)$/i', $name, $m)) {
                 $rest = trim($m[1]);
                 if ($rest !== '') {
-                    return $rest;
+                    return $this->stripRoomSuffix($rest);
                 }
             }
             if (strcasecmp($name, 'Room') === 0 && $type !== '') {
-                return $type;
+                return $this->stripRoomSuffix($type);
             }
 
-            return $name;
+            return $this->stripRoomSuffix($name);
         }
 
         if ($type !== '') {
-            return $type;
+            return $this->stripRoomSuffix($type);
         }
 
         return 'Type '.$hr->id;
+    }
+
+    private function stripRoomSuffix(string $title): string
+    {
+        $title = trim($title);
+        $clean = trim(preg_replace('/\s+Room$/i', '', $title) ?? $title);
+
+        return $clean !== '' ? $clean : 'Standard';
+    }
+
+    private function inferRoomCategory(string $title): string
+    {
+        $title = strtolower($title);
+        if (str_contains($title, 'suite')) {
+            return HotelRoomType::CATEGORY_SUITE;
+        }
+        if (str_contains($title, 'apartment')) {
+            return HotelRoomType::CATEGORY_APARTMENT;
+        }
+
+        return HotelRoomType::CATEGORY_ROOM;
     }
 
     private function queryActiveModuleHotelRooms(int $hotelId, bool $strict)
@@ -1037,7 +1069,8 @@ final class HotelBookingService
                 'id' => $rt->id,
                 'room_type_id' => $rt->id,
                 'code' => $rt->code,
-                'title' => $rt->title,
+                'title' => $rt->displayTitle(),
+                'category' => $rt->accommodationCategory(),
                 'max_occupancy' => (int) $rt->max_occupancy,
                 'bed_type' => $rt->bed_type,
                 'amenities' => $rt->amenities ?? [],
@@ -1100,7 +1133,8 @@ final class HotelBookingService
                 'id' => $rt->id,
                 'room_type_id' => $rt->id,
                 'code' => $rt->code,
-                'title' => $rt->title,
+                'title' => $rt->displayTitle(),
+                'category' => $rt->accommodationCategory(),
                 'max_occupancy' => (int) $rt->max_occupancy,
                 'bed_type' => $rt->bed_type,
                 'amenities' => $rt->amenities ?? [],
@@ -1250,7 +1284,8 @@ final class HotelBookingService
                 'room_type_id' => $rt->id,
                 'quantity' => $qty,
                 'code' => $rt->code,
-                'title' => $rt->title,
+                'title' => $rt->displayTitle(),
+                'category' => $rt->accommodationCategory(),
                 'quote' => $q,
                 'line_total' => $lineTotal,
             ];
