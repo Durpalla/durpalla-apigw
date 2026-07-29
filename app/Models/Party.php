@@ -7,9 +7,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Party extends Model
 {
+    use SoftDeletes;
+
     public const TYPE_SYSTEM = 'system';
     public const TYPE_AGENCY = 'agency';
     public const TYPE_API_PARTNER = 'api_partner';
@@ -34,6 +37,16 @@ class Party extends Model
     public function offices(): MorphMany
     {
         return $this->morphMany(Office::class, 'official');
+    }
+
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(PartyContact::class);
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(PartyDocument::class);
     }
 
     /**

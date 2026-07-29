@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -29,6 +30,8 @@ class Agent extends Authenticatable
         'email_verified_at',
         'nid',
         'device_id',
+        'source',
+        'legacy_partner_id',
     ];
 
     protected $hidden = [
@@ -59,6 +62,15 @@ class Agent extends Authenticatable
     }
 
     /**
+     * Legacy compatibility for `$user->type === 'agent'`.
+     * Not a DB column — do not use in where('type', ...).
+     */
+    public function getTypeAttribute(): string
+    {
+        return 'agent';
+    }
+
+    /**
      * Legacy user_metas still keyed by user_id; keep until agent_metas / polymorphic.
      */
     public function meta(): HasOne
@@ -81,11 +93,19 @@ class Agent extends Authenticatable
         return $this->hasMany(Booking::class, 'customer_id', 'id');
     }
 
+    public function vehicles(): BelongsToMany
+    {
+        return $this->belongsToMany(Vehicle::class, 'agent_vehicle', 'agent_id', 'vehicle_id');
+    }
+
     public static function boot()
     {
         parent::boot();
 
         static::deleting(function (Agent $agent) {
+            if (! $agent->isForceDeleting()) {
+                return;
+            }
             $agent->meta()->delete();
             foreach ($agent->logs as $log) {
                 $log->delete();

@@ -43,14 +43,20 @@ return Application::configure(basePath: dirname(__DIR__))
             'user.type' => \App\Http\Middleware\EnsureUserType::class,
             'client' => \Laravel\Passport\Http\Middleware\EnsureClientIsResourceOwner::class,
             'resolve.api.partner' => \App\Http\Middleware\ResolveApiPartner::class,
+            'api.agent' => \App\Http\Middleware\EnsureApiAgent::class,
+            'agent.active' => \App\Http\Middleware\EnsureAgentActive::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {
             if ($request->expectsJson() || $request->is('api/*')) {
-                $message = str_contains($request->path(), 'customer')
-                    ? 'Unauthenticated. Get a token from POST /api/v1/customer/auth/login or /api/v1/customer/auth/register, then send it as: Authorization: Bearer <token>'
-                    : 'Unauthenticated.';
+                $message = 'Unauthenticated.';
+                if (str_contains($request->path(), 'customer')) {
+                    $message = 'Unauthenticated. Get a token from POST /api/v1/customer/auth/login or /api/v1/customer/auth/register, then send it as: Authorization: Bearer <token>';
+                } elseif (str_contains($request->path(), 'agent')) {
+                    $message = 'Unauthenticated. Get a token from POST /api/v1/agent/auth/login, then send it as: Authorization: Bearer <token>';
+                }
+
                 return response()->json([
                     'success' => false,
                     'message' => $message,

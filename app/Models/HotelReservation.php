@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -17,7 +16,7 @@ class HotelReservation extends Model
     public const STATUS_FAILED = 'failed';
 
     protected $fillable = [
-        'user_id', 'hotel_hold_id', 'hotel_id', 'hotel_room_type_id', 'booking_id',
+        'user_id', 'agent_id', 'hotel_hold_id', 'hotel_id', 'hotel_room_type_id', 'booking_id',
         'check_in', 'check_out', 'adults', 'children', 'total_payable', 'currency',
         'status', 'quote_json', 'payment_due_at',
     ];
@@ -31,6 +30,11 @@ class HotelReservation extends Model
             'total_payable' => 'decimal:2',
             'payment_due_at' => 'datetime',
         ];
+    }
+
+    public function agent(): BelongsTo
+    {
+        return $this->belongsTo(Agent::class);
     }
 
     public function user(): BelongsTo

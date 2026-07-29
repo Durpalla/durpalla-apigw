@@ -1,0 +1,55 @@
+# Agent mobile API proxy snippet
+#
+# The agent mobile app API (all `/api/v1/agent/*` routes) has moved from the
+# main `durpalla` app to `durpalla-apigw`. The Android app itself has been
+# repointed at `https://apigw.durpalla.com/api/v1/agent/*` (see
+# durpalla-agent/android/.env.example), so in the common case no nginx change
+# is required.
+#
+# This snippet is only needed if you want `admin.durpalla.com` (or any other
+# host still fronted by the main durpalla app) to transparently forward agent
+# API traffic to durpalla-apigw as well — e.g. for old app builds that are
+# still hard-coded to the admin host, or during a soft-launch rollout window.
+#
+# Installation:
+#   1. Ensure the apigw upstream is defined once in the http {} context, e.g.
+#      by including durpalla-apigw/docker/nginx/upstream.conf (or
+#      assets-and-apigw.host-network.conf, whichever this box already loads):
+#
+#        upstream apigw_durpalla {
+#            least_conn;
+#            server 127.0.0.1:8001 max_fails=3 fail_timeout=30s;
+#            server 127.0.0.1:8002 max_fails=3 fail_timeout=30s;
+#            server 127.0.0.1:8003 max_fails=3 fail_timeout=30s;
+#            server 127.0.0.1:8004 max_fails=3 fail_timeout=30s;
+#            keepalive 64;
+#        }
+#
+#   2. Paste the `location /api/v1/agent/` block below into the server {}
+#      block of durpalla/docker/nginx/admin.durpalla.com.conf (or whichever
+#      vhost you want to gateway), ABOVE the catch-all `location /` block —
+#      nginx picks the most specific matching prefix location, but keeping
+#      it above the fallback avoids any ambiguity when configs are edited.
+#   3. `nginx -t && systemctl reload nginx` (or the box's usual reload script).
+#
+# Do NOT do this for the admin panel's own agent management screens
+# (resources/views/admin/agent/*, routes/web.php) — those stay on durpalla
+# unchanged; only the JSON mobile API under /api/v1/agent/ moves.
+
+location /api/v1/agent/ {
+    proxy_pass http://apigw_durpalla;
+
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header CF-Connecting-IP $http_cf_connecting_ip;
+    proxy_set_header Connection "";
+
+    proxy_connect_timeout 10s;
+    proxy_send_timeout 60s;
+    proxy_read_timeout 60s;
+    proxy_buffering on;
+}

@@ -4,7 +4,6 @@
 namespace App\Repository;
 
 
-use App\Constants\AppConst;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use App\Models\AgentCommission;
@@ -27,7 +26,8 @@ class AgentRepository extends BaseRepository implements AgentRepositoryInterface
     {
         Cache::forget('agents');
         return Cache::rememberForever('agents', function () {
-            return $this->model->with(['meta', 'roles'])->where('type', AppConst::AGENT_TYPE)->get();
+            // Agent.type is an accessor (not a DB column); agents table is already agent-only.
+            return $this->model->with(['meta'])->get();
         });
     }
 

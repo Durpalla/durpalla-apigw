@@ -422,8 +422,13 @@ class FrontApiController2 extends Controller
             }
         }
 
-        //fetch deck fares
-        $deckFares = new Collection(DeckFare::with(['departureFrom.ghat', 'departureTo.ghat'])->where('route_id', $trip->route_id)->get());
+        //fetch deck fares (skip inactive planning fares when column exists)
+        $deckFares = new Collection(
+            DeckFare::with(['departureFrom.ghat', 'departureTo.ghat'])
+                ->active()
+                ->where('route_id', $trip->route_id)
+                ->get()
+        );
         $launchDefined = $deckFares->where('vehicle_id', $trip->vehicle_id);
 
         if ($launchDefined) {

@@ -200,12 +200,12 @@ class VehicleSchedule extends Model
 
     public function deckFares(): HasMany
     {
-        return $this->hasMany(DeckFare::class, 'route_id', 'route_id');
+        return $this->hasMany(DeckFare::class, 'route_id', 'route_id')->active();
     }
 
     public function decks(): HasMany
     {
-        return $this->hasMany(DeckFare::class, 'vehicle_id', 'vehicle_id');
+        return $this->hasMany(DeckFare::class, 'vehicle_id', 'vehicle_id')->active();
     }
 
     // automatically deleted relations

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -17,7 +16,7 @@ class HotelHold extends Model
     public const STATUS_CANCELLED = 'cancelled';
 
     protected $fillable = [
-        'user_id', 'hotel_room_type_id', 'check_in', 'check_out', 'adults', 'children',
+        'user_id', 'agent_id', 'hotel_room_type_id', 'check_in', 'check_out', 'adults', 'children',
         'idempotency_key', 'expires_at', 'status', 'total_amount', 'quote_json',
     ];
 
@@ -30,6 +29,11 @@ class HotelHold extends Model
             'quote_json' => 'array',
             'total_amount' => 'decimal:2',
         ];
+    }
+
+    public function agent(): BelongsTo
+    {
+        return $this->belongsTo(Agent::class);
     }
 
     public function user(): BelongsTo

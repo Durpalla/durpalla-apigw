@@ -15,6 +15,10 @@ class CommonHelper
 {
     public static function purseGateway($gateway): GatewayInterface
     {
+        if (is_string($gateway)) {
+            return self::purseGatewayByCode($gateway);
+        }
+
         $gatewayName = $gateway->class_name ?? NotExist::class;
         if (!class_exists($gatewayName)) {
             throw new \Exception('Gateway not properly configured', 500);
@@ -29,6 +33,19 @@ class CommonHelper
         }
 
         return $ref->newInstance($gateway);
+    }
+
+    /**
+     * Resolve a gateway handler by payment method code (e.g. fund, bkash).
+     */
+    public static function purseGatewayByCode(string $code): GatewayInterface
+    {
+        $code = strtolower(trim($code));
+
+        return match ($code) {
+            'fund', 'wallet' => new \App\Gateways\Fund(),
+            default => throw new \InvalidArgumentException(__('Unknown payment gateway: :code', ['code' => $code])),
+        };
     }
 
     public static function hasPermission(array $permissions, $roles = ['admin']): bool

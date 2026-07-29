@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Ghat;
 use App\Models\ScheduleCabinMapping;
 use App\Models\CabinLock;
 use App\Services\CartService;
@@ -38,6 +39,33 @@ class TransportApiController extends Controller
             'success' => true,
             'data' => $trips,
             'meta' => ['count' => is_array($trips) ? count($trips) : 0],
+        ], $this->success);
+    }
+
+    /**
+     * GET Ghat / terminal suggestions for From/To fields.
+     * Params: q|term (query), exclude|accept (name to omit). Also accepts path {term}/{accept}.
+     */
+    public function suggest(Request $request, ?string $term = null, ?string $accept = null): JsonResponse
+    {
+        $term = trim((string) ($term
+            ?: $request->query('q', $request->query('term', $request->route('term') ?? ''))));
+        $accept = trim((string) ($accept
+            ?: $request->query('exclude', $request->query('accept', $request->route('accept') ?? $request->route('term2') ?? ''))));
+
+        $query = Ghat::query()->select('name', 'id')->distinct();
+
+        if ($term !== '') {
+            $query->where('name', 'LIKE', '%'.$term.'%');
+        }
+
+        if ($accept !== '') {
+            $query->whereNotIn('name', [$accept]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $query->orderBy('name')->limit(30)->get(),
         ], $this->success);
     }
 

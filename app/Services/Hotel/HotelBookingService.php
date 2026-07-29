@@ -681,6 +681,117 @@ final class HotelBookingService
     }
 
     /**
+     * Module hotel_rooms.id from API room type code `mod_hr_{id}`.
+     */
+    private function moduleHotelRoomIdFromApiCode(?string $code): ?int
+    {
+        if ($code === null || $code === '') {
+            return null;
+        }
+        if (! preg_match('/^mod_hr_(\d+)$/', $code, $m)) {
+            return null;
+        }
+
+        return (int) $m[1];
+    }
+
+    /**
+     * Room-level facility names via hotel_room_facility (admin Rooms tab).
+     *
+     * @return list<string>
+     */
+    private function facilityNamesForHotelRoom(int $hotelRoomId): array
+    {
+        if ($hotelRoomId <= 0
+            || ! Schema::hasTable('hotel_room_facility')
+            || ! Schema::hasTable('hotel_facilities')) {
+            return [];
+        }
+
+        return DB::table('hotel_room_facility as pivot')
+            ->join('hotel_facilities as f', 'f.id', '=', 'pivot.hotel_facility_id')
+            ->where('pivot.hotel_room_id', $hotelRoomId)
+            ->orderBy('f.name')
+            ->pluck('f.name')
+            ->map(fn ($name) => trim((string) $name))
+            ->filter(fn ($name) => $name !== '')
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Room gallery from module `hotel_room_images`.
+     *
+     * @return list<array{url: string}>
+     */
+    private function moduleHotelRoomGalleryAsApiPhotos(int $hotelRoomId): array
+    {
+        if ($hotelRoomId <= 0 || ! Schema::hasTable('hotel_room_images')) {
+            return [];
+        }
+
+        $out = [];
+        $rows = DB::table('hotel_room_images')
+            ->where('hotel_room_id', $hotelRoomId)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+        foreach ($rows as $row) {
+            $u = $this->normalizeHotelImageUrl((string) ($row->image_path ?? ''));
+            if ($u === '') {
+                continue;
+            }
+            $out[] = ['url' => $u];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Photos for an API room type: legacy hotel_room_type_photos, else module hotel_room_images.
+     *
+     * @return list<array{url: string}>
+     */
+    private function photosForApiRoomType(HotelRoomType $rt): array
+    {
+        $roomPhotos = [];
+        foreach ($rt->photos as $p) {
+            $u = $this->normalizeHotelImageUrl((string) ($p->url ?? ''));
+            if ($u === '') {
+                continue;
+            }
+            $roomPhotos[] = ['url' => $u];
+        }
+        if ($roomPhotos !== []) {
+            return $roomPhotos;
+        }
+
+        $hrId = $this->moduleHotelRoomIdFromApiCode((string) $rt->code);
+
+        return $hrId !== null ? $this->moduleHotelRoomGalleryAsApiPhotos($hrId) : [];
+    }
+
+    /**
+     * Amenities for an API room type: stored JSON, else module hotel_room_facility names.
+     *
+     * @return list<string>
+     */
+    private function amenitiesForApiRoomType(HotelRoomType $rt): array
+    {
+        $stored = $rt->amenities ?? [];
+        if (is_array($stored) && $stored !== []) {
+            return array_values(array_filter(array_map(
+                fn ($name) => trim((string) $name),
+                $stored
+            ), fn ($name) => $name !== ''));
+        }
+
+        $hrId = $this->moduleHotelRoomIdFromApiCode((string) $rt->code);
+
+        return $hrId !== null ? $this->facilityNamesForHotelRoom($hrId) : [];
+    }
+
+    /**
      * @return list<array{url: string, caption: ?string}>
      */
     private function moduleHotelGalleryAsApiPhotos(int $hotelId, bool $excludeCoverTypes): array
@@ -931,7 +1042,7 @@ final class HotelBookingService
                 'title' => $title,
                 'max_occupancy' => max(1, (int) $hr->max_occupancy),
                 'bed_type' => null,
-                'amenities' => [],
+                'amenities' => $this->facilityNamesForHotelRoom((int) $hr->id),
                 'base_price_per_night' => $baseFloat,
                 'currency' => 'BDT',
                 'status' => 1,
@@ -1057,14 +1168,7 @@ final class HotelBookingService
 
         $out = [];
         foreach ($types as $rt) {
-            $roomPhotos = [];
-            foreach ($rt->photos as $p) {
-                $u = $this->normalizeHotelImageUrl((string) ($p->url ?? ''));
-                if ($u === '') {
-                    continue;
-                }
-                $roomPhotos[] = ['url' => $u];
-            }
+            $amenities = $this->amenitiesForApiRoomType($rt);
             $out[] = [
                 'id' => $rt->id,
                 'room_type_id' => $rt->id,
@@ -1073,8 +1177,9 @@ final class HotelBookingService
                 'category' => $rt->accommodationCategory(),
                 'max_occupancy' => (int) $rt->max_occupancy,
                 'bed_type' => $rt->bed_type,
-                'amenities' => $rt->amenities ?? [],
-                'photos' => $roomPhotos,
+                'amenities' => $amenities,
+                'facilities' => $amenities,
+                'photos' => $this->photosForApiRoomType($rt),
                 'base_price_per_night' => $rt->base_price_per_night !== null
                     ? (float) $rt->base_price_per_night
                     : null,
@@ -1121,14 +1226,7 @@ final class HotelBookingService
                 $available = $relaxInv;
             }
             $quote = $this->pricing->quoteStay($rt, $checkIn, $checkOut, $adults, $children);
-            $roomPhotos = [];
-            foreach ($rt->photos as $p) {
-                $u = $this->normalizeHotelImageUrl((string) ($p->url ?? ''));
-                if ($u === '') {
-                    continue;
-                }
-                $roomPhotos[] = ['url' => $u];
-            }
+            $amenities = $this->amenitiesForApiRoomType($rt);
             $out[] = [
                 'id' => $rt->id,
                 'room_type_id' => $rt->id,
@@ -1137,8 +1235,9 @@ final class HotelBookingService
                 'category' => $rt->accommodationCategory(),
                 'max_occupancy' => (int) $rt->max_occupancy,
                 'bed_type' => $rt->bed_type,
-                'amenities' => $rt->amenities ?? [],
-                'photos' => $roomPhotos,
+                'amenities' => $amenities,
+                'facilities' => $amenities,
+                'photos' => $this->photosForApiRoomType($rt),
                 'available' => $available,
                 'quote' => $quote,
             ];

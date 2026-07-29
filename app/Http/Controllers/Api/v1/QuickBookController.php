@@ -818,7 +818,7 @@ class QuickBookController extends Controller
         $schedule = VehicleSchedule::with(['launch', 'startingPoint', 'endingPoint', 'boardingVias'])->findOrFail($request->trip_id);
 
         if ((strtotime($schedule->leaving_at) + ($schedule->operation_hour * 60 * 60)) <= time()) {
-            $item = DeckFare::find($request->deck_id);
+            $item = DeckFare::active()->find($request->deck_id);
 
             if ($item) {
                 $vat_applicable_to = $schedule->launch['merchant']['vat_applicable_to'];
@@ -1000,7 +1000,12 @@ class QuickBookController extends Controller
         if ($validator->fails()) {
             $data['message'] = $validator->errors()->first();
         } else {
-            $item = DeckFare::find($request->deck_id);
+            $item = DeckFare::active()->find($request->deck_id);
+            if (! $item) {
+                $data['message'] = __('Selected deck fare is not available.');
+
+                return response()->json($data, $this->success);
+            }
             $schedule = VehicleSchedule::find($request->trip_id);
             $leavingTime = strtotime($schedule->leaving_at) - (3*60*60);
             try {

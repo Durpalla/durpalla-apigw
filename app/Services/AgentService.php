@@ -64,7 +64,7 @@ class AgentService
     {
         try {
             DB::transaction(function() use($data) {
-                $agent = Agent::create(['password' => Hash::make($data['password']), 'type' => AppConst::AGENT_TYPE, 'email_verified_at' => now(), 'status' => AppConst::USER_ACTIVE] + $data);
+                $agent = Agent::create(['password' => Hash::make($data['password']), 'email_verified_at' => now(), 'status' => AppConst::USER_ACTIVE] + $data);
                 $meta = UserMeta::create($data + ['user_id' => $agent->id, 'created_by' => auth()->user()->id, 'platform' => 'counter']);
                 $incentives = AgentIncentive::create($data + ['agent_id' => $agent->id]);
             }, 2);
