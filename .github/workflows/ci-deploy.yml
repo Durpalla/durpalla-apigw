@@ -122,7 +122,34 @@ jobs:
             exit 1
           fi
 
+      # A host that is down must not fail the whole run: the other servers still
+      # need to receive the image, and smoke-test needs the deploy job to succeed.
+      - name: Check SSH reachability
+        id: reachable
+        env:
+          DEPLOY_HOST: ${{ matrix.server.host }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+        run: |
+          set -uo pipefail
+          PORT="${DEPLOY_PORT:-22}"
+
+          for attempt in 1 2 3; do
+            if timeout 15 bash -c "cat < /dev/null > /dev/tcp/${DEPLOY_HOST}/${PORT}" 2>/dev/null; then
+              echo "${DEPLOY_HOST}:${PORT} is reachable (attempt ${attempt})."
+              echo "up=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "Attempt ${attempt}/3: no TCP connection to ${DEPLOY_HOST}:${PORT}."
+            if [[ "$attempt" -lt 3 ]]; then
+              sleep 10
+            fi
+          done
+
+          echo "up=false" >> "$GITHUB_OUTPUT"
+          echo "::warning::Skipping ${{ matrix.server.name }} (${DEPLOY_HOST}) — SSH port unreachable. Re-run this workflow once the host is back online."
+
       - name: Deploy to ${{ matrix.server.host }}
+        if: steps.reachable.outputs.up == 'true'
         env:
           DEPLOY_HOST: ${{ matrix.server.host }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
@@ -153,6 +180,7 @@ jobs:
             -o StrictHostKeyChecking=accept-new
             -o UserKnownHostsFile=~/.ssh/known_hosts
             -o IdentitiesOnly=yes
+            -o ConnectTimeout=15
             -o TCPKeepAlive=yes
             -o ServerAliveInterval=15
             -o ServerAliveCountMax=40
@@ -178,10 +206,18 @@ jobs:
 
       - name: Deploy summary
         run: |
-          echo "### Deployed to ${{ matrix.server.name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Host: \`${{ matrix.server.host }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Image: \`${{ env.REGISTRY }}/${{ needs.build-and-push.outputs.image_ref }}:dev-latest\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Note: CI deploys containers only (no nginx/SSL changes)" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ steps.reachable.outputs.up }}" == 'true' ]]; then
+            echo "### Deployed to ${{ matrix.server.name }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Host: \`${{ matrix.server.host }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Image: \`${{ env.REGISTRY }}/${{ needs.build-and-push.outputs.image_ref }}:dev-latest\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Note: CI deploys containers only (no nginx/SSL changes)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### Skipped ${{ matrix.server.name }} — host unreachable" >> $GITHUB_STEP_SUMMARY
+            echo "- Host: \`${{ matrix.server.host }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- The SSH port did not accept a TCP connection after 3 attempts." >> $GITHUB_STEP_SUMMARY
+            echo "- This host is still running the previously deployed image." >> $GITHUB_STEP_SUMMARY
+            echo "- Re-run this workflow once the server is back online." >> $GITHUB_STEP_SUMMARY
+          fi
 
   smoke-test:
     name: Public health check

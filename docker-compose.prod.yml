@@ -13,6 +13,12 @@ x-apigw-common: &apigw-common
     dockerfile: Dockerfile
   image: durpalla-apigw-app:local
   restart: unless-stopped
+  # Without this, json-file logs grow unbounded across 4 containers and fill /var/lib/docker.
+  logging:
+    driver: json-file
+    options:
+      max-size: "50m"
+      max-file: "2"
   env_file:
     - ${APIGW_ENV_FILE:-.env}
   extra_hosts:
