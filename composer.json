@@ -9,7 +9,8 @@
         "php": "^8.4",
         "ext-curl": "*",
         "ext-openssl": "*",
-        "guzzlehttp/psr7": "*",
+        "guzzlehttp/guzzle": "^7.15.1",
+        "guzzlehttp/psr7": "^2.13",
         "harris21/laravel-fuse": "^0.1.1",
         "kreait/firebase-php": "^7.21",
         "laravel/framework": "^12.0",
@@ -84,6 +85,7 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true,
+            "tbachert/spi": false,
             "wikimedia/composer-merge-plugin": false
         }
     },
