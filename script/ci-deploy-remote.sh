@@ -95,6 +95,14 @@ common_run=(
   -v apigw-storage:/var/www/html/storage
   -v apigw-bootstrap-cache:/var/www/html/bootstrap/cache
   "${shared_public_mounts[@]}"
+  # Unbounded json-file logs across 4 containers previously filled /var/lib/docker.
+  --log-opt max-size=50m
+  --log-opt max-file=2
+  # Steady state per container is well under 100MB. The ceiling exists so a runaway
+  # process is killed inside its own cgroup instead of pushing the 4GB host into OOM.
+  # memory-swap equal to memory keeps a container from spilling into swap.
+  --memory=1g
+  --memory-swap=1g
   durpalla-apigw-app:local
 )
 
@@ -111,8 +119,10 @@ replace_apigw_container() {
   echo "Rolling replace ${name} on port ${port} (other backends keep serving)..."
   docker rm -f "$name" >/dev/null 2>&1 || true
 
+  # Bound to loopback: the host nginx proxies to 127.0.0.1:<port>, so publishing on all
+  # interfaces only exposed the backends directly to the internet.
   # shellcheck disable=SC2068
-  docker run --name "$name" -p "${port}:80" "${primary_env[@]}" "${common_run[@]}"
+  docker run --name "$name" -p "127.0.0.1:${port}:80" "${primary_env[@]}" "${common_run[@]}"
 
   for attempt in $(seq 1 30); do
     if curl -fsS "http://127.0.0.1:${port}/up" >/dev/null 2>&1; then
