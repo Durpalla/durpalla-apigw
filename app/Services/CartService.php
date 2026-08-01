@@ -54,17 +54,34 @@ class CartService
 
     private function resolveCustomerToken(): ?string
     {
-        if (auth()->check()) {
-            $user = auth()->user();
-            $token = $user && isset($user->email) ? base64_encode($user->email) : null;
-            if ($token) {
-                // Seats locked as guest before login must follow the customer.
-                $this->claimGuestLocks($token);
-                return $token;
-            }
+        // Cart routes are public (guest + auth). Default guard is Passport `api`,
+        // so Sanctum customer tokens must be read from the customer guard explicitly.
+        $user = auth('customer')->user()
+            ?? auth('agent')->user()
+            ?? (auth()->check() ? auth()->user() : null);
+
+        if ($user && ! empty($user->email)) {
+            $token = base64_encode((string) $user->email);
+            // Seats locked as guest before login must follow the customer.
+            $this->claimGuestLocks($token);
+
+            return $token;
         }
 
         return $this->guestPlainToken() ?? request()->input('customer_token');
+    }
+
+    /**
+     * Re-assign active guest locks to the authenticated customer token.
+     * Safe to call from login/register while the guest id is still on the request.
+     */
+    public function claimGuestLocksForUser(object $user): void
+    {
+        if (empty($user->email)) {
+            return;
+        }
+
+        $this->claimGuestLocks(base64_encode((string) $user->email));
     }
 
     /**

@@ -23,9 +23,14 @@ class EnsureGuestId
         $cookieName = config('guest.cookie.name', 'guest_unique_id');
         $headerName = config('guest.header_name', 'X-Guest-Id');
 
-        $encrypted = $request->cookie($cookieName) ?: $request->header($headerName);
+        // Prefer the client header so SPA localStorage wins over a regenerated cookie
+        // (cookie-first previously orphaned guest cart locks after auth calls).
+        $candidates = array_values(array_filter([
+            $request->header($headerName),
+            $request->cookie($cookieName),
+        ], static fn ($v) => is_string($v) && $v !== ''));
 
-        if ($encrypted) {
+        foreach ($candidates as $encrypted) {
             try {
                 decrypt($encrypted);
                 $request->merge(['guest_unique_id' => $encrypted]);
@@ -34,7 +39,7 @@ class EnsureGuestId
 
                 return $response;
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::debug('Invalid or tampered guest id cookie', [
+                \Illuminate\Support\Facades\Log::debug('Invalid or tampered guest id', [
                     'message' => $e->getMessage(),
                 ]);
             }

@@ -12,6 +12,7 @@ use App\Http\Requests\OtpVerifyRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Models\Customer;
 use App\Models\UserOtp;
+use App\Services\CartService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -207,6 +208,7 @@ class AuthController extends Controller
 
                     Auth::guard('customer')->setUser($user);
                     $token = $user->createToken(config('app.name'))->plainTextToken;
+                    app(CartService::class)->claimGuestLocksForUser($user);
 
                     $userData = [
                         'id' => $user->id,
@@ -276,6 +278,7 @@ class AuthController extends Controller
 
             Auth::guard('customer')->setUser($user);
             $token = $user->createToken(config('app.name'))->plainTextToken;
+            app(CartService::class)->claimGuestLocksForUser($user);
 
             $userData = [
                 'id' => $user->id,

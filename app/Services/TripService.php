@@ -427,6 +427,7 @@ class TripService
         // Cap floors — corrupt number_of_floor values used to OOM formatFloors().
         $floorsCount = max(1, min(11, (int) ($vehicle?->number_of_floor ?? 1)));
         $photo = $vehicle?->photo;
+        $merchantId = $vehicle?->merchant_id ?? $trip->merchant_id;
 
         return [
             'id' => $trip->id,
@@ -450,12 +451,14 @@ class TripService
                 $sofas,
                 $vehicle?->vehicle_type
             ),
-            'merchant_id' => $vehicle?->merchant_id ?? $trip->merchant_id,
+            'merchant_id' => $merchantId,
+            'merchant_name' => $merchant?->merchant_name ?? $merchant?->name ?? '',
             'route_id' => $trip->route_id,
             'vehicle_name' => $vehicle?->name ?? '',
             'vehicle_photo' => $photo
                 ? upload_asset('vehicles/' . $photo)
                 : asset('default/launch.png'),
+            'vehicle_type' => $vehicle?->vehicle_type ?? null,
             'is_ac' => $vehicle?->ac_available ?? 0,
             'leaving_time' => date('h:i A', strtotime((string) $trip->leaving_at)),
             'starting_point' => $startName,
@@ -472,10 +475,115 @@ class TripService
             'seat_types' => $seatTypes,
             'sofa_types' => $sofaTypes,
             'stoppages' => $this->formatStoppages($trip, true),
+            'amenities' => $this->formatTripAmenities($vehicle, $floorsCount, $cabinTypes, $seatTypes, $sofaTypes),
+            'policies' => $this->formatTripPolicies($merchantId ? (int) $merchantId : null),
             'vat_amount' => getOption('vat_amount', 0),
             'vat_applicable_to' => $merchant?->vat_applicable_to ?? null,
             'vat_visibility' => $merchant?->vat_visibility ?? null,
         ];
+    }
+
+    /**
+     * Amenities for the trip details sidebar (derived from vehicle + cabin classes).
+     *
+     * @param  array<int, array{value:int|string, label:string}>  $cabinTypes
+     * @param  array<int, array{value:int|string, label:string}>  $seatTypes
+     * @param  array<int, array{value:int|string, label:string}>  $sofaTypes
+     * @return array<int, array{key:string, label:string}>
+     */
+    private function formatTripAmenities($vehicle, int $floorsCount, array $cabinTypes, array $seatTypes, array $sofaTypes): array
+    {
+        $amenities = [];
+
+        $amenities[] = [
+            'key' => ! empty($vehicle?->ac_available) ? 'ac' : 'non_ac',
+            'label' => ! empty($vehicle?->ac_available) ? 'Air conditioned' : 'Non-AC',
+        ];
+
+        $type = trim((string) ($vehicle?->vehicle_type ?? ''));
+        if ($type !== '') {
+            $amenities[] = [
+                'key' => 'vehicle_type',
+                'label' => ucfirst($type).' service',
+            ];
+        }
+
+        if ($floorsCount > 1) {
+            $amenities[] = [
+                'key' => 'floors',
+                'label' => $floorsCount.' floors',
+            ];
+        }
+
+        $classLabels = [];
+        foreach (array_merge($cabinTypes, $seatTypes, $sofaTypes) as $opt) {
+            $value = (int) ($opt['value'] ?? 0);
+            $label = trim((string) ($opt['label'] ?? ''));
+            if ($value <= 0 || $label === '' || strcasecmp($label, 'All') === 0) {
+                continue;
+            }
+            $classLabels[$label] = true;
+        }
+        foreach (array_keys($classLabels) as $label) {
+            $amenities[] = [
+                'key' => 'class_'.md5($label),
+                'label' => $label,
+            ];
+        }
+
+        return array_values($amenities);
+    }
+
+    /**
+     * Merchant / platform policies for the trip details sidebar.
+     *
+     * @return array<int, array{title:string, text:string}>
+     */
+    private function formatTripPolicies(?int $merchantId): array
+    {
+        $policies = [
+            [
+                'title' => 'Boarding',
+                'text' => 'Please arrive at the boarding point at least 30 minutes before departure.',
+            ],
+            [
+                'title' => 'Identity',
+                'text' => 'Carry a valid photo ID matching the passenger name on the ticket.',
+            ],
+        ];
+
+        try {
+            $tiers = app(MerchantCancellationPolicyResolver::class)->tiersFor($merchantId, 'transport');
+            if ($tiers) {
+                foreach ($tiers as $tier) {
+                    $hours = (int) ($tier['min_hours_before'] ?? 0);
+                    $percent = (float) ($tier['refund_percent'] ?? 0);
+                    $policies[] = [
+                        'title' => 'Cancellation',
+                        'text' => $hours > 0
+                            ? "Cancel {$hours}+ hours before departure for {$percent}% refund."
+                            : "Cancellations close to departure may receive {$percent}% refund.",
+                    ];
+                }
+            } else {
+                $policies[] = [
+                    'title' => 'Cancellation',
+                    'text' => 'Cancellation and refund follow Durpalla and operator rules for this trip.',
+                ];
+            }
+        } catch (\Throwable $e) {
+            $policies[] = [
+                'title' => 'Cancellation',
+                'text' => 'Cancellation and refund follow Durpalla and operator rules for this trip.',
+            ];
+        }
+
+        $policies[] = [
+            'title' => 'Operator terms',
+            'text' => 'Tickets are subject to the transport operator’s terms and schedule changes.',
+        ];
+
+        return $policies;
     }
 
     public function formatStoppages($trip, $last = true)
