@@ -240,6 +240,9 @@ if ! artisan php script/ensure-passport-keys.php; then
   echo "ERROR: Passport keys are missing or invalid."
   exit 1
 fi
+# league/oauth2-server rejects world-readable keys (0644 → HTTP 500 on throttled routes).
+docker exec -u root durpalla-apigw-1 sh -c \
+  'chmod 660 /var/www/html/storage/oauth-private.key /var/www/html/storage/oauth-public.key 2>/dev/null || true'
 
 artisan php artisan config:clear
 artisan php artisan route:clear

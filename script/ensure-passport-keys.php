@@ -77,11 +77,26 @@ function writeStorageKeys(string $privatePath, string $publicPath, string $priva
         throw new RuntimeException("Failed to write {$publicPath}");
     }
 
-    @chmod($privatePath, 0600);
-    @chmod($publicPath, 0644);
+    // league/oauth2-server CryptKey rejects world-readable keys (e.g. 0644).
+    hardenPassportKeyPermissions($privatePath, $publicPath);
+}
+
+/**
+ * Passport/League require oauth key files to be 0600 or 0660 — not 0644.
+ * A 0644 public key makes every throttled API route return HTTP 500.
+ */
+function hardenPassportKeyPermissions(string $privatePath, string $publicPath): void
+{
+    foreach ([$privatePath, $publicPath] as $path) {
+        if (! is_file($path)) {
+            continue;
+        }
+        @chmod($path, 0660);
+    }
 }
 
 if (storageKeysValid($privatePath, $publicPath)) {
+    hardenPassportKeyPermissions($privatePath, $publicPath);
     echo "Passport keys OK (storage volume).\n";
     exit(0);
 }
