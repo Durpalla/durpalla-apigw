@@ -7,10 +7,14 @@ Production deploys use **rolling servers** (one host at a time) and **rolling co
 1. CI builds and pushes the image to GHCR.
 2. Each server deploys **sequentially** (`max-parallel: 1`).
 3. On each server, `script/ci-deploy-remote.sh`:
-   - Pulls the new image.
+   - Pulls the new image and pins all containers to that **image digest** (not a mutable `:local` tag).
+   - Removes orphan `durpalla-apigw*` containers that are not named `1`–`4`.
    - Replaces `durpalla-apigw-1` on port `8001`, warms Laravel caches on the shared bootstrap volume.
-   - Replaces `durpalla-apigw-2`, `3`, `4` one at a time with health checks on `/up`.
+   - Replaces `durpalla-apigw-2`, `3`, `4` one at a time (`docker rm -f` then `docker run`) with `/up` health checks.
+   - Reconciles any straggler still on an old image, then **fails the deploy** unless all four ports are healthy on the expected digest.
    - Nginx upstream (`apigw_durpalla`) always lists all four ports; `max_fails` skips a backend briefly during single-container swap.
+
+CI never cancels an in-flight host deploy (`cancel-in-progress: false` on the workflow and deploy jobs). A newer push waits for the current roll to finish so hosts are never left half-updated.
 
 There is **no** full stop of all four containers and **no** post-deploy `docker restart` of all containers.
 

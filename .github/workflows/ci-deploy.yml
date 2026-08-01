@@ -9,14 +9,20 @@ on:
 env:
   REGISTRY: ghcr.io
 
+# Do not cancel the whole workflow on a newer push — that aborted mid-roll
+# deploys and left mixed old/new containers behind Cloudflare.
 concurrency:
   group: deploy-apigw-build-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build-and-push:
     name: Build Docker Image & Push to GHCR
     runs-on: ubuntu-latest
+    # Safe to cancel a superseded image build; deploy jobs below never cancel.
+    concurrency:
+      group: build-apigw-image-${{ github.ref }}
+      cancel-in-progress: true
     permissions:
       contents: read
       packages: write
@@ -102,9 +108,11 @@ jobs:
           - name: server-3
             host: 103.60.204.238
 
+    # Never cancel an in-flight host deploy — that left mixed old/new
+    # durpalla-apigw-{1..4} images and intermittent trip/500 responses.
     concurrency:
       group: deploy-apigw-${{ github.ref }}-${{ matrix.server.host }}
-      cancel-in-progress: true
+      cancel-in-progress: false
 
     steps:
       - name: Checkout source

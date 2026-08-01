@@ -199,7 +199,8 @@ use App\Services\OptionService;
                 $rowInt = (int) $rowKey;
                 $posInt = (int) $posKey;
                 // Drop obviously corrupt layout coordinates (see _my_layout caps).
-                if ($rowInt < 1 || $rowInt > 24 || $posInt < 1 || $posInt > 80) {
+                // Real launch layouts use cabin_position up to ~99; keep headroom.
+                if ($rowInt < 1 || $rowInt > 24 || $posInt < 1 || $posInt > 120) {
                     continue;
                 }
                 $arr[$rowInt][$posInt] = $v;
@@ -218,7 +219,7 @@ use App\Services\OptionService;
         // Cap sparse grids — bad cabin_row / cabin_position values previously
         // expanded into huge arrays and OOM'd the trip endpoint.
         $maxCols = 24;
-        $maxPos = 80;
+        $maxPos = 120;
 
         $hCol = min($maxCols, (int) max(array_keys($arr)));
         if ($hCol < 1) {

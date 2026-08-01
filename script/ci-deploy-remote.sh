@@ -87,6 +87,22 @@ docker pull "$IMAGE"
 echo "Image pulled: $IMAGE"
 docker tag "$IMAGE" durpalla-apigw-app:local
 
+# Pin every container to this digest so a later retag of :local cannot leave stragglers.
+EXPECTED_IMAGE_ID="$(docker image inspect -f '{{.Id}}' "$IMAGE")"
+if [[ -z "$EXPECTED_IMAGE_ID" ]]; then
+  echo "ERROR: could not resolve image id for $IMAGE"
+  exit 1
+fi
+echo "Expected image id: $EXPECTED_IMAGE_ID"
+
+# Drop any leftover / renamed apigw app containers that are not the canonical 1–4 names.
+echo "Removing orphan apigw containers (not durpalla-apigw-1..4)..."
+while read -r orphan; do
+  [[ -z "$orphan" ]] && continue
+  echo "  rm -f orphan $orphan"
+  docker rm -f "$orphan" >/dev/null 2>&1 || true
+done < <(docker ps -a --format '{{.Names}}' | grep -E '^durpalla-apigw' | grep -Ev '^durpalla-apigw-[1-4]$' || true)
+
 common_run=(
   -d --restart unless-stopped
   --add-host="host.docker.internal:${DOCKER_HOST_GATEWAY}"
@@ -103,8 +119,26 @@ common_run=(
   # memory-swap equal to memory keeps a container from spilling into swap.
   --memory=1g
   --memory-swap=1g
-  durpalla-apigw-app:local
+  # Use the digest-resolved image id, not a mutable :local tag.
+  "$EXPECTED_IMAGE_ID"
 )
+
+container_image_id() {
+  docker inspect -f '{{.Image}}' "$1" 2>/dev/null || true
+}
+
+assert_container_image() {
+  local name="$1"
+  local got
+  got="$(container_image_id "$name")"
+  if [[ "$got" != "$EXPECTED_IMAGE_ID" ]]; then
+    echo "ERROR: ${name} image mismatch."
+    echo "  expected: $EXPECTED_IMAGE_ID"
+    echo "  got:      ${got:-<missing>}"
+    return 1
+  fi
+  return 0
+}
 
 replace_apigw_container() {
   local idx="$1"
@@ -117,7 +151,15 @@ replace_apigw_container() {
   fi
 
   echo "Rolling replace ${name} on port ${port} (other backends keep serving)..."
+  # Force-destroy whatever currently owns this name/port — never leave an old replica.
   docker rm -f "$name" >/dev/null 2>&1 || true
+  # If an unnamed/old container still holds the published port, kill it.
+  local port_holder
+  port_holder="$(docker ps --filter "publish=${port}" --format '{{.ID}} {{.Names}}' | head -1 || true)"
+  if [[ -n "$port_holder" ]]; then
+    echo "  Clearing port ${port} holder: ${port_holder}"
+    docker rm -f "$(awk '{print $1}' <<<"$port_holder")" >/dev/null 2>&1 || true
+  fi
 
   # Bound to loopback: the host nginx proxies to 127.0.0.1:<port>, so publishing on all
   # interfaces only exposed the backends directly to the internet.
@@ -126,7 +168,8 @@ replace_apigw_container() {
 
   for attempt in $(seq 1 30); do
     if curl -fsS "http://127.0.0.1:${port}/up" >/dev/null 2>&1; then
-      echo "  OK ${name} — http://127.0.0.1:${port}/up"
+      assert_container_image "$name" || exit 1
+      echo "  OK ${name} — http://127.0.0.1:${port}/up (image verified)"
       return 0
     fi
     echo "  Waiting for ${name} (attempt ${attempt}/30)..."
@@ -136,6 +179,22 @@ replace_apigw_container() {
   echo "ERROR: ${name} failed health check on port ${port}"
   docker logs "$name" --tail 60 2>&1 || true
   exit 1
+}
+
+reconcile_all_apigw_containers() {
+  echo "Reconciling durpalla-apigw-1..4 to ${EXPECTED_IMAGE_ID}..."
+  local idx port name got
+  for idx in 1 2 3 4; do
+    port=$((8000 + idx))
+    name="durpalla-apigw-${idx}"
+    got="$(container_image_id "$name")"
+    if [[ "$got" != "$EXPECTED_IMAGE_ID" ]]; then
+      echo "  ${name} is stale (${got:-missing}) — force replace"
+      replace_apigw_container "$idx" "$port"
+    else
+      echo "  ${name} already on expected image"
+    fi
+  done
 }
 
 echo "Rolling deploy: replace one container at a time on ports 8001-8004..."
@@ -184,6 +243,9 @@ replace_apigw_container 2 8002
 replace_apigw_container 3 8003
 replace_apigw_container 4 8004
 
+# Catch any straggler left by a previous interrupted deploy.
+reconcile_all_apigw_containers
+
 echo "Verifying MySQL..."
 mysql_ok="$(artisan php -r "
 require 'vendor/autoload.php';
@@ -226,21 +288,32 @@ if (!openssl_pkey_get_public(file_get_contents(\$public))) {
   exit 1
 fi
 
-health_ok=0
-for port in 8001 8002 8003 8004; do
-  if curl -fsS "http://127.0.0.1:${port}/up" >/dev/null 2>&1; then
-    echo "  OK 127.0.0.1:${port}/up"
-    health_ok=1
-  else
-    echo "  FAIL 127.0.0.1:${port}/up"
+echo "Final gate: all four containers must be healthy AND on the expected image..."
+health_fail=0
+for idx in 1 2 3 4; do
+  port=$((8000 + idx))
+  name="durpalla-apigw-${idx}"
+  if ! curl -fsS "http://127.0.0.1:${port}/up" >/dev/null 2>&1; then
+    echo "  FAIL ${name} http://127.0.0.1:${port}/up"
+    health_fail=1
+    continue
   fi
+  if ! assert_container_image "$name"; then
+    health_fail=1
+    continue
+  fi
+  echo "  OK ${name} port ${port} image match"
 done
 
-if [[ "$health_ok" -ne 1 ]]; then
-  echo "ERROR: No apigw container responded on /up"
+if [[ "$health_fail" -ne 0 ]]; then
+  echo "ERROR: Not all apigw containers are healthy on the new image."
+  docker ps -a --filter name=durpalla-apigw --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}' || true
   docker logs durpalla-apigw-1 --tail 60 2>&1 || true
   exit 1
 fi
+
+echo "Running containers:"
+docker ps --filter name=durpalla-apigw --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
 
 # Host nginx is configured once on the server — CI only deploys containers.
 if curl -fsS -H 'Host: apigw.durpalla.com' 'http://127.0.0.1/up' >/dev/null 2>&1; then
