@@ -209,6 +209,7 @@ class TripService
             'schedule_date' => $trip->schedule_date,
             'schedule_type' => $trip->schedule_type,
             'leaving_at' => date('Y-m-d H:i:s', strtotime($trip->leaving_at)),
+            'leaving_time' => date('h:i A', strtotime($trip->leaving_at)),
             'operation_end' => $trip->operation_timeline,
             'total_cabins' => $trip->mappings->where('type', 'cabin')->count(),
             'total_seats' => $trip->mappings->where('type', 'seat')->count(),
@@ -404,10 +405,25 @@ class TripService
         collect($cabin_types)->each(fn($item, $key) => $cabinTypes[] = ['value' => $key, 'label' => $item]);
         collect($seat_types)->each(fn($item, $key) => $seatTypes[] = ['value' => $key, 'label' => $item]);
 
+        $allItems = array_merge($cabins, $seats);
+        $cabinRows = 1;
+        $maxPosition = 1;
+        foreach ($allItems as $item) {
+            $rowNum = (int) ($item['cabin_row'] ?? 0);
+            $posNum = (int) ($item['cabin_position'] ?? 0);
+            if ($rowNum > $cabinRows) {
+                $cabinRows = $rowNum;
+            }
+            if ($posNum > $maxPosition) {
+                $maxPosition = $posNum;
+            }
+        }
+
         return [
             'id' => $trip->id,
             'trip_id' => $trip->id,
-            'cabin_rows' => 5,
+            'cabin_rows' => $cabinRows,
+            'max_position' => $maxPosition,
             'rowClass' => '',
             'vehicle_id' => $trip->vehicle_id,
             'number_of_floor' => $trip->vehicle['number_of_floor'],
@@ -415,6 +431,11 @@ class TripService
             'merchant_id' => $trip->vehicle['merchant_id'],
             'route_id' => $trip->route_id,
             'vehicle_name' => $trip->vehicle['name'],
+            'vehicle_photo' => ($trip->vehicle['photo']) ? upload_asset('vehicles/' . $trip->vehicle['photo']) : asset('default/launch.png'),
+            'is_ac' => $trip->vehicle['ac_available'],
+            'leaving_time' => date('h:i A', strtotime($trip->leaving_at)),
+            'starting_point' => $trip->startFrom['name'],
+            'ending_point' => $trip->stopTo['name'],
             'route_name' => $trip->startFrom['name'] . ' - ' . $trip->stopTo['name'],
             'vehicle_route' => $trip->startFrom['name'] . ' - ' . $trip->stopTo['name'],
             'schedule_date' => date('Y-m-d H:i:s', strtotime($trip->leaving_at)),
@@ -424,7 +445,7 @@ class TripService
             'decks' => $this->formatDecks($trip),
             'cabin_types' => $cabinTypes,
             'seat_types' => $seatTypes,
-            'stoppages' => $this->formatStoppages($trip, false),
+            'stoppages' => $this->formatStoppages($trip, true),
             'vat_amount' => getOption('vat_amount', 0),
             'vat_applicable_to' => $trip->vehicle['merchant']['vat_applicable_to'],
             'vat_visibility' => $trip->vehicle['merchant']['vat_visibility'],
