@@ -129,21 +129,18 @@ jobs:
             exit 1
           fi
 
-      # Soft-skip unreachable hosts (e.g. .94 SSH temporarily blocked). Destroy-all +
-      # verify still run when the host is reachable so mixed old/new containers cannot remain.
-      - name: Check SSH reachability
-        id: reachable
+      # Unreachable host fails this matrix leg (and the workflow via deploy-gate).
+      - name: Require SSH reachability
         env:
           DEPLOY_HOST: ${{ matrix.server.host }}
           DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
         run: |
-          set -uo pipefail
+          set -euo pipefail
           PORT="${DEPLOY_PORT:-22}"
 
           for attempt in 1 2 3; do
             if timeout 15 bash -c "cat < /dev/null > /dev/tcp/${DEPLOY_HOST}/${PORT}" 2>/dev/null; then
               echo "${DEPLOY_HOST}:${PORT} is reachable (attempt ${attempt})."
-              echo "up=true" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             echo "Attempt ${attempt}/3: no TCP connection to ${DEPLOY_HOST}:${PORT}."
@@ -152,12 +149,11 @@ jobs:
             fi
           done
 
-          echo "up=false" >> "$GITHUB_OUTPUT"
-          echo "::warning::Skipping ${{ matrix.server.name }} (${DEPLOY_HOST}) — SSH unreachable. Re-run once SSH is open."
+          echo "::error::${{ matrix.server.name }} (${DEPLOY_HOST}:${PORT}) unreachable — deploy failed."
+          exit 1
 
       - name: Deploy to ${{ matrix.server.host }}
         id: deploy
-        if: steps.reachable.outputs.up == 'true'
         env:
           DEPLOY_HOST: ${{ matrix.server.host }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
@@ -224,17 +220,35 @@ jobs:
         run: |
           echo "### ${{ matrix.server.name }} → ${{ matrix.server.host }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Image: \`${{ env.REGISTRY }}/${{ needs.build-and-push.outputs.image_ref }}@${{ needs.build-and-push.outputs.image_digest }}\`" >> "$GITHUB_STEP_SUMMARY"
-          if [[ "${{ steps.reachable.outputs.up }}" == "true" ]]; then
-            echo "- Result: \`${{ steps.deploy.outcome }}\`" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "- Result: \`skipped (SSH unreachable)\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Result: \`${{ steps.deploy.outcome }}\`" >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-gate:
+    name: All servers must succeed
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: always() && github.ref == 'refs/heads/master'
+    steps:
+      - name: Fail workflow when any host deploy failed
+        run: |
+          set -euo pipefail
+          result="${{ needs.deploy.result }}"
+          echo "## Apigw multi-server deploy" >> "$GITHUB_STEP_SUMMARY"
+          echo "Matrix deploy result: \`${result}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Server |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| 103.60.204.94 |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| 103.60.204.238 |" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$result" != "success" ]]; then
+            echo "::error::Deploy failed on at least one server (result=${result}). Treating build as failed."
+            exit 1
           fi
+          echo "All apigw servers deployed successfully."
 
   smoke-test:
     name: Public health check
-    needs: deploy
+    needs: [deploy, deploy-gate]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master' && needs.deploy-gate.result == 'success'
 
     steps:
       - name: Check https://apigw.durpalla.com/up
