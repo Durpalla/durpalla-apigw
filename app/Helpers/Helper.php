@@ -191,7 +191,12 @@ use App\Services\OptionService;
         $arr = [];//declare new array
         if(count($array)){
             foreach($array as $k => $v){
-                $arr[$v[$key]][$v['cabin_position']] = $v;
+                $rowKey = $v[$key] ?? null;
+                $posKey = $v['cabin_position'] ?? null;
+                if ($rowKey === null || $rowKey === '' || $posKey === null || $posKey === '') {
+                    continue;
+                }
+                $arr[(int) $rowKey][(int) $posKey] = $v;
             }
         }
 
@@ -200,37 +205,38 @@ use App\Services\OptionService;
 
     function _my_layout($arr)
     {
-        if(!is_null($arr)) {
-            if(is_array($arr) && !empty($arr)) {
-                $newArr = [];
-                $hCol = max(array_keys($arr));
-                $cols = [];
-                for($i = 1; $i <= $hCol; $i++) {
-                    if(array_key_exists($i, $arr)) {
-                        $cols[$i] = [];
-                        $hRow = max(array_keys($arr[$i]));
-                        $col = $arr[$i];
-                        for($j = 1; $j <= $hRow; $j++) {
-                            if(array_key_exists($j, $col)) {
-                                array_push($cols[$i], $col[$j]);
-                            } else {
-                                array_push($cols[$i], [
-                                    'fare' => 0,
-                                    'cabin_type' => 'empty'
-                                ]);
-                            }
-                        }
-                    } else {
-                        $cols[$i] = [];
-                    }
-                }
-                return $cols;
-            } else {
-                return $arr;
-            }
-        } else {
-            return $arr;
+        if (!is_array($arr) || empty($arr)) {
+            return [];
         }
+
+        $hCol = (int) max(array_keys($arr));
+        if ($hCol < 1) {
+            return [];
+        }
+
+        $cols = [];
+        for ($i = 1; $i <= $hCol; $i++) {
+            if (!array_key_exists($i, $arr) || !is_array($arr[$i]) || empty($arr[$i])) {
+                $cols[$i] = [];
+                continue;
+            }
+
+            $col = $arr[$i];
+            $hRow = (int) max(array_keys($col));
+            $cols[$i] = [];
+            for ($j = 1; $j <= $hRow; $j++) {
+                if (array_key_exists($j, $col)) {
+                    $cols[$i][] = $col[$j];
+                } else {
+                    $cols[$i][] = [
+                        'fare' => 0,
+                        'cabin_type' => 'empty',
+                    ];
+                }
+            }
+        }
+
+        return $cols;
     }
 
     function _my_layout_old($arr)

@@ -15,10 +15,13 @@ return [
         'name' => env('GUEST_COOKIE_NAME', 'guest_unique_id'),
         'minutes' => (int) env('GUEST_COOKIE_MINUTES', 60 * 24 * 30), // 30 days
         'path' => '/',
-        'domain' => env('GUEST_COOKIE_DOMAIN'),
-        'secure' => env('GUEST_COOKIE_SECURE', true),
+        // Share across web.durpalla.com ↔ apigw.durpalla.com (leading dot).
+        'domain' => env('GUEST_COOKIE_DOMAIN', '.durpalla.com'),
+        'secure' => filter_var(env('GUEST_COOKIE_SECURE', true), FILTER_VALIDATE_BOOLEAN),
         'http_only' => true,
-        'same_site' => env('GUEST_COOKIE_SAME_SITE', 'lax'), // lax, strict, or none (use none for cross-domain)
+        // Credentialed XHR from another subdomain is cross-origin; browsers reject
+        // Set-Cookie with Lax/Strict in that context. Use None+Secure for *.durpalla.com.
+        'same_site' => env('GUEST_COOKIE_SAME_SITE', 'none'),
     ],
 
     /*

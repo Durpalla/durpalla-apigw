@@ -20,11 +20,13 @@ return [
         'trim',
         explode(',', (string) env(
             'CORS_ALLOWED_ORIGINS',
-            'https://admin.durpalla.com,https://durpalla.com,https://www.durpalla.com'
+            'https://admin.durpalla.com,https://web.durpalla.com,https://durpalla.com,https://www.durpalla.com'
         ))
     ))),
 
+    // Any https://*.durpalla.com subdomain (web, apigw callers, staging hosts).
     'allowed_origins_patterns' => array_values(array_filter([
+        '#^https://([a-z0-9-]+\.)*durpalla\.com$#i',
         env('APP_ENV') === 'local' ? '#^https?://(localhost|127\.0\.0\.1)(:\d+)?$#' : null,
         env('APP_ENV') === 'local' ? '#^https?://.*\.test(:\d+)?$#' : null,
     ])),

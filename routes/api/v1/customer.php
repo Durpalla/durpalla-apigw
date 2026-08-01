@@ -86,8 +86,9 @@ Route::middleware(['JsonResponse'])->group(function () {
         Route::get('{hotel}/rooms', [HotelController::class, 'rooms'])->whereNumber('hotel');
     });
 
+    // Cart list + lock/unlock (guest via EnsureGuestId cookie / X-Guest-Id).
+    Route::get('cart', [ApiCartController::class, 'index']);
     Route::prefix('cart')->group(function () {
-        Route::get('/', [ApiCartController::class, 'index']);
         Route::post('/add', [TransportApiController::class, 'lock']);
         Route::post('/lock', [TransportApiController::class, 'lock']);
         Route::post('/remove', [ApiCartController::class, 'remove']);

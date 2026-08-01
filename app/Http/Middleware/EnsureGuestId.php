@@ -56,15 +56,27 @@ class EnsureGuestId
         $response->headers->set($headerName, $encrypted);
 
         $minutes = (int) config('guest.cookie.minutes', 60 * 24 * 30);
-        $sameSite = config('guest.cookie.same_site', 'lax');
+        $sameSite = strtolower((string) config('guest.cookie.same_site', 'none'));
+        if (! in_array($sameSite, ['lax', 'strict', 'none'], true)) {
+            $sameSite = 'none';
+        }
+
+        // SameSite=None requires Secure; force it so browsers do not reject the cookie.
+        $secure = (bool) config('guest.cookie.secure', true) || $sameSite === 'none';
+
+        $domain = config('guest.cookie.domain');
+        if (is_string($domain) && $domain !== '' && ! str_starts_with($domain, '.')) {
+            // Parent-domain cookies should be ".durpalla.com", not "durpalla.com".
+            $domain = '.' . ltrim($domain, '.');
+        }
 
         $cookie = cookie(
             config('guest.cookie.name', 'guest_unique_id'),
             $encrypted,
             $minutes,
             config('guest.cookie.path', '/'),
-            config('guest.cookie.domain'),
-            (bool) config('guest.cookie.secure', true),
+            $domain ?: null,
+            $secure,
             (bool) config('guest.cookie.http_only', true),
             false,
             $sameSite

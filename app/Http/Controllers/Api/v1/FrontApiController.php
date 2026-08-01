@@ -320,12 +320,35 @@ class FrontApiController extends Controller
      */
     public function trip(Request $request, $id): JsonResponse
     {
-        $layout = collect(VehicleSchedule::with(['route', 'decks.departureFrom.ghat', 'decks.departureTo.ghat', 'boardingVias.ghat', 'startFrom', 'stopTo', 'mappings.cabinType', 'vehicle', 'merchant'])
-            ->where('id', $id)
-            ->get())
-            ->map(function($trip, $key) use($request) {
-                return $this->trip->formatTriplayout($trip, $request->floor);
-            })->first();
+        $trip = VehicleSchedule::with([
+            'route',
+            'decks.departureFrom.ghat',
+            'decks.departureTo.ghat',
+            'boardingVias.ghat',
+            'startFrom',
+            'stopTo',
+            'mappings.cabinType',
+            'vehicle.merchant',
+            'merchant',
+        ])->find($id);
+
+        if (!$trip) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Trip not found',
+            ], 404);
+        }
+
+        try {
+            $floor = $request->filled('floor') ? $request->floor : null;
+            $layout = $this->trip->formatTriplayout($trip, $floor);
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to load trip layout',
+            ], 500);
+        }
 
         return response()->json(['success' => true, 'data' => $layout], $this->success);
     }
