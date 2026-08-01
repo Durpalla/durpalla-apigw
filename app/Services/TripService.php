@@ -417,7 +417,8 @@ class TripService
         $merchant = $vehicle?->merchant ?? $trip->merchant;
         $startName = $trip->startFrom?->name ?? '';
         $endName = $trip->stopTo?->name ?? '';
-        $floorsCount = max(1, (int) ($vehicle?->number_of_floor ?? 1));
+        // Cap floors — corrupt number_of_floor values used to OOM formatFloors().
+        $floorsCount = max(1, min(11, (int) ($vehicle?->number_of_floor ?? 1)));
         $photo = $vehicle?->photo;
 
         return [
@@ -503,22 +504,28 @@ class TripService
 
     private function formatDecks($trip)
     {
-        $decks = $trip->decks ?? collect();
+        try {
+            $decks = $trip->decks ?? collect();
 
-        return $decks->map(function ($item) use ($trip) {
-            return [
-                'id' => $item->id,
-                'from' => $item->departureFrom?->ghat?->name,
-                'to' => $item->departureTo?->ghat?->name,
-                'fare' => ($trip->schedule_type == 'reverse') ? $item->reverse_fare : $item->fare,
-            ];
-        })->values();
+            return $decks->map(function ($item) use ($trip) {
+                return [
+                    'id' => $item->id,
+                    'from' => $item->departureFrom?->ghat?->name,
+                    'to' => $item->departureTo?->ghat?->name,
+                    'fare' => ($trip->schedule_type == 'reverse') ? $item->reverse_fare : $item->fare,
+                ];
+            })->values();
+        } catch (\Throwable $e) {
+            report($e);
+
+            return collect();
+        }
     }
 
     private function formatFloors($number_of_floor): array
     {
         $floors = [];
-        $count = max(1, (int) $number_of_floor);
+        $count = max(1, min(11, (int) $number_of_floor));
         $floor_levels = config('constants.floors', []);
         for ($i = 1; $i <= $count; $i++) {
             $floors[] = [

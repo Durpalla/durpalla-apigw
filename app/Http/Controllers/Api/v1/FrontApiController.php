@@ -321,17 +321,21 @@ class FrontApiController extends Controller
     public function trip(Request $request, $id): JsonResponse
     {
         try {
-            $trip = VehicleSchedule::with([
-                'route',
-                'decks.departureFrom.ghat',
-                'decks.departureTo.ghat',
-                'boardingVias.ghat',
-                'startFrom',
-                'stopTo',
-                'mappings.cabinType',
-                'vehicle.merchant',
-                'merchant',
-            ])->find($id);
+            // Vehicle uses SoftDeletes — without withTrashed, soft-deleted vehicles
+            // null out and historically blew up layout formatting.
+            $trip = VehicleSchedule::query()
+                ->with([
+                    'route',
+                    'boardingVias.ghat',
+                    'startFrom',
+                    'stopTo',
+                    'mappings.cabinType',
+                    'vehicle' => static function ($q) {
+                        $q->withTrashed()->with(['merchant' => static fn ($m) => $m->withTrashed()]);
+                    },
+                    'merchant' => static fn ($q) => $q->withTrashed(),
+                ])
+                ->find($id);
 
             if (!$trip) {
                 return response()->json([
@@ -340,23 +344,35 @@ class FrontApiController extends Controller
                 ], 404);
             }
 
-            $floor = $request->filled('floor') ? $request->floor : null;
-            $layout = $this->trip->formatTriplayout($trip, $floor);
-        } catch (\Throwable $e) {
-            report($e);
-            $payload = [
-                'success' => false,
-                'message' => 'Unable to load trip layout',
-            ];
-            if (config('app.debug')) {
-                $payload['error'] = $e->getMessage();
-                $payload['file'] = basename($e->getFile()) . ':' . $e->getLine();
+            // Deck fares / Schema::hasColumn must not take down the whole layout.
+            try {
+                $trip->load([
+                    'decks.departureFrom.ghat',
+                    'decks.departureTo.ghat',
+                ]);
+            } catch (\Throwable $deckError) {
+                report($deckError);
+                $trip->setRelation('decks', collect());
             }
 
-            return response()->json($payload, 500);
-        }
+            $floor = $request->filled('floor') ? $request->floor : null;
+            $layout = $this->trip->formatTriplayout($trip, $floor);
 
-        return response()->json(['success' => true, 'data' => $layout], $this->success);
+            return response()->json(['success' => true, 'data' => $layout], $this->success);
+        } catch (\Throwable $e) {
+            try {
+                report($e);
+            } catch (\Throwable) {
+                // Logger misconfig must not mask the original failure.
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to load trip layout',
+                'error' => $e->getMessage(),
+                'file' => basename($e->getFile()) . ':' . $e->getLine(),
+            ], 500);
+        }
     }
 
     public function suggest(Request $request, $term = '', $term2 = ''): JsonResponse
