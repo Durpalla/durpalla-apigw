@@ -848,14 +848,23 @@ class MyApiController extends Controller
 
         if ($request->hasFile('avatar')) {
             $image = $request->file('avatar');
-            $filename = $user->id . '_' . time() . '.' . $image->getClientOriginalExtension();
+            $ext = strtolower((string) $image->getClientOriginalExtension()) ?: 'jpg';
+            $filename = $user->id . '_' . time() . '.' . $ext;
             $destinationPath = public_path('uploads/avatar');
-            if (! is_dir($destinationPath)) {
-                @mkdir($destinationPath, 0755, true);
+            if (! is_dir($destinationPath) && ! @mkdir($destinationPath, 0775, true) && ! is_dir($destinationPath)) {
+                return response()->json(['success'=> false, 'message' => __('Upload directory is not writable.')], $this->success );
             }
             $source = $image->getRealPath() ?: $image->getPathname();
-            $outPath = $destinationPath . '/' . $filename;
-            RasterImage::resizeToFit($source, $outPath, 460, 340);
+            $outPath = $destinationPath . DIRECTORY_SEPARATOR . $filename;
+            $saved = is_string($source) && $source !== ''
+                ? RasterImage::resizeToFit($source, $outPath, 320, 320)
+                : false;
+            if ((! $saved || ! is_file($outPath)) && ! $image->move($destinationPath, $filename)) {
+                return response()->json(['success'=> false, 'message' => __('Could not save upload.')], $this->success );
+            }
+            if (! is_file($outPath)) {
+                return response()->json(['success'=> false, 'message' => __('Could not save upload.')], $this->success );
+            }
             $user->profile_pic = 'uploads/avatar/' . $filename;
         }
 
@@ -1178,34 +1187,61 @@ class MyApiController extends Controller
 
     public function uploadProcedural( Request $request )
     {
-        //validation rules
         $validator = Validator::make($request->all(), [
             'avatar' => 'required|file|max:100|mimes:jpg,jpeg,png,gif,webp'
         ]);
 
-        //validation fails
         if ( $validator->fails() )
             return response()->json(['success' => false, 'message' => $validator->errors()->first()]);
 
         $user = Auth::user();
-
-        if( $request->avatar ) {
-            $image = $request->file('avatar');
-            $filename = $user->id . '_' . time().'.'.$image->getClientOriginalExtension();
-            $destinationPath = public_path('/uploads/avatar');
-            if (! is_dir($destinationPath)) {
-                @mkdir($destinationPath, 0755, true);
-            }
-            $source = $image->getRealPath() ?: $image->getPathname();
-            RasterImage::resizeToFit($source, $destinationPath . '/' . $filename, 460, 340);
-            $user->profile_pic = 'uploads/avatar/' . $filename;
+        $image = $request->file('avatar');
+        if (! $image) {
+            return response()->json(['success' => false, 'message' => __('Invalid image.')], $this->success);
         }
 
-        if( $user->save() ) :
-            return response()->json(['success' => true, 'avatar' => upload_asset( $user->profile_pic ), 'message' => __('Your profile picture successfully uploaded')], $this->success);
-        else :
-            return response()->json(['success' => false, 'message' => __('Sorry! upload fail.') ] );
-        endif;
+        $ext = strtolower((string) $image->getClientOriginalExtension());
+        if (! in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
+            $ext = 'jpg';
+        }
+
+        $filename = $user->id . '_' . time() . '.' . $ext;
+        $destinationPath = public_path('uploads/avatar');
+        if (! is_dir($destinationPath) && ! @mkdir($destinationPath, 0775, true) && ! is_dir($destinationPath)) {
+            return response()->json(['success' => false, 'message' => __('Upload directory is not writable.')], $this->success);
+        }
+
+        $outPath = $destinationPath . DIRECTORY_SEPARATOR . $filename;
+        $source = $image->getRealPath() ?: $image->getPathname();
+        $saved = is_string($source) && $source !== ''
+            ? RasterImage::resizeToFit($source, $outPath, 320, 320)
+            : false;
+
+        if ((! $saved || ! is_file($outPath)) && ! $image->move($destinationPath, $filename)) {
+            return response()->json(['success' => false, 'message' => __('Could not save upload.')], $this->success);
+        }
+
+        if (! is_file($outPath) || filesize($outPath) < 1) {
+            return response()->json(['success' => false, 'message' => __('Could not save upload.')], $this->success);
+        }
+
+        $user->profile_pic = 'uploads/avatar/' . $filename;
+
+        if (! $user->save()) {
+            @unlink($outPath);
+
+            return response()->json(['success' => false, 'message' => __('Sorry! upload fail.')]);
+        }
+
+        $avatarUrl = upload_asset($user->profile_pic);
+
+        return response()->json([
+            'success' => true,
+            'avatar' => $avatarUrl,
+            'photo' => $avatarUrl,
+            'avatar_url' => $avatarUrl,
+            'message' => __('Your profile picture successfully uploaded'),
+        ], $this->success);
     }
 
     public function wallet(Request $request): JsonResponse

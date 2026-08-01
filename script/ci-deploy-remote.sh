@@ -74,13 +74,15 @@ SHARED_ASSETS_ROOT="${SHARED_ASSETS_ROOT:-/mnt/durpalla-assets}"
 shared_public_mounts=()
 if [[ -d "${SHARED_ASSETS_ROOT}/uploads" ]]; then
   echo "Using shared assets at ${SHARED_ASSETS_ROOT}"
+  # Profile avatars land in uploads/avatar — ensure it exists on the NFS share.
+  mkdir -p "${SHARED_ASSETS_ROOT}/uploads/avatar" 2>/dev/null || true
   for dir in uploads nid vehicles qrs images temp; do
     if [[ -d "${SHARED_ASSETS_ROOT}/${dir}" ]]; then
       shared_public_mounts+=( -v "${SHARED_ASSETS_ROOT}/${dir}:/var/www/html/public/${dir}" )
     fi
   done
 else
-  echo "Shared assets not mounted — apigw public uploads stay in container filesystem"
+  echo "WARNING: Shared assets not mounted at ${SHARED_ASSETS_ROOT}/uploads — avatar uploads will 404 on CDN"
 fi
 
 docker pull "$IMAGE"
