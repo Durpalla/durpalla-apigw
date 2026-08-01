@@ -40,7 +40,7 @@ class CalculationService
         if($item['booking_party'] != 'merchant') {
             $total += $this->calculateItemCharge($item);
         }
-        if(($item['vat_applicable_to'] ?? 'merchant') == 'customer') {
+        if ($this->resolveVatApplicableTo() === 'customer') {
             $total += $this->calculateItemVat($item);
         }
 
@@ -48,16 +48,39 @@ class CalculationService
     }
 
     /**
+     * Global Options: who pays VAT (customer | merchant | vendor).
+     * Merchants cannot override this.
+     */
+    public function resolveVatApplicableTo(): string
+    {
+        $value = strtolower((string) getOption('vat_applicable_to', 'customer'));
+        if (! in_array($value, ['customer', 'merchant', 'vendor'], true)) {
+            return 'customer';
+        }
+
+        return $value;
+    }
+
+    /**
+     * Global Options VAT rate (%). Merchants cannot override this.
+     */
+    public function resolveVatRate(): float
+    {
+        return abs((float) getOption('vat_amount', 0));
+    }
+
+    /**
      * VAT applies to service charge only — never to ticket fare.
+     * Rate + applicability come from Durpalla Options.
      */
     public function calculateItemVat(array $item)
     {
-        if (($item['vat_applicable_to'] ?? 'merchant') !== 'customer') {
+        if ($this->resolveVatApplicableTo() !== 'customer') {
             return call_user_func([$this, $this->numberFormat], 0);
         }
 
         $charge = (float) $this->calculateItemCharge($item);
-        $vatAmount = (float) ($item['vat_amount'] ?? getOption('vat_amount', 0));
+        $vatAmount = $this->resolveVatRate();
 
         return call_user_func([$this, $this->numberFormat], ($charge * ($vatAmount / 100)));
     }
@@ -107,7 +130,10 @@ class CalculationService
     }
 
     /**
-     * Priority: seat/cabin mapping → merchant → Durpalla platform (default 5%).
+     * Priority (Durpalla-admin configured; merchants cannot manage):
+     * 1) seat/cabin/item service_charge
+     * 2) merchant service_charge
+     * 3) global Options platform charge (web/mobile/counter)
      *
      * @return array{amount: float, type: string, total: float}
      */
@@ -174,11 +200,23 @@ class CalculationService
     public function calculateVat($chargeAmount, $type = 'percent'): float
     {
         $chargeAmount = (float) $chargeAmount;
-        $vatRate = (float) getOption('vat_amount', 0);
+        $vatRate = $this->resolveVatRate();
 
         return ($type == 'percent')
             ? (float) call_user_func([$this, $this->numberFormat], ($chargeAmount * ($vatRate / 100)), 2)
             : (float) call_user_func([$this, $this->numberFormat], $chargeAmount);
+    }
+
+    /**
+     * VAT amount for a computed service-charge total (Options rate + applicability).
+     */
+    public function vatOnCharge(float $serviceChargeTotal): float
+    {
+        if ($this->resolveVatApplicableTo() !== 'customer' || $serviceChargeTotal <= 0) {
+            return 0.0;
+        }
+
+        return abs((float) $this->calculateVat($serviceChargeTotal, 'percent'));
     }
 
     public function calculateCharge($amount, $type): float

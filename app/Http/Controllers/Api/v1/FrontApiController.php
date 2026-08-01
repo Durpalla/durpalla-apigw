@@ -167,9 +167,13 @@ class FrontApiController extends Controller
 
     public function vehicles(): JsonResponse
     {
-        $vehicles = Vehicle::whereHas('merchant', function ($q) {
+        $vehiclesQuery = Vehicle::whereHas('merchant', function ($q) {
             $q->where('status', '1');
-        })
+        });
+        if (\Illuminate\Support\Facades\Schema::hasColumn('vehicles', 'is_approved')) {
+            $vehiclesQuery->where('is_approved', true);
+        }
+        $vehicles = $vehiclesQuery
             ->orderBy('id')
             ->get(['id', 'name'])
             ->map(fn ($v) => ['id' => (string) $v->id, 'name' => $v->name])
@@ -213,6 +217,7 @@ class FrontApiController extends Controller
                             ->where('leaving_at', '>=', now());
                     });
             });
+        \App\Support\PublicListingVisibility::applyApprovedVehicle($query, 'vehicle');
 
         $results = $query
             ->orderBy('schedule_date', 'asc')
@@ -231,7 +236,8 @@ class FrontApiController extends Controller
     {
         $results = null;
         $log = 'Search trip ';
-        $query = VehicleSchedule::with(['route', 'startingPoint.ghat', 'endingPoint.ghat', 'boardingVias.ghat', 'startFrom', 'stopTo', 'cabinMappings', 'seatMappings', 'locks', 'bookingItems'])->where('status', 'ACTIVE')->where('schedule_date', '>=', date('Y-m-d'));
+        $query = VehicleSchedule::with(['route', 'startingPoint.ghat', 'endingPoint.ghat', 'boardingVias.ghat', 'startFrom', 'stopTo', 'cabinMappings', 'seatMappings', 'locks', 'bookingItems', 'vehicle'])->where('status', 'ACTIVE')->where('schedule_date', '>=', date('Y-m-d'));
+        \App\Support\PublicListingVisibility::applyApprovedVehicle($query, 'vehicle');
 
         if ($request->trip_date) {
             $date = (!empty($request->trip_date)) ? date('Y-m-d', strtotime($request->trip_date)) : date('Y-m-d');
@@ -267,7 +273,8 @@ class FrontApiController extends Controller
         $onWay = $query->orderBy('schedule_date', 'asc');
 
         if( $request->trip_return_date ) {
-            $query2 = VehicleSchedule::with(['route', 'startingPoint.ghat', 'endingPoint.ghat', 'boardingVias.ghat', 'startFrom', 'stopTo', 'cabinMappings', 'seatMappings', 'locks', 'bookingItems'])->where('status', 'ACTIVE')->where('schedule_date', '>=', date('Y-m-d'));
+            $query2 = VehicleSchedule::with(['route', 'startingPoint.ghat', 'endingPoint.ghat', 'boardingVias.ghat', 'startFrom', 'stopTo', 'cabinMappings', 'seatMappings', 'locks', 'bookingItems', 'vehicle'])->where('status', 'ACTIVE')->where('schedule_date', '>=', date('Y-m-d'));
+            \App\Support\PublicListingVisibility::applyApprovedVehicle($query2, 'vehicle');
 
             if ($request->trip_return_date) {
                 $reverse_date = date('Y-m-d', strtotime( $request->trip_return_date ) );

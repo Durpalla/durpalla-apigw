@@ -43,6 +43,9 @@ class ScheduleRepository extends BaseRepository implements ScheduleRepositoryInt
             ->withCount('cabins')
             ->where('status', AppConst::SCHEDULE_ACTIVE);
 
+        // Customer/agent public search: only Durpalla-admin approved vehicles.
+        \App\Support\PublicListingVisibility::applyApprovedVehicle($query, 'launch');
+
         if ($request->filled('trip_id')) {
             $query->where('id', $request->input('trip_id'));
         } elseif ($request->filled('vehicle_id')) {
@@ -147,9 +150,13 @@ class ScheduleRepository extends BaseRepository implements ScheduleRepositoryInt
         }
         $placeholders = implode(',', $ids);
 
-        return $this->model->newQuery()
+        $query = $this->model->newQuery()
             ->with(['vehicle', 'mappings.cabinType', 'startFrom', 'stopTo', 'route', 'launch'])
-            ->whereIn('id', $ids)
+            ->whereIn('id', $ids);
+
+        \App\Support\PublicListingVisibility::applyApprovedVehicle($query, 'vehicle');
+
+        return $query
             ->orderByRaw('FIELD(id,'.$placeholders.')')
             ->get();
     }

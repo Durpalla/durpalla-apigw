@@ -10,6 +10,7 @@ class Hotel extends Model
     protected $fillable = [
         'name', 'slug', 'city', 'address', 'lat', 'lng', 'star_rating',
         'aggregate_rating', 'review_count', 'description', 'policies', 'status',
+        'is_approved',
     ];
 
     protected function casts(): array
@@ -18,6 +19,7 @@ class Hotel extends Model
             'lat' => 'decimal:7',
             'lng' => 'decimal:7',
             'aggregate_rating' => 'decimal:2',
+            'is_approved' => 'boolean',
         ];
     }
 

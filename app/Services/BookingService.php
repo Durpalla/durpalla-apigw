@@ -316,8 +316,10 @@ class BookingService
             if (! ($user instanceof Merchant || $user instanceof MerchantStaff)) {
                 $itemCharge = abs($item['total_charge'] ?? 0);
                 $booking->charge_total += $itemCharge;
-                if (($item['vat_applicable_to'] ?? 'merchant') === 'customer') {
-                    $booking->vat_total += abs($itemCharge * (($item['vat_amount'] ?? $vat_amount) / 100));
+                if ($this->calculation->resolveVatApplicableTo() === 'customer') {
+                    $booking->vat_total += abs(
+                        $itemCharge * (($item['vat_amount'] ?? $this->calculation->resolveVatRate()) / 100)
+                    );
                 }
             } else {
                 $charge_amount = 0;
@@ -337,7 +339,7 @@ class BookingService
                 'cabin_id' => (in_array($item['type'], ['cabin', 'seat'])) ? $item['cabin_id'] : null,
                 'deck_fare_id' => ($item['type'] == 'deck') ? $item['cabin_id'] : null,
                 'price' => abs($item['fare']),
-                'vat_applicable_to' => $item['vat_applicable_to'],
+                'vat_applicable_to' => $this->calculation->resolveVatApplicableTo(),
                 'route_name' => $item['route_name'],
                 'trip_id' => $item['trip_id'],
                 'trip_date' => $trip_date,
@@ -345,7 +347,7 @@ class BookingService
                 'discount' => $item['discount'],
                 'boarding_point' => (isset($item['boardingPoint'])) ? json_encode($item['boardingPoint']) : null,
                 'passenger' => json_encode($passenger),
-                'vat_amount' => $vat_amount,
+                'vat_amount' => $this->calculation->resolveVatRate(),
                 'charge_amount' => $charge_amount,
                 'charge_type' => $item['charge_type'] ?? 'percent',
                 'status' => 1,
@@ -564,7 +566,7 @@ class BookingService
                     'cabin_no' => ($mapping->cabinType) ? $mapping->cabinType['letter'] . '-' . $rawCabinNo : (string) $rawCabinNo,
                     'price' => $mapping->fare,
                     'vat_visibility' => $merchant['vat_visibility'] ?? 1,
-                    'vat_applicable_to' => $merchant['vat_applicable_to'] ?? 'merchant',
+                    'vat_applicable_to' => $this->calculation->resolveVatApplicableTo(),
                     'route_name' => $mapping->schedule['startingPoint']['ghat']['name'] . ' - ' . $mapping->schedule['endingPoint']['ghat']['name'],
                     'vehicle_name' => $mapping->schedule['vehicle']['name'],
                     'trip_id' => $mapping->schedule_id,
@@ -575,7 +577,7 @@ class BookingService
                     'promotion_id' => $item['promotion_id'] ?? null,
                     'boarding_point' => (isset($item['boardingPoint'])) ? json_encode($item['boardingPoint']) : null,
                     'passenger' => json_encode($passenger),
-                    'vat_amount' => $vatAmount,
+                    'vat_amount' => $this->calculation->resolveVatRate(),
                     'charge_amount' => $charges['amount'],
                     'charge_type' => $charges['type'],
                     'status' => 1,
@@ -618,7 +620,12 @@ class BookingService
             ->each(function ($item, $tripID) use (&$notBlacker, $customerID) {
                 $item->groupBy('booking_type')
                     ->each(function ($item, $type) use (&$notBlacker, $tripID, $customerID) {
-                        if (BookingItem::where(['trip_id' => $tripID, 'booking_type' => $type, 'customer_id' => $customerID])->count() > getOption('max_' . $type . '_booking', 2)) {
+                        $defaultMax = strtolower((string) $type) === 'cabin' ? 2 : 4;
+                        if (BookingItem::where([
+                            'trip_id' => $tripID,
+                            'booking_type' => $type,
+                            'customer_id' => $customerID,
+                        ])->count() > getOption('max_' . $type . '_booking', $defaultMax)) {
                             $notBlacker = false;
                         }
                     });

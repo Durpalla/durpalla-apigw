@@ -93,7 +93,9 @@ class AgentHotelSearchService
 
     public function addFavourite(Agent $agent, int $hotelId): array
     {
-        $hotel = Hotel::query()->where('status', 1)->find($hotelId);
+        $hotel = Hotel::query()->where('status', 1);
+        \App\Support\PublicListingVisibility::applyApprovedHotel($hotel);
+        $hotel = $hotel->find($hotelId);
         if (! $hotel) {
             throw new \InvalidArgumentException(__('Hotel not found'));
         }
@@ -126,7 +128,9 @@ class AgentHotelSearchService
     public function detail(Agent $agent, int $hotelId): array
     {
         $hotel = Hotel::query()
-            ->where('status', 1)
+            ->where('status', 1);
+        \App\Support\PublicListingVisibility::applyApprovedHotel($hotel);
+        $hotel = $hotel
             ->with([
                 'city',
                 'images',
@@ -249,10 +253,12 @@ class AgentHotelSearchService
             return [];
         }
 
-        $hotels = Hotel::query()
+        $hotelsQuery = Hotel::query()
             ->where('status', 1)
             ->whereIn('id', $favouriteIds)
-            ->with(['city', 'images', 'facilities', 'activeRooms'])
+            ->with(['city', 'images', 'facilities', 'activeRooms']);
+        \App\Support\PublicListingVisibility::applyApprovedHotel($hotelsQuery);
+        $hotels = $hotelsQuery
             ->get()
             ->keyBy('id');
 
@@ -277,6 +283,7 @@ class AgentHotelSearchService
         $query = Hotel::query()
             ->where('status', 1)
             ->with(['city', 'images', 'facilities', 'activeRooms']);
+        \App\Support\PublicListingVisibility::applyApprovedHotel($query);
 
         if ($city !== '') {
             $like = '%'.$city.'%';

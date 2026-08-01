@@ -65,6 +65,7 @@ class AgentUpcomingTripService
                             ->whereDate('schedule_date', '>=', now()->toDateString());
                     });
             });
+        \App\Support\PublicListingVisibility::applyApprovedVehicle($query, 'vehicle');
 
         if ($favouritesOnly) {
             if ($meta['favourite_vehicle_ids'] === []) {

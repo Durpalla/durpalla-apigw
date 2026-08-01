@@ -360,6 +360,9 @@ final class HotelBookingService
                 }
             }
         });
+
+        // Customer/agent public search: only Durpalla-admin approved hotels.
+        \App\Support\PublicListingVisibility::applyApprovedHotel($q, $t);
     }
 
     private function roomTypesTable(): string

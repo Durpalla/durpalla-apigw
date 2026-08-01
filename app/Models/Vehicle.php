@@ -35,7 +35,8 @@ class Vehicle extends Model
         'ac_available',
         'default_tab',
         'default_floor',
-        'status'
+        'status',
+        'is_approved',
     ];
 
     protected $casts = [
@@ -43,6 +44,7 @@ class Vehicle extends Model
         'fitness_expiry_date' => 'datetime:Y-m-d H:i:s',
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
+        'is_approved' => 'boolean',
     ];
 
     public function user(): BelongsTo

@@ -38,22 +38,49 @@ class CartService
         return $this->resolveCustomerToken();
     }
 
+    private function guestPlainToken(): ?string
+    {
+        $encrypted = request()->input('guest_unique_id');
+        if (! $encrypted) {
+            return null;
+        }
+        try {
+            return decrypt($encrypted);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::debug('Guest token decrypt failed', ['message' => $e->getMessage()]);
+            return null;
+        }
+    }
+
     private function resolveCustomerToken(): ?string
     {
         if (auth()->check()) {
             $user = auth()->user();
-            return $user && isset($user->email) ? base64_encode($user->email) : null;
-        }
-        $encrypted = request()->input('guest_unique_id');
-        if ($encrypted) {
-            try {
-                return decrypt($encrypted);
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::debug('Guest token decrypt failed', ['message' => $e->getMessage()]);
-                return null;
+            $token = $user && isset($user->email) ? base64_encode($user->email) : null;
+            if ($token) {
+                // Seats locked as guest before login must follow the customer.
+                $this->claimGuestLocks($token);
+                return $token;
             }
         }
-        return request()->input('customer_token');
+
+        return $this->guestPlainToken() ?? request()->input('customer_token');
+    }
+
+    /**
+     * Re-assign active guest locks to the authenticated customer token.
+     */
+    private function claimGuestLocks(string $userToken): void
+    {
+        $guest = $this->guestPlainToken();
+        if (! $guest || $guest === $userToken) {
+            return;
+        }
+
+        CabinLock::query()
+            ->where('customer_token', (string) $guest)
+            ->where('expire_at', '>', now())
+            ->update(['customer_token' => (string) $userToken]);
     }
 
     public function add($item): bool
@@ -114,10 +141,61 @@ class CartService
             if (BookingItem::where(['cabin_id' => $item->cabin_id, 'trip_id' => $item->schedule_id, 'status' => AppConst::BOOKING_ITEM_ACTIVE])->count()) {
                 return 'Your selected item has already been booked';
             }
+
+            // Customer/guest cart caps: 4 seats or 2 cabins per trip at a time.
+            $limitError = $this->assertCustomerCartLimit($item);
+            if ($limitError !== null) {
+                return $limitError;
+            }
         } catch (\Exception $exception) {
             return $exception->getMessage();
         }
         return true;
+    }
+
+    /**
+     * Soft-limit customer carts (agents have their own quota service).
+     */
+    private function assertCustomerCartLimit(ScheduleCabinMapping $item): ?string
+    {
+        $user = auth()->user();
+        if ($user instanceof Agent || $user instanceof Merchant || $user instanceof MerchantStaff) {
+            return null;
+        }
+
+        $customerToken = $this->resolveCustomerToken();
+        if ($customerToken === null) {
+            return null;
+        }
+
+        $type = strtolower((string) ($item->type ?? 'seat'));
+        $isCabin = $type === 'cabin';
+        $max = $isCabin
+            ? (int) getOption('max_cabin_booking', 2)
+            : (int) getOption('max_seat_booking', 4);
+        if ($max <= 0) {
+            return null;
+        }
+
+        $lockQuery = CabinLock::query()
+            ->where('customer_token', (string) $customerToken)
+            ->where('trip_id', (int) $item->schedule_id)
+            ->where('expire_at', '>', now())
+            ->whereHas('mapping', function ($q) use ($isCabin) {
+                if ($isCabin) {
+                    $q->where('type', 'cabin');
+                } else {
+                    $q->where('type', '!=', 'cabin');
+                }
+            });
+
+        if ($lockQuery->count() >= $max) {
+            return $isCabin
+                ? "You can select at most {$max} cabins per trip"
+                : "You can select at most {$max} seats per trip";
+        }
+
+        return null;
     }
 
     private function validTrip(VehicleSchedule $schedule): bool
@@ -210,8 +288,9 @@ class CartService
         $schedule = $item->schedule;
         $vehicle = $schedule?->vehicle ?? $schedule?->launch;
         $merchant = $vehicle?->merchant ?? $schedule?->merchant;
-        $vat_applicable_to = $merchant?->vat_applicable_to ?? 'merchant';
-        $vat_amount = abs(getOption('vat_amount', 0));
+        // VAT is global Options; charge is item → merchant → Options (admin-set only).
+        $vat_applicable_to = $this->calculation->resolveVatApplicableTo();
+        $vat_amount = $this->calculation->resolveVatRate();
         $service_charge_counter = 0;
         $service_charge = 0;
         $service_charge_type = 'percent';
@@ -221,11 +300,14 @@ class CartService
         $is_honorium = 0;
         $honorium_charge = 0;
 
-        $chargeInput = array_merge($item->toArray(), [
+        $chargeInput = [
             'fare' => $item->fare,
+            'price' => $item->fare,
+            'service_charge' => $item->service_charge,
+            'service_charge_type' => $item->service_charge_type ?? 'percent',
             'merchant_service_charge' => $merchant?->getAttribute('service_charge'),
             'merchant_service_charge_type' => $merchant?->getAttribute('service_charge_type') ?? 'percent',
-        ]);
+        ];
 
         if(auth()->check()) {
             $user = auth()->user();
@@ -258,11 +340,8 @@ class CartService
             $service_charge_type = $charges['type'];
         }
 
-        // VAT only on service charge (not fare).
-        $vat = 0;
-        if ($vat_applicable_to === 'customer' && $service_charge > 0) {
-            $vat = abs($service_charge * ($vat_amount / 100));
-        }
+        // VAT only on service charge (not fare), from Options.
+        $vat = $this->calculation->vatOnCharge((float) $service_charge);
 
         $startName = $schedule?->startFrom?->name ?? '';
         $endName = $schedule?->stopTo?->name ?? '';

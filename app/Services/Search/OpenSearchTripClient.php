@@ -91,6 +91,17 @@ class OpenSearchTripClient
         $filter = [
             ['term' => ['status' => strtolower(AppConst::SCHEDULE_ACTIVE)]],
             ['term' => ['schedule_date' => $filters['trip_date']]],
+            // Prefer approved vehicles; docs without the field (pre-reindex) still pass
+            // and are filtered in ScheduleRepository::findSchedulesByIdsForTripList.
+            [
+                'bool' => [
+                    'should' => [
+                        ['term' => ['vehicle_is_approved' => true]],
+                        ['bool' => ['must_not' => [['exists' => ['field' => 'vehicle_is_approved']]]]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ],
         ];
 
         if (! empty($filters['vehicle_type'])) {
