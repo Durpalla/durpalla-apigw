@@ -343,6 +343,14 @@ class TripService
             return !empty($grouped) ? $grouped : new stdClass();
         };
 
+        // Legacy bus seats often share cabin_position=99 (merchant layout/seat rows API
+        // still works because it groups by cabin_row only). Without renumbering,
+        // _my_group_by collapses each row to one cell — and the OOM position cap
+        // dropped every seat at 99, returning empty first_floor/second_floor maps.
+        $cabins = $this->normalizeLayoutPositions($cabins);
+        $seats = $this->normalizeLayoutPositions($seats);
+        $sofas = $this->normalizeLayoutPositions($sofas);
+
         $sortLayout = static function ($layout) {
             if (!is_array($layout)) {
                 return [];
@@ -430,8 +438,19 @@ class TripService
             'vehicle_id' => $trip->vehicle_id,
             'number_of_floor' => $floorsCount,
             'floors' => $this->formatFloors($floorsCount),
-            'default_floor' => $vehicle?->default_floor ?? 1,
-            'default_tab' => $vehicle?->default_tab ?? null,
+            'default_floor' => $this->resolveDefaultFloor(
+                $vehicle?->default_floor,
+                $cabinsLayout,
+                $seatsLayout,
+                $sofasLayout
+            ),
+            'default_tab' => $this->resolveDefaultTab(
+                $vehicle?->default_tab,
+                $cabins,
+                $seats,
+                $sofas,
+                $vehicle?->vehicle_type
+            ),
             'merchant_id' => $vehicle?->merchant_id ?? $trip->merchant_id,
             'route_id' => $trip->route_id,
             'vehicle_name' => $vehicle?->name ?? '',
@@ -535,5 +554,169 @@ class TripService
         }
 
         return $floors;
+    }
+
+    /**
+     * Ensure each floor+row has unique sequential cabin_position values for map rendering.
+     * Legacy data often stores cabin_position=99 for every unit, which collapses the grid
+     * (and is dropped by the OOM position cap). Same fix as admin TripService.
+     *
+     * @param  list<array<string, mixed>>  $items
+     * @return list<array<string, mixed>>
+     */
+    private function normalizeLayoutPositions(array $items): array
+    {
+        if ($items === []) {
+            return [];
+        }
+
+        $grouped = [];
+        foreach ($items as $item) {
+            $key = ((int) ($item['cabin_floor'] ?? 0)) . '|' . ((int) ($item['cabin_row'] ?? 0));
+            $grouped[$key][] = $item;
+        }
+
+        $out = [];
+        foreach ($grouped as $rowItems) {
+            usort($rowItems, static function (array $a, array $b): int {
+                $posCmp = ((int) ($a['cabin_position'] ?? 0)) <=> ((int) ($b['cabin_position'] ?? 0));
+                if ($posCmp !== 0) {
+                    return $posCmp;
+                }
+
+                return ((int) ($a['item_id'] ?? 0)) <=> ((int) ($b['item_id'] ?? 0));
+            });
+
+            $positions = array_map(static fn (array $i) => (int) ($i['cabin_position'] ?? 0), $rowItems);
+            $unique = array_unique($positions);
+            $allSentinel = count($unique) === 1 && in_array((int) reset($unique), [0, 99], true);
+            $hasDupes = count($positions) !== count($unique);
+
+            if ($allSentinel || $hasDupes) {
+                $pos = 1;
+                foreach ($rowItems as &$item) {
+                    $item['cabin_position'] = $pos++;
+                }
+                unset($item);
+            }
+
+            foreach ($rowItems as $item) {
+                $out[] = $item;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param  array<string, mixed>|stdClass  $floorMap
+     */
+    private function floorMapHasItems(mixed $floorMap): bool
+    {
+        if ($floorMap instanceof stdClass) {
+            $floorMap = (array) $floorMap;
+        }
+        if (!is_array($floorMap) || $floorMap === []) {
+            return false;
+        }
+        foreach ($floorMap as $col) {
+            if (!is_array($col)) {
+                continue;
+            }
+            foreach ($col as $cell) {
+                if (!is_array($cell)) {
+                    continue;
+                }
+                if (($cell['cabin_type'] ?? null) === 'empty') {
+                    continue;
+                }
+                if (!empty($cell['item_id'])) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private function resolveDefaultFloor(
+        mixed $configured,
+        mixed $cabinsLayout,
+        mixed $seatsLayout,
+        mixed $sofasLayout
+    ): int {
+        $def = (int) ($configured ?? 1);
+        $keys = [1 => 'first_floor', 2 => 'second_floor', 3 => 'third_floor', 4 => 'fourth_floor'];
+
+        $hasOn = function (int $floorNum) use ($keys, $cabinsLayout, $seatsLayout, $sofasLayout): bool {
+            $key = $keys[$floorNum] ?? null;
+            if ($key === null) {
+                return false;
+            }
+            foreach ([$cabinsLayout, $seatsLayout, $sofasLayout] as $layout) {
+                if (!is_array($layout)) {
+                    continue;
+                }
+                if ($this->floorMapHasItems($layout[$key] ?? null)) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        if ($def >= 1 && $def <= 4 && $hasOn($def)) {
+            return $def;
+        }
+        foreach ([1, 2, 3, 4] as $fi) {
+            if ($hasOn($fi)) {
+                return $fi;
+            }
+        }
+
+        return $def >= 1 ? $def : 1;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $cabins
+     * @param  list<array<string, mixed>>  $seats
+     * @param  list<array<string, mixed>>  $sofas
+     */
+    private function resolveDefaultTab(
+        mixed $configured,
+        array $cabins,
+        array $seats,
+        array $sofas,
+        mixed $vehicleType
+    ): string {
+        $raw = strtolower(trim((string) ($configured ?? '')));
+        $type = strtolower(trim((string) ($vehicleType ?? '')));
+        $isBus = in_array($type, ['bus', 'coach', 'ac_bus', 'non_ac_bus'], true);
+
+        if ($isBus && $seats !== []) {
+            return 'seat';
+        }
+        if (in_array($raw, ['seat', 'cabin', 'sofa'], true)) {
+            if ($raw === 'seat' && $seats !== []) {
+                return 'seat';
+            }
+            if ($raw === 'cabin' && $cabins !== []) {
+                return 'cabin';
+            }
+            if ($raw === 'sofa' && $sofas !== []) {
+                return 'sofa';
+            }
+        }
+        if ($seats !== []) {
+            return 'seat';
+        }
+        if ($cabins !== []) {
+            return 'cabin';
+        }
+        if ($sofas !== []) {
+            return 'sofa';
+        }
+
+        return $raw !== '' ? $raw : 'cabin';
     }
 }

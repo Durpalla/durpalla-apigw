@@ -13,7 +13,7 @@ TRIP_ID="${TRIP_ID:-10}"
 if [[ $# -gt 0 ]]; then
   SERVERS=("$@")
 else
-  SERVERS=(103.60.204.238 103.60.204.200 103.60.204.94)
+  SERVERS=(103.60.204.238 103.60.204.94)
 fi
 
 SSH_OPTS=(

@@ -95,13 +95,31 @@ if [[ -z "$EXPECTED_IMAGE_ID" ]]; then
 fi
 echo "Expected image id: $EXPECTED_IMAGE_ID"
 
-# Drop any leftover / renamed apigw app containers that are not the canonical 1–4 names.
-echo "Removing orphan apigw containers (not durpalla-apigw-1..4)..."
-while read -r orphan; do
-  [[ -z "$orphan" ]] && continue
-  echo "  rm -f orphan $orphan"
-  docker rm -f "$orphan" >/dev/null 2>&1 || true
-done < <(docker ps -a --format '{{.Names}}' | grep -E '^durpalla-apigw' | grep -Ev '^durpalla-apigw-[1-4]$' || true)
+destroy_all_apigw_app_containers() {
+  echo "Force-destroying ALL apigw app containers and :8001–8004 publishers..."
+  # Canonical names first.
+  for idx in 1 2 3 4; do
+    docker rm -f "durpalla-apigw-${idx}" >/dev/null 2>&1 || true
+  done
+  # Orphans / renamed leftovers (never touch host nginx containers).
+  while read -r orphan; do
+    [[ -z "$orphan" ]] && continue
+    echo "  rm -f orphan $orphan"
+    docker rm -f "$orphan" >/dev/null 2>&1 || true
+  done < <(docker ps -a --format '{{.Names}}' | grep -E '^durpalla-apigw(-|$)' | grep -Ev '^durpalla-apigw-nginx' || true)
+  # Anything still publishing the app ports (stale replicas under other names).
+  for port in 8001 8002 8003 8004; do
+    while read -r cid; do
+      [[ -z "$cid" ]] && continue
+      echo "  rm -f port ${port} holder ${cid}"
+      docker rm -f "$cid" >/dev/null 2>&1 || true
+    done < <(docker ps -q --filter "publish=${port}" || true)
+  done
+}
+
+# Wipe every old replica before create — mixed images on one host caused
+# intermittent Cloudflare 500s (e.g. server .94).
+destroy_all_apigw_app_containers
 
 common_run=(
   -d --restart unless-stopped
@@ -197,7 +215,7 @@ reconcile_all_apigw_containers() {
   done
 }
 
-echo "Rolling deploy: replace one container at a time on ports 8001-8004..."
+echo "Creating fresh containers on ports 8001-8004 (old replicas already destroyed)..."
 replace_apigw_container 1 8001
 
 if ! docker exec durpalla-apigw-1 test -f /var/www/html/app/Providers/OpenTelemetryServiceProvider.php; then
@@ -314,6 +332,11 @@ fi
 
 echo "Running containers:"
 docker ps --filter name=durpalla-apigw --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
+
+# Strict per-host gate (image + /up + trip) — same script CI runs after SSH deploy.
+if [[ -f "${SCRIPT_DIR}/ci-verify-remote.sh" ]]; then
+  EXPECTED_IMAGE_ID="$EXPECTED_IMAGE_ID" bash "${SCRIPT_DIR}/ci-verify-remote.sh"
+fi
 
 # Host nginx is configured once on the server — CI only deploys containers.
 if curl -fsS -H 'Host: apigw.durpalla.com' 'http://127.0.0.1/up' >/dev/null 2>&1; then

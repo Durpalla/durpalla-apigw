@@ -30,6 +30,7 @@ jobs:
     outputs:
       image_tag: ${{ steps.meta.outputs.version }}
       image_ref: ${{ steps.image.outputs.ref }}
+      image_digest: ${{ steps.build.outputs.digest }}
 
     steps:
       - name: Checkout source
@@ -101,11 +102,9 @@ jobs:
       max-parallel: 1
       matrix:
         server:
-          - name: server-1
-            host: 103.60.204.200
-          - name: server-2
+          - name: server-94
             host: 103.60.204.94
-          - name: server-3
+          - name: server-238
             host: 103.60.204.238
 
     # Never cancel an in-flight host deploy — that left mixed old/new
@@ -130,8 +129,8 @@ jobs:
             exit 1
           fi
 
-      # A host that is down must not fail the whole run: the other servers still
-      # need to receive the image, and smoke-test needs the deploy job to succeed.
+      # Soft-skip unreachable hosts (e.g. .94 SSH temporarily blocked). Destroy-all +
+      # verify still run when the host is reachable so mixed old/new containers cannot remain.
       - name: Check SSH reachability
         id: reachable
         env:
@@ -154,9 +153,10 @@ jobs:
           done
 
           echo "up=false" >> "$GITHUB_OUTPUT"
-          echo "::warning::Skipping ${{ matrix.server.name }} (${DEPLOY_HOST}) — SSH port unreachable. Re-run this workflow once the host is back online."
+          echo "::warning::Skipping ${{ matrix.server.name }} (${DEPLOY_HOST}) — SSH unreachable. Re-run once SSH is open."
 
       - name: Deploy to ${{ matrix.server.host }}
+        id: deploy
         if: steps.reachable.outputs.up == 'true'
         env:
           DEPLOY_HOST: ${{ matrix.server.host }}
@@ -164,7 +164,8 @@ jobs:
           DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          IMAGE: ${{ env.REGISTRY }}/${{ needs.build-and-push.outputs.image_ref }}:dev-latest
+          # Digest pin — never deploy a floating :dev-latest that another push retagged.
+          IMAGE: ${{ env.REGISTRY }}/${{ needs.build-and-push.outputs.image_ref }}@${{ needs.build-and-push.outputs.image_digest }}
           GHCR_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
           GHCR_USER: ${{ github.repository_owner }}
         run: |
@@ -188,7 +189,7 @@ jobs:
             -o StrictHostKeyChecking=accept-new
             -o UserKnownHostsFile=~/.ssh/known_hosts
             -o IdentitiesOnly=yes
-            -o ConnectTimeout=15
+            -o ConnectTimeout=20
             -o TCPKeepAlive=yes
             -o ServerAliveInterval=15
             -o ServerAliveCountMax=40
@@ -204,27 +205,29 @@ jobs:
 
           scp "${SSH_COMMON[@]}" -P "$PORT" \
             script/ci-deploy-remote.sh \
+            script/ci-verify-remote.sh \
             script/normalize-docker-env.sh \
             script/docker-host-gateway.sh \
             "${DEPLOY_USER}@${DEPLOY_HOST}:${REMOTE_DIR}/"
 
           ssh "${SSH_COMMON[@]}" -p "$PORT" \
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "export DEPLOY_PATH='${PATH_ON_SERVER}' IMAGE='${IMAGE}' GHCR_TOKEN_B64='${GHCR_TOKEN_B64}' GHCR_USER='${GHCR_USER}' DEPLOY_SCRIPT_DIR='${REMOTE_DIR}'; bash '${REMOTE_DIR}/ci-deploy-remote.sh'; rm -rf '${REMOTE_DIR}'"
+            "export DEPLOY_PATH='${PATH_ON_SERVER}' IMAGE='${IMAGE}' GHCR_TOKEN_B64='${GHCR_TOKEN_B64}' GHCR_USER='${GHCR_USER}' DEPLOY_SCRIPT_DIR='${REMOTE_DIR}'; bash '${REMOTE_DIR}/ci-deploy-remote.sh'"
+
+          # Second independent gate over SSH — must match the digest we just deployed.
+          ssh "${SSH_COMMON[@]}" -p "$PORT" \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "EXPECTED_IMAGE_ID=\$(docker image inspect -f '{{.Id}}' '${IMAGE}') bash '${REMOTE_DIR}/ci-verify-remote.sh'; rm -rf '${REMOTE_DIR}'"
 
       - name: Deploy summary
+        if: always()
         run: |
-          if [[ "${{ steps.reachable.outputs.up }}" == 'true' ]]; then
-            echo "### Deployed to ${{ matrix.server.name }}" >> $GITHUB_STEP_SUMMARY
-            echo "- Host: \`${{ matrix.server.host }}\`" >> $GITHUB_STEP_SUMMARY
-            echo "- Image: \`${{ env.REGISTRY }}/${{ needs.build-and-push.outputs.image_ref }}:dev-latest\`" >> $GITHUB_STEP_SUMMARY
-            echo "- Note: CI deploys containers only (no nginx/SSL changes)" >> $GITHUB_STEP_SUMMARY
+          echo "### ${{ matrix.server.name }} → ${{ matrix.server.host }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Image: \`${{ env.REGISTRY }}/${{ needs.build-and-push.outputs.image_ref }}@${{ needs.build-and-push.outputs.image_digest }}\`" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "${{ steps.reachable.outputs.up }}" == "true" ]]; then
+            echo "- Result: \`${{ steps.deploy.outcome }}\`" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "### Skipped ${{ matrix.server.name }} — host unreachable" >> $GITHUB_STEP_SUMMARY
-            echo "- Host: \`${{ matrix.server.host }}\`" >> $GITHUB_STEP_SUMMARY
-            echo "- The SSH port did not accept a TCP connection after 3 attempts." >> $GITHUB_STEP_SUMMARY
-            echo "- This host is still running the previously deployed image." >> $GITHUB_STEP_SUMMARY
-            echo "- Re-run this workflow once the server is back online." >> $GITHUB_STEP_SUMMARY
+            echo "- Result: \`skipped (SSH unreachable)\`" >> "$GITHUB_STEP_SUMMARY"
           fi
 
   smoke-test:
@@ -243,13 +246,12 @@ jobs:
             code="$(curl -sS -o /dev/null -w '%{http_code}' --connect-timeout 15 --max-time 30 "$URL" || echo 000)"
             if [[ "$code" -ge 200 && "$code" -lt 400 ]]; then
               echo "OK HTTP ${code}"
-              echo "### Public smoke test passed (HTTP ${code})" >> $GITHUB_STEP_SUMMARY
+              echo "### Public smoke test passed (HTTP ${code})" >> "$GITHUB_STEP_SUMMARY"
               exit 0
             fi
             echo "Attempt ${attempt}/5: HTTP ${code}, retrying in 10s..."
             sleep 10
           done
-          echo "::warning::Public health check failed (last HTTP ${code}). Containers may be OK — check Cloudflare DNS/SSL and host nginx."
-          echo "### Public smoke test warning (HTTP ${code})" >> $GITHUB_STEP_SUMMARY
-          echo "Deploy may have succeeded on servers; verify nginx/Cloudflare if the site still returns 500." >> $GITHUB_STEP_SUMMARY
+          echo "::warning::Public /up failed (last HTTP ${code}). Reachable hosts may still be OK — check Cloudflare / nginx."
+          echo "### Public smoke test warning (HTTP ${code})" >> "$GITHUB_STEP_SUMMARY"
           exit 0

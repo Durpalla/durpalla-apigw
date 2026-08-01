@@ -16,6 +16,8 @@ Production deploys use **rolling servers** (one host at a time) and **rolling co
 
 CI never cancels an in-flight host deploy (`cancel-in-progress: false` on the workflow and deploy jobs). A newer push waits for the current roll to finish so hosts are never left half-updated.
 
+Deploy targets: `103.60.204.94` and `103.60.204.238` only (`.200` removed). Unreachable hosts are soft-skipped with a warning; when SSH works, destroy-all + `ci-verify-remote.sh` still require all four containers on the new image.
+
 There is **no** full stop of all four containers and **no** post-deploy `docker restart` of all containers.
 
 ## Cloudflare
