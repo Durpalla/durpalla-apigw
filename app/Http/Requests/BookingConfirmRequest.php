@@ -17,6 +17,9 @@ class BookingConfirmRequest extends FormRequest
             'items' => 'bail|required|array',
             'items.*.item_id' => 'bail|required|integer|exists:schedule_cabin_mappings,id',
             'items.*.lock_id' => 'bail|required|integer|exists:cabin_locks,id',
+            'coupon' => 'bail|nullable|string|max:64',
+            'channel' => 'bail|nullable|string|max:32',
+            'platform' => 'bail|nullable|string|max:32',
         ];
     }
 

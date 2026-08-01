@@ -186,6 +186,10 @@ class CartService
                     'trip_date' => $payload['trip_date'] ?? null,
                     'trip_id' => $payload['trip_id'] ?? $lock->trip_id ?? null,
                     'fare' => $payload['fare'] ?? null,
+                    'merchant_id' => $payload['merchant_id'] ?? null,
+                    'total_charge' => $payload['total_charge'] ?? 0,
+                    'total_vat' => $payload['total_vat'] ?? 0,
+                    'vehicle_id' => $payload['vehicle_id'] ?? null,
                 ];
                 $items[] = $payload;
             } catch (\Throwable $e) {
@@ -198,16 +202,16 @@ class CartService
 
     private function buildCartItem($item): array
     {
-        $platform = (request()->platform !== null && request()->platform !== 'android') ? request()->platform : 'mobile';
+        $reqPlatform = request()->input('platform');
+        if (! $reqPlatform && auth()->user() instanceof Agent) {
+            $reqPlatform = 'agent_app';
+        }
+        $platform = $this->calculation->resolveChargeOptionKey($reqPlatform ?: 'web');
         $schedule = $item->schedule;
         $vehicle = $schedule?->vehicle ?? $schedule?->launch;
         $merchant = $vehicle?->merchant ?? $schedule?->merchant;
         $vat_applicable_to = $merchant?->vat_applicable_to ?? 'merchant';
         $vat_amount = abs(getOption('vat_amount', 0));
-        $vat = 0;
-        if ($vat_applicable_to == 'customer') {
-            $vat = abs($item->fare * ($vat_amount / 100));
-        }
         $service_charge_counter = 0;
         $service_charge = 0;
         $service_charge_type = 'percent';
@@ -216,10 +220,17 @@ class CartService
         $incentive_type = 0;
         $is_honorium = 0;
         $honorium_charge = 0;
+
+        $chargeInput = array_merge($item->toArray(), [
+            'fare' => $item->fare,
+            'merchant_service_charge' => $merchant?->getAttribute('service_charge'),
+            'merchant_service_charge_type' => $merchant?->getAttribute('service_charge_type') ?? 'percent',
+        ]);
+
         if(auth()->check()) {
             $user = auth()->user();
             if (! ($user instanceof Merchant || $user instanceof MerchantStaff)) {
-                $charges = $this->calculation->getCharges($item->toArray(), $platform);
+                $charges = $this->calculation->getCharges($chargeInput, $platform);
                 $service_charge_counter = $charges['amount'];
                 $service_charge = $charges['total'];
                 $service_charge_type = $charges['type'];
@@ -240,13 +251,17 @@ class CartService
                 $is_honorium = 1;
                 $honorium_charge = $merchant?->honorium_service_charge ?? 0;
             }
-
-            // Skip schedule discounts — `discounts` table is not available in this DB.
         } else {
-            $charges = $this->calculation->getCharges($item->toArray(), $platform);
+            $charges = $this->calculation->getCharges($chargeInput, $platform);
             $service_charge_counter = $charges['amount'];
             $service_charge = $charges['total'];
             $service_charge_type = $charges['type'];
+        }
+
+        // VAT only on service charge (not fare).
+        $vat = 0;
+        if ($vat_applicable_to === 'customer' && $service_charge > 0) {
+            $vat = abs($service_charge * ($vat_amount / 100));
         }
 
         $startName = $schedule?->startFrom?->name ?? '';
@@ -280,7 +295,8 @@ class CartService
             'honorium_charge' => $honorium_charge,
             'honorium_type' => $merchant?->honorium_type ?? null,
             'incentive' => $incentive,
-            'incentive_type' => $incentive_type
+            'incentive_type' => $incentive_type,
+            'merchant_id' => $merchant?->id,
         ];
 
         return $cartItem;

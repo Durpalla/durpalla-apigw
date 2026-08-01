@@ -28,6 +28,9 @@ use App\Models\User;
 use App\Events\BookingCompleteEvent;
 use App\Jobs\BookingChargeAdjustmentJob;
 use App\Support\AuthActor;
+use App\Services\Promotion\DTO\PromotionContext;
+use App\Services\Promotion\PromotionEngine;
+use App\Services\Promotion\Exceptions\PromotionLimitExceededException;
 
 class BookingService
 {
@@ -141,8 +144,9 @@ class BookingService
                     throw new \Exception("Cannot create or find customer");
                 }
                 $vat_amount = abs(getOption('vat_amount', 0));
-                $charge_amount = ($user instanceof Customer) ? abs(getOption('service_charge_web', 0)) : abs(getOption('service_charge_counter', 0));
+                $charge_amount = ($user instanceof Customer) ? abs(getOption('service_charge_web', 5)) : abs(getOption('service_charge_counter', 5));
                 $bookingItems = $this->fetchBookingItems($cartItems, $customer);
+                $appliedPromotion = $this->applyCouponToBookingItems($bookingItems);
                 $vat_total = 0;
                 $charge_total = 0;
                 $total_amount = 0;
@@ -156,10 +160,10 @@ class BookingService
                 $leaving_time = '';
                 $boarding_point = null;
                 collect($bookingItems)->each(function ($item, $key) use (&$vat_total, &$charge_total, &$total_amount, &$total_discount, &$vehicleName, &$route_name, &$item_list, &$item_count, &$vatVisibility, &$trip_date, &$leaving_time, &$boarding_point) {
-                    $vat_total += $this->calculation->calculateVat($item['vat_amount']);
-                    $charge_total += $this->calculation->calculateCharge($item['charge_amount'], $item['charge_type']);
-                    $total_amount += $vat_total + $item['price'] + $charge_total;
-                    $total_discount += $item['discount'];
+                    $total_amount += abs($item['price']);
+                    $charge_total += (float) $this->calculation->calculateItemCharge($item);
+                    $vat_total += (float) $this->calculation->calculateItemVat($item);
+                    $total_discount += abs($item['discount'] ?? 0);
                     $vehicleName = $item['vehicle_name'];
                     $route_name = $item['route_name'];
                     $item_count += 1;
@@ -173,12 +177,13 @@ class BookingService
                         'is_ac' => $item['is_ac'] ?? 0,
                     ]);
                 });
+                $total_payable = abs(($total_amount + $charge_total + $vat_total) - $total_discount);
                 $booking = Booking::create([
                     'booking_date' => date('Y-m-d'),
                     'customer_id' => $customer->id,
                     'total_amount' => $total_amount,
                     'total_discount' => $total_discount,
-                    'total_payable' => $total_amount - $total_discount,
+                    'total_payable' => $total_payable,
                     'vat_amount' => $vat_amount,
                     'vat_total' => $vat_total,
                     'charge_amount' => $charge_amount,
@@ -196,11 +201,29 @@ class BookingService
                     $booking->bookingItems()->create($item);
                 });
 
+                if ($appliedPromotion !== null && $total_discount > 0) {
+                    try {
+                        app(PromotionEngine::class)->redeem(
+                            $appliedPromotion,
+                            $booking->id,
+                            $user?->id,
+                            (float) $total_discount
+                        );
+                    } catch (PromotionLimitExceededException $e) {
+                        throw new \Exception($e->getMessage());
+                    }
+                }
+
                 $payment = $this->savePayment($booking);
                 dispatch(new BookingChargeAdjustmentJob($booking, $this->calculation));
                 BookingCompleteEvent::dispatch($booking);
                 $data['success'] = true;
                 $data['order_id'] = $booking->id;
+                $data['booking_id'] = $booking->id;
+                $data['total_payable'] = $booking->total_payable;
+                $data['total_discount'] = $booking->total_discount;
+                $data['charge_total'] = $booking->charge_total;
+                $data['vat_total'] = $booking->vat_total;
                 $data['invoice'] = URL::temporarySignedRoute(
                     'invoice.download',
                     now()->addMinutes(30),
@@ -284,9 +307,6 @@ class BookingService
 
             $booking->total_amount += abs($item['fare']);
             $booking->total_discount += abs($item['discount']);
-            if ($item['vat_applicable_to'] == 'customer') {
-                $booking->vat_total += abs($item['fare'] * ($item['vat_amount'] / 100));
-            }
             $passenger = [
                 'type' => 'self',
                 'name' => $customer->name,
@@ -294,7 +314,11 @@ class BookingService
                 'person' => ($item['passenger']) ? $item['passenger']['person'] : 1
             ];
             if (! ($user instanceof Merchant || $user instanceof MerchantStaff)) {
-                $booking->charge_total += abs($item['total_charge']);
+                $itemCharge = abs($item['total_charge'] ?? 0);
+                $booking->charge_total += $itemCharge;
+                if (($item['vat_applicable_to'] ?? 'merchant') === 'customer') {
+                    $booking->vat_total += abs($itemCharge * (($item['vat_amount'] ?? $vat_amount) / 100));
+                }
             } else {
                 $charge_amount = 0;
             }
@@ -444,13 +468,61 @@ class BookingService
         };
     }
 
+    /**
+     * Apply optional coupon from request onto booking item discounts.
+     *
+     * @param  list<array<string, mixed>>  $bookingItems
+     * @return \App\Models\Promotion|null
+     */
+    private function applyCouponToBookingItems(array &$bookingItems)
+    {
+        $code = trim((string) request()->input('coupon', ''));
+        if ($code === '' || $bookingItems === []) {
+            return null;
+        }
+
+        $promoItems = [];
+        foreach ($bookingItems as $item) {
+            $promoItems[] = [
+                'type' => $item['booking_type'] ?? $item['type'] ?? null,
+                'amount' => (float) ($item['price'] ?? 0),
+                'merchant_id' => $item['merchant_id'] ?? null,
+                'route_id' => $item['route_id'] ?? null,
+                'vehicle_id' => $item['vehicle_id'] ?? null,
+                'schedule_id' => $item['trip_id'] ?? null,
+            ];
+        }
+
+        $context = PromotionContext::fromArray([
+            'user_id' => auth()->id(),
+            'service_type' => request()->input('service_type', 'transport'),
+            'channel' => request()->input('channel', 'web'),
+            'items' => $promoItems,
+        ]);
+
+        $result = app(PromotionEngine::class)->applyCode($context, $code);
+        if (! $result->success || ! $result->promotion) {
+            throw new \Exception($result->message ?: 'Invalid coupon code');
+        }
+
+        foreach ($result->itemDiscounts as $index => $discount) {
+            if (! isset($bookingItems[$index])) {
+                continue;
+            }
+            $bookingItems[$index]['discount'] = abs((float) $discount);
+            $bookingItems[$index]['discount_type'] = 'coupon';
+            $bookingItems[$index]['promotion_id'] = $result->promotion->id;
+        }
+
+        return $result->promotion;
+    }
+
     private function fetchBookingItems($cartItems, $customer): array
     {
         $user = auth()->user();
-        $chargeType = getOption('service_charge_platform', 'global');
         $vatAmount = getOption('vat_amount', 0);
         $platform = $this->normalizeBookingPlatform(request()->input('platform'));
-        return collect($cartItems)->map(function ($item, $key) use ($customer, $chargeType, $vatAmount, $platform, $user) {
+        return collect($cartItems)->map(function ($item, $key) use ($customer, $vatAmount, $platform, $user) {
             $item = (array)$item;
             $passenger = $item['passengers'] ?? [];
             if ($item['for_self']) {
@@ -470,6 +542,18 @@ class BookingService
                 }
                 $meta = is_array($item['meta'] ?? null) ? $item['meta'] : [];
                 $rawCabinNo = $meta['cabin_no'] ?? ($item['cabin_no'] ?? null) ?? $mapping->cabin?->cabin_no ?? '';
+                $merchant = $mapping->schedule['vehicle']['merchant'] ?? null;
+                $chargePlatform = $this->calculation->resolveChargeOptionKey(
+                    request()->input('platform', $platform)
+                );
+                $charges = $this->calculation->getCharges([
+                    'fare' => $mapping->fare,
+                    'price' => $mapping->fare,
+                    'service_charge' => $mapping->service_charge,
+                    'service_charge_type' => $mapping->service_charge_type,
+                    'merchant_service_charge' => is_object($merchant) ? $merchant->getAttribute('service_charge') : ($merchant['service_charge'] ?? null),
+                    'merchant_service_charge_type' => is_object($merchant) ? ($merchant->getAttribute('service_charge_type') ?? 'percent') : ($merchant['service_charge_type'] ?? 'percent'),
+                ], $chargePlatform);
                 $data = [
                     'customer_id' => $customer->id,
                     'mapping_id' => $mapping->id,
@@ -479,8 +563,8 @@ class BookingService
                     'cabin_id' => $mapping->cabin_id,
                     'cabin_no' => ($mapping->cabinType) ? $mapping->cabinType['letter'] . '-' . $rawCabinNo : (string) $rawCabinNo,
                     'price' => $mapping->fare,
-                    'vat_visibility' => $mapping->schedule['vehicle']['merchant']['vat_visibility'],
-                    'vat_applicable_to' => $mapping->schedule['vehicle']['merchant']['vat_applicable_to'],
+                    'vat_visibility' => $merchant['vat_visibility'] ?? 1,
+                    'vat_applicable_to' => $merchant['vat_applicable_to'] ?? 'merchant',
                     'route_name' => $mapping->schedule['startingPoint']['ghat']['name'] . ' - ' . $mapping->schedule['endingPoint']['ghat']['name'],
                     'vehicle_name' => $mapping->schedule['vehicle']['name'],
                     'trip_id' => $mapping->schedule_id,
@@ -488,17 +572,19 @@ class BookingService
                     'leaving_time' => $mapping->schedule['leaving_at'],
                     'booking_date' => date('Y-m-d'),
                     'discount' => $item['discount'] ?? 0,
+                    'promotion_id' => $item['promotion_id'] ?? null,
                     'boarding_point' => (isset($item['boardingPoint'])) ? json_encode($item['boardingPoint']) : null,
                     'passenger' => json_encode($passenger),
                     'vat_amount' => $vatAmount,
-                    'charge_amount' => ($chargeType == 'global') ? getOption('service_charge_' . $platform, 0) : $mapping->service_charge,
-                    'charge_type' => ($chargeType == 'global') ? 'percent' : $mapping->service_charge_type,
+                    'charge_amount' => $charges['amount'],
+                    'charge_type' => $charges['type'],
                     'status' => 1,
                     'is_honorium' => (int)$mapping->is_honorium,
-                    'honorium_charge' => $mapping->schedule['vehicle']['merchant']['honorium_service_charge'],
-                    'honorium_type' => $mapping->schedule['vehicle']['merchant']['honorium_type'],
+                    'honorium_charge' => $merchant['honorium_service_charge'] ?? 0,
+                    'honorium_type' => $merchant['honorium_type'] ?? null,
                     'incentive' => 0,
                     'incentive_type' => 'percent',
+                    'merchant_id' => is_object($merchant) ? $merchant->id : ($merchant['id'] ?? null),
                 ];
                 if ($user instanceof Agent) {
                     $data['incentive'] = $user->incentive->incentive;

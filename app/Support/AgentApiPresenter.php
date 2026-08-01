@@ -91,6 +91,10 @@ class AgentApiPresenter
             'propertyType' => $propertyType,
             'customerName' => $booking->customer?->name,
             'customerMobile' => $booking->customer?->mobile,
+            'totalAmount' => (float) $booking->total_amount,
+            'chargeTotal' => (float) $booking->charge_total,
+            'vatTotal' => (float) $booking->vat_total,
+            'totalDiscount' => (float) $booking->total_discount,
             'totalPayable' => (float) $booking->total_payable,
             'routeOrStay' => $routeOrStay,
             'cancellable' => $source === 'counter'

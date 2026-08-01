@@ -40,16 +40,26 @@ class CalculationService
         if($item['booking_party'] != 'merchant') {
             $total += $this->calculateItemCharge($item);
         }
-        if($item['vat_applicable_to'] == 'customer') {
+        if(($item['vat_applicable_to'] ?? 'merchant') == 'customer') {
             $total += $this->calculateItemVat($item);
         }
 
         return call_user_func([$this, $this->numberFormat], $total);
     }
 
+    /**
+     * VAT applies to service charge only — never to ticket fare.
+     */
     public function calculateItemVat(array $item)
     {
-        return call_user_func([$this, $this->numberFormat],($item['price'] * ($item['vat_amount'] / 100)));
+        if (($item['vat_applicable_to'] ?? 'merchant') !== 'customer') {
+            return call_user_func([$this, $this->numberFormat], 0);
+        }
+
+        $charge = (float) $this->calculateItemCharge($item);
+        $vatAmount = (float) ($item['vat_amount'] ?? getOption('vat_amount', 0));
+
+        return call_user_func([$this, $this->numberFormat], ($charge * ($vatAmount / 100)));
     }
 
     public function calculateItemCharge(array $item)
@@ -75,31 +85,78 @@ class CalculationService
 
     public function getServiceCharge(array $item, $platform = 'web')
     {
-        $charge = 0;
-        if(getOption('service_charge_type', 'global') == 'global') {
-            $charge += getOption('service_charge_' . $platform, 0);
-        } else {
-            return $item['service_charge'];
-        }
-        return call_user_func([$this, $this->numberFormat], $charge);
+        $charges = $this->getCharges($item, $platform);
+
+        return call_user_func([$this, $this->numberFormat], $charges['amount']);
     }
 
+    /**
+     * Map request/booking platform labels to options keys:
+     * service_charge_web | service_charge_mobile | service_charge_counter.
+     */
+    public function resolveChargeOptionKey(?string $platform): string
+    {
+        $p = strtolower(trim((string) ($platform ?? '')));
+
+        return match ($p) {
+            'web' => 'web',
+            'android', 'ios', 'mobile', 'app', 'flutter', 'iphone' => 'mobile',
+            'counter', 'agent', 'agent_app', 'office', 'supervisor_app', 'merchant_desk' => 'counter',
+            default => 'mobile',
+        };
+    }
+
+    /**
+     * Priority: seat/cabin mapping → merchant → Durpalla platform (default 5%).
+     *
+     * @return array{amount: float, type: string, total: float}
+     */
     public function getCharges(array $item, string $platform = 'web'): array
     {
-        $res = [
-            'amount' => 0,
-            'type' => getOption('service_charge_type', 'percent'),
-            'total' => 0
-        ];
-        if(getOption('service_charge_platform', 'global') === 'global') {
-            $res['amount'] = getOption('service_charge_' . $platform, 0);
-            $res['total'] = ($res['type'] == 'percent') ? ($item['fare'] * ($res['amount'] / 100)) : $res['amount'];
+        $fare = (float) ($item['fare'] ?? $item['price'] ?? 0);
+        $type = 'percent';
+        $amount = 0.0;
+        $optionKey = $this->resolveChargeOptionKey($platform);
+
+        if ($this->hasChargeValue($item['service_charge'] ?? null)) {
+            $type = $this->normalizeChargeType($item['service_charge_type'] ?? 'percent');
+            $amount = abs((float) $item['service_charge']);
+        } elseif ($this->hasChargeValue($item['merchant_service_charge'] ?? null)) {
+            $type = $this->normalizeChargeType($item['merchant_service_charge_type'] ?? 'percent');
+            $amount = abs((float) $item['merchant_service_charge']);
         } else {
-            $res['type'] = $item['service_charge_type'];
-            $res['amount'] = $item['service_charge'];
-            $res['total'] = ($res['type'] == 'percent') ? ($item['fare'] * $res['amount'] / 100) : $res['amount'];
+            $type = $this->normalizeChargeType(getOption('service_charge_type', 'percent'));
+            $raw = getOption('service_charge_' . $optionKey, null);
+            if (($raw === null || $raw === '') && $optionKey !== 'mobile') {
+                $raw = getOption('service_charge_mobile', null);
+            }
+            $amount = ($raw === null || $raw === '') ? 5.0 : abs((float) $raw);
         }
-        return $res;
+
+        $total = ($type === 'percent')
+            ? ($fare * ($amount / 100))
+            : $amount;
+
+        return [
+            'amount' => $amount,
+            'type' => $type,
+            'total' => (float) call_user_func([$this, $this->numberFormat], $total),
+        ];
+    }
+
+    private function hasChargeValue(mixed $value): bool
+    {
+        return $value !== null && $value !== '' && is_numeric($value) && (float) $value > 0;
+    }
+
+    private function normalizeChargeType(mixed $type): string
+    {
+        $type = strtolower((string) ($type ?: 'percent'));
+        if (in_array($type, ['fixed', 'f', 'flat'], true)) {
+            return 'fixed';
+        }
+
+        return 'percent';
     }
 
     public function createDate($date, $format = 'd/m/Y')
@@ -111,14 +168,24 @@ class CalculationService
         return $date_formated;
     }
 
-    public function calculateVat(int $price, $type = 'percent'): float
+    /**
+     * VAT on a charge amount (percent of charge, or fixed).
+     */
+    public function calculateVat($chargeAmount, $type = 'percent'): float
     {
-        return ($type == 'percent') ? call_user_func([$this, $this->numberFormat],($price * (getOption('vat_amount', 0) / 100)), 2) : call_user_func([$this, $this->numberFormat], $price);
+        $chargeAmount = (float) $chargeAmount;
+        $vatRate = (float) getOption('vat_amount', 0);
+
+        return ($type == 'percent')
+            ? (float) call_user_func([$this, $this->numberFormat], ($chargeAmount * ($vatRate / 100)), 2)
+            : (float) call_user_func([$this, $this->numberFormat], $chargeAmount);
     }
 
     public function calculateCharge($amount, $type): float
     {
-        return ($type == 'percent') ? call_user_func([$this, $this->numberFormat],($amount * (getOption('vat_amount', 0) / 100)), 2) : call_user_func([$this, $this->numberFormat], $amount);
+        return ($type == 'percent')
+            ? (float) call_user_func([$this, $this->numberFormat], ((float) $amount * ((float) getOption('vat_amount', 0) / 100)), 2)
+            : (float) call_user_func([$this, $this->numberFormat], $amount);
     }
 
     public function calculateAgentCommission(array $item)

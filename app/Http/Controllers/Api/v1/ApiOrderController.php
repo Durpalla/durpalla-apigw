@@ -8,7 +8,6 @@ use App\Jobs\BookingQrcodeGenerateJob;
 use App\Models\Booking;
 use App\Models\BookingItem;
 use App\Models\CabinLock;
-use App\Models\Coupon;
 use App\Models\DeckFare;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -18,6 +17,8 @@ use Illuminate\Support\Facades\DB;
 use App\Models\VehicleSchedule;
 use App\Models\Payment;
 use App\Services\BookingService;
+use App\Services\Promotion\DTO\PromotionContext;
+use App\Services\Promotion\PromotionEngine;
 
 class ApiOrderController extends Controller
 {
@@ -238,84 +239,73 @@ class ApiOrderController extends Controller
 
     public function couponValidate(Request $request)
     {
-        $data = ['success' => false, 'message' => __('Cannot validate coupon')];
-        //validation rules
         $validator = Validator::make($request->all(), [
-            'items' => 'bail|required|string',
-            'coupon' => 'bail|required|string|exists:coupons,code'
+            'items' => 'bail|required',
+            'coupon' => 'bail|required|string',
         ]);
 
-        //validation fails
-        if ($validator->fails())
-            return response()->json(['success' => false, 'message' => $validator->errors()->first()], $this->success);
-
-        $items = json_decode(str_replace("//", "", $request->items));
-
-        if (is_array($items)) {
-            $coupon = Coupon::where(['code' => $request->coupon, 'status' => 1])->first();
-
-            //if coupon is valid
-            if ($coupon && $coupon->offer_start <= date('Y-m-d') && $coupon->offer_end >= date('Y-m-d')) {
-                $totalDiscount = 0;
-                $applicablesTo = explode(',', $coupon->items);
-                switch ($coupon->type) {
-                    case 'customer':
-                        foreach ($items as $item) {
-                            if (in_array(Auth::user()->id, $applicablesTo)) {
-                                if (($item->cabin_type == 'cabin' && $coupon->is_cabin) || ($item->cabin_type == 'seat' && $coupon->is_seat) || ($item->cabin_type == 'deck' && $coupon->is_deck)) {
-                                    $totalDiscount += ($coupon->discount_type == 'flat') ? $coupon->discount_amount : $item->fare * ($coupon->discount_amount / 100);
-                                }
-
-                            }
-                        }
-                        break;
-
-                    case 'merchant':
-                        foreach ($items as $item) {
-                            if (in_array($item->merchant_id, $applicablesTo)) {
-                                if (($item->cabin_type == 'cabin' && $coupon->is_cabin) || ($item->cabin_type == 'seat' && $coupon->is_seat) || ($item->cabin_type == 'deck' && $coupon->is_deck)) {
-                                    $totalDiscount += ($coupon->discount_type == 'flat') ? $coupon->discount_amount : $item->fare * ($coupon->discount_amount / 100);
-                                }
-                            }
-                        }
-                        break;
-
-                    case 'route':
-                        foreach ($items as $item) {
-                            if (in_array($item->route_id, $applicablesTo)) {
-                                if (($item->cabin_type == 'cabin' && $coupon->is_cabin) || ($item->cabin_type == 'seat' && $coupon->is_seat) || ($item->cabin_type == 'deck' && $coupon->is_deck)) {
-                                    $totalDiscount += ($coupon->discount_type == 'flat') ? $coupon->discount_amount : $item->fare * ($coupon->discount_amount / 100);
-                                }
-                            }
-                        }
-                        break;
-
-                    case 'launch':
-                        foreach ($items as $item) {
-                            if (in_array($item->vehicle_id, $applicablesTo)) {
-                                if (($item->cabin_type == 'cabin' && $coupon->is_cabin) || ($item->cabin_type == 'seat' && $coupon->is_seat) || ($item->cabin_type == 'deck' && $coupon->is_deck)) {
-                                    $totalDiscount += ($coupon->discount_type == 'flat') ? $coupon->discount_amount : $item->fare * ($coupon->discount_amount / 100);
-                                }
-                            }
-                        }
-                        break;
-
-                    case 'period':
-                        foreach ($items as $item) {
-                            if (($item->cabin_type == 'cabin' && $coupon->is_cabin) || ($item->cabin_type == 'seat' && $coupon->is_seat) || ($item->cabin_type == 'deck' && $coupon->is_deck)) {
-                                $totalDiscount += ($coupon->discount_type == 'flat') ? $coupon->discount_amount : $item->fare * ($coupon->discount_amount / 100);
-                            }
-                        }
-                        break;
-                }
-
-                $data['success'] = true;
-                $data['discount'] = $totalDiscount;
-                $data['message'] = ($totalDiscount) ? __('You have accuire this offer successfully') : __('Coupon is valid but you are not applicable');
-            }
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ], $this->success);
         }
 
-        return response()->json($data, $this->success);
+        $items = $this->parsePromotionItems($request->input('items'));
+        if ($items === []) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Cannot validate coupon'),
+            ], $this->success);
+        }
+
+        $context = PromotionContext::fromArray([
+            'user_id' => Auth::id(),
+            'service_type' => $request->input('service_type', 'transport'),
+            'channel' => $request->input('channel', 'web'),
+            'items' => $items,
+        ]);
+
+        $result = app(PromotionEngine::class)->applyCode($context, (string) $request->input('coupon'));
+
+        return response()->json([
+            'success' => $result->success,
+            'message' => $result->message,
+            'discount' => $result->discountAmount,
+            'promotion_id' => $result->promotion?->id,
+            'item_discounts' => $result->itemDiscounts,
+        ], $this->success);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function parsePromotionItems(mixed $raw): array
+    {
+        if (is_string($raw)) {
+            $raw = json_decode(str_replace('//', '', $raw), true);
+        }
+
+        if (! is_array($raw)) {
+            return [];
+        }
+
+        $items = [];
+        foreach ($raw as $item) {
+            $item = (array) $item;
+            $items[] = [
+                'type' => $item['cabin_type'] ?? $item['type'] ?? null,
+                'amount' => (float) ($item['fare'] ?? $item['amount'] ?? $item['price'] ?? 0),
+                'merchant_id' => $item['merchant_id'] ?? null,
+                'route_id' => $item['route_id'] ?? null,
+                'vehicle_id' => $item['vehicle_id'] ?? $item['launch_id'] ?? null,
+                'schedule_id' => $item['schedule_id'] ?? $item['trip_id'] ?? null,
+                'hotel_id' => $item['hotel_id'] ?? null,
+                'city_id' => $item['city_id'] ?? null,
+            ];
+        }
+
+        return $items;
     }
 
     /**

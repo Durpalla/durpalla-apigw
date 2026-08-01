@@ -30,32 +30,31 @@ class BookingChargeAdjustmentJob
     }
 
     /**
-     * Execute the job.
-     *
-     * @return void
+     * Recompute charge / VAT (on charge only) / discount / payable from booking items.
      */
     public function handle()
     {
         $total_discount = 0;
         $total_charge = 0;
-        $total_amount = $this->booking->total_amount;
-        $total_payable = $this->booking->total_payable;
         $total_vat = 0;
-        $this->booking->bookingItems->each(function($item, $key) use(&$total_payable, &$total_amount, &$total_charge, &$total_discount, &$total_vat) {
-            $itemCharge = $this->calculation->calculateItemCharge($item->toArray());
-            $itemVat = $this->calculation->calculateItemVat($item->toArray());
-            $totalDiscount = $this->calculation->calculateItemDiscount($item->toArray());
-            $total_charge += $itemCharge;
-            $total_payable += $itemCharge + $itemVat - $totalDiscount;
-            $total_discount += $totalDiscount;
-            $total_vat += $itemVat;
+        $total_amount = 0;
+
+        $this->booking->bookingItems->each(function ($item) use (&$total_charge, &$total_discount, &$total_vat, &$total_amount) {
+            $row = $item->toArray();
+            $total_amount += abs($row['price'] ?? 0);
+            $total_charge += (float) $this->calculation->calculateItemCharge($row);
+            $total_vat += (float) $this->calculation->calculateItemVat($row);
+            $total_discount += (float) $this->calculation->calculateItemDiscount($row);
         });
+
+        $total_payable = abs(($total_amount + $total_charge + $total_vat) - $total_discount);
+
         $this->booking->update([
             'charge_total' => $total_charge,
             'total_payable' => $total_payable,
             'total_amount' => $total_amount,
             'total_discount' => $total_discount,
-            'vat_total' => $total_vat
+            'vat_total' => $total_vat,
         ]);
     }
 }

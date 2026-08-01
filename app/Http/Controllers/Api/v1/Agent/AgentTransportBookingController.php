@@ -83,6 +83,10 @@ class AgentTransportBookingController extends Controller
 
     public function lock(Request $request): JsonResponse
     {
+        $request->merge([
+            'platform' => $request->input('platform', 'agent_app'),
+        ]);
+
         $agent = auth()->user();
         if ($agent instanceof Agent) {
             $itemIds = $request->has('item_ids')
@@ -237,6 +241,11 @@ class AgentTransportBookingController extends Controller
             $booking = Booking::query()->with(['bookingItems', 'customer'])->find($data['order_id']);
             if ($booking) {
                 $data['booking'] = \App\Support\AgentApiPresenter::booking($booking);
+                $data['total_amount'] = (float) $booking->total_amount;
+                $data['charge_total'] = (float) $booking->charge_total;
+                $data['vat_total'] = (float) $booking->vat_total;
+                $data['total_discount'] = (float) $booking->total_discount;
+                $data['total_payable'] = (float) $booking->total_payable;
             }
         }
 

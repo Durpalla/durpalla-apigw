@@ -23,6 +23,7 @@ class BookingItem extends Model
         'trip_date',
         'booking_date',
         'discount',
+        'promotion_id',
         'boarding_point',
         'passenger',
         'vat_amount',
