@@ -153,14 +153,16 @@ class CartService
             return [];
         }
 
+        // Do not eager-load schedule.discounts — `discounts` table is not present
+        // in this DB and previously made GET /cart 500 when locks existed (empty cart on reload).
         $locks = CabinLock::with([
             'mapping.cabinType',
             'mapping.schedule.startFrom',
             'mapping.schedule.stopTo',
             'mapping.schedule.boardingVias.ghat',
-            'mapping.schedule.vehicle.merchant',
-            'mapping.schedule.discounts',
-            'mapping.schedule.launch',
+            'mapping.schedule.vehicle' => static fn ($q) => $q->withTrashed()->with([
+                'merchant' => static fn ($m) => $m->withTrashed(),
+            ]),
         ])
             ->where('customer_token', (string) $customerToken)
             ->where('expire_at', '>', now())
@@ -169,21 +171,26 @@ class CartService
         $items = [];
         foreach ($locks as $lock) {
             $item = $lock->mapping;
-            if (! $item) {
+            if (! $item || ! $item->schedule) {
                 continue;
             }
-            $item->lock_id = $lock->id;
-            $payload = $this->buildCartItem($item);
-            $payload['expires_at'] = $lock->expire_at?->toIso8601String();
-            $payload['price'] = $payload['fare'];
-            $payload['meta'] = [
-                'cabin_no' => $payload['cabin_no'] ?? null,
-                'vehicle_name' => $payload['vehicle_name'] ?? null,
-                'route_name' => $payload['route_name'] ?? null,
-                'trip_date' => $payload['trip_date'] ?? null,
-                'fare' => $payload['fare'] ?? null,
-            ];
-            $items[] = $payload;
+            try {
+                $item->lock_id = $lock->id;
+                $payload = $this->buildCartItem($item);
+                $payload['expires_at'] = $lock->expire_at?->toIso8601String();
+                $payload['price'] = $payload['fare'] ?? 0;
+                $payload['meta'] = [
+                    'cabin_no' => $payload['cabin_no'] ?? null,
+                    'vehicle_name' => $payload['vehicle_name'] ?? null,
+                    'route_name' => $payload['route_name'] ?? null,
+                    'trip_date' => $payload['trip_date'] ?? null,
+                    'trip_id' => $payload['trip_id'] ?? $lock->trip_id ?? null,
+                    'fare' => $payload['fare'] ?? null,
+                ];
+                $items[] = $payload;
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
 
         return $items;
@@ -192,7 +199,10 @@ class CartService
     private function buildCartItem($item): array
     {
         $platform = (request()->platform !== null && request()->platform !== 'android') ? request()->platform : 'mobile';
-        $vat_applicable_to = $item->schedule->launch['merchant']['vat_applicable_to'];
+        $schedule = $item->schedule;
+        $vehicle = $schedule?->vehicle ?? $schedule?->launch;
+        $merchant = $vehicle?->merchant ?? $schedule?->merchant;
+        $vat_applicable_to = $merchant?->vat_applicable_to ?? 'merchant';
         $vat_amount = abs(getOption('vat_amount', 0));
         $vat = 0;
         if ($vat_applicable_to == 'customer') {
@@ -228,44 +238,29 @@ class CartService
 
             if (($user instanceof Merchant || $user instanceof MerchantStaff) && $item->honorium) {
                 $is_honorium = 1;
-                $honorium_charge = $item->launch['merchant']['honorium_service_charge'];
+                $honorium_charge = $merchant?->honorium_service_charge ?? 0;
             }
 
-            if ($item->schedule->discounts) {
-                if ($user instanceof Agent || (isset($user->type) && in_array($user->type, [AppConst::AGENT_TYPE, 'admin'], true))) {
-                    $userType = 'durpalla';
-                } else {
-                    $userType = 'merchant';
-                }
-                foreach ($item->schedule->discounts as $discount) {
-                    $calculated = ($discount->type == 'p') ? ($item->fare * ($discount->amount / 100)) : $discount->amount;
-                    if (($userType == $discount->applicable_to) || $discount->applicable_to == 'both') {
-                        switch ($item->type) {
-                            case 'cabin':
-                                $discounted += ($discount->is_cabin) ? $calculated : 0;
-                                break;
-                            case 'seat':
-                                $discounted += ($discount->is_seat) ? $calculated : 0;
-                                break;
-                        }
-                    }
-                }
-            }
+            // Skip schedule discounts — `discounts` table is not available in this DB.
         } else {
             $charges = $this->calculation->getCharges($item->toArray(), $platform);
             $service_charge_counter = $charges['amount'];
             $service_charge = $charges['total'];
             $service_charge_type = $charges['type'];
         }
+
+        $startName = $schedule?->startFrom?->name ?? '';
+        $endName = $schedule?->stopTo?->name ?? '';
+
         $cartItem = [
             'lock_id' => $item->lock_id,
             'type' => $item->type,
             'trip_id' => $item->schedule_id,
-            'trip_date' => date('Y-m-d H:i:s', strtotime($item->schedule->leaving_at)),
-            'vehicle_id' => $item->schedule->vehicle_id,
-            'vehicle_name' => $item->schedule->vehicle['name'],
-            'route_name' => $item->schedule->startFrom['name'] . ' - ' . $item->schedule->stopTo['name'],
-            'cabin_no' => ($item['cabinType']) ? $item['cabinType']['letter'] . '-' . $item['cabin_no'] : $item['cabin_no'],
+            'trip_date' => date('Y-m-d H:i:s', strtotime((string) $schedule->leaving_at)),
+            'vehicle_id' => $schedule->vehicle_id,
+            'vehicle_name' => $vehicle?->name ?? '',
+            'route_name' => trim($startName . ' - ' . $endName, ' -'),
+            'cabin_no' => ($item->cabinType) ? ($item->cabinType->letter ?? '') . '-' . $item->cabin_no : $item->cabin_no,
             'item_id' => $item->id,
             'cabin_id' => $item->cabin_id,
             'fare' => abs($item->fare),
@@ -276,14 +271,14 @@ class CartService
             'charge_amount' => $service_charge_counter,
             'charge_type' => $service_charge_type ?? 'percent',
             'vat_applicable_to' => $vat_applicable_to,
-            'cabin_is_ac' => ($item['cabinType']) ? $item->cabinType['is_ac'] : 0,
+            'cabin_is_ac' => ($item->cabinType) ? (int) ($item->cabinType->is_ac ?? 0) : 0,
             'status' => 2,
             'passenger' => ['name' => '', 'mobile' => '', 'person' => $item->passenger_capacity, 'for' => '', 'type' => ''],
-            'stoppages' => $this->tripService->formatStoppages($item->schedule),
-            'boardingPoint' => ['id' => $item->schedule->starting_point, 'name' => $item->schedule->startFrom['name']],
+            'stoppages' => $this->tripService->formatStoppages($schedule),
+            'boardingPoint' => ['id' => $schedule->starting_point, 'name' => $startName],
             'is_honorium' => $is_honorium,
             'honorium_charge' => $honorium_charge,
-            'honorium_type' => $item->schedule->vehicle->merchant['honorium_type'],
+            'honorium_type' => $merchant?->honorium_type ?? null,
             'incentive' => $incentive,
             'incentive_type' => $incentive_type
         ];
