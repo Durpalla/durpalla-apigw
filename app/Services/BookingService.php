@@ -459,7 +459,7 @@ class BookingService
             'web' => 'web',
             'android' => 'android',
             'ios', 'iphone' => 'ios',
-            'counter' => 'counter',
+            'counter', 'agent', 'agent_app' => 'counter',
             'office' => 'office',
             'supervisor_app' => 'supervisor_app',
             'merchant_desk' => 'merchant_desk',
