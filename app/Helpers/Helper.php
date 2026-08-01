@@ -196,7 +196,13 @@ use App\Services\OptionService;
                 if ($rowKey === null || $rowKey === '' || $posKey === null || $posKey === '') {
                     continue;
                 }
-                $arr[(int) $rowKey][(int) $posKey] = $v;
+                $rowInt = (int) $rowKey;
+                $posInt = (int) $posKey;
+                // Drop obviously corrupt layout coordinates (see _my_layout caps).
+                if ($rowInt < 1 || $rowInt > 24 || $posInt < 1 || $posInt > 80) {
+                    continue;
+                }
+                $arr[$rowInt][$posInt] = $v;
             }
         }
 
@@ -209,7 +215,12 @@ use App\Services\OptionService;
             return [];
         }
 
-        $hCol = (int) max(array_keys($arr));
+        // Cap sparse grids — bad cabin_row / cabin_position values previously
+        // expanded into huge arrays and OOM'd the trip endpoint.
+        $maxCols = 24;
+        $maxPos = 80;
+
+        $hCol = min($maxCols, (int) max(array_keys($arr)));
         if ($hCol < 1) {
             return [];
         }
@@ -222,7 +233,12 @@ use App\Services\OptionService;
             }
 
             $col = $arr[$i];
-            $hRow = (int) max(array_keys($col));
+            $keys = array_filter(array_keys($col), static fn ($k) => (int) $k >= 1 && (int) $k <= $maxPos);
+            if ($keys === []) {
+                $cols[$i] = [];
+                continue;
+            }
+            $hRow = (int) max($keys);
             $cols[$i] = [];
             for ($j = 1; $j <= $hRow; $j++) {
                 if (array_key_exists($j, $col)) {

@@ -35,11 +35,30 @@ class DeckFare extends Model
     ];
 
     /**
+     * Cached once per process — Schema::hasColumn on every decks eager-load
+     * hammered information_schema and contributed to intermittent 500s.
+     */
+    private static ?bool $hasIsActiveColumn = null;
+
+    private static function hasIsActiveColumn(): bool
+    {
+        if (self::$hasIsActiveColumn === null) {
+            try {
+                self::$hasIsActiveColumn = Schema::hasColumn('deck_fares', 'is_active');
+            } catch (\Throwable) {
+                self::$hasIsActiveColumn = false;
+            }
+        }
+
+        return self::$hasIsActiveColumn;
+    }
+
+    /**
      * Exclude inactive planning fares when the column exists.
      */
     public function scopeActive(Builder $query): Builder
     {
-        if (Schema::hasColumn('deck_fares', 'is_active')) {
+        if (self::hasIsActiveColumn()) {
             $query->where(function (Builder $q) {
                 $q->where('is_active', true)
                     ->orWhereNull('is_active');
@@ -51,7 +70,7 @@ class DeckFare extends Model
 
     public function isSellable(): bool
     {
-        if (! Schema::hasColumn('deck_fares', 'is_active')) {
+        if (! self::hasIsActiveColumn()) {
             return true;
         }
 
