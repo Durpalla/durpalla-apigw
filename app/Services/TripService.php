@@ -343,10 +343,9 @@ class TripService
             return !empty($grouped) ? $grouped : new stdClass();
         };
 
-        // Legacy bus seats often share cabin_position=99 (merchant layout/seat rows API
-        // still works because it groups by cabin_row only). Without renumbering,
-        // _my_group_by collapses each row to one cell — and the OOM position cap
-        // dropped every seat at 99, returning empty first_floor/second_floor maps.
+        // Safety net for legacy DB default cabin_position=99 (see durpalla migration
+        // 2026_08_01_160000 + SeatCabinImport). Prefer fixing source data with
+        // `php artisan cabins:fix-position-sentinels`. Both APIs use cabin_position.
         $cabins = $this->normalizeLayoutPositions($cabins);
         $seats = $this->normalizeLayoutPositions($seats);
         $sofas = $this->normalizeLayoutPositions($sofas);
