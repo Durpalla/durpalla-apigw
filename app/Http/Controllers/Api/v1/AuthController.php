@@ -131,12 +131,16 @@ class AuthController extends Controller
             // check() stores OTP without type (null). Flutter sends type=register for sign-up flow.
             if ($type === 'forgot') {
                 $query->where('type', 'forgot');
+            } elseif ($type === '2fa_login' || $type === '2fa') {
+                $query->whereIn('type', ['2fa_login', '2fa']);
             } else {
                 $query->where(function ($q) {
                     $q->whereNull('type')
                         ->orWhere('type', '')
                         ->orWhere('type', 'login')
-                        ->orWhere('type', 'register');
+                        ->orWhere('type', 'register')
+                        ->orWhere('type', '2fa_login')
+                        ->orWhere('type', '2fa');
                 });
             }
 
@@ -150,9 +154,9 @@ class AuthController extends Controller
             if (strtotime($otp->updated_at) < time() - 900) {
                 $data['message'] = 'Your otp code has been expired.';
             } else {
-                $user = Customer::firstOrNew(['mobile' => $request->mobile]);
+                $user = Customer::where('mobile', $request->mobile)->first();
 
-                if ($user->id) {
+                if ($user) {
                     $user->email_verified_at = now();
                     $user->save();
                     $data['step'] = 'login';
@@ -169,6 +173,34 @@ class AuthController extends Controller
 
                 $otp->verified = 1;
                 $otp->save();
+
+                // Complete password+OTP login when 2FA is enabled.
+                if (
+                    $user
+                    && (
+                        in_array((string) $otp->type, ['2fa_login', '2fa'], true)
+                        || $type === '2fa_login'
+                        || $type === '2fa'
+                    )
+                    && $user->hasTwoFactorEnabled()
+                ) {
+                    Auth::guard('customer')->setUser($user);
+                    $token = $user->createToken(config('app.name'))->plainTextToken;
+                    app(CartService::class)->claimGuestLocksForUser($user);
+                    $data['token'] = $token;
+                    $data['step'] = 'authenticated';
+                    $data['user'] = [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'mobile' => $user->mobile,
+                        'type' => 'customer',
+                        'photo' => $user->profile_pic ? upload_asset($user->profile_pic) : asset('default/avatar.png'),
+                        'role' => 'customer',
+                        'two_factor_enabled' => $user->hasTwoFactorEnabled(),
+                    ];
+                    $data['message'] = __('Login success');
+                }
             }
         } catch (\Exception $e) {
             LogHelper::exception($e, [
@@ -274,6 +306,33 @@ class AuthController extends Controller
 
             if (! Hash::check($request->password, $user->password)) {
                 return response()->json(['success' => false, 'message' => __('Your password does not match.')], $this->success);
+            }
+
+            if ($user->hasTwoFactorEnabled()) {
+                $code = $this->getOtpCode();
+                $otp = UserOtp::firstOrNew(['mobile' => $request->mobile]);
+                $otp->mobile = $request->mobile;
+                $otp->otp_code = $code;
+                $otp->verified = 0;
+                $otp->type = '2fa_login';
+                $otp->attempts = ($otp->attempts ?? 0) + 1;
+                $otp->updated_at = now();
+                $otp->save();
+
+                if (! app()->environment('local')) {
+                    sendSMS([
+                        'mobile' => $request->mobile,
+                        'message' => config('app.name').' login code is '.$otp->otp_code,
+                    ]);
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'step' => 'otp',
+                    'otp_required' => true,
+                    'two_factor' => true,
+                    'message' => __('Enter the OTP sent to your mobile to finish login.'),
+                ], $this->success);
             }
 
             Auth::guard('customer')->setUser($user);

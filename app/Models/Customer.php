@@ -30,6 +30,8 @@ class Customer extends Authenticatable
         'status',
         'profile_pic',
         'email_verified_at',
+        'two_factor_enabled',
+        'two_factor_confirmed_at',
     ];
 
     protected $hidden = [
@@ -42,7 +44,14 @@ class Customer extends Authenticatable
         return [
             'password' => 'hashed',
             'email_verified_at' => 'datetime',
+            'two_factor_enabled' => 'boolean',
+            'two_factor_confirmed_at' => 'datetime',
         ];
+    }
+
+    public function hasTwoFactorEnabled(): bool
+    {
+        return (bool) $this->two_factor_enabled && ! empty($this->two_factor_confirmed_at);
     }
 
     /** @var string Guard name for auth (customer). */

@@ -8,17 +8,21 @@ use App\Models\Booking;
 use App\Models\BookingCancellation;
 use App\Models\BookingItem;
 use App\Http\Controllers\Controller;
+use App\Constants\AppConst;
 use App\Models\Customer;
 use App\Models\Hotel;
 use App\Models\HotelFavorite;
+use App\Models\UserOtp;
 use App\Models\Vehicle;
 use App\Notifications\ProfileUpdate;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 use App\Services\SupervisorService;
 use App\Support\RasterImage;
 
@@ -44,7 +48,15 @@ class MyApiController extends Controller
                 'back' => ($user->meta['nid_back_side']) ? upload_asset('nid/' . $user->meta['nid_back_side']) : ''
             ];
         }
-        return response()->json(['success' => true, 'user' => $user ], $this->success );
+
+        $avatar = $user->profile_pic ? upload_asset($user->profile_pic) : asset('default/avatar.png');
+        $payload = $user->toArray();
+        $payload['photo'] = $avatar;
+        $payload['avatar'] = $avatar;
+        $payload['avatar_url'] = $avatar;
+        $payload['two_factor_enabled'] = $user instanceof Customer ? $user->hasTwoFactorEnabled() : false;
+
+        return response()->json(['success' => true, 'user' => $payload, 'data' => $payload], $this->success);
     }
 
     public function updateDeviceId( Request $request )
@@ -794,14 +806,33 @@ class MyApiController extends Controller
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
+        $table = $user instanceof Customer ? 'customers' : 'users';
+
+        $uniqueEmail = Rule::unique($table, 'email')->ignore($user->getKey());
+        $uniqueMobile = Rule::unique($table, 'mobile')->ignore($user->getKey());
+        if ($user instanceof Customer) {
+            // Soft-deleted rows must not block keeping/updating the current profile.
+            $uniqueEmail->whereNull('deleted_at');
+            $uniqueMobile->whereNull('deleted_at');
+        }
+
+        $emailRules = ['required', 'email', 'max:191'];
+        $mobileRules = ['required', 'regex:/^(01){1}[3456789]{1}(\d){8}$/', 'min:11'];
+        // Skip uniqueness when value is unchanged (avoids false positives from legacy dupes).
+        if (strcasecmp(trim((string) $request->email), trim((string) $user->email)) !== 0) {
+            $emailRules[] = $uniqueEmail;
+        }
+        if (trim((string) $request->mobile) !== trim((string) $user->mobile)) {
+            $mobileRules[] = $uniqueMobile;
+        }
 
         $rules = [
-            'name' => 'required',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'mobile' => 'required|regex:/^(01){1}[3456789]{1}(\d){8}$/|min:11|unique:users,mobile,' . $user->id,
+            'name' => 'required|min:3|max:191',
+            'email' => $emailRules,
+            'mobile' => $mobileRules,
         ];
         if ($request->hasFile('avatar')) {
-            $rules['avatar'] = 'file|mimes:jpg,jpeg,png,gif,webp|max:10240';
+            $rules['avatar'] = 'file|mimes:jpg,jpeg,png,gif,webp|max:100';
         }
 
         $validator = Validator::make($request->all(), $rules);
@@ -829,15 +860,21 @@ class MyApiController extends Controller
         }
 
         if( $user->save() ) {
-            $user->notify(new ProfileUpdate());
+            try {
+                $user->notify(new ProfileUpdate());
+            } catch (\Throwable $e) {
+                // Notification channel may be unavailable in some envs.
+            }
             $avatarUrl = $user->profile_pic ? upload_asset($user->profile_pic) : null;
             $payloadUser = [
+                'id' => $user->id,
                 'name' => $user->name,
                 'mobile' => $user->mobile,
                 'email' => $user->email,
                 'avatar' => $avatarUrl,
                 'photo' => $avatarUrl,
                 'avatar_url' => $avatarUrl,
+                'two_factor_enabled' => $user instanceof Customer ? $user->hasTwoFactorEnabled() : false,
             ];
 
             return response()->json([
@@ -947,8 +984,16 @@ class MyApiController extends Controller
         $data = ['success' => false, 'message' => __('Cannot change password')];
         //validation rules
         $validator = Validator::make($request->all(), [
-            'password' => 'required|max:14|min:6',
-            'confirm_password' => 'required|same:password'
+            'current_password' => 'bail|nullable|string',
+            'password' => [
+                'required',
+                'min:8',
+                'max:20',
+                'regex:/^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/',
+            ],
+            'confirm_password' => 'required|same:password',
+        ], [
+            'password.regex' => 'Password must include letters, a number, and a special character.',
         ]);
 
         //validation fails
@@ -957,6 +1002,11 @@ class MyApiController extends Controller
         } else {
             //update user
             $user = Auth::user();
+            if ($request->filled('current_password') && ! Hash::check($request->current_password, $user->password)) {
+                $data['message'] = __('Current password does not match.');
+
+                return response()->json($data, $this->success);
+            }
             $user->password = Hash::make($request->password);
 
             if( $user->save() ) {
@@ -968,6 +1018,124 @@ class MyApiController extends Controller
         }
 
         return response()->json($data, $this->success );
+    }
+
+    /**
+     * Start enabling 2FA — SMS OTP to the customer's mobile.
+     */
+    public function twoFactorEnable(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        if (! $user instanceof Customer) {
+            return response()->json(['success' => false, 'message' => __('Only customers can enable 2FA.')], $this->success);
+        }
+
+        if ($user->hasTwoFactorEnabled()) {
+            return response()->json(['success' => true, 'message' => __('Two-factor authentication is already enabled.'), 'two_factor_enabled' => true], $this->success);
+        }
+
+        $code = App::environment('production')
+            ? (string) mt_rand(100000, 999999)
+            : (string) AppConst::DEFAULT_OTP;
+
+        $otp = UserOtp::firstOrNew(['mobile' => $user->mobile]);
+        $otp->mobile = $user->mobile;
+        $otp->otp_code = $code;
+        $otp->verified = 0;
+        $otp->type = '2fa';
+        $otp->attempts = 1;
+        $otp->updated_at = now();
+        $otp->save();
+
+        if (! App::environment('local')) {
+            sendSMS([
+                'mobile' => $user->mobile,
+                'message' => config('app.name').' 2FA code is '.$otp->otp_code,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'step' => 'otp',
+            'message' => __('OTP sent to your mobile. Enter it to enable 2FA.'),
+        ], $this->success);
+    }
+
+    /**
+     * Confirm 2FA enable with OTP.
+     */
+    public function twoFactorConfirm(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        if (! $user instanceof Customer) {
+            return response()->json(['success' => false, 'message' => __('Only customers can enable 2FA.')], $this->success);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'otp' => 'bail|required|max:6',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()], $this->success);
+        }
+
+        $otp = UserOtp::where('mobile', $user->mobile)
+            ->where('otp_code', $request->otp)
+            ->where(function ($q) {
+                $q->where('type', '2fa')->orWhereNull('type')->orWhere('type', '');
+            })
+            ->latest()
+            ->first();
+
+        if (! $otp) {
+            return response()->json(['success' => false, 'message' => __('Your OTP code is invalid.')], $this->success);
+        }
+        if (strtotime($otp->updated_at) < time() - 900) {
+            return response()->json(['success' => false, 'message' => __('Your otp code has been expired.')], $this->success);
+        }
+
+        $user->two_factor_enabled = true;
+        $user->two_factor_confirmed_at = now();
+        $user->save();
+
+        $otp->verified = 1;
+        $otp->save();
+
+        return response()->json([
+            'success' => true,
+            'two_factor_enabled' => true,
+            'message' => __('Two-factor authentication enabled.'),
+        ], $this->success);
+    }
+
+    /**
+     * Disable 2FA (requires current password).
+     */
+    public function twoFactorDisable(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        if (! $user instanceof Customer) {
+            return response()->json(['success' => false, 'message' => __('Only customers can manage 2FA.')], $this->success);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'password' => 'bail|required|string',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()], $this->success);
+        }
+        if (! Hash::check($request->password, $user->password)) {
+            return response()->json(['success' => false, 'message' => __('Password does not match.')], $this->success);
+        }
+
+        $user->two_factor_enabled = false;
+        $user->two_factor_confirmed_at = null;
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'two_factor_enabled' => false,
+            'message' => __('Two-factor authentication disabled.'),
+        ], $this->success);
     }
 
     public function upload( Request $request )
@@ -1012,7 +1180,7 @@ class MyApiController extends Controller
     {
         //validation rules
         $validator = Validator::make($request->all(), [
-            'avatar' => 'required|max:10000|mimes:jpg,jpeg,png,gif'
+            'avatar' => 'required|file|max:100|mimes:jpg,jpeg,png,gif,webp'
         ]);
 
         //validation fails

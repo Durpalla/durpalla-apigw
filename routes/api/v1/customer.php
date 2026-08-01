@@ -156,6 +156,9 @@ Route::middleware(['JsonResponse'])->group(function () {
             Route::post('/password/change', [MyApiController::class, 'changePassword']);
             Route::post('/profile/upload', [MyApiController::class, 'upload']);
             Route::post('/profile/upload/procedural', [MyApiController::class, 'uploadProcedural']);
+            Route::post('/2fa/enable', [MyApiController::class, 'twoFactorEnable']);
+            Route::post('/2fa/confirm', [MyApiController::class, 'twoFactorConfirm']);
+            Route::post('/2fa/disable', [MyApiController::class, 'twoFactorDisable']);
             Route::get('/bookings', [MyApiController::class, 'bookings']);
             Route::get('/get-bookings', [MyApiController::class, 'getBookings']);
             Route::get('/cancellations', [MyApiController::class, 'cancellations']);
@@ -183,6 +186,9 @@ Route::middleware(['JsonResponse'])->group(function () {
             Route::post('/password/change', [MyApiController::class, 'changePassword']);
             Route::post('/profile/upload', [MyApiController::class, 'upload']);
             Route::post('/profile/upload/procedural', [MyApiController::class, 'uploadProcedural']);
+            Route::post('/2fa/enable', [MyApiController::class, 'twoFactorEnable']);
+            Route::post('/2fa/confirm', [MyApiController::class, 'twoFactorConfirm']);
+            Route::post('/2fa/disable', [MyApiController::class, 'twoFactorDisable']);
             Route::get('/bookings', [MyApiController::class, 'bookings']);
             Route::get('/cancellations', [MyApiController::class, 'cancellations']);
             Route::get('/activities', [MyApiController::class, 'activities']);

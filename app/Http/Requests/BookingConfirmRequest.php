@@ -8,7 +8,10 @@ class BookingConfirmRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth('api')->check();
+        // Web/mobile customers use Sanctum (customer); legacy clients may use Passport (api).
+        return auth('customer')->check()
+            || auth('api')->check()
+            || auth()->check();
     }
 
     public function rules(): array
