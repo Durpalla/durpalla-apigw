@@ -9,6 +9,7 @@
         "php": "^8.4",
         "ext-curl": "*",
         "ext-openssl": "*",
+        "bacon/bacon-qr-code": "^3.1",
         "guzzlehttp/guzzle": "^7.15.1",
         "guzzlehttp/psr7": "^2.13",
         "harris21/laravel-fuse": "^0.1.1",
@@ -21,6 +22,7 @@
         "open-telemetry/exporter-otlp": "^1.4",
         "open-telemetry/sdk": "^1.14",
         "php-http/guzzle7-adapter": "^1.1",
+        "pragmarx/google2fa": "^9.0",
         "predis/predis": "^3.1",
         "pusher/pusher-php-server": "^7.2",
         "thiagoalessio/tesseract_ocr": "^2.13"

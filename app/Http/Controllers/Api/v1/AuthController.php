@@ -13,6 +13,7 @@ use App\Http\Requests\RegisterRequest;
 use App\Models\Customer;
 use App\Models\UserOtp;
 use App\Services\CartService;
+use App\Services\TwoFactorService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -42,6 +43,32 @@ class AuthController extends Controller
         return App::environment('production')
             ? (string) mt_rand(100000, 999999)
             : (string) AppConst::DEFAULT_OTP;
+    }
+
+    /** Issue a Sanctum token and the standard customer payload after the second factor passes. */
+    private function completeCustomerLogin(Customer $user): array
+    {
+        Auth::guard('customer')->setUser($user);
+        $token = $user->createToken(config('app.name'))->plainTextToken;
+        app(CartService::class)->claimGuestLocksForUser($user);
+
+        return [
+            'success' => true,
+            'step' => 'authenticated',
+            'token' => $token,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'mobile' => $user->mobile,
+                'type' => 'customer',
+                'photo' => $user->profile_pic ? upload_asset($user->profile_pic) : asset('default/avatar.png'),
+                'role' => 'customer',
+                'two_factor_enabled' => $user->hasTwoFactorEnabled(),
+                'two_factor_method' => $user->hasTwoFactorEnabled() ? $user->twoFactorMethod() : null,
+            ],
+            'message' => __('Login success'),
+        ];
     }
 
     public function check(LoginCheckRequest $request)
@@ -125,6 +152,24 @@ class AuthController extends Controller
 
         try {
             $type = $request->input('type');
+
+            // Authenticator-app users have no stored OTP row — check the TOTP code instead.
+            if (in_array((string) $type, ['2fa_login', '2fa'], true)) {
+                $totpUser = Customer::where('mobile', $request->mobile)->first();
+                if ($totpUser && $totpUser->hasTwoFactorEnabled() && $totpUser->usesAuthenticatorApp()) {
+                    $valid = app(TwoFactorService::class)
+                        ->verifyTotp($totpUser->two_factor_secret, (string) $request->input('otp'));
+
+                    if (! $valid) {
+                        $data['message'] = __('That authenticator code is invalid or expired.');
+
+                        return response()->json($data, $this->success);
+                    }
+
+                    return response()->json($this->completeCustomerLogin($totpUser), $this->success);
+                }
+            }
+
             $query = UserOtp::where('mobile', $request->mobile)
                 ->where('otp_code', $request->input('otp'));
 
@@ -184,22 +229,7 @@ class AuthController extends Controller
                     )
                     && $user->hasTwoFactorEnabled()
                 ) {
-                    Auth::guard('customer')->setUser($user);
-                    $token = $user->createToken(config('app.name'))->plainTextToken;
-                    app(CartService::class)->claimGuestLocksForUser($user);
-                    $data['token'] = $token;
-                    $data['step'] = 'authenticated';
-                    $data['user'] = [
-                        'id' => $user->id,
-                        'name' => $user->name,
-                        'email' => $user->email,
-                        'mobile' => $user->mobile,
-                        'type' => 'customer',
-                        'photo' => $user->profile_pic ? upload_asset($user->profile_pic) : asset('default/avatar.png'),
-                        'role' => 'customer',
-                        'two_factor_enabled' => $user->hasTwoFactorEnabled(),
-                    ];
-                    $data['message'] = __('Login success');
+                    $data = array_merge($data, $this->completeCustomerLogin($user));
                 }
             }
         } catch (\Exception $e) {
@@ -309,21 +339,21 @@ class AuthController extends Controller
             }
 
             if ($user->hasTwoFactorEnabled()) {
-                $code = $this->getOtpCode();
-                $otp = UserOtp::firstOrNew(['mobile' => $request->mobile]);
-                $otp->mobile = $request->mobile;
-                $otp->otp_code = $code;
-                $otp->verified = 0;
-                $otp->type = '2fa_login';
-                $otp->attempts = ($otp->attempts ?? 0) + 1;
-                $otp->updated_at = now();
-                $otp->save();
+                $twoFactor = app(TwoFactorService::class);
 
-                if (! app()->environment('local')) {
-                    sendSMS([
-                        'mobile' => $request->mobile,
-                        'message' => config('app.name').' login code is '.$otp->otp_code,
-                    ]);
+                if ($user->usesAuthenticatorApp()) {
+                    return response()->json([
+                        'success' => true,
+                        'step' => 'otp',
+                        'otp_required' => true,
+                        'two_factor' => true,
+                        'two_factor_method' => TwoFactorService::METHOD_TOTP,
+                        'message' => __('Enter the 6-digit code from your authenticator app.'),
+                    ], $this->success);
+                }
+
+                if (! $twoFactor->sendEmailCode($user, '2fa_login')) {
+                    return response()->json(['success' => false, 'message' => __('Could not send the login code to your email.')], $this->success);
                 }
 
                 return response()->json([
@@ -331,7 +361,8 @@ class AuthController extends Controller
                     'step' => 'otp',
                     'otp_required' => true,
                     'two_factor' => true,
-                    'message' => __('Enter the OTP sent to your mobile to finish login.'),
+                    'two_factor_method' => TwoFactorService::METHOD_EMAIL,
+                    'message' => __('Enter the code we emailed you to finish login.'),
                 ], $this->success);
             }
 

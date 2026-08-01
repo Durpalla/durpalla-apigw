@@ -11,7 +11,11 @@ class PaymentCreateRequest extends FormRequest
 
     public function authorize(): bool
     {
-        return auth('api')->check();
+        // Route is auth:customer,api — web/mobile customers use Sanctum (customer),
+        // legacy clients use Passport (api).
+        return auth('customer')->check()
+            || auth('api')->check()
+            || auth()->check();
     }
 
     public function rules(): array

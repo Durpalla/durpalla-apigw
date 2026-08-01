@@ -32,11 +32,14 @@ class Customer extends Authenticatable
         'email_verified_at',
         'two_factor_enabled',
         'two_factor_confirmed_at',
+        'two_factor_method',
+        'two_factor_secret',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
     ];
 
     protected function casts(): array
@@ -46,12 +49,24 @@ class Customer extends Authenticatable
             'email_verified_at' => 'datetime',
             'two_factor_enabled' => 'boolean',
             'two_factor_confirmed_at' => 'datetime',
+            'two_factor_secret' => 'encrypted',
         ];
     }
 
     public function hasTwoFactorEnabled(): bool
     {
         return (bool) $this->two_factor_enabled && ! empty($this->two_factor_confirmed_at);
+    }
+
+    /** 'totp' (authenticator app) or 'email'. SMS is not supported. */
+    public function twoFactorMethod(): string
+    {
+        return $this->two_factor_method === 'totp' ? 'totp' : 'email';
+    }
+
+    public function usesAuthenticatorApp(): bool
+    {
+        return $this->twoFactorMethod() === 'totp' && ! empty($this->two_factor_secret);
     }
 
     /** @var string Guard name for auth (customer). */

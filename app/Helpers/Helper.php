@@ -659,12 +659,12 @@ use App\Services\OptionService;
                 return $path;
             }
 
-            $normalized = ltrim(str_replace('\\', '/', $path), '/');
-            $base = (string) config('uploads.public_base_url', '');
+            $normalized = rtrim(ltrim(str_replace('\\', '/', $path), '/'), '/');
+            $base = rtrim((string) config('uploads.public_base_url', ''), '/');
 
             if ($base !== '') {
                 foreach ((array) config('uploads.cdn_path_prefixes', []) as $prefix) {
-                    if (str_starts_with($normalized, ltrim($prefix, '/'))) {
+                    if (str_starts_with($normalized, ltrim((string) $prefix, '/'))) {
                         return $base.'/'.$normalized;
                     }
                 }

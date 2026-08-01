@@ -71,6 +71,9 @@ docker volume inspect apigw-storage >/dev/null 2>&1 || docker volume create apig
 docker volume inspect apigw-bootstrap-cache >/dev/null 2>&1 || docker volume create apigw-bootstrap-cache
 
 SHARED_ASSETS_ROOT="${SHARED_ASSETS_ROOT:-/mnt/durpalla-assets}"
+# php-fpm runs as www-data inside the image, which is uid/gid 82 there but 33 on the
+# host. Shared dirs owned by the host's www-data are read-only to php, so uploads fail.
+CONTAINER_WWW_UID="${CONTAINER_WWW_UID:-82}"
 shared_public_mounts=()
 if [[ -d "${SHARED_ASSETS_ROOT}/uploads" ]]; then
   echo "Using shared assets at ${SHARED_ASSETS_ROOT}"
@@ -78,6 +81,12 @@ if [[ -d "${SHARED_ASSETS_ROOT}/uploads" ]]; then
   mkdir -p "${SHARED_ASSETS_ROOT}/uploads/avatar" 2>/dev/null || true
   for dir in uploads nid vehicles qrs images temp; do
     if [[ -d "${SHARED_ASSETS_ROOT}/${dir}" ]]; then
+      owner="$(stat -c '%u' "${SHARED_ASSETS_ROOT}/${dir}" 2>/dev/null || echo "$CONTAINER_WWW_UID")"
+      if [[ "$owner" != "$CONTAINER_WWW_UID" ]]; then
+        echo "Reowning ${SHARED_ASSETS_ROOT}/${dir} to ${CONTAINER_WWW_UID} so php-fpm can write"
+        sudo chown -R "${CONTAINER_WWW_UID}:${CONTAINER_WWW_UID}" "${SHARED_ASSETS_ROOT}/${dir}" 2>/dev/null \
+          || echo "WARNING: could not chown ${SHARED_ASSETS_ROOT}/${dir} — uploads to it will fail"
+      fi
       shared_public_mounts+=( -v "${SHARED_ASSETS_ROOT}/${dir}:/var/www/html/public/${dir}" )
     fi
   done

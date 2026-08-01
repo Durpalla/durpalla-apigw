@@ -3,20 +3,18 @@
 namespace App\Http\Controllers\Api\v1;
 
 use Illuminate\Http\JsonResponse;
+use App\Helpers\LogHelper;
 use App\Models\ActivityLog;
 use App\Models\Booking;
 use App\Models\BookingCancellation;
 use App\Models\BookingItem;
 use App\Http\Controllers\Controller;
-use App\Constants\AppConst;
 use App\Models\Customer;
 use App\Models\Hotel;
 use App\Models\HotelFavorite;
-use App\Models\UserOtp;
 use App\Models\Vehicle;
 use App\Notifications\ProfileUpdate;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +22,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use App\Services\SupervisorService;
+use App\Services\TwoFactorService;
 use App\Support\RasterImage;
 
 class MyApiController extends Controller
@@ -55,6 +54,9 @@ class MyApiController extends Controller
         $payload['avatar'] = $avatar;
         $payload['avatar_url'] = $avatar;
         $payload['two_factor_enabled'] = $user instanceof Customer ? $user->hasTwoFactorEnabled() : false;
+        $payload['two_factor_method'] = $user instanceof Customer && $user->hasTwoFactorEnabled()
+            ? $user->twoFactorMethod()
+            : null;
 
         return response()->json(['success' => true, 'user' => $payload, 'data' => $payload], $this->success);
     }
@@ -1030,7 +1032,7 @@ class MyApiController extends Controller
     }
 
     /**
-     * Start enabling 2FA — SMS OTP to the customer's mobile.
+     * Start enabling 2FA with email OTP or an authenticator app (TOTP).
      */
     public function twoFactorEnable(Request $request): JsonResponse
     {
@@ -1040,38 +1042,61 @@ class MyApiController extends Controller
         }
 
         if ($user->hasTwoFactorEnabled()) {
-            return response()->json(['success' => true, 'message' => __('Two-factor authentication is already enabled.'), 'two_factor_enabled' => true], $this->success);
+            return response()->json(['success' => true, 'message' => __('Two-factor authentication is already enabled.'), 'two_factor_enabled' => true, 'two_factor_method' => $user->twoFactorMethod()], $this->success);
         }
 
-        $code = App::environment('production')
-            ? (string) mt_rand(100000, 999999)
-            : (string) AppConst::DEFAULT_OTP;
+        $validator = Validator::make($request->all(), [
+            'method' => 'nullable|in:email,totp',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()], $this->success);
+        }
 
-        $otp = UserOtp::firstOrNew(['mobile' => $user->mobile]);
-        $otp->mobile = $user->mobile;
-        $otp->otp_code = $code;
-        $otp->verified = 0;
-        $otp->type = '2fa';
-        $otp->attempts = 1;
-        $otp->updated_at = now();
-        $otp->save();
+        $twoFactor = app(TwoFactorService::class);
+        $method = $twoFactor->normalizeMethod($request->input('method'));
 
-        if (! App::environment('local')) {
-            sendSMS([
-                'mobile' => $user->mobile,
-                'message' => config('app.name').' 2FA code is '.$otp->otp_code,
-            ]);
+        if ($method === TwoFactorService::METHOD_TOTP) {
+            // Secret is stored unconfirmed; 2FA only turns on after a valid code.
+            $secret = $twoFactor->generateSecret();
+            $user->two_factor_method = TwoFactorService::METHOD_TOTP;
+            $user->two_factor_secret = $secret;
+            $user->save();
+
+            $otpauthUrl = $twoFactor->otpauthUrl($user, $secret);
+
+            return response()->json([
+                'success' => true,
+                'step' => 'totp',
+                'two_factor_method' => TwoFactorService::METHOD_TOTP,
+                'secret' => $secret,
+                'otpauth_url' => $otpauthUrl,
+                'qr_image' => $twoFactor->qrDataUri($otpauthUrl),
+                'message' => __('Scan the QR code in your authenticator app, then enter the 6-digit code.'),
+            ], $this->success);
+        }
+
+        if (empty($user->email)) {
+            return response()->json(['success' => false, 'message' => __('Add an email address to your profile first.')], $this->success);
+        }
+
+        $user->two_factor_method = TwoFactorService::METHOD_EMAIL;
+        $user->two_factor_secret = null;
+        $user->save();
+
+        if (! $twoFactor->sendEmailCode($user, '2fa')) {
+            return response()->json(['success' => false, 'message' => __('Could not send the code to your email.')], $this->success);
         }
 
         return response()->json([
             'success' => true,
             'step' => 'otp',
-            'message' => __('OTP sent to your mobile. Enter it to enable 2FA.'),
+            'two_factor_method' => TwoFactorService::METHOD_EMAIL,
+            'message' => __('Code sent to :email. Enter it to enable 2FA.', ['email' => $user->email]),
         ], $this->success);
     }
 
     /**
-     * Confirm 2FA enable with OTP.
+     * Confirm 2FA enable with an emailed code or an authenticator code.
      */
     public function twoFactorConfirm(Request $request): JsonResponse
     {
@@ -1081,37 +1106,31 @@ class MyApiController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'otp' => 'bail|required|max:6',
+            'otp' => 'bail|required|string|max:10',
         ]);
         if ($validator->fails()) {
             return response()->json(['success' => false, 'message' => $validator->errors()->first()], $this->success);
         }
 
-        $otp = UserOtp::where('mobile', $user->mobile)
-            ->where('otp_code', $request->otp)
-            ->where(function ($q) {
-                $q->where('type', '2fa')->orWhereNull('type')->orWhere('type', '');
-            })
-            ->latest()
-            ->first();
+        $twoFactor = app(TwoFactorService::class);
+        $code = trim((string) $request->otp);
 
-        if (! $otp) {
-            return response()->json(['success' => false, 'message' => __('Your OTP code is invalid.')], $this->success);
-        }
-        if (strtotime($otp->updated_at) < time() - 900) {
-            return response()->json(['success' => false, 'message' => __('Your otp code has been expired.')], $this->success);
+        if ($user->two_factor_method === TwoFactorService::METHOD_TOTP) {
+            if (! $twoFactor->verifyTotp($user->two_factor_secret, $code)) {
+                return response()->json(['success' => false, 'message' => __('That authenticator code is invalid or expired.')], $this->success);
+            }
+        } elseif (! $twoFactor->verifyEmailCode($user, $code, ['2fa'])) {
+            return response()->json(['success' => false, 'message' => __('Your code is invalid or expired.')], $this->success);
         }
 
         $user->two_factor_enabled = true;
         $user->two_factor_confirmed_at = now();
         $user->save();
 
-        $otp->verified = 1;
-        $otp->save();
-
         return response()->json([
             'success' => true,
             'two_factor_enabled' => true,
+            'two_factor_method' => $user->twoFactorMethod(),
             'message' => __('Two-factor authentication enabled.'),
         ], $this->success);
     }
@@ -1138,6 +1157,8 @@ class MyApiController extends Controller
 
         $user->two_factor_enabled = false;
         $user->two_factor_confirmed_at = null;
+        $user->two_factor_method = null;
+        $user->two_factor_secret = null;
         $user->save();
 
         return response()->json([
@@ -1211,17 +1232,42 @@ class MyApiController extends Controller
             return response()->json(['success' => false, 'message' => __('Upload directory is not writable.')], $this->success);
         }
 
+        if (! is_writable($destinationPath)) {
+            LogHelper::error('Avatar upload directory is not writable', [
+                'keyword' => 'AVATAR_UPLOAD_NOT_WRITABLE',
+                'path' => $destinationPath,
+                'owner' => @fileowner($destinationPath),
+                'process_user' => function_exists('posix_geteuid') ? posix_geteuid() : null,
+            ]);
+
+            return response()->json(['success' => false, 'message' => __('Upload directory is not writable.')], $this->success);
+        }
+
         $outPath = $destinationPath . DIRECTORY_SEPARATOR . $filename;
         $source = $image->getRealPath() ?: $image->getPathname();
         $saved = is_string($source) && $source !== ''
             ? RasterImage::resizeToFit($source, $outPath, 320, 320)
             : false;
 
-        if ((! $saved || ! is_file($outPath)) && ! $image->move($destinationPath, $filename)) {
-            return response()->json(['success' => false, 'message' => __('Could not save upload.')], $this->success);
+        if (! $saved || ! is_file($outPath)) {
+            try {
+                $image->move($destinationPath, $filename);
+            } catch (\Throwable $e) {
+                LogHelper::error('Avatar upload move failed: ' . $e->getMessage(), [
+                    'keyword' => 'AVATAR_UPLOAD_MOVE_FAILED',
+                    'path' => $outPath,
+                ]);
+
+                return response()->json(['success' => false, 'message' => __('Could not save upload.')], $this->success);
+            }
         }
 
         if (! is_file($outPath) || filesize($outPath) < 1) {
+            LogHelper::error('Avatar upload produced no file', [
+                'keyword' => 'AVATAR_UPLOAD_EMPTY',
+                'path' => $outPath,
+            ]);
+
             return response()->json(['success' => false, 'message' => __('Could not save upload.')], $this->success);
         }
 

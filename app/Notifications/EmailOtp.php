@@ -42,10 +42,10 @@ class EmailOtp extends Notification implements ShouldQueue
     {
         return (new MailMessage)
             ->greeting('Dear ' . $notifiable->name )
-            ->subject(config('app.name') . ' Login OTP')
-            ->line('Here is your otp code ' . $this->code)
-            ->line('Please use this code to login into your account')
-            ->line('Thank you');
+            ->subject(config('app.name') . ' verification code')
+            ->line('Your verification code is ' . $this->code)
+            ->line('Enter this code to finish signing in or enabling two-factor authentication. It expires in 15 minutes.')
+            ->line('If you did not request this, you can ignore this email.');
     }
 
     /**
