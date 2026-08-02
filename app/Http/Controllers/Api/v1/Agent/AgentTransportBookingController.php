@@ -11,6 +11,7 @@ use App\Models\VehicleSchedule;
 use App\Services\AgentBookingQuotaService;
 use App\Services\AgentCounterPaymentService;
 use App\Services\AgentPaymentService;
+use App\Services\ApiIdempotencyService;
 use App\Services\BookingService;
 use App\Services\TripService;
 use Illuminate\Http\JsonResponse;
@@ -138,6 +139,23 @@ class AgentTransportBookingController extends Controller
     {
         $agent = auth()->user();
         $agentModel = $agent instanceof Agent ? $agent : null;
+
+        $idempotency = app(ApiIdempotencyService::class);
+        $idemKey = $idempotency->keyFromRequest();
+        $actorId = (int) ($agentModel?->id ?? 0);
+        if ($idemKey !== '' && ! $idempotency->isValidKey($idemKey)) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Idempotency-Key must be 1–64 characters.'),
+            ], 422);
+        }
+        if ($idemKey !== '' && $actorId > 0) {
+            $cached = $idempotency->find('agent_transport_confirm', $actorId, $idemKey);
+            if ($cached) {
+                return $cached;
+            }
+        }
+
         $method = $this->counterPayments->normalize(
             (string) $request->input('payment_method', AgentCounterPaymentService::METHOD_FUND)
         );
@@ -268,9 +286,23 @@ class AgentTransportBookingController extends Controller
             }
         }
 
-        return response()->json(array_merge([
+        $payload = array_merge([
             'success' => ! empty($data['success']),
             'message' => $data['message'] ?? '',
-        ], $data));
+        ], $data);
+
+        if (! empty($payload['success']) && $idemKey !== '' && $actorId > 0) {
+            $resourceId = (int) ($data['order_id'] ?? 0) ?: null;
+            $idempotency->remember(
+                'agent_transport_confirm',
+                $actorId,
+                $idemKey,
+                $payload,
+                200,
+                $resourceId
+            );
+        }
+
+        return response()->json($payload);
     }
 }

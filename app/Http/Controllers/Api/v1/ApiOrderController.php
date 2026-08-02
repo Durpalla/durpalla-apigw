@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use App\Models\VehicleSchedule;
 use App\Models\Payment;
+use App\Services\ApiIdempotencyService;
 use App\Services\BookingService;
 use App\Services\Promotion\DTO\PromotionContext;
 use App\Services\Promotion\PromotionEngine;
@@ -32,6 +33,22 @@ class ApiOrderController extends Controller
 
     public function confirm(BookingConfirmRequest $request): JsonResponse
     {
+        $idempotency = app(ApiIdempotencyService::class);
+        $idemKey = $idempotency->keyFromRequest();
+        $actorId = (int) (Auth::id() ?? 0);
+        if ($idemKey !== '' && ! $idempotency->isValidKey($idemKey)) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Idempotency-Key must be 1–64 characters.'),
+            ], 422);
+        }
+        if ($idemKey !== '' && $actorId > 0) {
+            $cached = $idempotency->find('customer_booking_confirm', $actorId, $idemKey);
+            if ($cached) {
+                return $cached;
+            }
+        }
+
         $data = ['success' => false, 'message' => __('Your booking request is not valid')];
         try {
             $items = $request->input('items');
@@ -53,7 +70,20 @@ class ApiOrderController extends Controller
             $data['message'] = $exception->getMessage();
         }
 
-        return response()->json($data, $this->success);
+        $response = response()->json($data, $this->success);
+        if (! empty($data['success']) && $idemKey !== '' && $actorId > 0) {
+            $resourceId = (int) ($data['order_id'] ?? $data['booking_id'] ?? 0) ?: null;
+            $idempotency->remember(
+                'customer_booking_confirm',
+                $actorId,
+                $idemKey,
+                $data,
+                $this->success,
+                $resourceId
+            );
+        }
+
+        return $response;
     }
 
     public function confirm2(Request $request)
