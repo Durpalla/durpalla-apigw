@@ -29,7 +29,9 @@ class Payment extends Model
         'bank_tran_id',
         'status',
         'gateway_session',
-        'gateway_initiated_id'
+        'gateway_initiated_id',
+        'channel',
+        'external_reference',
     ];
 
     public function booking(): BelongsTo

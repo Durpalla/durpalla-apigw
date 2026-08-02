@@ -289,12 +289,30 @@ class AgentHotelBookingService
             throw new \InvalidArgumentException('Invalid payment method');
         }
 
-        return DB::transaction(function () use ($agent, $hold, $customer, $method, $input) {
+        $gatewayId = $input['gateway_id'] ?? null;
+        $isFund = $this->counterPayments->isFund($method);
+        $isLiveGateway = $this->counterPayments->isLiveGateway($method, $gatewayId);
+
+        if (! $isFund && ! $isLiveGateway) {
+            throw new \InvalidArgumentException('Use Fund or a Live payment gateway with gateway_id.');
+        }
+        if ($isLiveGateway && empty($gatewayId)) {
+            throw new \InvalidArgumentException('gateway_id is required for digital payment');
+        }
+
+        return DB::transaction(function () use ($agent, $hold, $customer, $method, $input, $isFund, $isLiveGateway) {
             $roomType = $hold->roomType;
             $checkIn = Carbon::parse($hold->check_in)->startOfDay();
             $checkOut = Carbon::parse($hold->check_out)->startOfDay();
             $quote = is_array($hold->quote_json) ? $hold->quote_json : [];
             $total = (float) ($quote['total'] ?? $hold->total_amount);
+
+            $bookingStatus = $isLiveGateway
+                ? AppConst::BOOKING_PENDING
+                : AppConst::BOOKING_COMPLETE;
+            $reservationStatus = $isLiveGateway
+                ? HotelReservation::STATUS_PENDING_PAYMENT
+                : HotelReservation::STATUS_CONFIRMED;
 
             $booking = new Booking([
                 'booking_date' => date('Y-m-d'),
@@ -308,7 +326,7 @@ class AgentHotelBookingService
                 'charge_total' => (float) ($quote['charge_amount'] ?? 0),
                 'booking_party' => 'durpalla',
                 'platform' => (string) ($input['platform'] ?? 'agent_app'),
-                'status' => AppConst::BOOKING_COMPLETE,
+                'status' => $bookingStatus,
                 'service_type' => 'hotel',
                 'from_date' => $checkIn->toDateString(),
                 'to_date' => $checkOut->toDateString(),
@@ -329,9 +347,9 @@ class AgentHotelBookingService
                 'children' => $hold->children,
                 'total_payable' => $total,
                 'currency' => $quote['currency'] ?? 'BDT',
-                'status' => HotelReservation::STATUS_CONFIRMED,
+                'status' => $reservationStatus,
                 'quote_json' => $quote,
-                'payment_due_at' => null,
+                'payment_due_at' => $isLiveGateway ? now()->addHours(24) : null,
             ]);
 
             $hold->update([
@@ -346,15 +364,10 @@ class AgentHotelBookingService
                 $roomType,
             );
 
-            $isFund = $this->counterPayments->isFund($method);
             $paidAmount = $isFund
                 ? $total
                 : (isset($input['paid_amount']) ? (float) $input['paid_amount'] : $total);
             $dues = max(0, $total - $paidAmount);
-
-            if (! $isFund && empty($input['trx_id'])) {
-                throw new \InvalidArgumentException('Transaction ID is required for digital payments');
-            }
 
             $payment = Payment::create([
                 'booking_id' => $booking->id,
@@ -363,10 +376,11 @@ class AgentHotelBookingService
                 'customer_id' => $customer->id,
                 'gateway_id' => isset($input['gateway_id']) ? (int) $input['gateway_id'] : null,
                 'payment_method' => $method,
-                'status' => $dues > 0 ? 'advance' : 'success',
-                'paid_amount' => $paidAmount,
-                'store_amount' => $paidAmount,
-                'dues' => $dues,
+                'channel' => $isLiveGateway ? 'live' : 'offline',
+                'status' => $isLiveGateway ? 'pending' : ($dues > 0 ? 'advance' : 'success'),
+                'paid_amount' => $isLiveGateway ? 0 : $paidAmount,
+                'store_amount' => $isLiveGateway ? 0 : $paidAmount,
+                'dues' => $isLiveGateway ? $total : $dues,
             ]);
 
             if ($isFund) {

@@ -56,6 +56,11 @@ class AgentFundTopupService
             return ['success' => false, 'message' => __('Invalid amount')];
         }
 
+        $allowedIds = collect($this->payments->topupGateways())->pluck('id')->all();
+        if (! in_array($gatewayId, $allowedIds, true)) {
+            return ['success' => false, 'message' => __('Invalid payment gateway')];
+        }
+
         $gateway = Gateway::query()->find($gatewayId);
         if (! $gateway) {
             return ['success' => false, 'message' => __('Invalid payment gateway')];

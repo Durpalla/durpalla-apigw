@@ -7,7 +7,34 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Gateway extends Model
 {
-    protected $fillable = ['name', 'description', 'logo', 'status', 'class_name', 'type', 'is_editable'];
+    protected $fillable = [
+        'name',
+        'description',
+        'logo',
+        'status',
+        'class_name',
+        'type',
+        'code',
+        'channel',
+        'merchant_id',
+        'for_public',
+        'for_agent',
+        'for_merchant',
+        'requires_trx',
+        'sort_order',
+        'media_id',
+        'is_editable',
+    ];
+
+    protected $casts = [
+        'for_public' => 'boolean',
+        'for_agent' => 'boolean',
+        'for_merchant' => 'boolean',
+        'requires_trx' => 'boolean',
+        'status' => 'integer',
+        'sort_order' => 'integer',
+        'merchant_id' => 'integer',
+    ];
 
     public function credentials(): HasMany
     {

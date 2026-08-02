@@ -7,6 +7,7 @@ use App\Models\Agent;
 use App\Services\AgentCounterPaymentService;
 use App\Services\AgentHotelBookingService;
 use App\Services\AgentHotelSearchService;
+use App\Services\AgentPaymentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,7 @@ class AgentHotelController extends Controller
         private readonly AgentHotelSearchService $hotels,
         private readonly AgentHotelBookingService $booking,
         private readonly AgentCounterPaymentService $counterPayments,
+        private readonly AgentPaymentService $agentPayments,
     ) {
     }
 
@@ -263,6 +265,17 @@ class AgentHotelController extends Controller
             'platform' => ['nullable', 'string', 'max:40'],
         ]);
 
+        $method = $this->counterPayments->normalize(
+            (string) $request->input('payment_method', AgentCounterPaymentService::METHOD_FUND)
+        );
+        $liveGateway = $this->counterPayments->isLiveGateway($method, $request->input('gateway_id'));
+        if ($liveGateway && ! $request->filled('gateway_id')) {
+            return response()->json([
+                'success' => false,
+                'message' => __('gateway_id is required for digital payment'),
+            ], 422);
+        }
+
         try {
             $result = $this->booking->confirmForAgent($agent, (int) $request->input('hold_id'), $request->all());
         } catch (\InvalidArgumentException $e) {
@@ -278,11 +291,14 @@ class AgentHotelController extends Controller
         $reservation = $result['reservation'];
         $roomType = $reservation->roomType;
 
-        return response()->json([
+        $payload = [
             'success' => true,
-            'message' => __('Booking confirmed'),
+            'message' => $liveGateway
+                ? __('Complete payment to confirm booking')
+                : __('Booking confirmed'),
             'order_id' => $booking->id,
             'booking_id' => $booking->id,
+            'requires_payment' => $liveGateway,
             'booking' => [
                 'id' => $booking->id,
                 'status' => $booking->status,
@@ -306,7 +322,26 @@ class AgentHotelController extends Controller
                 'hold_id' => (int) $request->input('hold_id'),
                 'total_payable' => (float) $booking->total_payable,
             ],
-        ]);
+        ];
+
+        if ($liveGateway) {
+            $pay = $this->agentPayments->initiate(
+                $agent,
+                (int) $booking->id,
+                (int) $request->input('gateway_id'),
+                $request
+            );
+            $payload['payment'] = array_merge($payload['payment'], $pay);
+            if (! empty($pay['paymentURL'])) {
+                $payload['paymentURL'] = $pay['paymentURL'];
+                $payload['paymentID'] = $pay['paymentID'] ?? null;
+            } elseif (empty($pay['success'])) {
+                $payload['message'] = $pay['message']
+                    ?? __('Booking created but payment could not be started. Retry payment.');
+            }
+        }
+
+        return response()->json($payload);
     }
 
     private function agent(): ?Agent
