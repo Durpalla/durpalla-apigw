@@ -63,6 +63,15 @@ class Bkash implements GatewayInterface, BkashInterface
     private function runCreatePayment($payment, &$data): void
     {
         try {
+            if (
+                empty($this->attributes['endpoints']['create'])
+                || empty($this->attributes['credentials']['app_key'])
+            ) {
+                $data['message'] = __('bKash gateway is not configured. Check credentials and endpoints in admin.');
+
+                return;
+            }
+
             $payload = [
                 'mode' => '0011',
                 'callbackURL' => route('gateway.callback', $payment->gateway_id),
@@ -215,9 +224,14 @@ class Bkash implements GatewayInterface, BkashInterface
                     ]);
 
                 if ($res->successful()) {
-                    if (array_key_exists('id_token', $res->json())) {
-                        $token = $res->json()['id_token'];
-                        Cache::put('bkash.token', $token, now()->addSeconds($res->json()['expires_in'] ?? 3500));
+                    $json = $res->json();
+                    if (is_array($json) && array_key_exists('id_token', $json)) {
+                        $token = $json['id_token'];
+                        Cache::put(
+                            'bkash.token',
+                            $token,
+                            now()->addSeconds((int) ($json['expires_in'] ?? 3500))
+                        );
                     }
                 }
             }

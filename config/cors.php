@@ -29,6 +29,10 @@ return [
         '#^https://([a-z0-9-]+\.)*durpalla\.com$#i',
         env('APP_ENV') === 'local' ? '#^https?://(localhost|127\.0\.0\.1)(:\d+)?$#' : null,
         env('APP_ENV') === 'local' ? '#^https?://.*\.test(:\d+)?$#' : null,
+        env('APP_ENV') === 'local' ? '#^https?://([a-z0-9-]+\.)*durpalla\.site(:\d+)?$#i' : null,
+        env('APP_ENV') === 'local'
+            ? '#^https?://(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})(:\d+)?$#'
+            : null,
     ])),
 
     'allowed_headers' => ['*'],
