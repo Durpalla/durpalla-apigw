@@ -24,6 +24,7 @@ use Illuminate\Validation\Rule;
 use App\Models\Merchant;
 use App\Constants\AppConst;
 use App\Services\CalculationService;
+use App\Services\CancellationService;
 use App\Services\MerchantCancellationPolicyResolver;
 use App\Services\SupervisorService;
 use App\Services\TwoFactorService;
@@ -452,7 +453,6 @@ class MyApiController extends Controller
             $cancellationItemIds = $this->cancellationRequestedItemIds($booking);
 
             $calculation = app(CalculationService::class);
-            $chargeRefundable = (bool) getOption('is_charge_refundable', 0);
             $cancellationEnabled = filter_var(
                 getOption('is_cancellation_enabled', '1'),
                 FILTER_VALIDATE_BOOLEAN
@@ -467,10 +467,8 @@ class MyApiController extends Controller
                 }
                 $itemArray = $item->toArray();
                 $refundPercent = $calculation->policyRefundPercent($itemArray);
-                $refundableAmount = $calculation->calculatePolicyRefundableAmount(
-                    $itemArray,
-                    $chargeRefundable
-                );
+                // Charge/VAT flags resolve via CancellationPolicyContext (merchant → global).
+                $refundableAmount = $calculation->calculatePolicyRefundableAmount($itemArray);
                 $policyCancellable = $calculation->isItemCancellableByPolicy($itemArray);
                 $cancelRequested = in_array((int) $item['id'], $cancellationItemIds, true);
                 $itemCancellable = $cancellationEnabled
@@ -679,17 +677,21 @@ class MyApiController extends Controller
             $row['total_discount'] = 0;
             $row['vat_total'] = 0;
             $row['charge_total'] = 0;
-            $row['total_refundable'] = 0;
+            // Prefer amounts snapshotted at request time (merchant-aware policy).
+            $row['total_refundable'] = (float) ($cancellation->total_refundable ?? 0);
+            $row['refund_amount'] = (float) ($cancellation->refund_amount ?? 0);
+            $row['vat_refundable'] = (bool) $cancellation->vat_refundable;
+            $row['charge_refundable'] = (bool) $cancellation->charge_refundable;
+            $row['refund_percent_applied'] = (float) ($cancellation->refund_percent_applied ?? 0);
             $row['items'] = [];
-            $row['status'] = 'Pending';
-            switch ($cancellation->status) {
-                case '1':
-                    $row['status'] = 'Approved';
-                    break;
-                case '2':
-                    $row['status'] = 'Declined';
-                    break;
-            }
+            $row['status'] = match ((int) $cancellation->status) {
+                AppConst::CANCELLATION_APPROVED => 'Approved',
+                AppConst::CANCELLATION_PROCESSING => 'Processing',
+                AppConst::CANCELLATION_REFUNDED => 'Refunded',
+                AppConst::CANCELLATION_REFUND_FAILED => 'Refund failed',
+                AppConst::CANCELLATION_REJECTED => 'Declined',
+                default => 'Pending',
+            };
             $items = explode(',', $cancellation->items);
 
             foreach( $cancellation->bookingItems as $item ) {
@@ -716,13 +718,6 @@ class MyApiController extends Controller
                     $row['vat_total'] += $vat;
                     $row['charge_total'] += $charge;
                     $row['total_amount'] += abs($item['price'] + $vat + $charge - $item['discount']);
-                    $row['total_refundable'] += abs($item['price'] - $item['discount']);
-                    if( getOption('is_vat_refundable', 1) ) {
-                        $row['total_refundable'] += abs($vat);
-                    }
-                    if( getOption('is_charge_refundable', 1) ) {
-                        $row['total_refundable'] += abs($charge);
-                    }
                     if( $item['trip']['schedule_type'] == 'reverse' ) {
                         $irow['route_name'] = $item['trip']['endingPoint']['ghat']['name'] . ' - ' . $item['trip']['startingPoint']['ghat']['name'];
                     }
@@ -799,6 +794,27 @@ class MyApiController extends Controller
         }
 
         return response()->json($data, $this->success);
+    }
+
+    public function cancellationQuote(Request $request, int $id): JsonResponse
+    {
+        $itemsParam = $request->query('items', $request->input('items', ''));
+        if (is_array($itemsParam)) {
+            $itemIds = $itemsParam;
+        } else {
+            $itemIds = array_filter(array_map('trim', explode(',', (string) $itemsParam)), static fn ($v) => $v !== '');
+        }
+
+        try {
+            $quote = app(CancellationService::class)->quoteCancellation($id, $itemIds);
+
+            return response()->json(['success' => true, 'quote' => $quote], $this->success);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
     }
 
     /**

@@ -311,9 +311,13 @@ class Nagad implements GatewayInterface
         return openssl_verify($plain, $sig, $pub, OPENSSL_ALGO_SHA1) === 1;
     }
 
-    public function refund($payment, $request)
+    public function refund($payment, $request, $amount = null)
     {
-        return ['message' => 'Not implemented'];
+        return [
+            'success' => false,
+            'message' => 'Not implemented',
+            'amount' => $amount ?? $payment->paid_amount ?? null,
+        ];
     }
 
     private function formatPemKey(string $key, string $type = 'PRIVATE'): string

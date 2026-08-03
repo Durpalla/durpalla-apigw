@@ -104,8 +104,13 @@ class CalculationService
 
     public function calculateRefundableAmount(array $item, $charge_refundable = false)
     {
-        $vat = (getOption('vat_refundable', 0)) ? $this->calculateItemVat($item) : 0;
-        $charge = ( $charge_refundable || getOption('charge_refundable', 0)) ? $this->calculateItemCharge($item) : 0;
+        $context = app(CancellationPolicyContext::class);
+        $merchantId = $context->itemMerchantId($item);
+        $vatRefundable = $context->isVatRefundable($merchantId);
+        $chargeRefundable = $charge_refundable || $context->isChargeRefundable($merchantId);
+
+        $vat = $vatRefundable ? $this->calculateItemVat($item) : 0;
+        $charge = $chargeRefundable ? $this->calculateItemCharge($item) : 0;
         $discount = $this->calculateItemDiscount($item);
 
         return call_user_func([$this, $this->resolveNumberFormat()], ($item['price'] + $vat + $charge - $discount));
@@ -113,77 +118,48 @@ class CalculationService
 
     public function itemDepartureAt(array $item): ?\Illuminate\Support\Carbon
     {
-        $tripDateRaw = $item['trip_date'] ?? null;
-        $leavingRaw = $item['trip']['leaving_at'] ?? null;
+        return app(CancellationPolicyContext::class)->itemEventAt($item, 'transport');
+    }
 
-        if (! $tripDateRaw && ! $leavingRaw) {
-            return null;
-        }
-
-        try {
-            if ($leavingRaw) {
-                $leaving = \Illuminate\Support\Carbon::parse((string) $leavingRaw);
-                // Trip schedule stores a full departure datetime on leaving_at.
-                if ($leaving->year > 2000 && preg_match('/\d{4}-\d{2}-\d{2}/', (string) $leavingRaw)) {
-                    return $leaving;
-                }
-            }
-
-            if ($tripDateRaw) {
-                $tripDate = \Illuminate\Support\Carbon::parse((string) $tripDateRaw);
-                if ($leavingRaw) {
-                    $time = \Illuminate\Support\Carbon::parse((string) $leavingRaw);
-
-                    return $tripDate->copy()->setTime(
-                        (int) $time->hour,
-                        (int) $time->minute,
-                        (int) $time->second
-                    );
-                }
-
-                return $tripDate;
-            }
-
-            return \Illuminate\Support\Carbon::parse((string) $leavingRaw);
-        } catch (\Exception) {
-            return null;
-        }
+    public function itemEventAt(array $item, ?string $serviceType = null): ?\Illuminate\Support\Carbon
+    {
+        return app(CancellationPolicyContext::class)->itemEventAt($item, $serviceType);
     }
 
     public function itemMerchantId(array $item): ?int
     {
-        $merchantId = $item['trip']['merchant_id'] ?? $item['merchant_id'] ?? null;
-
-        return $merchantId ? (int) $merchantId : null;
+        return app(CancellationPolicyContext::class)->itemMerchantId($item);
     }
 
-    public function policyRefundPercent(array $item): float
+    public function policyRefundPercent(array $item, ?string $serviceType = null): float
     {
-        $departure = $this->itemDepartureAt($item);
-        if (! $departure) {
+        $context = app(CancellationPolicyContext::class);
+        $serviceType = $serviceType ?: $context->resolveServiceType($item);
+        $eventAt = $context->itemEventAt($item, $serviceType);
+        if (! $eventAt) {
             return 0.0;
         }
 
         return app(MerchantCancellationPolicyResolver::class)->refundPercent(
-            $this->itemMerchantId($item),
-            $departure,
-            'transport'
+            $context->itemMerchantId($item),
+            $eventAt,
+            $serviceType
         );
     }
 
-    public function calculatePolicyRefundableAmount(array $item, bool $charge_refundable = false): float
+    public function calculatePolicyRefundableAmount(array $item, bool $charge_refundable = false, ?string $serviceType = null): float
     {
         $base = (float) $this->calculateRefundableAmount($item, $charge_refundable);
-        $percent = $this->policyRefundPercent($item);
+        $percent = $this->policyRefundPercent($item, $serviceType);
 
         return call_user_func([$this, $this->resolveNumberFormat()], $base * $percent / 100);
     }
 
-    public function isItemCancellableByPolicy(array $item): bool
+    public function isItemCancellableByPolicy(array $item, ?string $serviceType = null): bool
     {
-        $departure = $this->itemDepartureAt($item);
+        $eventAt = $this->itemEventAt($item, $serviceType);
 
-        return $departure !== null && $departure->isFuture();
+        return $eventAt !== null && $eventAt->isFuture();
     }
 
     public function getServiceCharge(array $item, $platform = 'web')

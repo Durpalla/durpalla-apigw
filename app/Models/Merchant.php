@@ -35,6 +35,8 @@ class Merchant extends Authenticatable
         'status',
         'allowed_service_types',
         'vat_visibility',
+        'vat_refundable',
+        'charge_refundable',
         'logo',
         'two_factor_type',
         'two_factor_secret',

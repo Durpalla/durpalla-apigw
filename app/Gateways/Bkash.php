@@ -270,14 +270,18 @@ class Bkash implements GatewayInterface, BkashInterface
         return $token;
     }
 
-    public function refund($payment, $request)
+    public function refund($payment, $request, $amount = null)
     {
+        $refundAmount = $amount ?? $payment->paid_amount ?? $payment->amount ?? 0;
+        $paymentId = $payment->gateway_initiated_id ?? $payment->gateway_trx_id ?? null;
+        $trxId = $payment->bank_tran_id ?? $payment->transaction_id ?? $payment->uuid ?? null;
+
         $res = Http::withHeaders($this->authHeaders())
             ->post($this->attributes['endpoints']['refund'], [
-                'paymentID' => $payment->gateway_trx_id,
-                'trxID' => $payment->uuid,
-                'amount' => $payment->amount,
-                'sku' => $payment->id,
+                'paymentID' => $paymentId,
+                'trxID' => $trxId,
+                'amount' => (string) $refundAmount,
+                'sku' => (string) $payment->id,
                 'reason' => 'Customer request',
             ]);
 

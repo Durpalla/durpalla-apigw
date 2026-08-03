@@ -167,6 +167,7 @@ Route::middleware(['JsonResponse'])->group(function () {
             Route::get('/cancellations', [MyApiController::class, 'cancellations']);
             Route::get('/activities', [MyApiController::class, 'activities']);
             Route::get('/booking/{id}', [MyApiController::class, 'booking']);
+            Route::get('/bookings/{id}/cancellation-quote', [MyApiController::class, 'cancellationQuote'])->whereNumber('id');
             Route::get('/booking/android/{id}', [MyApiController::class, 'bookingAndroid']);
             Route::get('/journey', [MyApiController::class, 'journey']);
             Route::get('/journey/{id}', [MyApiController::class, 'viewJourney']);
@@ -196,6 +197,7 @@ Route::middleware(['JsonResponse'])->group(function () {
             Route::get('/cancellations', [MyApiController::class, 'cancellations']);
             Route::get('/activities', [MyApiController::class, 'activities']);
             Route::get('/booking/{id}', [MyApiController::class, 'booking']);
+            Route::get('/bookings/{id}/cancellation-quote', [MyApiController::class, 'cancellationQuote'])->whereNumber('id');
             Route::get('/booking/android/{id}', [MyApiController::class, 'bookingAndroid']);
             Route::get('/journey', [MyApiController::class, 'journey']);
             Route::get('/journey/{id}', [MyApiController::class, 'viewJourney']);

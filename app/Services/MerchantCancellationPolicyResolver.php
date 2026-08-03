@@ -59,4 +59,49 @@ class MerchantCancellationPolicyResolver
     {
         return round($base * $this->refundPercent($merchantId, $departure, $serviceType, $now) / 100, 2);
     }
+
+    /**
+     * Short human-readable lines for invoices, quotes, and tickets.
+     *
+     * @return list<string>
+     */
+    public function invoicePolicyLines(?int $merchantId, string $serviceType = 'transport'): array
+    {
+        $tiers = $this->tiersFor($merchantId, $serviceType);
+        if ($tiers === []) {
+            return [];
+        }
+
+        $lines = [];
+        foreach ($tiers as $tier) {
+            $hours = (int) $tier['min_hours_before'];
+            $pct = (int) round($tier['refund_percent']);
+
+            if ($hours <= 0) {
+                if ($pct <= 0) {
+                    $lines[] = 'Late cancellation or no-show: no refund.';
+                }
+                continue;
+            }
+
+            $lines[] = sprintf(
+                'Cancel %s or more before departure: %d%% refund.',
+                $this->formatHoursLabel($hours),
+                $pct
+            );
+        }
+
+        return $lines;
+    }
+
+    private function formatHoursLabel(int $hours): string
+    {
+        if ($hours >= 24 && $hours % 24 === 0) {
+            $days = (int) ($hours / 24);
+
+            return $days === 1 ? '24 hours' : "{$hours} hours ({$days} days)";
+        }
+
+        return "{$hours} hours";
+    }
 }

@@ -68,7 +68,13 @@ class CancellationService
         $bookingItems = collect($booking->bookingItems);
         $totalRefundable = 0;
         $itemValidity = true;
-        $chargeRefundable = (bool) getOption('is_charge_refundable', 0);
+        $context = app(CancellationPolicyContext::class);
+        $policySnapshot = ['items' => [], 'computed_at' => now()->toIso8601String()];
+        $percentSum = 0.0;
+        $percentCount = 0;
+        $headerVat = null;
+        $headerCharge = null;
+        $serviceType = 'transport';
         if( is_array( $requestItems ) ) {
             foreach( $requestItems as $item ) {
                 if ($cancellations && in_array((int) $item, $cancellations, true)) {
@@ -79,19 +85,47 @@ class CancellationService
                 if(!$bookingItem) {
                     throw new \Exception('Booking item ' . $item . ' is not valid.');
                 }
-                if (! $this->calculation->isItemCancellableByPolicy($bookingItem->toArray())) {
+                $itemArray = $bookingItem->toArray();
+                $serviceType = $context->resolveServiceType($itemArray);
+                if (! $this->calculation->isItemCancellableByPolicy($itemArray, $serviceType)) {
                     $itemValidity = false;
                 }
+                $merchantId = $context->itemMerchantId($itemArray);
+                $vatRefundable = $context->isVatRefundable($merchantId);
+                $chargeRefundable = $context->isChargeRefundable($merchantId);
+                $baseAmount = (float) $this->calculation->calculateRefundableAmount($itemArray, $chargeRefundable);
+                $refundPercent = $this->calculation->policyRefundPercent($itemArray, $serviceType);
                 $refundableAmount = $this->calculation->calculatePolicyRefundableAmount(
-                    $bookingItem->toArray(),
-                    $chargeRefundable
+                    $itemArray,
+                    $chargeRefundable,
+                    $serviceType
                 );
                 $totalRefundable += $refundableAmount;
+                $percentSum += $refundPercent;
+                $percentCount++;
+                $headerVat = $headerVat === null ? $vatRefundable : ($headerVat && $vatRefundable);
+                $headerCharge = $headerCharge === null ? $chargeRefundable : ($headerCharge && $chargeRefundable);
+                $eventAt = $context->itemEventAt($itemArray, $serviceType);
+                $policySnapshot['items'][] = [
+                    'booking_item_id' => $bookingItem->id,
+                    'merchant_id' => $merchantId,
+                    'service_type' => $serviceType,
+                    'event_at' => $eventAt?->toIso8601String(),
+                    'base_amount' => $baseAmount,
+                    'refund_percent' => $refundPercent,
+                    'refundable_amount' => $refundableAmount,
+                    'vat_refundable' => $vatRefundable,
+                    'charge_refundable' => $chargeRefundable,
+                ];
                 array_push($cancellationItems, [
                     'booking_item_id' => $bookingItem->id,
                     'customer_id' => $booking->customer_id,
                     'officer_id' => $user->id,
-                    'refundable_amount' => $refundableAmount
+                    'base_amount' => $baseAmount,
+                    'refund_percent' => $refundPercent,
+                    'refundable_amount' => $refundableAmount,
+                    'vat_refundable' => (int) $vatRefundable,
+                    'charge_refundable' => (int) $chargeRefundable,
                 ]);
             }
         }
@@ -100,13 +134,16 @@ class CancellationService
                 $cancellation = $this->cancellationRepository->create([
                     'booking_id' => $params['booking_id'],
                     'type' => $bookingItem->type,
+                    'service_type' => $serviceType,
                     'customer_id' => $booking->customer_id,
                     'user_id' => Auth::user()->id,
                     'transaction_id' => uniqid(),
                     'items' => implode(',', $requestItems),
-                    'vat_refundable' => (int)getOption('is_vat_refundable'),
-                    'charge_refundable' => (int)getOption('is_charge_refundable'),
-                    'total_refundable' => $totalRefundable
+                    'vat_refundable' => (int) ($headerVat ?? false),
+                    'charge_refundable' => (int) ($headerCharge ?? false),
+                    'total_refundable' => $totalRefundable,
+                    'refund_percent_applied' => $percentCount > 0 ? round($percentSum / $percentCount, 2) : 0,
+                    'policy_snapshot' => $policySnapshot,
                 ]);
                 collect($cancellationItems)->each(function ($item, $key) use ($cancellation) {
                     $item['booking_cancellation_id'] = $cancellation->id;
@@ -238,6 +275,125 @@ class CancellationService
         return [];
     }
 
+    /**
+     * Preview refund amounts for selected booking items before confirming cancel.
+     *
+     * @param  list<int|string>  $itemIds
+     * @return array{
+     *   booking_id:int,
+     *   items:list<array<string,mixed>>,
+     *   total_base:float,
+     *   total_refundable:float,
+     *   vat_refundable:bool,
+     *   charge_refundable:bool,
+     *   policy_lines:list<string>,
+     *   cancellable:bool
+     * }
+     */
+    public function quoteCancellation(int $bookingId, array $itemIds): array
+    {
+        $user = auth()->user();
+        $booking = Booking::with(['bookingItems.trip', 'bookingItems.hotel'])->find($bookingId);
+        if (! $booking) {
+            throw new \Exception('Booking not found.');
+        }
+
+        if ((int) $booking->customer_id !== (int) ($user->id ?? 0)) {
+            throw new \Exception('You are not allowed to quote this booking.');
+        }
+
+        $itemIds = array_values(array_unique(array_map('intval', $itemIds)));
+        if ($itemIds === []) {
+            throw new \Exception('Select at least one item.');
+        }
+
+        $already = [];
+        foreach ($booking->cancellations ?? [] as $cancellation) {
+            foreach (explode(',', (string) $cancellation->items) as $id) {
+                $id = (int) trim($id);
+                if ($id > 0) {
+                    $already[$id] = true;
+                }
+            }
+        }
+
+        $context = app(CancellationPolicyContext::class);
+        $itemsOut = [];
+        $totalBase = 0.0;
+        $totalRefundable = 0.0;
+        $headerVat = null;
+        $headerCharge = null;
+        $allCancellable = true;
+        $merchantIdForLines = null;
+        $serviceTypeForLines = 'transport';
+
+        foreach ($itemIds as $itemId) {
+            $bookingItem = $booking->bookingItems->firstWhere('id', $itemId);
+            if (! $bookingItem) {
+                throw new \Exception('Booking item '.$itemId.' is not valid.');
+            }
+            if (isset($already[$itemId])) {
+                throw new \Exception('Item '.$itemId.' is already in a cancellation request.');
+            }
+
+            $itemArray = $bookingItem->toArray();
+            $serviceType = $context->resolveServiceType($itemArray);
+            $serviceTypeForLines = $serviceType;
+            $merchantId = $context->itemMerchantId($itemArray);
+            $merchantIdForLines = $merchantId;
+            $vatRefundable = $context->isVatRefundable($merchantId);
+            $chargeRefundable = $context->isChargeRefundable($merchantId);
+            $cancellable = $this->calculation->isItemCancellableByPolicy($itemArray, $serviceType);
+            if (! $cancellable) {
+                $allCancellable = false;
+            }
+
+            $baseAmount = (float) $this->calculation->calculateRefundableAmount($itemArray, $chargeRefundable);
+            $refundPercent = $this->calculation->policyRefundPercent($itemArray, $serviceType);
+            $refundableAmount = $this->calculation->calculatePolicyRefundableAmount(
+                $itemArray,
+                $chargeRefundable,
+                $serviceType
+            );
+            $eventAt = $context->itemEventAt($itemArray, $serviceType);
+            $vatInBase = $vatRefundable ? (float) $this->calculation->calculateItemVat($itemArray) : 0.0;
+            $chargeInBase = $chargeRefundable ? (float) $this->calculation->calculateItemCharge($itemArray) : 0.0;
+
+            $totalBase += $baseAmount;
+            $totalRefundable += $refundableAmount;
+            $headerVat = $headerVat === null ? $vatRefundable : ($headerVat && $vatRefundable);
+            $headerCharge = $headerCharge === null ? $chargeRefundable : ($headerCharge && $chargeRefundable);
+
+            $itemsOut[] = [
+                'booking_item_id' => $bookingItem->id,
+                'base_amount' => $baseAmount,
+                'refund_percent' => $refundPercent,
+                'refundable_amount' => $refundableAmount,
+                'vat_refundable' => $vatRefundable,
+                'charge_refundable' => $chargeRefundable,
+                'vat_amount_in_base' => $vatInBase,
+                'charge_amount_in_base' => $chargeInBase,
+                'event_at' => $eventAt?->toIso8601String(),
+                'cancellable' => $cancellable,
+                'service_type' => $serviceType,
+            ];
+        }
+
+        $policyLines = app(MerchantCancellationPolicyResolver::class)
+            ->invoicePolicyLines($merchantIdForLines, $serviceTypeForLines);
+
+        return [
+            'booking_id' => $booking->id,
+            'items' => $itemsOut,
+            'total_base' => round($totalBase, 2),
+            'total_refundable' => round($totalRefundable, 2),
+            'vat_refundable' => (bool) ($headerVat ?? false),
+            'charge_refundable' => (bool) ($headerCharge ?? false),
+            'policy_lines' => $policyLines,
+            'cancellable' => $allCancellable,
+        ];
+    }
+
     public function afterApproved(BookingCancellation $bookingCancellation)
     {
         $hasActiveItem = false;
@@ -252,10 +408,11 @@ class CancellationService
             }
         }
         $refundAmount = 0;
-        if($booking['payment']['dues'] == 0 ) {
+        $dues = (float) data_get($booking, 'payment.dues', 0);
+        if ($dues == 0) {
             $refundAmount += $bookingCancellation->total_refundable;
-        } elseif($booking['payment']['dues'] < $bookingCancellation->total_refundable) {
-            $refundAmount += $bookingCancellation->total_refundable - $booking['payment']['dues'];
+        } elseif ($dues < $bookingCancellation->total_refundable) {
+            $refundAmount += $bookingCancellation->total_refundable - $dues;
         }
 
         if($refundAmount > 0) {
