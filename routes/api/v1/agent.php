@@ -29,6 +29,7 @@ Route::prefix('agent')->middleware(['JsonResponse'])->group(function () {
         Route::post('my/profile/fcm-token', [AgentProfileController::class, 'updateFcmToken']);
         Route::get('my/dashboard', [AgentDashboardController::class, 'show']);
         Route::get('my/bookings', [AgentBookingController::class, 'index']);
+        Route::get('my/bookings/{id}', [AgentBookingController::class, 'show'])->whereNumber('id');
         Route::post('my/bookings/{id}/cancel', [AgentBookingController::class, 'cancel'])->whereNumber('id');
         Route::get('my/wallet', [AgentWalletController::class, 'show']);
         Route::get('my/wallet/statements', [AgentWalletController::class, 'statements']);

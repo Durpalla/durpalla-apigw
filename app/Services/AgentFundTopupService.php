@@ -56,63 +56,75 @@ class AgentFundTopupService
             return ['success' => false, 'message' => __('Invalid amount')];
         }
 
-        $allowedIds = collect($this->payments->topupGateways())->pluck('id')->all();
-        if (! in_array($gatewayId, $allowedIds, true)) {
-            return ['success' => false, 'message' => __('Invalid payment gateway')];
-        }
-
-        $gateway = Gateway::query()->find($gatewayId);
-        if (! $gateway) {
-            return ['success' => false, 'message' => __('Invalid payment gateway')];
-        }
-
-        $topup = AgentFundTopup::create([
-            'user_id' => $agent->id,
-            'amount' => round($amount, 2),
-            'method' => 'gateway',
-            'gateway_id' => $gatewayId,
-            'status' => 'pending_payment',
-            'transaction_ref' => 'AFT'.time().$agent->id.random_int(100, 999),
-        ]);
-
-        // Gateway handlers expect payment-like fields/methods.
-        $topup->transaction_id = $topup->transaction_ref;
-        $topup->paid_amount = (float) $topup->amount;
-        $data = ['success' => false, 'message' => __('Could not start payment')];
-
         try {
+            $allowedIds = collect($this->payments->topupGateways())->pluck('id')->all();
+            if (! in_array($gatewayId, $allowedIds, true)) {
+                return ['success' => false, 'message' => __('Invalid payment gateway')];
+            }
+
+            $gateway = Gateway::query()->find($gatewayId);
+            if (! $gateway) {
+                return ['success' => false, 'message' => __('Invalid payment gateway')];
+            }
+
+            $topup = AgentFundTopup::create([
+                'user_id' => $agent->id,
+                'amount' => round($amount, 2),
+                'method' => 'gateway',
+                'gateway_id' => $gatewayId,
+                'status' => 'pending_payment',
+                'transaction_ref' => 'AFT'.time().$agent->id.random_int(100, 999),
+            ]);
+
+            // Payment-compat aliases for gateway handlers (mapped on the model).
+            $topup->transaction_id = $topup->transaction_ref;
+            $topup->paid_amount = (float) $topup->amount;
+            $data = ['success' => false, 'message' => __('Could not start payment'), 'data' => []];
+
             $handler = CommonHelper::purseGateway($gateway);
             $handler->create($topup, $request, $data);
-        } catch (\Throwable $e) {
-            $topup->update(['status' => 'failed', 'note' => $e->getMessage()]);
-            return ['success' => false, 'message' => $e->getMessage()];
-        }
 
-        $paymentUrl = $data['paymentURL']
-            ?? ($data['data']['paymentURL'] ?? null)
-            ?? ($data['bkashURL'] ?? null)
-            ?? null;
+            $paymentUrl = $data['paymentURL']
+                ?? ($data['data']['paymentURL'] ?? null)
+                ?? ($data['bkashURL'] ?? null)
+                ?? null;
 
-        $status = ! empty($data['success']) && $paymentUrl ? 'pending_payment' : 'failed';
-        $topup->update([
-            'payment_url' => $paymentUrl,
-            'status' => $status,
-            'meta' => ['gateway_response' => $data],
-        ]);
-
-        if (! $paymentUrl) {
-            return ['success' => false, 'message' => $data['message'] ?? __('Could not start payment')];
-        }
-
-        return [
-            'success' => true,
-            'message' => __('Payment started'),
-            'data' => [
-                'topup_id' => $topup->id,
+            $status = ! empty($data['success']) && $paymentUrl ? 'pending_payment' : 'failed';
+            $topup->refresh();
+            $topup->update([
                 'payment_url' => $paymentUrl,
-                'status' => $topup->status,
-            ],
-        ];
+                'status' => $status,
+                'meta' => ['gateway_response' => $data],
+            ]);
+
+            if (! $paymentUrl) {
+                return ['success' => false, 'message' => $data['message'] ?? __('Could not start payment')];
+            }
+
+            return [
+                'success' => true,
+                'message' => __('Payment started'),
+                'data' => [
+                    'topup_id' => $topup->id,
+                    'payment_url' => $paymentUrl,
+                    'status' => $topup->status,
+                ],
+            ];
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Agent fund gateway-init failed', [
+                'agent_id' => $agent->id,
+                'gateway_id' => $gatewayId,
+                'amount' => $amount,
+                'message' => $e->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'message' => app()->environment('production')
+                    ? __('Could not start payment. Please try again.')
+                    : $e->getMessage(),
+            ];
+        }
     }
 
     /**
@@ -202,6 +214,12 @@ class AgentFundTopupService
         ]);
         $this->creditIfNeeded($topup);
         return $topup->refresh();
+    }
+
+    /** Called from AgentFundTopup::successful() after gateway verify/callback. */
+    public function creditAfterGatewaySuccess(AgentFundTopup $topup): void
+    {
+        $this->creditIfNeeded($topup->refresh());
     }
 
     private function creditIfNeeded(AgentFundTopup $topup): void

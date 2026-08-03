@@ -76,9 +76,11 @@ class ScheduleRepository extends BaseRepository implements ScheduleRepositoryInt
         }
 
         if ($request->filled('trip_from') && $request->filled('trip_to')) {
-            $tripFrom = $data['trip_from'];
-            $tripTo = $data['trip_to'];
+            $tripFrom = trim((string) $data['trip_from']);
+            $tripTo = trim((string) $data['trip_to']);
             $tableName = $this->model->getTable();
+            [$fromSql, $fromBindings] = \App\Support\GhatPlaceName::sqlMatch('g1.name', $tripFrom);
+            [$toSql, $toBindings] = \App\Support\GhatPlaceName::sqlMatch('g2.name', $tripTo);
 
             $query->whereRaw("
                 EXISTS (
@@ -87,8 +89,8 @@ class ScheduleRepository extends BaseRepository implements ScheduleRepositoryInt
                     JOIN route_properties as rp2 ON rp1.route_id = rp2.route_id
                     JOIN ghats as g2 ON rp2.ghat_id = g2.id
                     WHERE rp1.route_id = {$tableName}.route_id
-                    AND g1.name = ?
-                    AND g2.name = ?
+                    AND {$fromSql}
+                    AND {$toSql}
                     AND rp1.ghat_id <> rp2.ghat_id
                     AND (
                         (
@@ -108,20 +110,24 @@ class ScheduleRepository extends BaseRepository implements ScheduleRepositoryInt
                         )
                     )
                 )
-            ", [$tripFrom, $tripTo]);
+            ", array_merge($fromBindings, $toBindings));
         } else {
             if ($request->filled('trip_from')) {
-                $query->whereHas('routeProperties', function ($q) use ($data) {
-                    $q->whereHas('ghat', function ($q) use ($data) {
-                        $q->where(['name' => $data['trip_from']]);
+                $tripFrom = trim((string) $data['trip_from']);
+                [$fromSql, $fromBindings] = \App\Support\GhatPlaceName::sqlMatch('name', $tripFrom);
+                $query->whereHas('routeProperties', function ($q) use ($fromSql, $fromBindings) {
+                    $q->whereHas('ghat', function ($q) use ($fromSql, $fromBindings) {
+                        $q->whereRaw($fromSql, $fromBindings);
                     });
                 });
             }
 
             if ($request->filled('trip_to')) {
-                $query->whereHas('routeProperties', function ($q) use ($data) {
-                    $q->whereHas('ghat', function ($q) use ($data) {
-                        $q->where(['name' => $data['trip_to']]);
+                $tripTo = trim((string) $data['trip_to']);
+                [$toSql, $toBindings] = \App\Support\GhatPlaceName::sqlMatch('name', $tripTo);
+                $query->whereHas('routeProperties', function ($q) use ($toSql, $toBindings) {
+                    $q->whereHas('ghat', function ($q) use ($toSql, $toBindings) {
+                        $q->whereRaw($toSql, $toBindings);
                     });
                 });
             }

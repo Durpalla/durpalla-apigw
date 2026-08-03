@@ -7,11 +7,13 @@ use App\Models\Agent;
 use App\Models\Booking;
 use App\Services\AgentDashboardService;
 use App\Services\CancellationService;
+use App\Services\InvoiceBuilder;
 use App\Support\AgentApiPresenter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
 
 class AgentBookingController extends Controller
 {
@@ -63,6 +65,107 @@ class AgentBookingController extends Controller
                 'source' => $source,
                 'date_from' => $dateFrom,
                 'date_to' => $dateTo,
+            ],
+        ]);
+    }
+
+    /**
+     * Booking invoice / details for a counter booking owned by the agent.
+     */
+    public function show(int $id, InvoiceBuilder $invoiceBuilder): JsonResponse
+    {
+        $agent = auth()->user();
+        if (! $agent instanceof Agent) {
+            return response()->json(['success' => false, 'message' => __('Unauthorized')], 401);
+        }
+
+        $booking = Booking::query()->find($id);
+        if (! $booking) {
+            return response()->json(['success' => false, 'message' => __('Booking not found')], 404);
+        }
+
+        $allowed = $this->dashboardService
+            ->bookingsQuery((int) $agent->id, 'all')
+            ->where('bookings.id', $id)
+            ->exists();
+        if (! $allowed) {
+            return response()->json(['success' => false, 'message' => __('Booking not found')], 404);
+        }
+
+        $invoice = $invoiceBuilder->build($booking);
+        $payment = $booking->payment;
+        $trx = (string) ($payment->transaction_id ?? '');
+
+        $items = [];
+        foreach ($invoice['items'] ?? [] as $group) {
+            foreach ($group['tickets'] ?? [] as $ticket) {
+                $items[] = [
+                    'id' => $ticket['id'] ?? null,
+                    'cabin_no' => $ticket['cabin_no'] ?? '',
+                    'cabin_type' => $ticket['cabin_type'] ?? '',
+                    'fare' => (float) ($ticket['price'] ?? 0),
+                    'is_ac' => (bool) ($ticket['is_ac'] ?? false),
+                    'vehicle_name' => $ticket['vehicle_name'] ?? '',
+                    'route_name' => $ticket['route_name'] ?? '',
+                    'schedule_date' => $ticket['schedule_date'] ?? '',
+                    'leaving_time' => $ticket['leaving_time'] ?? '',
+                    'leaving_time_formated' => $ticket['leaving_time_formated'] ?? '',
+                    'from' => $ticket['from'] ?? '',
+                    'to' => $ticket['to'] ?? '',
+                    'status' => $ticket['status'] ?? null,
+                    'passenger' => $ticket['passenger'] ?? null,
+                ];
+            }
+        }
+
+        if (! empty($invoice['hotel'])) {
+            $hotel = $invoice['hotel'];
+            $items[] = [
+                'id' => null,
+                'is_hotel_stay' => true,
+                'hotel_name' => $hotel['title'] ?? 'Hotel',
+                'room_type_title' => $hotel['title'] ?? 'Room',
+                'check_in' => $hotel['check_in'] ?? '',
+                'check_out' => $hotel['check_out'] ?? '',
+                'adults' => (int) ($hotel['adults'] ?? 0),
+                'children' => (int) ($hotel['children'] ?? 0),
+                'fare' => (float) ($booking->total_payable ?? $booking->total_amount ?? 0),
+                'cabin_type' => 'hotel',
+            ];
+        }
+
+        $customer = $invoice['customer'] ?? null;
+
+        return response()->json([
+            'success' => true,
+            'message' => '',
+            'booking' => [
+                'id' => $booking->id,
+                'pnr' => $booking->id,
+                'qr_code' => $trx !== '' ? $trx : (string) $booking->id,
+                'status' => $booking->status,
+                'payment_status' => $invoice['payment_status'] ?? ($payment->status ?? ''),
+                'transaction_id' => $trx,
+                'gateway_name' => $payment?->gateway?->name
+                    ?? $payment?->payment_gateway
+                    ?? '',
+                'booking_date' => $invoice['booking_date'] ?? null,
+                'booking_date_formated' => $invoice['booking_date_formated'] ?? null,
+                'total_amount' => (float) ($invoice['total_amount'] ?? 0),
+                'total_discount' => (float) ($invoice['total_discount'] ?? 0),
+                'vat_total' => (float) ($invoice['vat_total'] ?? 0),
+                'charge_total' => (float) ($invoice['charge_total'] ?? 0),
+                'total_payable' => (float) str_replace(',', '', (string) ($invoice['total_payable'] ?? 0)),
+                'seal' => $invoice['seal'] ?? '',
+                'customer_name' => is_object($customer) ? ($customer->name ?? '') : ($customer['name'] ?? ''),
+                'customer_mobile' => is_object($customer) ? ($customer->mobile ?? '') : ($customer['mobile'] ?? ''),
+                'invoice' => URL::temporarySignedRoute(
+                    'invoice.download',
+                    now()->addMinutes(60),
+                    ['id' => $booking->id]
+                ),
+                'items' => $items,
+                'hotel' => $invoice['hotel'] ?? null,
             ],
         ]);
     }
