@@ -26,6 +26,7 @@ class GatewayService
         return Cache::remember('gateways.public.live', 600, function () {
             if (Schema::hasColumn('gateways', 'channel')) {
                 return Gateway::query()
+                    ->with('media')
                     ->where('status', 1)
                     ->whereNull('merchant_id')
                     ->where('channel', 'live')

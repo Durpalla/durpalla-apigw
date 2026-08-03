@@ -99,7 +99,7 @@ class SendBookingInvoiceJob implements ShouldQueue
                 array_push($responseArr['items'], $row);
             }
 
-            $responseArr['items'] = ( $responseArr['items'] ) ? _my_group_by($responseArr['items'], 'schedule_date' ) : [];
+            $responseArr['items'] = ( $responseArr['items'] ) ? _my_group_by_old($responseArr['items'], 'schedule_date' ) : [];
 
             $tickets = [];
             foreach( $responseArr['items'] as $key => $items ) {

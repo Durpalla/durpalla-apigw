@@ -96,14 +96,12 @@ class Nagad implements GatewayInterface
             $status = $js['status'] ?? 'UnknownFailed';
 
             if (Str::lower($status) === 'success') {
-                if ($payment->status !== 'success') {
-                    $payment->update(['status' => 'success']);
-                }
+                $payment->successful();
                 $data['success'] = true;
                 $data['status']  = true;
                 $data['message'] = 'Payment successful';
             } else {
-                $payment->update(['status' => 'failed']);
+                $payment->failed();
                 $data['status']  = false;
                 $data['message'] = $js['statusCode'] ?? 'Payment failed';
             }

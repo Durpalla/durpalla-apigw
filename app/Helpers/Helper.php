@@ -12,9 +12,9 @@ use App\Services\OptionService;
 
     function getOption($key, $default = null)
     {
-//        $option = new OptionService();
-//        return $option->get($key, $default);
-        return $default;
+        $option = app(OptionService::class);
+
+        return $option->get($key, $default);
     }
 
     function EtoB($str = null)

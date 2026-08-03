@@ -10,22 +10,30 @@ class HandlePendingBookings extends Command
 {
     protected $signature = 'booking:pending';
 
-    protected $description = 'Fail PENDING bookings that were not paid within the configured window (default 10 minutes) and release items';
+    protected $description = 'Resolve expired PENDING bookings: complete paid orders, fail and release unpaid ones';
 
     public function handle(): int
     {
         $bookings = PendingBookingPaymentWindow::queryExpiredPendingBookings()->get();
-        $count = 0;
+        $completed = 0;
+        $failed = 0;
         foreach ($bookings as $booking) {
             try {
-                PendingBookingPaymentWindow::failBookingForNonPayment($booking);
-                $count++;
+                $result = PendingBookingPaymentWindow::resolveExpiredPendingBooking($booking);
+                if ($result === 'completed') {
+                    $completed++;
+                } elseif ($result === 'failed') {
+                    $failed++;
+                }
             } catch (\Throwable $e) {
                 $this->error($booking->id.': '.$e->getMessage());
             }
         }
-        if ($count > 0) {
-            $this->info("Expired {$count} unpaid pending booking(s).");
+        if ($completed > 0) {
+            $this->info("Completed {$completed} pending booking(s) with successful payment.");
+        }
+        if ($failed > 0) {
+            $this->info("Expired {$failed} unpaid pending booking(s).");
         }
 
         return self::SUCCESS;

@@ -21,6 +21,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
+use App\Models\Merchant;
+use App\Constants\AppConst;
+use App\Services\CalculationService;
+use App\Services\MerchantCancellationPolicyResolver;
 use App\Services\SupervisorService;
 use App\Services\TwoFactorService;
 use App\Support\RasterImage;
@@ -202,7 +206,7 @@ class MyApiController extends Controller
             'cancellations',
             'bookingItems.item.cabinType',
             'bookingItems.trip.launch',
-            'payment',
+            'payment.gateway',
             'hotelReservation.hotel',
             'hotelReservation.roomType',
         ])
@@ -228,6 +232,10 @@ class MyApiController extends Controller
             $row['booking_date_formated'] = date('d M, Y h:i A', strtotime( $booking->created_at ) );
             $row['payment_status'] = $booking->payment['status'];
             $row['transaction_id'] = $booking->payment['transaction_id'];
+            $row['gateway_name'] = $booking->payment?->gateway?->name
+                ?? $booking->payment['payment_gateway']
+                ?? '';
+            $row['paid_amount'] = $booking->payment['paid_amount'] ?? null;
             $row['total_amount'] = round($booking->total_amount, 2);
             $row['total_discount'] = round($booking->total_discount, 2);
             $row['vat_total'] = round($booking->vat_total, 2);
@@ -403,7 +411,16 @@ class MyApiController extends Controller
     public function booking( Request $request, $id )
     {
         $user = Auth::user();
-        $booking = Booking::with(['bookingItems.trip.route', 'cancellations', 'bookingItems.item.cabinType', 'bookingItems.trip.launch', 'payment'])
+        $booking = Booking::with([
+            'bookingItems.trip.route',
+            'bookingItems.trip.launch',
+            'bookingItems.trip.merchant',
+            'bookingItems.trip.startingPoint.ghat',
+            'bookingItems.trip.endingPoint.ghat',
+            'cancellations',
+            'bookingItems.item.cabinType',
+            'payment.gateway',
+        ])
             ->where('customer_id', $user->id)->orderBy('booking_date', 'desc')->findOrFail($id);
 
         $responseArr = [];
@@ -415,6 +432,11 @@ class MyApiController extends Controller
             $responseArr['booking_date'] = date('Y-m-d H:i:s', strtotime( $booking->created_at ) );
             $responseArr['booking_date_formated'] = date('d M, Y h:i A', strtotime( $booking->created_at ) );
             $responseArr['payment_status'] = $booking->payment['status'];
+            $responseArr['transaction_id'] = $booking->payment['transaction_id'];
+            $responseArr['gateway_name'] = $booking->payment?->gateway?->name
+                ?? $booking->payment['payment_gateway']
+                ?? '';
+            $responseArr['status'] = $booking->status;
             $responseArr['total_amount'] = $booking->total_amount;
             $responseArr['total_discount'] = $booking->total_discount;
             $responseArr['vat_amount'] = $booking->vat_amount;
@@ -427,16 +449,36 @@ class MyApiController extends Controller
             $responseArr['cancellable'] = false;
             $responseArr['items'] = [];
 
-            $cancellations = [];
-            if( $booking->cancellations ) {
-                foreach( $booking->cancellations as $cancellation ) {
-                    $cancellations = array_merge_recursive( $cancellations, explode(',', $cancellation->items) );
-                }
-            }
+            $cancellationItemIds = $this->cancellationRequestedItemIds($booking);
+
+            $calculation = app(CalculationService::class);
+            $chargeRefundable = (bool) getOption('is_charge_refundable', 0);
+            $cancellationEnabled = filter_var(
+                getOption('is_cancellation_enabled', '1'),
+                FILTER_VALIDATE_BOOLEAN
+            );
+            $bookingPaid = $this->bookingPaymentLooksPaid($booking);
 
             // $responseArr['status'] = $booking->status;
 
             foreach( $booking->bookingItems as $item ) {
+                if (empty($item['trip'])) {
+                    continue;
+                }
+                $itemArray = $item->toArray();
+                $refundPercent = $calculation->policyRefundPercent($itemArray);
+                $refundableAmount = $calculation->calculatePolicyRefundableAmount(
+                    $itemArray,
+                    $chargeRefundable
+                );
+                $policyCancellable = $calculation->isItemCancellableByPolicy($itemArray);
+                $cancelRequested = in_array((int) $item['id'], $cancellationItemIds, true);
+                $itemCancellable = $cancellationEnabled
+                    && $bookingPaid
+                    && (int) $item['status'] === AppConst::BOOKING_ITEM_ACTIVE
+                    && $policyCancellable
+                    && ! $cancelRequested;
+
                 $row = [
                     'id' => $item['id'],
                     'cabin_no' => ( $item['item'] ) ? $item['item']['cabinType']['letter'] . '-' . $item['item']['cabin_no'] : '',
@@ -445,32 +487,46 @@ class MyApiController extends Controller
                     'cabin_position' => $item['cabin_position'],
                     'discount' => $item['discount'],
                     'is_ac' => ($item['item']) ? $item['item']['cabinType']['is_ac'] : null,
-                    'vehicle_name' => $item['trip']['launch']['name'],
-                    'route_name' => $item['trip']['route']['route_name'],
+                    'vehicle_name' => $item['trip']['launch']['name'] ?? '',
+                    'route_name' => $item['trip']['route']['route_name'] ?? '',
                     'schedule_date' => date('d F Y', strtotime( $item['trip_date'] ) ),
                     'leaving_time' => $item['trip']['leaving_at'],
                     'leaving_time_formated' => date('h:i A', strtotime($item['trip']['leaving_at'])),
                     'boarding_point' => json_decode($item['boarding_point']),
                     'passenger' => json_decode($item['passenger']),
-                    'from' => ($item['trip']['schedule_type'] == 'reverse') ? $item['trip']['endingPoint']['ghat']['name'] : $item['trip']['startingPoint']['ghat']['name'],
-                    'to' => ($item['trip']['schedule_type'] == 'reverse') ? $item['trip']['startingPoint']['ghat']['name'] : $item['trip']['endingPoint']['ghat']['name'],
-                    'cancellable' => ($item['trip_date'] >= date('Y-m-d')) ? (( in_array($item['id'], $cancellations) ) ? false : true) : false,
+                    'from' => ($item['trip']['schedule_type'] == 'reverse') ? ($item['trip']['endingPoint']['ghat']['name'] ?? '') : ($item['trip']['startingPoint']['ghat']['name'] ?? ''),
+                    'to' => ($item['trip']['schedule_type'] == 'reverse') ? ($item['trip']['startingPoint']['ghat']['name'] ?? '') : ($item['trip']['endingPoint']['ghat']['name'] ?? ''),
+                    'cancellable' => $itemCancellable,
+                    'cancel_requested' => $cancelRequested,
+                    'refund_percent' => $refundPercent,
+                    'refundable_amount' => $refundableAmount,
                     'status' => $item['status']
                 ];
                 if( $item['trip']['schedule_type'] == 'reverse' ) {
-                    $row['route_name'] = $item['trip']['endingPoint']['ghat']['name'] . ' - ' . $item['trip']['startingPoint']['ghat']['name'];
+                    $row['route_name'] = ($item['trip']['endingPoint']['ghat']['name'] ?? '') . ' - ' . ($item['trip']['startingPoint']['ghat']['name'] ?? '');
                 }
-                if( $item['status'] == 1 && $item['trip_date'] >= date('Y-m-d') ) {
+                if( $itemCancellable ) {
                     $responseArr['cancellable'] = true;
                 }
                 array_push($responseArr['items'], $row);
             }
 
-            if( !getOption('is_cancellation_enabled') ) {
+            if( ! $cancellationEnabled || ! $bookingPaid ) {
                 $responseArr['cancellable'] = false;
             }
 
-            $responseArr['items'] = ( $responseArr['items'] ) ? _my_group_by($responseArr['items'], 'schedule_date' ) : [];
+            $merchantModel = null;
+            foreach ($booking->bookingItems as $bookingItem) {
+                if ($bookingItem->trip?->merchant instanceof Merchant) {
+                    $merchantModel = $bookingItem->trip->merchant;
+                    break;
+                }
+            }
+            if ($merchantModel) {
+                $responseArr['merchant'] = $this->formatBookingMerchant($merchantModel);
+            }
+
+            $responseArr['items'] = ( $responseArr['items'] ) ? _my_group_by_old($responseArr['items'], 'schedule_date' ) : [];
 
             $tickets = [];
             foreach( $responseArr['items'] as $key => $items ) {
@@ -1405,6 +1461,24 @@ class MyApiController extends Controller
         ];
     }
 
+    /**
+     * @return list<int>
+     */
+    private function cancellationRequestedItemIds(Booking $booking): array
+    {
+        $ids = [];
+        foreach ($booking->cancellations ?? [] as $cancellation) {
+            foreach (explode(',', (string) $cancellation->items) as $id) {
+                $id = (int) trim($id);
+                if ($id > 0) {
+                    $ids[] = $id;
+                }
+            }
+        }
+
+        return array_values(array_unique($ids));
+    }
+
     private function bookingPaymentLooksPaid(Booking $booking): bool
     {
         $p = $booking->payment;
@@ -1412,10 +1486,42 @@ class MyApiController extends Controller
             return false;
         }
         $status = is_array($p) ? ($p['status'] ?? '') : ($p->status ?? '');
+        $dues = is_array($p) ? ($p['dues'] ?? null) : ($p->dues ?? null);
         $st = strtoupper((string) $status);
+
+        if ($dues !== null && (float) $dues <= 0) {
+            return true;
+        }
 
         return str_contains($st, 'PAID')
             || str_contains($st, 'COMPLETE')
             || str_contains($st, 'SUCCESS');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function formatBookingMerchant(Merchant $merchant): array
+    {
+        $tiers = app(MerchantCancellationPolicyResolver::class)->tiersFor($merchant->id, 'transport');
+        $cancellationLines = [];
+        foreach ($tiers as $tier) {
+            $hours = (int) ($tier['min_hours_before'] ?? 0);
+            $percent = (float) ($tier['refund_percent'] ?? 0);
+            $cancellationLines[] = $hours > 0
+                ? "Cancel {$hours}+ hours before departure for {$percent}% refund."
+                : "Cancellations close to departure may receive {$percent}% refund.";
+        }
+
+        return [
+            'name' => $merchant->merchant_name ?? '',
+            'address' => $merchant->merchant_address ?? '',
+            'email' => $merchant->merchant_email ?? '',
+            'mobile' => $merchant->merchant_mobile ?? '',
+            'phone' => $merchant->merchant_phone ?? '',
+            'registration_no' => $merchant->merchant_reg_no ?? '',
+            'logo_url' => $merchant->profile_pic_url,
+            'cancellation_policy_lines' => $cancellationLines,
+        ];
     }
 }

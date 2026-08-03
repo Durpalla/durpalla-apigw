@@ -72,7 +72,15 @@ class GatewayCallbackController extends Controller
         try {
             $payment = Payment::find($request->input('payment_id'));
             if (! $payment) {
+                if ($url = $this->frontendPaymentStatusUrl(null, false)) {
+                    return redirect()->away($url);
+                }
+
                 return view('payment.notfound');
+            }
+
+            if ($url = $this->frontendPaymentStatusUrl($payment)) {
+                return redirect()->away($url);
             }
 
             return view('payment.status', compact('payment'));
@@ -83,13 +91,54 @@ class GatewayCallbackController extends Controller
 
     public function paymentFailed(Payment $payment, array $data): RedirectResponse
     {
+        if ($url = $this->frontendPaymentStatusUrl($payment, false)) {
+            return redirect()->away($url);
+        }
+
         return redirect()->route('payment.status', ['payment_id' => $payment->id])
             ->with('error', __('Payment failed.'));
     }
 
     public function paymentSuccess(Payment $payment, array $data): RedirectResponse
     {
+        if ($url = $this->frontendPaymentStatusUrl($payment, true)) {
+            return redirect()->away($url);
+        }
+
         return redirect()->route('payment.status', ['payment_id' => $payment->id])
             ->with('success', __('Payment successful.'));
+    }
+
+    /**
+     * Browser checkout: send the customer back to the web app result page.
+     * Mobile apps leave FRONTEND_PAYMENT_STATUS_URL unset and keep the apigw status view / API polling.
+     */
+    private function frontendPaymentStatusUrl(?Payment $payment, ?bool $success = null): ?string
+    {
+        $base = config('gateway.bkash.frontend_url') ?: config('gateway.nagad.frontend_url');
+        if (! is_string($base) || trim($base) === '') {
+            return null;
+        }
+
+        $base = rtrim(trim($base), '?&');
+        $isSuccess = $success ?? ($payment !== null && $payment->status === 'success');
+        $query = ['success' => $isSuccess ? '1' : '0'];
+
+        if ($payment !== null) {
+            if ($payment->booking_id) {
+                $query['bookingId'] = (string) $payment->booking_id;
+            }
+            if ($payment->transaction_id) {
+                $query['ref'] = $payment->transaction_id;
+            }
+
+            $payment->loadMissing('booking');
+            $platform = strtolower((string) ($payment->booking?->platform ?? 'web'));
+            if ($platform !== '' && $platform !== 'web') {
+                $query['client'] = 'app';
+            }
+        }
+
+        return $base.(str_contains($base, '?') ? '&' : '?').http_build_query($query);
     }
 }

@@ -6,9 +6,9 @@ use App\Constants\AppConst;
 use Illuminate\Support\Facades\DB;
 use App\Models\BookingCancellation;
 use App\Services\CancellationService;
-use Modules\Booking\Jobs\BookingCancellationCreatedJob;
-use Modules\Booking\Jobs\BookingCancellationUpdatedJob;
-use Modules\Booking\Jobs\BookingCancelledCabinRealeseJob;
+use App\Jobs\BookingCancellationCreatedJob;
+use App\Jobs\BookingCancellationUpdatedJob;
+use App\Jobs\BookingCancelledCabinRealeseJob;
 
 class BookingCancellationObserver
 {

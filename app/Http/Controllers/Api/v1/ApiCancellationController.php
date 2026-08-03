@@ -40,6 +40,12 @@ class ApiCancellationController extends Controller
      */
     public function store(Request $request)
     {
+        $request->validate([
+            'booking_id' => 'required|integer|exists:bookings,id',
+            'items' => 'required|array|min:1',
+            'items.*' => 'integer',
+        ]);
+
         $data = ['success' => false, 'message' => __('Your cancellation request failed')];
         try{
             DB::transaction(function() use($request, &$data) {

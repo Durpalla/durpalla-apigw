@@ -86,10 +86,14 @@ class Payment extends Model
         }
 
         $this->update(['status' => 'success']);
-        if ($this->booking && $this->booking->status != AppConst::BOOKING_PENDING) {
-            $this->booking->update(['status' => AppConst::BOOKING_COMPLETE]);
+        if ($this->booking) {
+            if ($this->booking->status === AppConst::BOOKING_PENDING) {
+                $this->booking->update(['status' => AppConst::BOOKING_COMPLETE]);
+            }
             $this->bookingItems->each(function ($item) {
-                $item->update(['status' => AppConst::BOOKING_ITEM_ACTIVE]);
+                if ((int) $item->status === AppConst::BOOKING_ITEM_PENDING) {
+                    $item->update(['status' => AppConst::BOOKING_ITEM_ACTIVE]);
+                }
             });
         }
     }
@@ -128,7 +132,7 @@ class Payment extends Model
             return;
         }
 
-        if ($booking->status != AppConst::BOOKING_PENDING) {
+        if ($booking->status === AppConst::BOOKING_PENDING) {
             $booking->update(['status' => AppConst::BOOKING_FAILED]);
             $this->bookingItems->each(function ($item) {
                 $item->update(['status' => AppConst::BOOKING_ITEM_FAILED]);

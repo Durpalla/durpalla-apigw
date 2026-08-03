@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Gateway extends Model
@@ -51,8 +52,17 @@ class Gateway extends Model
         return $this->hasMany(GatewayEndpoint::class);
     }
 
+    public function media(): BelongsTo
+    {
+        return $this->belongsTo(Media::class, 'media_id');
+    }
+
     public function getIconAttribute(): string
     {
+        if ($this->media_id && $this->media) {
+            return $this->media->publicUrl();
+        }
+
         return asset('default/gateway.png');
     }
 }

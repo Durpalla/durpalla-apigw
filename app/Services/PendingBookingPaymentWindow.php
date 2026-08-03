@@ -90,7 +90,7 @@ final class PendingBookingPaymentWindow
             ->where('status', HotelReservation::STATUS_PENDING_PAYMENT)
             ->first();
         if ($hotelRes?->payment_due_at) {
-            if (now()->gt($hotelRes->payment_due_at)) {
+            if (! app()->environment('local') && now()->gt($hotelRes->payment_due_at)) {
                 return __('Payment time has expired. Please book again (payment window: :minutes minutes).', [
                     'minutes' => max(1, (int) config('hotel.payment_window_minutes', 10)),
                 ]);
@@ -102,7 +102,7 @@ final class PendingBookingPaymentWindow
         if (self::hasNonPayableItems($booking)) {
             return __('This booking has cancelled or released items and can no longer be paid.');
         }
-        if (! self::isWithinPaymentWindow($booking)) {
+        if (! app()->environment('local') && ! self::isWithinPaymentWindow($booking)) {
             return __('Payment time has expired. Please book again (payment window: :minutes minutes).', [
                 'minutes' => self::deadlineMinutes(),
             ]);
@@ -118,13 +118,76 @@ final class PendingBookingPaymentWindow
      */
     public static function queryExpiredPendingBookings(): Builder
     {
+        if (app()->environment('local')) {
+            return Booking::query()->whereRaw('0 = 1');
+        }
+
         $cutoff = now()->subMinutes(self::deadlineMinutes());
 
         return Booking::query()
-            ->with(['bookingItems'])
+            ->with(['bookingItems', 'payment'])
             ->where('status', AppConst::BOOKING_PENDING)
             ->where('created_at', '<=', $cutoff)
             ->whereDoesntHave('hotelReservation');
+    }
+
+    public static function paymentLooksSuccessful(?Payment $payment): bool
+    {
+        if (! $payment) {
+            return false;
+        }
+
+        $status = strtolower(trim((string) $payment->status));
+        if (in_array($status, ['success', 'paid', 'complete', 'completed'], true)) {
+            return true;
+        }
+
+        if ($status === 'advance' && (float) $payment->dues <= 0) {
+            return true;
+        }
+
+        $upper = strtoupper((string) $payment->status);
+
+        return str_contains($upper, 'PAID')
+            || str_contains($upper, 'COMPLETE')
+            || str_contains($upper, 'SUCCESS');
+    }
+
+    /**
+     * Expired PENDING booking: complete when payment already succeeded; otherwise fail and release items.
+     *
+     * @return 'completed'|'failed'|'skipped'
+     */
+    public static function resolveExpiredPendingBooking(Booking $booking): string
+    {
+        $booking->refresh();
+        if ($booking->status !== AppConst::BOOKING_PENDING) {
+            return 'skipped';
+        }
+
+        $payment = Payment::query()
+            ->where('booking_id', $booking->id)
+            ->latest('id')
+            ->first();
+
+        if (self::paymentLooksSuccessful($payment)) {
+            DB::transaction(function () use ($booking, $payment): void {
+                $booking->refresh();
+                if ($booking->status !== AppConst::BOOKING_PENDING || ! $payment) {
+                    return;
+                }
+
+                $payment->refresh();
+                $payment->setRelation('booking', $booking);
+                $payment->successful();
+            });
+
+            return 'completed';
+        }
+
+        self::failBookingForNonPayment($booking);
+
+        return 'failed';
     }
 
     /**
@@ -140,7 +203,10 @@ final class PendingBookingPaymentWindow
 
             $booking->update(['status' => AppConst::BOOKING_FAILED]);
 
-            Payment::query()->where('booking_id', $booking->id)->update(['status' => 'failed']);
+            Payment::query()
+                ->where('booking_id', $booking->id)
+                ->whereNotIn('status', ['success', 'paid', 'complete', 'completed', 'advance'])
+                ->update(['status' => 'failed']);
 
             $booking->loadMissing('bookingItems');
             $booking->bookingItems->each(function (BookingItem $item): void {

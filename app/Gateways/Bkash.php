@@ -7,7 +7,6 @@ use App\Models\Gateway;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
 use App\Helpers\GatewayHelper;
 
 class Bkash implements GatewayInterface, BkashInterface
@@ -23,15 +22,7 @@ class Bkash implements GatewayInterface, BkashInterface
 
     public function setCredentials(): void
     {
-        $cacheKey = Str::slug($this->gateway->name);
-        $attributes = Cache::get($cacheKey, []);
-        if (empty($attributes)) {
-            $attributes = GatewayHelper::getCredentials($this->gateway);
-
-            Cache::put($cacheKey, $attributes);
-        }
-
-        $this->attributes = $attributes;
+        $this->attributes = GatewayHelper::getCredentials($this->gateway);
     }
 
     private function authHeaders(): array
@@ -91,13 +82,19 @@ class Bkash implements GatewayInterface, BkashInterface
                 LogHelper::debug('BKASH_CREATE_PAYMENT_RESPONSE', [
                     'response' => (!app()->environment('production')) ? $jsonData : Arr::except($jsonData, ['bkashURL'])
                 ]);
-                if (is_array($jsonData) && array_key_exists('paymentID', $jsonData)) {
+                if (is_array($jsonData) && ! empty($jsonData['paymentID'])) {
+                    $paymentUrl = $this->resolvePaymentUrl($jsonData);
                     $payment->update(['gateway_initiated_id' => $jsonData['paymentID']]);
-                    $data['success'] = true;
-                    $data['message'] = 'success';
-                    $data['data']['status'] = 'success';
                     $data['data']['paymentID'] = $jsonData['paymentID'];
-                    $data['data']['paymentURL'] = $jsonData['bkashURL'];
+                    if ($paymentUrl) {
+                        $data['success'] = true;
+                        $data['message'] = 'success';
+                        $data['data']['status'] = 'success';
+                        $data['data']['paymentURL'] = $paymentUrl;
+                    } else {
+                        $data['data']['status'] = false;
+                        $data['message'] = 'Gateway not initiated payment. Please try again or contact the developer for further assistance.';
+                    }
                 } else {
                     $data['data']['status'] = false;
                     $data['message'] = 'Gateway not initiated payment. Please try again or contact the developer for further assistance.';
@@ -138,12 +135,41 @@ class Bkash implements GatewayInterface, BkashInterface
         return str_contains($m, 'unauthorized')
             || str_contains($m, 'permission denied')
             || str_contains($m, 'invalid id token')
-            || str_contains($m, 'token expired');
+            || str_contains($m, 'token expired')
+            || str_contains($m, 'authorization header requires');
     }
 
     private function isGenericUnauthorizedMessage(string $message): bool
     {
         return strtolower(trim($message)) === 'unauthorized';
+    }
+
+    /**
+     * Tokenized create returns bkashURL; Checkout API returns paymentID + hash only.
+     */
+    private function resolvePaymentUrl(array $jsonData): ?string
+    {
+        $direct = $jsonData['bkashURL'] ?? $jsonData['redirectURL'] ?? null;
+        if (is_string($direct) && $direct !== '') {
+            return $direct;
+        }
+
+        $paymentId = $jsonData['paymentID'] ?? null;
+        $hash = $jsonData['hash'] ?? null;
+        if (! is_string($paymentId) || $paymentId === '' || ! is_string($hash) || $hash === '') {
+            return null;
+        }
+
+        $createEndpoint = (string) ($this->attributes['endpoints']['create'] ?? '');
+        $host = str_contains($createEndpoint, 'sandbox')
+            ? 'https://sandbox.payment.bkash.com/'
+            : 'https://payment.bkash.com/';
+        $apiVersion = (string) ($this->attributes['params']['version'] ?? 'v1.2.0-beta');
+
+        // bKash validates hash literally — do not URL-encode paymentId/hash.
+        return $host.'?paymentId='.$paymentId
+            .'&hash='.$hash
+            .'&mode=0011&apiVersion='.$apiVersion.'/';
     }
 
     public function execute($payment, $request, &$data)
@@ -197,11 +223,11 @@ class Bkash implements GatewayInterface, BkashInterface
             if (is_array($jsonData) && array_key_exists('paymentID', $jsonData)) {
                 if ($jsonData['statusCode'] == '0000') {
                     if ($payment->status != 'success') {
-                        $payment->update(['status' => 'success']);
+                        $payment->successful();
                     }
                 } else {
                     $data['message'] = $jsonData['statusMessage'];
-                    $payment->update(['status' => 'failed']);
+                    $payment->failed();
                 }
             }
         }

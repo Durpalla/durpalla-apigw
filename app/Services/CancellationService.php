@@ -27,8 +27,12 @@ class CancellationService
 
     public function cancelBooking(array $params)
     {
+        if (! filter_var(getOption('is_cancellation_enabled', '1'), FILTER_VALIDATE_BOOLEAN)) {
+            throw new \Exception(__('Sorry! cancellation is not eligible at this moment'));
+        }
+
         $user = auth()->user();
-        $booking = Booking::find($params['booking_id']);
+        $booking = Booking::with(['bookingItems.trip', 'cancellations'])->find($params['booking_id']);
         if (! $booking) {
             throw new \Exception('Booking not found.');
         }
@@ -46,10 +50,16 @@ class CancellationService
         }
 
         $cancellations = [];
-        if( $booking->cancellations ) {
-            foreach( $booking->cancellations as $cancellation ) {
-                $cancellations = array_merge_recursive( $cancellations, explode(',', $cancellation->items) );
+        if ($booking->cancellations) {
+            foreach ($booking->cancellations as $cancellation) {
+                foreach (explode(',', (string) $cancellation->items) as $id) {
+                    $id = (int) trim($id);
+                    if ($id > 0) {
+                        $cancellations[] = $id;
+                    }
+                }
             }
+            $cancellations = array_values(array_unique($cancellations));
         }
         $items = [];
         $requestItems = $params['items'];
@@ -58,10 +68,10 @@ class CancellationService
         $bookingItems = collect($booking->bookingItems);
         $totalRefundable = 0;
         $itemValidity = true;
-        $currentTime = time();
+        $chargeRefundable = (bool) getOption('is_charge_refundable', 0);
         if( is_array( $requestItems ) ) {
             foreach( $requestItems as $item ) {
-                if($cancellations && in_array($item, $cancellations)) {
+                if ($cancellations && in_array((int) $item, $cancellations, true)) {
                     $inCancellation = true;
                 }
                 array_push($items, $item);
@@ -69,16 +79,13 @@ class CancellationService
                 if(!$bookingItem) {
                     throw new \Exception('Booking item ' . $item . ' is not valid.');
                 }
-                if (! ($user instanceof \App\Models\Customer)) {
-                    if ((strtotime($bookingItem['trip']['leaving_at']) + ($bookingItem['trip']['operation_hour'] * 60 * 60)) < $currentTime) {
-                        $itemValidity = false;
-                    }
-                } else {
-                    if ((strtotime($bookingItem['trip']['leaving_at']) + (3 * 60 * 60)) < $currentTime) {
-                        $itemValidity = false;
-                    }
+                if (! $this->calculation->isItemCancellableByPolicy($bookingItem->toArray())) {
+                    $itemValidity = false;
                 }
-                $refundableAmount = $this->calculation->calculateRefundableAmount($bookingItem->toArray());
+                $refundableAmount = $this->calculation->calculatePolicyRefundableAmount(
+                    $bookingItem->toArray(),
+                    $chargeRefundable
+                );
                 $totalRefundable += $refundableAmount;
                 array_push($cancellationItems, [
                     'booking_item_id' => $bookingItem->id,
