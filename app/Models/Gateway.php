@@ -59,8 +59,17 @@ class Gateway extends Model
 
     public function getIconAttribute(): string
     {
-        if ($this->media_id && $this->media) {
-            return $this->media->publicUrl();
+        if ($this->media_id) {
+            $media = $this->relationLoaded('media')
+                ? $this->media
+                : $this->media()->first();
+
+            if ($media) {
+                $path = (string) ($media->getRawOriginal('attachment') ?? '');
+                if ($path !== '') {
+                    return upload_asset($path) ?? asset($path);
+                }
+            }
         }
 
         return asset('default/gateway.png');

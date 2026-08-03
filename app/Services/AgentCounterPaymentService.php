@@ -101,17 +101,19 @@ class AgentCounterPaymentService
         }
 
         return Gateway::query()
+            ->with('media')
             ->whereNull('merchant_id')
             ->where('channel', self::CHANNEL_LIVE)
             ->where('status', 1)
             ->where('for_agent', true)
             ->orderBy('sort_order')
             ->orderBy('name')
-            ->get(['id', 'name', 'code'])
+            ->get()
             ->map(fn (Gateway $g) => [
                 'id' => (int) $g->id,
                 'name' => (string) $g->name,
                 'code' => (string) ($g->code ?: $this->normalize($g->name)),
+                'icon' => $g->icon,
             ])
             ->all();
     }

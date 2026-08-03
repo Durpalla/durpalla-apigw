@@ -17,21 +17,9 @@ class GatewayController extends Controller
 
     public function index(): JsonResponse
     {
-        return response()->json(
-            [
-                'success' => true,
-                'data' => $this->gatewayService->all()
-                    ->map(function ($gateway) {
-                        return [
-                            'id' => (int) $gateway->id,
-                            'name' => (string) $gateway->name,
-                            'code' => (string) ($gateway->code ?? ''),
-                            'channel' => (string) ($gateway->channel ?? 'live'),
-                            'icon' => $gateway->icon,
-                        ];
-                    })
-                    ->values()
-            ]
-        );
+        return response()->json([
+            'success' => true,
+            'data' => $this->gatewayService->forPublicCustomers(),
+        ]);
     }
 }
