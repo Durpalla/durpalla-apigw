@@ -11,7 +11,8 @@ Lightweight Laravel API service for customer app and related endpoints. Same dat
   **Production (Docker / CI deploy):** keys are stored on the `apigw-storage` volume as `storage/oauth-private.key` and `storage/oauth-public.key`. On each deploy, `script/ensure-passport-keys.php` runs before `config:cache`:
 
   1. If key files already exist on the volume, they are kept (never overwritten).
-  2. Otherwise keys are copied from `PASSPORT_PRIVATE_KEY` / `PASSPORT_PUBLIC_KEY` in `/opt/durpalla-apigw/.env`.
+  2. Otherwise deploy runs `script/seed-passport-keys-volume.sh` (copies from `/var/www/html/durpalla/storage`, `DURPALLA_PASSPORT_KEYS_DIR`, or `/opt/durpalla/storage`).
+  3. Otherwise keys are copied from `PASSPORT_PRIVATE_KEY` / `PASSPORT_PUBLIC_KEY` in `/opt/durpalla-apigw/.env`.
 
   Add multiline PEM values to `.env` (or copy key files from the main app):
 

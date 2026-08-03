@@ -63,6 +63,34 @@ function storageKeysValid(string $privatePath, string $publicPath): bool
     return isValidPrivatePem($private) && isValidPublicPem($public);
 }
 
+function passportKeysFromEnvFile(string $envPath): array
+{
+    if (! is_readable($envPath)) {
+        return [null, null];
+    }
+
+    try {
+        $repository = Dotenv\Repository\RepositoryBuilder::createWithNoAdapters()
+            ->addAdapter(Dotenv\Repository\Adapter\EnvConstAdapter::class)
+            ->addAdapter(Dotenv\Repository\Adapter\PutenvAdapter::class)
+            ->immutable()
+            ->make();
+
+        $dotenv = Dotenv\Dotenv::create($repository, dirname($envPath), basename($envPath));
+        $dotenv->load();
+
+        $private = $_ENV['PASSPORT_PRIVATE_KEY'] ?? $_SERVER['PASSPORT_PRIVATE_KEY'] ?? getenv('PASSPORT_PRIVATE_KEY') ?: null;
+        $public = $_ENV['PASSPORT_PUBLIC_KEY'] ?? $_SERVER['PASSPORT_PUBLIC_KEY'] ?? getenv('PASSPORT_PUBLIC_KEY') ?: null;
+
+        return [
+            is_string($private) && $private !== '' ? $private : null,
+            is_string($public) && $public !== '' ? $public : null,
+        ];
+    } catch (Throwable) {
+        return [null, null];
+    }
+}
+
 function writeStorageKeys(string $privatePath, string $publicPath, string $private, string $public): void
 {
     $dir = dirname($privatePath);
@@ -104,6 +132,10 @@ if (storageKeysValid($privatePath, $publicPath)) {
 $privateEnv = env('PASSPORT_PRIVATE_KEY');
 $publicEnv = env('PASSPORT_PUBLIC_KEY');
 
+if ((! is_string($privateEnv) || $privateEnv === '') || (! is_string($publicEnv) || $publicEnv === '')) {
+    [$privateEnv, $publicEnv] = passportKeysFromEnvFile($root.'/.env');
+}
+
 if (is_string($privateEnv) && $privateEnv !== '' && is_string($publicEnv) && $publicEnv !== '') {
     $private = normalizePem($privateEnv);
     $public = normalizePem($publicEnv);
@@ -120,5 +152,6 @@ if (is_string($privateEnv) && $privateEnv !== '' && is_string($publicEnv) && $pu
 
 fwrite(STDERR, "ERROR: Passport keys missing.\n");
 fwrite(STDERR, "Add PASSPORT_PRIVATE_KEY and PASSPORT_PUBLIC_KEY to {$root}/.env,\n");
+fwrite(STDERR, "set DURPALLA_PASSPORT_KEYS_DIR to the main app storage/ (oauth-*.key),\n");
 fwrite(STDERR, "or place oauth-private.key / oauth-public.key in the apigw-storage volume.\n");
 exit(1);

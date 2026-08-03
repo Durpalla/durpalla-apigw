@@ -204,6 +204,7 @@ jobs:
             script/ci-verify-remote.sh \
             script/normalize-docker-env.sh \
             script/docker-host-gateway.sh \
+            script/seed-passport-keys-volume.sh \
             "${DEPLOY_USER}@${DEPLOY_HOST}:${REMOTE_DIR}/"
 
           ssh "${SSH_COMMON[@]}" -p "$PORT" \

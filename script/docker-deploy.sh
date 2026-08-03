@@ -69,10 +69,12 @@ run_artisan() {
 }
 
 echo "Ensuring Passport OAuth keys on persistent storage..."
+run_artisan php artisan config:clear
+bash "$ROOT/script/seed-passport-keys-volume.sh"
 if ! run_artisan php script/ensure-passport-keys.php; then
   echo "ERROR: Passport keys are missing or invalid." >&2
-  echo "Set PASSPORT_PRIVATE_KEY and PASSPORT_PUBLIC_KEY in $DEPLOY_PATH/.env" >&2
-  echo "or restore storage/oauth-*.key on the apigw-storage Docker volume." >&2
+  echo "Set PASSPORT_PRIVATE_KEY and PASSPORT_PUBLIC_KEY in $DEPLOY_PATH/.env," >&2
+  echo "set DURPALLA_PASSPORT_KEYS_DIR to main app storage/, or restore oauth-*.key on apigw-storage." >&2
   exit 1
 fi
 

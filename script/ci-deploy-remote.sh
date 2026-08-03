@@ -247,6 +247,8 @@ artisan() {
 }
 
 echo "Ensuring Passport OAuth keys on persistent storage..."
+artisan php artisan config:clear
+bash "${SCRIPT_DIR}/seed-passport-keys-volume.sh"
 if ! artisan php script/ensure-passport-keys.php; then
   echo "ERROR: Passport keys are missing or invalid."
   exit 1
