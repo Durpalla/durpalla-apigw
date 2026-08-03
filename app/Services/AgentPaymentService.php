@@ -148,16 +148,29 @@ class AgentPaymentService
         $paid = $order->status === AppConst::BOOKING_COMPLETE
             || ($payment && strtolower((string) $payment->status) === 'success');
 
-        return [
+        $payload = [
             'success' => true,
             'paid' => $paid,
             'status' => $order->status,
             'payment_status' => $payment?->status,
             'order_id' => $order->id,
+            'booking_id' => $order->id,
             'message' => $paid
                 ? __('Payment successful')
                 : __('Payment pending'),
         ];
+
+        if ($paid) {
+            $payload['invoice'] = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                'invoice.download',
+                now()->addMinutes(60),
+                ['id' => $order->id]
+            );
+            $payload['paid_amount'] = (float) ($payment?->paid_amount ?: $order->total_payable);
+            $payload['transaction_id'] = $payment?->transaction_id;
+        }
+
+        return $payload;
     }
 
     public function markBookingPaid(Booking $booking, Payment $payment): void

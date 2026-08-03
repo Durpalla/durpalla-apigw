@@ -339,6 +339,12 @@ class AgentHotelController extends Controller
                 $payload['message'] = $pay['message']
                     ?? __('Booking created but payment could not be started. Retry payment.');
             }
+        } else {
+            $payload['invoice'] = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                'invoice.download',
+                now()->addMinutes(60),
+                ['id' => $booking->id]
+            );
         }
 
         return response()->json($payload);

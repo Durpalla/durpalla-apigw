@@ -284,6 +284,12 @@ class AgentTransportBookingController extends Controller
                 $data['message'] = $pay['message']
                     ?? __('Booking created but payment could not be started. Retry payment.');
             }
+        } elseif (! empty($data['order_id']) && empty($data['invoice'])) {
+            $data['invoice'] = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                'invoice.download',
+                now()->addMinutes(60),
+                ['id' => (int) $data['order_id']]
+            );
         }
 
         $payload = array_merge([
