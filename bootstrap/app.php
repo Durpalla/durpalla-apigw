@@ -40,6 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'JsonResponse' => JsonResponse::class,
             'guest.id' => \App\Http\Middleware\EnsureGuestId::class,
+            'optional.customer.auth' => \App\Http\Middleware\OptionalCustomerAuth::class,
             'user.type' => \App\Http\Middleware\EnsureUserType::class,
             'client' => \Laravel\Passport\Http\Middleware\EnsureClientIsResourceOwner::class,
             'resolve.api.partner' => \App\Http\Middleware\ResolveApiPartner::class,

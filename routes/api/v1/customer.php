@@ -72,7 +72,7 @@ Route::middleware(['JsonResponse'])->group(function () {
     Route::get('/trip/{id}', [FrontApiController::class, 'trip']);
 
     // Transport API (same contract as durpalla: search, lock, unlock)
-    Route::prefix('transport')->group(function () {
+    Route::prefix('transport')->middleware(['optional.customer.auth'])->group(function () {
         Route::get('/search', [TransportApiController::class, 'search']);
         Route::get('/available', [TransportApiController::class, 'search']);
         Route::post('/lock', [TransportApiController::class, 'lock']);
@@ -88,13 +88,15 @@ Route::middleware(['JsonResponse'])->group(function () {
     });
 
     // Cart list + lock/unlock (guest via EnsureGuestId cookie / X-Guest-Id).
-    Route::get('cart', [ApiCartController::class, 'index']);
-    Route::prefix('cart')->group(function () {
-        Route::post('/add', [TransportApiController::class, 'lock']);
-        Route::post('/lock', [TransportApiController::class, 'lock']);
-        Route::post('/remove', [ApiCartController::class, 'remove']);
-        Route::post('/unlock', [ApiCartController::class, 'remove']);
-        Route::get('/reset', [ApiCartController::class, 'resetLockdItems']);
+    Route::middleware(['optional.customer.auth'])->group(function () {
+        Route::get('cart', [ApiCartController::class, 'index']);
+        Route::prefix('cart')->group(function () {
+            Route::post('/add', [TransportApiController::class, 'lock']);
+            Route::post('/lock', [TransportApiController::class, 'lock']);
+            Route::post('/remove', [ApiCartController::class, 'remove']);
+            Route::post('/unlock', [ApiCartController::class, 'remove']);
+            Route::get('/reset', [ApiCartController::class, 'resetLockdItems']);
+        });
     });
 
     /*************** AUTHENTICATED API ****************/
