@@ -53,42 +53,12 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: max(20px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
-        }
-
-        .brand-bar {
-            width: 100%;
-            max-width: 420px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 28px;
-            padding-top: 8px;
-        }
-
-        .brand-mark {
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
-            background: #FFFFFF;
-            border: 1px solid var(--brand-border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 6px 16px var(--brand-ring);
-            padding: 7px;
+            padding: max(28px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
         }
 
         .brand-logo {
             display: block;
             object-fit: contain;
-        }
-
-        .brand-logo--header {
-            width: 100%;
-            height: 100%;
-            filter: none;
         }
 
         .brand-logo--hero {
@@ -110,13 +80,6 @@
         .brand-logo--pending,
         .brand-logo--neutral {
             filter: grayscale(0.35) saturate(0.45) brightness(1.08) opacity(0.55);
-        }
-
-        .brand-name {
-            font-size: 1.35rem;
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            color: var(--brand-dark);
         }
 
         .card {
@@ -355,13 +318,6 @@
 </head>
 <body class="@yield('body_class')">
 <div class="page">
-    <header class="brand-bar" aria-label="Durpalla">
-        <div class="brand-mark" aria-hidden="true">
-            @include('payment._logo', ['tone' => 'success', 'size' => 'header'])
-        </div>
-        <span class="brand-name">Durpalla</span>
-    </header>
-
     @yield('content')
 
     <p class="footer-note">
