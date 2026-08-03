@@ -53,6 +53,8 @@ class AgentCounterPaymentService
                     'balance' => $balance,
                     'gateway_id' => (int) $gateway->id,
                     'channel' => self::CHANNEL_OFFLINE,
+                    'icon' => $gateway->icon,
+                    'live_gateway' => false,
                 ];
                 continue;
             }
@@ -65,6 +67,8 @@ class AgentCounterPaymentService
                 'requires_trx' => false,
                 'gateway_id' => (int) $gateway->id,
                 'channel' => self::CHANNEL_LIVE,
+                'icon' => $gateway->icon,
+                'live_gateway' => true,
             ];
         }
 
@@ -76,6 +80,7 @@ class AgentCounterPaymentService
                 'requires_trx' => false,
                 'balance' => $balance,
                 'channel' => self::CHANNEL_OFFLINE,
+                'live_gateway' => false,
             ]);
         }
 
@@ -205,6 +210,7 @@ class AgentCounterPaymentService
     private function listForAgent()
     {
         $fund = Gateway::query()
+            ->with('media')
             ->where('status', 1)
             ->whereNull('merchant_id')
             ->where('code', self::METHOD_FUND)
@@ -212,6 +218,7 @@ class AgentCounterPaymentService
             ->first();
 
         $live = Gateway::query()
+            ->with('media')
             ->where('status', 1)
             ->where(function ($q) {
                 $q->where('type', 'payment')->orWhereNull('type');
