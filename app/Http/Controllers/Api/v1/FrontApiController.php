@@ -413,6 +413,41 @@ class FrontApiController extends Controller
     }
 
     /**
+     * Ghat / terminal autocomplete for web & mobile (bus / launch).
+     * Query: ?query=dh&type=launch&exclude=Barisal
+     */
+    public function ghatSuggestions(Request $request): JsonResponse
+    {
+        $q = trim((string) ($request->query('query', $request->query('q', ''))));
+        $exclude = trim((string) $request->query('exclude', ''));
+        $type = strtolower(trim((string) $request->query('type', '')));
+
+        $query = Ghat::query()
+            ->select('name', 'id')
+            ->distinct()
+            ->orderBy('name');
+
+        if ($type !== '' && in_array($type, ['bus', 'launch'], true)) {
+            $query->where('service_type', $type);
+        }
+
+        if ($q !== '') {
+            $query->where('name', 'LIKE', '%'.$q.'%');
+        }
+
+        if ($exclude !== '') {
+            $query->where('name', '<>', $exclude);
+        }
+
+        $limit = ($q === '') ? 100 : 50;
+
+        return response()->json([
+            'success' => true,
+            'data' => $query->limit($limit)->get(),
+        ], $this->success);
+    }
+
+    /**
      * Hotel / stay search: city names from `cities` (not ghats).
      * Query: ?q=partialName — same envelope as {@see suggest} for mobile clients.
      */
