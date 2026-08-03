@@ -70,7 +70,7 @@ class GatewayCallbackController extends Controller
     public function paymentStatus(Request $request)
     {
         try {
-            $payment = Payment::find($request->input('payment_id'));
+            $payment = Payment::with(['booking', 'gateway'])->find($request->input('payment_id'));
             if (! $payment) {
                 if ($url = $this->frontendPaymentStatusUrl(null, false)) {
                     return redirect()->away($url);
@@ -79,11 +79,13 @@ class GatewayCallbackController extends Controller
                 return view('payment.notfound');
             }
 
-            if ($url = $this->frontendPaymentStatusUrl($payment)) {
+            $isAppClient = $this->isAppPaymentClient($request, $payment);
+
+            if (! $isAppClient && ($url = $this->frontendPaymentStatusUrl($payment))) {
                 return redirect()->away($url);
             }
 
-            return view('payment.status', compact('payment'));
+            return view('payment.status', compact('payment', 'isAppClient'));
         } catch (\Exception $exception) {
             return view('payment.notfound');
         }
@@ -91,7 +93,9 @@ class GatewayCallbackController extends Controller
 
     public function paymentFailed(Payment $payment, array $data): RedirectResponse
     {
-        if ($url = $this->frontendPaymentStatusUrl($payment, false)) {
+        $payment->loadMissing('booking');
+
+        if (! $this->isAppPaymentClient(request(), $payment) && ($url = $this->frontendPaymentStatusUrl($payment, false))) {
             return redirect()->away($url);
         }
 
@@ -101,7 +105,9 @@ class GatewayCallbackController extends Controller
 
     public function paymentSuccess(Payment $payment, array $data): RedirectResponse
     {
-        if ($url = $this->frontendPaymentStatusUrl($payment, true)) {
+        $payment->loadMissing('booking');
+
+        if (! $this->isAppPaymentClient(request(), $payment) && ($url = $this->frontendPaymentStatusUrl($payment, true))) {
             return redirect()->away($url);
         }
 
@@ -115,12 +121,11 @@ class GatewayCallbackController extends Controller
      */
     private function frontendPaymentStatusUrl(?Payment $payment, ?bool $success = null): ?string
     {
-        $base = config('gateway.bkash.frontend_url') ?: config('gateway.nagad.frontend_url');
-        if (! is_string($base) || trim($base) === '') {
+        $base = $this->resolveFrontendPaymentStatusBase();
+        if ($base === null) {
             return null;
         }
 
-        $base = rtrim(trim($base), '?&');
         $isSuccess = $success ?? ($payment !== null && $payment->status === 'success');
         $query = ['success' => $isSuccess ? '1' : '0'];
 
@@ -140,5 +145,60 @@ class GatewayCallbackController extends Controller
         }
 
         return $base.(str_contains($base, '?') ? '&' : '?').http_build_query($query);
+    }
+
+    /**
+     * Resolve web app payment result URL from config or .env (works even when
+     * bootstrap/config.php was cached before FRONTEND_PAYMENT_STATUS_URL was set).
+     */
+    private function resolveFrontendPaymentStatusBase(): ?string
+    {
+        foreach ([
+            config('payment.frontend_status_url'),
+            config('gateway.bkash.frontend_url'),
+            config('gateway.nagad.frontend_url'),
+        ] as $candidate) {
+            if (is_string($candidate) && trim($candidate) !== '') {
+                return rtrim(trim($candidate), '?&');
+            }
+        }
+
+        $envPath = base_path('.env');
+        if (! is_readable($envPath)) {
+            return null;
+        }
+
+        $lines = file($envPath, FILE_IGNORE_NEW_LINES);
+        if ($lines === false) {
+            return null;
+        }
+
+        foreach ($lines as $line) {
+            if (! str_starts_with($line, 'FRONTEND_PAYMENT_STATUS_URL=')) {
+                continue;
+            }
+            $raw = trim(substr($line, strlen('FRONTEND_PAYMENT_STATUS_URL=')), " \t\"'");
+
+            return $raw !== '' ? rtrim($raw, '?&') : null;
+        }
+
+        return null;
+    }
+
+    /** Mobile / native app checkout — keep apigw branded status page in WebView. */
+    private function isAppPaymentClient(Request $request, ?Payment $payment): bool
+    {
+        if ($request->query('client') === 'app') {
+            return true;
+        }
+
+        if ($payment === null) {
+            return false;
+        }
+
+        $payment->loadMissing('booking');
+        $platform = strtolower((string) ($payment->booking?->platform ?? 'web'));
+
+        return $platform !== '' && $platform !== 'web';
     }
 }
