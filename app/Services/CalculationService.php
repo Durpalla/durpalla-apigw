@@ -8,10 +8,15 @@ use App\Constants\AppConst;
 
 class CalculationService
 {
-    private $numberFormat;
-    public function __construct()
+    private ?string $numberFormat = null;
+
+    private function resolveNumberFormat(): string
     {
-        $this->numberFormat = getOption('number_format', 'actual')    . 'Format';
+        if ($this->numberFormat === null) {
+            $this->numberFormat = getOption('number_format', 'actual').'Format';
+        }
+
+        return $this->numberFormat;
     }
 
     public function actualFormat($num): string
@@ -31,7 +36,7 @@ class CalculationService
 
     public function format($num)
     {
-        return call_user_func([$this, $this->numberFormat], $num);
+        return call_user_func([$this, $this->resolveNumberFormat()], $num);
     }
 
     public function calculateItemTotal(array $item)
@@ -44,7 +49,7 @@ class CalculationService
             $total += $this->calculateItemVat($item);
         }
 
-        return call_user_func([$this, $this->numberFormat], $total);
+        return call_user_func([$this, $this->resolveNumberFormat()], $total);
     }
 
     /**
@@ -76,25 +81,25 @@ class CalculationService
     public function calculateItemVat(array $item)
     {
         if ($this->resolveVatApplicableTo() !== 'customer') {
-            return call_user_func([$this, $this->numberFormat], 0);
+            return call_user_func([$this, $this->resolveNumberFormat()], 0);
         }
 
         $charge = (float) $this->calculateItemCharge($item);
         $vatAmount = $this->resolveVatRate();
 
-        return call_user_func([$this, $this->numberFormat], ($charge * ($vatAmount / 100)));
+        return call_user_func([$this, $this->resolveNumberFormat()], ($charge * ($vatAmount / 100)));
     }
 
     public function calculateItemCharge(array $item)
     {
-        return ($item['charge_type'] == 'percent') ? call_user_func([$this, $this->numberFormat], ($item['price'] * ($item['charge_amount'] / 100))) : call_user_func([$this, $this->numberFormat],$item['charge_amount']);
+        return ($item['charge_type'] == 'percent') ? call_user_func([$this, $this->resolveNumberFormat()], ($item['price'] * ($item['charge_amount'] / 100))) : call_user_func([$this, $this->resolveNumberFormat()],$item['charge_amount']);
     }
 
     public function calculateItemDiscount(array $item)
     {
         return ($item['discount_type'] === 'percent') ?
-            call_user_func([$this, $this->numberFormat],($item['price'] * ($item['discount'] / 100)), 2) :
-            call_user_func([$this, $this->numberFormat],$item['discount'], 2);
+            call_user_func([$this, $this->resolveNumberFormat()],($item['price'] * ($item['discount'] / 100)), 2) :
+            call_user_func([$this, $this->resolveNumberFormat()],$item['discount'], 2);
     }
 
     public function calculateRefundableAmount(array $item, $charge_refundable = false)
@@ -103,7 +108,7 @@ class CalculationService
         $charge = ( $charge_refundable || getOption('charge_refundable', 0)) ? $this->calculateItemCharge($item) : 0;
         $discount = $this->calculateItemDiscount($item);
 
-        return call_user_func([$this, $this->numberFormat], ($item['price'] + $vat + $charge - $discount));
+        return call_user_func([$this, $this->resolveNumberFormat()], ($item['price'] + $vat + $charge - $discount));
     }
 
     public function itemDepartureAt(array $item): ?\Illuminate\Support\Carbon
@@ -171,7 +176,7 @@ class CalculationService
         $base = (float) $this->calculateRefundableAmount($item, $charge_refundable);
         $percent = $this->policyRefundPercent($item);
 
-        return call_user_func([$this, $this->numberFormat], $base * $percent / 100);
+        return call_user_func([$this, $this->resolveNumberFormat()], $base * $percent / 100);
     }
 
     public function isItemCancellableByPolicy(array $item): bool
@@ -185,7 +190,7 @@ class CalculationService
     {
         $charges = $this->getCharges($item, $platform);
 
-        return call_user_func([$this, $this->numberFormat], $charges['amount']);
+        return call_user_func([$this, $this->resolveNumberFormat()], $charges['amount']);
     }
 
     /**
@@ -241,7 +246,7 @@ class CalculationService
         return [
             'amount' => $amount,
             'type' => $type,
-            'total' => (float) call_user_func([$this, $this->numberFormat], $total),
+            'total' => (float) call_user_func([$this, $this->resolveNumberFormat()], $total),
         ];
     }
 
@@ -278,8 +283,8 @@ class CalculationService
         $vatRate = $this->resolveVatRate();
 
         return ($type == 'percent')
-            ? (float) call_user_func([$this, $this->numberFormat], ($chargeAmount * ($vatRate / 100)), 2)
-            : (float) call_user_func([$this, $this->numberFormat], $chargeAmount);
+            ? (float) call_user_func([$this, $this->resolveNumberFormat()], ($chargeAmount * ($vatRate / 100)), 2)
+            : (float) call_user_func([$this, $this->resolveNumberFormat()], $chargeAmount);
     }
 
     /**
@@ -297,20 +302,20 @@ class CalculationService
     public function calculateCharge($amount, $type): float
     {
         return ($type == 'percent')
-            ? (float) call_user_func([$this, $this->numberFormat], ((float) $amount * ((float) getOption('vat_amount', 0) / 100)), 2)
-            : (float) call_user_func([$this, $this->numberFormat], $amount);
+            ? (float) call_user_func([$this, $this->resolveNumberFormat()], ((float) $amount * ((float) getOption('vat_amount', 0) / 100)), 2)
+            : (float) call_user_func([$this, $this->resolveNumberFormat()], $amount);
     }
 
     public function calculateAgentCommission(array $item)
     {
-        return ($item['incentive_type'] == 'fixed') ?  call_user_func([$this, $this->numberFormat], $item['incentive']) : call_user_func([$this, $this->numberFormat], ($item['price'] * ($item['incentive'] / 100)));
+        return ($item['incentive_type'] == 'fixed') ?  call_user_func([$this, $this->resolveNumberFormat()], $item['incentive']) : call_user_func([$this, $this->resolveNumberFormat()], ($item['price'] * ($item['incentive'] / 100)));
     }
 
     public function calculatePartnerCommission($price, $partner)
     {
         $incentive = ($partner->incentive) ? $partner->incentive->incentive : 0;
         $type = ($partner->incentive) ? $partner->incentive->incentive_type : 'percent';
-        return ($type == 'fixed') ?  call_user_func([$this, $this->numberFormat], $incentive) : call_user_func([$this, $this->numberFormat], ($price * ($incentive / 100)));
+        return ($type == 'fixed') ?  call_user_func([$this, $this->resolveNumberFormat()], $incentive) : call_user_func([$this, $this->resolveNumberFormat()], ($price * ($incentive / 100)));
     }
 
     public function getAgentIncentive($order, $user)

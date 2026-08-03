@@ -65,10 +65,13 @@ RUN mkdir -p bootstrap/cache \
     storage/logs
 
 RUN APP_KEY=base64:ZHVtcHlrZXlmb3Jkb2NrZXJidWlsZG9ubHl5ZWFoCg= \
+    APP_ENV=local \
     CACHE_STORE=array \
     SESSION_DRIVER=array \
     QUEUE_CONNECTION=sync \
     REDIS_SENTINEL_ENABLED=false \
+    DB_CONNECTION=sqlite \
+    DB_DATABASE=:memory: \
     php artisan package:discover --ansi
 
 COPY docker/php/php.ini /usr/local/etc/php/conf.d/99-apigw.ini

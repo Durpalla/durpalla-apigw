@@ -4,24 +4,41 @@
 namespace App\Services;
 
 
-use Illuminate\Support\Facades\Cache;
 use App\Models\Option;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 
 class OptionService
 {
-    private $options;
-    public function __construct()
+    private ?Collection $options = null;
+
+    private function loadOptions(): Collection
     {
-        $this->options = Cache::rememberForever('options', function() {
-            return Option::all();
-        });
+        if ($this->options instanceof Collection) {
+            return $this->options;
+        }
+
+        try {
+            if (! Schema::hasTable('options')) {
+                return $this->options = collect();
+            }
+
+            $this->options = Cache::rememberForever('options', static function () {
+                return Option::all();
+            });
+        } catch (\Throwable) {
+            $this->options = collect();
+        }
+
+        return $this->options;
     }
 
     public function get($key, $default_value = '')
     {
-        $item = $this->options->first(function($item, $_k) use($key, $default_value) {
+        $item = $this->loadOptions()->first(function ($item, $_k) use ($key) {
             return $item->field == $key;
-        }, function() use($default_value) {
+        }, function () use ($default_value) {
             return $default_value;
         });
 
@@ -30,6 +47,8 @@ class OptionService
 
     public function getPublicOptions()
     {
-        return $this->options->whereIn('tab', ['general', 'booking', 'customer', 'cancellation', 'vatcharge', 'facts'])->pluck('value', 'field');
+        return $this->loadOptions()
+            ->whereIn('tab', ['general', 'booking', 'customer', 'cancellation', 'vatcharge', 'facts'])
+            ->pluck('value', 'field');
     }
 }
