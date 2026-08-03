@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#006D9C" />
     <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" href="{{ config('payment.brand_icon_url') }}" type="image/png" />
+    <link rel="apple-touch-icon" href="{{ config('payment.brand_icon_url') }}" />
     <title>@yield('title', 'Payment') — Durpalla</title>
     <style>
         :root {
@@ -35,6 +37,8 @@
         html, body {
             margin: 0;
             min-height: 100%;
+            overflow-x: hidden;
+            -webkit-text-size-adjust: 100%;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
                 "Helvetica Neue", Arial, sans-serif;
             -webkit-font-smoothing: antialiased;
@@ -300,10 +304,120 @@
             flex-shrink: 0;
         }
 
-        .app-compact .card-body { padding: 32px 20px 28px; }
-        .app-compact h1 { font-size: 1.25rem; }
+        .app-compact .page {
+            padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+            justify-content: center;
+        }
+
+        .app-compact .card {
+            max-width: 100%;
+            border-radius: 16px;
+            box-shadow: 0 10px 28px -8px rgba(0, 77, 112, 0.1);
+        }
+
+        .app-compact .card-body { padding: 22px 16px 18px; }
+
+        .app-compact .status-icon-wrap,
+        .app-compact .status-icon {
+            width: 72px;
+            height: 72px;
+        }
+
+        .app-compact .status-icon-wrap { margin-bottom: 14px; }
+
+        .app-compact .brand-logo--hero {
+            width: 42px;
+            height: 42px;
+        }
+
+        .app-compact h1 {
+            font-size: 1.125rem;
+            margin-bottom: 6px;
+        }
+
+        .app-compact .subtitle {
+            font-size: 0.8125rem;
+            line-height: 1.45;
+            margin-bottom: 10px;
+        }
+
+        .app-compact .badge {
+            font-size: 10px;
+            padding: 4px 10px;
+            margin-bottom: 8px;
+        }
+
         .app-compact .receipt { display: none; }
-        .app-compact .subtitle { margin-bottom: 8px; }
+
+        .app-compact .hint {
+            font-size: 0.6875rem;
+            margin: 0;
+        }
+
+        .app-compact .trust {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 4px;
+            padding: 10px 8px;
+        }
+
+        .app-compact .trust span {
+            justify-content: center;
+            font-size: 9px;
+            gap: 3px;
+            white-space: nowrap;
+            min-width: 0;
+        }
+
+        .app-compact .trust svg {
+            width: 11px;
+            height: 11px;
+            flex-shrink: 0;
+        }
+
+        .app-compact .footer-note {
+            font-size: 0.625rem;
+            margin-top: 10px;
+            padding: 0 2px;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 480px) {
+            .page {
+                padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+            }
+
+            .card {
+                max-width: 100%;
+                border-radius: 16px;
+            }
+
+            .card-body { padding: 22px 16px 18px; }
+
+            .trust {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 4px;
+                padding: 10px 8px;
+            }
+
+            .trust span {
+                justify-content: center;
+                font-size: 9px;
+                gap: 3px;
+                white-space: nowrap;
+            }
+
+            .trust svg {
+                width: 11px;
+                height: 11px;
+            }
+
+            .footer-note {
+                font-size: 0.625rem;
+                margin-top: 10px;
+            }
+        }
 
         .footer-note {
             max-width: 420px;
@@ -314,15 +428,31 @@
             color: var(--muted);
             line-height: 1.45;
         }
+
+        .footer-note p {
+            margin: 0;
+        }
+
+        .footer-copy {
+            margin-top: 6px !important;
+            font-size: 0.65rem;
+            opacity: 0.85;
+        }
+
+        .app-compact .footer-copy {
+            margin-top: 4px !important;
+            font-size: 0.6rem;
+        }
     </style>
 </head>
 <body class="@yield('body_class')">
 <div class="page">
     @yield('content')
 
-    <p class="footer-note">
-        Secure payments powered by Durpalla. Never share your wallet PIN or OTP with anyone.
-    </p>
+    <div class="footer-note">
+        <p>Never share your wallet PIN or OTP with anyone.</p>
+        <p class="footer-copy">&copy; {{ date('Y') }} Durpalla. All rights reserved.</p>
+    </div>
 </div>
 </body>
 </html>

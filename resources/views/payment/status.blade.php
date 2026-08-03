@@ -31,15 +31,15 @@
                 Verified
             </span>
             <h1>Payment successful</h1>
-            <p class="subtitle">Your booking is confirmed. A receipt will reach your registered contact details.</p>
+            <p class="subtitle">{{ $compact ? 'Your booking is confirmed.' : 'Your booking is confirmed. A receipt will reach your registered contact details.' }}</p>
         @elseif ($isFailed)
             <span class="badge failed">Not completed</span>
             <h1>Payment not completed</h1>
-            <p class="subtitle">No charge was confirmed. You can safely try again from the app.</p>
+            <p class="subtitle">{{ $compact ? 'No charge was confirmed. Try again from the app.' : 'No charge was confirmed. You can safely try again from the app.' }}</p>
         @else
             <span class="badge pending">Processing</span>
             <h1>Payment {{ $payment->nice_status }}</h1>
-            <p class="subtitle">We are confirming your payment with the gateway. This may take a moment.</p>
+            <p class="subtitle">{{ $compact ? 'Confirming with your payment gateway…' : 'We are confirming your payment with the gateway. This may take a moment.' }}</p>
         @endif
 
         <div class="receipt">
