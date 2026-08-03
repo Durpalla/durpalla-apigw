@@ -253,9 +253,18 @@ class AgentDashboardService
             false
         );
 
+        // MySQL PDO often exposes information_schema keys as COLUMN_NAME (uppercase).
         $found = collect($rows)
-            ->pluck('column_name')
-            ->map(fn ($name) => strtolower((string) $name))
+            ->map(function ($row) {
+                foreach ((array) $row as $key => $value) {
+                    if (strtolower((string) $key) === 'column_name') {
+                        return strtolower((string) $value);
+                    }
+                }
+
+                return '';
+            })
+            ->filter()
             ->unique()
             ->values()
             ->all();
