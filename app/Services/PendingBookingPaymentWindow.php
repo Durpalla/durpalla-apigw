@@ -118,10 +118,6 @@ final class PendingBookingPaymentWindow
      */
     public static function queryExpiredPendingBookings(): Builder
     {
-        if (app()->environment('local')) {
-            return Booking::query()->whereRaw('0 = 1');
-        }
-
         $cutoff = now()->subMinutes(self::deadlineMinutes());
 
         return Booking::query()
@@ -206,7 +202,7 @@ final class PendingBookingPaymentWindow
             Payment::query()
                 ->where('booking_id', $booking->id)
                 ->whereNotIn('status', ['success', 'paid', 'complete', 'completed', 'advance'])
-                ->update(['status' => 'failed']);
+                ->update(['status' => 'fail']);
 
             $booking->loadMissing('bookingItems');
             $booking->bookingItems->each(function (BookingItem $item): void {

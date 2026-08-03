@@ -100,7 +100,7 @@ class Payment extends Model
 
     public function failed(): void
     {
-        $this->update(['status' => 'failed']);
+        $this->update(['status' => 'fail']);
 
         $booking = $this->booking;
         if (! $booking) {

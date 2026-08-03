@@ -8,6 +8,8 @@ use App\Models\VehicleRoute;
 use App\Models\VehicleSchedule;
 use App\Services\Search\TripFederatedSearchService;
 use App\Support\AuthActor;
+use App\Constants\AppConst;
+use App\Models\BookingItem;
 use Illuminate\Support\Facades\DB;
 use stdClass;
 
@@ -196,6 +198,7 @@ class TripService
     public function formatTripList($trip)
     {
         $user = auth()->user();
+        $activeBookings = $this->activeBookingIndex((int) $trip->id);
         return [
             'trip_id' => $trip->id,
             'route_id' => $trip->route_id,
@@ -214,9 +217,12 @@ class TripService
             'total_seats' => $trip->mappings->where('type', 'seat')->count(),
             'default_tab' => $trip->vehicle['default_tab'],
             'default_floor' => $trip->vehicle['default_floor'],
-            'cabin_available' => $trip->mappings->where('type', 'cabin')->filter(function ($item, $key) use ($user) {
+            'cabin_available' => $trip->mappings->where('type', 'cabin')->filter(function ($item, $key) use ($user, $activeBookings) {
                 $status = true;
                 if ($item->is_reserved || $item->is_locked || $item->booked) {
+                    $status = false;
+                }
+                if ($this->mappingHasActiveBooking($item, $activeBookings)) {
                     $status = false;
                 }
                 $type = AuthActor::ownershipType($user);
@@ -225,9 +231,12 @@ class TripService
                 }
                 return $status;
             })->count(),
-            'seat_available' => $trip->mappings->where('type', 'seat')->filter(function ($item, $key) use ($user) {
+            'seat_available' => $trip->mappings->where('type', 'seat')->filter(function ($item, $key) use ($user, $activeBookings) {
                 $status = true;
                 if ($item->is_reserved || $item->is_locked || $item->booked) {
+                    $status = false;
+                }
+                if ($this->mappingHasActiveBooking($item, $activeBookings)) {
                     $status = false;
                 }
                 $type = AuthActor::ownershipType($user);
@@ -259,6 +268,7 @@ class TripService
         $nidCheck = $vehicle?->nid_verification_check ?? 0;
         $ownershipType = AuthActor::ownershipType($user);
         $mappings = $trip->mappings ?? collect();
+        $activeBookings = $this->activeBookingIndex((int) $trip->id);
 
         // Build rows
         $mappings->each(function ($cabin) use (
@@ -271,7 +281,8 @@ class TripService
             &$sofa_types,
             $vehicleName,
             $nidCheck,
-            $ownershipType
+            $ownershipType,
+            $activeBookings
         ) {
             $row = []; // IMPORTANT: reset per-iteration
             $cabinType = $cabin->cabinType;
@@ -303,13 +314,24 @@ class TripService
             $row['ownership'] = $cabin->ownership;
             $row['service_charge'] = $cabin->service_charge;
 
+            $activeBookingId = $this->activeBookingIdForMapping($cabin, $activeBookings);
+            $unavailable = ($cabin->is_reserved == 1)
+                || $cabin->booked == 1
+                || $cabin->is_locked == 1
+                || $activeBookingId !== null;
+
             // status gating
-            $row['status'] = (($cabin->is_reserved == 1) || $cabin->booked == 1 || $cabin->is_locked == 1) ? 0 : 1;
+            $row['status'] = $unavailable ? 0 : 1;
             if ($ownershipType !== $cabin->ownership) {
                 $row['status'] = 0;
             }
             if ($cabin->is_advance) {
                 $row['status'] = 9;
+            }
+
+            $row['booked'] = ($activeBookingId !== null || $cabin->booked == 1 || $cabin->is_reserved == 1) ? 1 : 0;
+            if ($activeBookingId !== null && empty($row['booking_id'])) {
+                $row['booking_id'] = $activeBookingId;
             }
 
             $row['cabin_class'] = $row['status'] ? 'cabin-active' : 'cabin-disable';
@@ -825,5 +847,56 @@ class TripService
         }
 
         return $raw !== '' ? $raw : 'cabin';
+    }
+
+    /**
+     * Active booking_items for a trip — authoritative when mapping.booked is stale.
+     *
+     * @return array{mapping: array<int, int>, cabin: array<int, int>}
+     */
+    private function activeBookingIndex(int $tripId): array
+    {
+        static $cache = [];
+
+        if (isset($cache[$tripId])) {
+            return $cache[$tripId];
+        }
+
+        $index = ['mapping' => [], 'cabin' => []];
+
+        BookingItem::query()
+            ->where('trip_id', $tripId)
+            ->where('status', AppConst::BOOKING_ITEM_ACTIVE)
+            ->where('booking_type', '!=', 'deck')
+            ->get(['mapping_id', 'cabin_id', 'booking_id'])
+            ->each(function (BookingItem $item) use (&$index) {
+                $bookingId = (int) $item->booking_id;
+                if ($item->mapping_id) {
+                    $index['mapping'][(int) $item->mapping_id] = $bookingId;
+                }
+                if ($item->cabin_id) {
+                    $index['cabin'][(int) $item->cabin_id] = $bookingId;
+                }
+            });
+
+        return $cache[$tripId] = $index;
+    }
+
+    private function mappingHasActiveBooking(object $mapping, array $activeBookings): bool
+    {
+        return isset($activeBookings['mapping'][(int) $mapping->id])
+            || isset($activeBookings['cabin'][(int) $mapping->cabin_id]);
+    }
+
+    private function activeBookingIdForMapping(object $mapping, array $activeBookings): ?int
+    {
+        if (isset($activeBookings['mapping'][(int) $mapping->id])) {
+            return $activeBookings['mapping'][(int) $mapping->id];
+        }
+        if (isset($activeBookings['cabin'][(int) $mapping->cabin_id])) {
+            return $activeBookings['cabin'][(int) $mapping->cabin_id];
+        }
+
+        return null;
     }
 }
