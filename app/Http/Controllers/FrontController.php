@@ -74,27 +74,42 @@ class FrontController extends Controller
                 $invoice['company_logo_url'] ?? null,
                 true
             ) ?? $builder->resolvePackagedCompanyLogoBinary();
+
+            $merchantFile = $merchantBinary !== null
+                ? $builder->writePdfImageFile($merchantBinary, $tempDir, 'inv-'.$booking->id.'-merchant')
+                : null;
+            $companyFile = $companyBinary !== null
+                ? $builder->writePdfImageFile($companyBinary, $tempDir, 'inv-'.$booking->id.'-company')
+                : null;
+
+            $qrFile = null;
             $qrBinary = null;
+            $qrSvg = null;
             if (! empty($invoice['qr_payload'])) {
-                $qrBinary = $builder->resolveQrBinary((string) $invoice['qr_payload']);
+                $payload = (string) $invoice['qr_payload'];
+                $qrBinary = $builder->resolveQrBinary($payload);
+                if ($qrBinary !== null) {
+                    $qrFile = $builder->writePdfImageFile($qrBinary, $tempDir, 'inv-'.$booking->id.'-qr');
+                }
+                // Inline SVG works in mPDF without GD; <img src="*.svg"> often fails.
+                if ($qrFile === null) {
+                    $qrSvg = $builder->localQrSvgMarkup($payload, 140);
+                }
             }
 
-            $merchantUri = $merchantBinary !== null ? $builder->binaryToDataUri($merchantBinary) : null;
-            $companyUri = $companyBinary !== null ? $builder->binaryToDataUri($companyBinary) : null;
-            $qrUri = $qrBinary !== null ? $builder->binaryToDataUri($qrBinary) : null;
-
+            // Absolute filesystem paths — mPDF is reliable with local JPEG/PNG files.
             $invoice['pdf_data_uris'] = [
-                'merchant' => $merchantUri,
-                'company' => $companyUri,
-                'qr' => $qrUri,
+                'merchant' => $merchantFile,
+                'company' => $companyFile,
+                'qr' => $qrFile,
             ];
+            $invoice['qr_svg'] = $qrSvg;
             $invoice['pdf_images'] = [
-                'merchant' => $merchantUri !== null,
-                'company' => $companyUri !== null,
-                'qr' => $qrUri !== null,
+                'merchant' => $merchantFile !== null,
+                'company' => $companyFile !== null,
+                'qr' => $qrFile !== null || $qrSvg !== null,
             ];
             $invoice['lang'] = $lang;
-            // Clear URL-based src so the blade only uses embedded data URIs.
             $invoice['merchant']['logo_url'] = null;
             $invoice['company_logo_url'] = null;
             $invoice['qr'] = null;
@@ -105,7 +120,6 @@ class FrontController extends Controller
             $mpdf->showImageErrors = false;
             $mpdf->curlAllowUnsafeSslRequests = true;
 
-            // Belt-and-suspenders: imageVars + data URIs in HTML.
             if ($merchantBinary !== null) {
                 $mpdf->imageVars['merchantLogo'] = $merchantBinary;
             }
@@ -118,9 +132,15 @@ class FrontController extends Controller
 
             Log::info('Invoice PDF logos resolved', [
                 'booking_id' => $id,
+                'merchant_file' => $merchantFile,
+                'company_file' => $companyFile,
+                'qr_file' => $qrFile,
+                'qr_svg' => $qrSvg !== null,
                 'merchant_bytes' => $merchantBinary !== null ? strlen($merchantBinary) : 0,
                 'company_bytes' => $companyBinary !== null ? strlen($companyBinary) : 0,
                 'qr_bytes' => $qrBinary !== null ? strlen($qrBinary) : 0,
+                'gd' => extension_loaded('gd'),
+                'packaged_logo' => is_file(resource_path('invoice-assets/logo-company.jpg')),
             ]);
 
             $seal = (string) ($invoice['seal'] ?? '');
@@ -154,6 +174,10 @@ class FrontController extends Controller
 
     private function makeInvoiceMpdf(string $tempDir, string $lang): Mpdf
     {
+        if (! is_dir($tempDir) && ! @mkdir($tempDir, 0755, true) && ! is_dir($tempDir)) {
+            $tempDir = sys_get_temp_dir();
+        }
+
         $fontDirs = (new ConfigVariables)->getDefaults()['fontDir'];
         $fontDirs[] = resource_path('fonts');
 
@@ -163,7 +187,10 @@ class FrontController extends Controller
             'useOTL' => 0xFF,
         ];
 
-        $defaultFont = $lang === BookingInvoice::LANG_BN ? 'lohitbengali' : 'dejavusans';
+        $defaultFont = 'dejavusans';
+        if ($lang === BookingInvoice::LANG_BN && is_file(resource_path('fonts/Lohit-Bengali.ttf'))) {
+            $defaultFont = 'lohitbengali';
+        }
 
         return new Mpdf([
             'mode' => 'utf-8',

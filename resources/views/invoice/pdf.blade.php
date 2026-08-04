@@ -59,22 +59,24 @@
     $invoiceCompany = (string) config('invoice.company_name', 'Durpalla Limited');
     $pdfImages = is_array($invoice['pdf_images'] ?? null) ? $invoice['pdf_images'] : [];
     $pdfUris = is_array($invoice['pdf_data_uris'] ?? null) ? $invoice['pdf_data_uris'] : [];
-    // Prefer embedded data URIs (reliable on servers without public/logos symlink).
+    // Absolute temp file paths (preferred), else mPDF imageVars.
     $merchantLogo = (string) ($pdfUris['merchant'] ?? '');
     $companyLogo = (string) ($pdfUris['company'] ?? '');
     $qrSrc = (string) ($pdfUris['qr'] ?? '');
+    $qrSvg = is_string($invoice['qr_svg'] ?? null) ? trim($invoice['qr_svg']) : '';
     if ($merchantLogo === '' && ! empty($pdfImages['merchant'])) {
         $merchantLogo = 'var:merchantLogo';
     }
     if ($companyLogo === '' && ! empty($pdfImages['company'])) {
         $companyLogo = 'var:companyLogo';
     }
-    if ($qrSrc === '' && ! empty($pdfImages['qr'])) {
+    // Only use imageVars for QR when we have PNG bytes (not SVG-only).
+    if ($qrSrc === '' && $qrSvg === '' && ! empty($pdfImages['qr'])) {
         $qrSrc = 'var:invoiceQr';
     }
     $merchantLogoOk = $merchantLogo !== '';
     $companyLogoOk = $companyLogo !== '';
-    $qrOk = $qrSrc !== '';
+    $qrOk = $qrSrc !== '' || $qrSvg !== '';
     $hasRealMerchant = ! empty($merchant['name']) && strcasecmp((string) $merchant['name'], $invoiceCompany) !== 0;
     $operatorName = $hasRealMerchant
         ? (string) $merchant['name']
@@ -137,8 +139,10 @@
             <div class="muted">{{ $invoice['booking_date_formated'] ?? '' }}</div>
         </td>
         <td width="15%" style="text-align:right;">
-            @if ($qrOk)
+            @if ($qrSrc !== '')
                 <img class="qr" src="{{ $qrSrc }}" alt="QR">
+            @elseif ($qrSvg !== '')
+                <div class="qr" style="width:70px;height:70px;overflow:hidden;">{!! $qrSvg !!}</div>
             @endif
         </td>
     </tr>

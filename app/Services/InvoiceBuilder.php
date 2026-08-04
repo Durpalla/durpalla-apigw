@@ -583,11 +583,13 @@ class InvoiceBuilder
     }
 
     /**
-     * Company logo shipped with apigw (not via public/logos symlink).
+     * Company logo shipped with apigw (JPEG preferred — mPDF embeds JPEG without GD).
      */
     public function resolvePackagedCompanyLogoBinary(): ?string
     {
         foreach ([
+            resource_path('invoice-assets/logo-company.jpg'),
+            resource_path('invoice-assets/logo-company-fallback.jpg'),
             resource_path('invoice-assets/logo-company.png'),
             resource_path('invoice-assets/logo-company-fallback.png'),
         ] as $path) {
@@ -598,6 +600,37 @@ class InvoiceBuilder
         }
 
         return null;
+    }
+
+    /**
+     * Write validated image bytes to mPDF temp dir; return absolute path for <img src>.
+     */
+    public function writePdfImageFile(string $binary, string $tempDir, string $prefix): ?string
+    {
+        $binary = $this->acceptImageBinary($binary, 16);
+        if ($binary === null) {
+            return null;
+        }
+
+        if (! is_dir($tempDir) && ! @mkdir($tempDir, 0755, true) && ! is_dir($tempDir)) {
+            return null;
+        }
+
+        $info = @getimagesizefromstring($binary);
+        $mime = is_array($info) ? (string) ($info['mime'] ?? 'image/png') : 'image/png';
+        $ext = match ($mime) {
+            'image/jpeg', 'image/jpg' => 'jpg',
+            'image/gif' => 'gif',
+            'image/webp' => 'webp',
+            default => 'png',
+        };
+
+        $path = rtrim($tempDir, '/').'/'.$prefix.'.'.$ext;
+        if (@file_put_contents($path, $binary) === false) {
+            return null;
+        }
+
+        return $path;
     }
 
     /**
@@ -635,7 +668,23 @@ class InvoiceBuilder
 
     public function resolveQrBinary(string $payload): ?string
     {
+        $payload = trim($payload);
+        if ($payload === '') {
+            return null;
+        }
+
         $tempDir = storage_path('app/mpdf');
+        if (! is_dir($tempDir) && ! @mkdir($tempDir, 0755, true) && ! is_dir($tempDir)) {
+            $tempDir = sys_get_temp_dir();
+        }
+
+        // 1) Local PNG via Bacon matrix + GD (no outbound HTTP; works in Docker once GD is enabled).
+        $localPng = $this->generateLocalQrPng($payload);
+        if ($localPng !== null) {
+            return $localPng;
+        }
+
+        // 2) Cached file / remote fallback.
         $file = $this->materializeQrForPdf($payload, $tempDir, 'qr-bin');
         if ($file !== null && is_file($file)) {
             $binary = $this->acceptImageBinary(@file_get_contents($file), 16);
@@ -648,11 +697,151 @@ class InvoiceBuilder
     }
 
     /**
+     * Offline QR as SVG markup for inline HTML (mPDF embeds SVG without GD).
+     * Do not pass this through <img src> — use {!! $svg !!} in the blade.
+     */
+    public function localQrSvgMarkup(string $payload, int $size = 140): ?string
+    {
+        $payload = trim($payload);
+        if ($payload === '' || ! class_exists(\BaconQrCode\Writer::class)) {
+            return null;
+        }
+
+        try {
+            $renderer = new \BaconQrCode\Renderer\ImageRenderer(
+                new \BaconQrCode\Renderer\RendererStyle\RendererStyle($size),
+                new \BaconQrCode\Renderer\Image\SvgImageBackEnd
+            );
+            $svg = (new \BaconQrCode\Writer($renderer))->writeString($payload);
+            if ($svg === '' || ! str_contains($svg, '<svg')) {
+                return null;
+            }
+
+            // Ensure explicit pixel size for mPDF layout.
+            if (! str_contains($svg, 'width=')) {
+                $svg = preg_replace(
+                    '/<svg\b/',
+                    '<svg width="'.$size.'" height="'.$size.'"',
+                    $svg,
+                    1
+                ) ?? $svg;
+            }
+
+            return $svg;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     * @deprecated Use localQrSvgMarkup() — SVG files via <img src> often fail in mPDF.
+     */
+    public function writeLocalQrSvgFile(string $payload, string $tempDir, string $prefix): ?string
+    {
+        $svg = $this->localQrSvgMarkup($payload);
+        if ($svg === null) {
+            return null;
+        }
+
+        if (! is_dir($tempDir) && ! @mkdir($tempDir, 0755, true) && ! is_dir($tempDir)) {
+            return null;
+        }
+
+        $path = rtrim($tempDir, '/').'/'.$prefix.'.svg';
+        if (@file_put_contents($path, $svg) === false) {
+            return null;
+        }
+
+        return $path;
+    }
+
+    /**
+     * Build a PNG QR with Bacon encoder + GD (no Imagick, no network).
+     */
+    private function generateLocalQrPng(string $payload, int $pixelSize = 140): ?string
+    {
+        if (! extension_loaded('gd') || ! function_exists('imagecreatetruecolor')) {
+            // Fall back to Imagick writer when GD is missing.
+            return $this->generateLocalQrPngViaImagick($payload, $pixelSize);
+        }
+
+        if (! class_exists(\BaconQrCode\Encoder\Encoder::class)) {
+            return null;
+        }
+
+        try {
+            $qrCode = \BaconQrCode\Encoder\Encoder::encode(
+                $payload,
+                \BaconQrCode\Common\ErrorCorrectionLevel::M()
+            );
+            $matrix = $qrCode->getMatrix();
+            $modules = $matrix->getWidth();
+            if ($modules < 1) {
+                return null;
+            }
+
+            $scale = max(1, (int) floor($pixelSize / $modules));
+            $imgSize = $modules * $scale;
+            $image = imagecreatetruecolor($imgSize, $imgSize);
+            if ($image === false) {
+                return null;
+            }
+
+            $white = imagecolorallocate($image, 255, 255, 255);
+            $black = imagecolorallocate($image, 0, 0, 0);
+            imagefilledrectangle($image, 0, 0, $imgSize, $imgSize, $white);
+
+            for ($y = 0; $y < $modules; $y++) {
+                for ($x = 0; $x < $modules; $x++) {
+                    if ($matrix->get($x, $y) === 1) {
+                        imagefilledrectangle(
+                            $image,
+                            $x * $scale,
+                            $y * $scale,
+                            (($x + 1) * $scale) - 1,
+                            (($y + 1) * $scale) - 1,
+                            $black
+                        );
+                    }
+                }
+            }
+
+            ob_start();
+            imagepng($image);
+            imagedestroy($image);
+            $png = ob_get_clean();
+
+            return $this->acceptImageBinary(is_string($png) ? $png : null, 16);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function generateLocalQrPngViaImagick(string $payload, int $pixelSize = 140): ?string
+    {
+        if (! class_exists(\BaconQrCode\Writer::class) || ! extension_loaded('imagick')) {
+            return null;
+        }
+
+        try {
+            $renderer = new \BaconQrCode\Renderer\ImageRenderer(
+                new \BaconQrCode\Renderer\RendererStyle\RendererStyle($pixelSize),
+                new \BaconQrCode\Renderer\Image\ImagickImageBackEnd
+            );
+            $png = (new \BaconQrCode\Writer($renderer))->writeString($payload);
+
+            return $this->acceptImageBinary($png, 16);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /**
      * Reject mPDF placeholders / tiny junk (e.g. 14×16 no_image.jpg).
      */
     private function acceptImageBinary(mixed $binary, int $minDimension = 40): ?string
     {
-        if (! is_string($binary) || $binary === '' || strlen($binary) < 512) {
+        if (! is_string($binary) || $binary === '' || strlen($binary) < 100) {
             return null;
         }
 
@@ -719,6 +908,11 @@ class InvoiceBuilder
 
         $path = rtrim($tempDir, '/').'/'.$prefix.'-'.substr(md5($payload), 0, 12).'.png';
         if (is_file($path) && filesize($path) > 0) {
+            return $path;
+        }
+
+        $local = $this->generateLocalQrPng($payload);
+        if ($local !== null && @file_put_contents($path, $local) !== false) {
             return $path;
         }
 

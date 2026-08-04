@@ -27,11 +27,17 @@ ENV APP_ENV=local \
 
 RUN apk add --no-cache --virtual .build-deps \
         $PHPIZE_DEPS \
+        freetype-dev \
+        libjpeg-turbo-dev \
+        libpng-dev \
         libxml2-dev \
         libzip-dev \
         oniguruma-dev \
     && apk add --no-cache \
         curl \
+        freetype \
+        libjpeg-turbo \
+        libpng \
         libxml2 \
         libzip \
         nginx \
@@ -40,8 +46,12 @@ RUN apk add --no-cache --virtual .build-deps \
         supervisor \
         tesseract-ocr \
         tesseract-ocr-data-eng \
+    && docker-php-ext-configure gd \
+        --with-freetype \
+        --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" \
         bcmath \
+        gd \
         mbstring \
         opcache \
         pcntl \
