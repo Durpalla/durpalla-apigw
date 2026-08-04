@@ -2,9 +2,12 @@
 
 namespace App\Gateways;
 
+use App\Constants\AppConst;
 use App\Models\Agent;
 use App\Models\Booking;
+use App\Models\Gateway;
 use App\Services\AgentCounterPaymentService;
+use App\Services\AgentPaymentService;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -29,7 +32,7 @@ class Fund implements GatewayInterface
             : $payment->booking()->first();
 
         if (! $booking) {
-            $booking = Booking::query()->find($payment->booking_id);
+            $booking = Booking::query()->useWritePdo()->find($payment->booking_id);
         }
 
         if (! $booking) {
@@ -43,14 +46,34 @@ class Fund implements GatewayInterface
                 app(AgentCounterPaymentService::class)->debitFund($agent, $booking);
 
                 $amount = (float) $booking->total_payable;
+                if (! $payment->gateway_id) {
+                    $fundGw = Gateway::query()
+                        ->where('code', AgentCounterPaymentService::METHOD_FUND)
+                        ->where('status', 1)
+                        ->whereNull('merchant_id')
+                        ->first();
+                    if ($fundGw) {
+                        $payment->gateway_id = $fundGw->id;
+                    }
+                }
                 $payment->update([
                     'payment_method' => AgentCounterPaymentService::METHOD_FUND,
+                    'gateway_id' => $payment->gateway_id,
                     'status' => 'success',
                     'paid_amount' => $amount,
                     'store_amount' => $amount,
                     'dues' => 0,
                     'bank_tran_id' => $payment->bank_tran_id ?: ('FUND-'.$booking->id),
                 ]);
+
+                $payment->refresh();
+                $booking->refresh();
+
+                // Transport agent bookings stay PENDING until fund settles.
+                if ($booking->status === AppConst::BOOKING_PENDING) {
+                    app(AgentPaymentService::class)->markBookingPaid($booking, $payment);
+                    $booking->refresh();
+                }
 
                 $data['success'] = true;
                 $data['status'] = 'success';

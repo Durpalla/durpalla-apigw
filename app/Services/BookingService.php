@@ -215,6 +215,26 @@ class BookingService
                 }
 
                 $payment = $this->savePayment($booking);
+                // Agent fund: leave payment pending until Fund gateway debits wallet.
+                // Live gateways already stay pending in savePayment().
+                if ($user instanceof Agent
+                    && app(AgentCounterPaymentService::class)->isFund((string) request()->payment_method)) {
+                    $payment->status = 'pending';
+                    $payment->paid_amount = (float) $booking->total_payable;
+                    $payment->store_amount = (float) $booking->total_payable;
+                    $payment->dues = 0;
+                    if (! $payment->gateway_id) {
+                        $fundGw = \App\Models\Gateway::query()
+                            ->where('code', AgentCounterPaymentService::METHOD_FUND)
+                            ->where('status', 1)
+                            ->whereNull('merchant_id')
+                            ->first();
+                        if ($fundGw) {
+                            $payment->gateway_id = $fundGw->id;
+                        }
+                    }
+                    $payment->save();
+                }
                 dispatch(new BookingChargeAdjustmentJob($booking, $this->calculation));
                 BookingCompleteEvent::dispatch($booking);
                 $data['success'] = true;

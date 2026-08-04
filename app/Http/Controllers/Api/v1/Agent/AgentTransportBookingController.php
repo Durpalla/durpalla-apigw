@@ -266,7 +266,7 @@ class AgentTransportBookingController extends Controller
         if (! empty($data['order_id'])) {
             $booking = Booking::query()
                 ->useWritePdo()
-                ->with(['bookingItems', 'customer'])
+                ->with(['bookingItems', 'customer', 'payment'])
                 ->find($data['order_id']);
             if ($booking) {
                 $data['booking'] = \App\Support\AgentApiPresenter::booking($booking);
@@ -278,7 +278,58 @@ class AgentTransportBookingController extends Controller
             }
         }
 
-        if ($liveGateway && $agentModel && ! empty($data['order_id'])) {
+        // Fund: create payment transaction via Fund gateway (debit wallet + confirm booking).
+        if ($this->counterPayments->isFund($method) && $agentModel && ! empty($data['order_id'])) {
+            $booking = Booking::query()
+                ->useWritePdo()
+                ->with('payment')
+                ->find((int) $data['order_id']);
+            $payment = $booking?->payment;
+            if (! $booking || ! $payment) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Booking created but payment record is missing'),
+                    'order_id' => (int) $data['order_id'],
+                ], 422);
+            }
+
+            $payable = (float) $booking->total_payable;
+            $balance = (float) app(\App\Services\BalanceService::class)->getMyBalance($agentModel->id);
+            if ($balance + 0.0001 < $payable) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Insufficient fund balance'),
+                    'order_id' => $booking->id,
+                    'total_payable' => $payable,
+                    'balance' => $balance,
+                ], 422);
+            }
+
+            $pay = $this->agentPayments->payWithFund($agentModel, $payment, $request);
+            if (empty($pay['success'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $pay['message'] ?? __('Fund payment failed'),
+                    'order_id' => $booking->id,
+                ], 422);
+            }
+
+            $booking->refresh()->load(['bookingItems', 'customer', 'payment']);
+            $data['success'] = true;
+            $data['requires_payment'] = false;
+            $data['message'] = $pay['message'] ?? __('Payment successful');
+            $data['booking'] = \App\Support\AgentApiPresenter::booking($booking);
+            $data['total_payable'] = (float) $booking->total_payable;
+            $data['invoice'] = \App\Support\BookingInvoice::signedUrl($booking, 60);
+            $data['trans_id'] = $booking->payment?->transaction_id;
+            $data['payment'] = [
+                'id' => $booking->payment?->id,
+                'transaction_id' => $booking->payment?->transaction_id,
+                'payment_method' => AgentCounterPaymentService::METHOD_FUND,
+                'status' => $booking->payment?->status,
+                'paid_amount' => (float) ($booking->payment?->paid_amount ?? 0),
+            ];
+        } elseif ($liveGateway && $agentModel && ! empty($data['order_id'])) {
             $pay = $this->agentPayments->initiate(
                 $agentModel,
                 (int) $data['order_id'],
