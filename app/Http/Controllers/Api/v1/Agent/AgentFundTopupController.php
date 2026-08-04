@@ -91,10 +91,31 @@ class AgentFundTopupController extends Controller
         }
 
         $rows = AgentFundTopup::query()
+            ->with('gateway:id,name')
             ->where('user_id', $agent->id)
             ->orderByDesc('id')
             ->limit(50)
-            ->get();
+            ->get()
+            ->map(static function (AgentFundTopup $topup): array {
+                $methodLabel = $topup->method === 'bank_transfer'
+                    ? 'Bank transfer'
+                    : ($topup->gateway?->name ?: 'Gateway');
+
+                return [
+                    'id' => $topup->id,
+                    'amount' => (float) $topup->amount,
+                    'method' => $topup->method,
+                    'method_label' => $methodLabel,
+                    'status' => $topup->status,
+                    'bank_reference' => $topup->bank_reference,
+                    'note' => $topup->note,
+                    'transaction_ref' => $topup->transaction_ref,
+                    'date' => optional($topup->created_at)?->toIso8601String(),
+                    'created_at' => optional($topup->created_at)?->toIso8601String(),
+                ];
+            })
+            ->values()
+            ->all();
 
         return response()->json(['success' => true, 'message' => '', 'data' => $rows]);
     }
