@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\v1\Agent;
 
 use App\Http\Controllers\Controller;
+use App\Constants\AppConst;
 use App\Models\Agent;
 use App\Models\Booking;
 use App\Services\AgentDashboardService;
@@ -97,8 +98,17 @@ class AgentBookingController extends Controller
         }
 
         $booking->loadMissing(['bookingItems.trip']);
-        $invoice = $invoiceBuilder->build($booking);
         $payment = $booking->payment;
+        // Heal premature success on unpaid PENDING agent bookings (pre-gateway).
+        if ($payment
+            && $booking->status === AppConst::BOOKING_PENDING
+            && ! $payment->isCollected()
+            && strtolower((string) $payment->status) === 'success') {
+            $payment->update(['status' => 'pending', 'bank_tran_id' => null]);
+            $payment->refresh();
+        }
+
+        $invoice = $invoiceBuilder->build($booking);
         $trx = (string) ($payment->transaction_id ?? '');
 
         $items = [];
@@ -152,7 +162,8 @@ class AgentBookingController extends Controller
                 'booking_reference' => AgentApiPresenter::formatBookingReference($booking),
                 'qr_code' => $trx !== '' ? $trx : (string) $booking->id,
                 'status' => $booking->status,
-                'payment_status' => $invoice['payment_status'] ?? ($payment->status ?? ''),
+                'payment_status' => $invoice['payment_status']
+                    ?? ($payment ? $payment->displayStatusForBooking($booking) : ''),
                 'transaction_id' => $trx,
                 'gateway_name' => $payment?->gateway?->name
                     ?? $payment?->payment_gateway

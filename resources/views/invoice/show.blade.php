@@ -569,7 +569,7 @@
             <div class="bi-merchant">
                 <div class="bi-logo">
                     @if ($merchantLogo !== '')
-                        <img src="{{ $merchantLogo }}" alt="{{ $operatorName }}">
+                        <img src="{{ $merchantLogo }}" alt="{{ $operatorName }}" referrerpolicy="no-referrer" loading="eager">
                     @else
                         {{ $operatorInitial }}
                     @endif
@@ -634,7 +634,7 @@
                 @if ((float) ($invoice['charge_total'] ?? 0) > 0)
                     <div class="bi-row"><span>Service charge</span><strong>{{ $money($invoice['charge_total']) }}</strong></div>
                 @endif
-                <div class="bi-row"><span>VAT</span><strong>{{ $money($invoice['vat_total'] ?? 0) }}</strong></div>
+                <div class="bi-row"><span>VAT on charge</span><strong>{{ $money($invoice['vat_total'] ?? 0) }}</strong></div>
                 @if ((float) ($invoice['total_discount'] ?? 0) > 0)
                     <div class="bi-row"><span>Discount</span><strong>-{{ $money($invoice['total_discount']) }}</strong></div>
                 @endif

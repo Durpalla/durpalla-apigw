@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
@@ -106,16 +105,47 @@ class Merchant extends Authenticatable
 
     public function getProfilePicUrlAttribute(): ?string
     {
+        return $this->logo_url;
+    }
+
+    /**
+     * Public URL for the merchant business logo.
+     * Legacy admin uploads store filename only under public/images.
+     * Newer uploads may use logos/merchants/….
+     */
+    public function getLogoUrlAttribute(): ?string
+    {
         if (empty($this->logo)) {
             return null;
         }
-        $path = $this->logo;
-        if (str_starts_with($path, 'avatars/') || str_starts_with($path, 'uploads/') || str_starts_with($path, 'logos/')) {
-            return asset($path);
-        }
-        $disk = config('filesystems.profile_disk', 'public');
 
-        return Storage::disk($disk)->url($path);
+        $path = (string) $this->logo;
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        $normalized = str_contains($path, '/')
+            ? ltrim(str_replace('\\', '/', $path), '/')
+            : 'images/'.$path;
+
+        $assetsBase = rtrim((string) (
+            config('invoice.assets_base_url')
+            ?: config('uploads.public_base_url')
+            ?: ''
+        ), '/');
+
+        if ($assetsBase !== '') {
+            return $assetsBase.'/'.$normalized;
+        }
+
+        if (function_exists('upload_asset')) {
+            $viaUpload = upload_asset($normalized);
+            if (is_string($viaUpload) && $viaUpload !== '') {
+                return $viaUpload;
+            }
+        }
+
+        return asset($normalized);
     }
 
     public function getEmailForPasswordReset(): string

@@ -47,7 +47,12 @@ class AgentPaymentService
         $request = $request ?? request();
         $data = ['success' => false, 'message' => __('Your payment cannot be processed'), 'data' => []];
 
-        $order = Booking::with(['payment', 'bookingItems', 'customer'])->find($orderId);
+        // Read from primary: confirm() just wrote this row; MySQL Router read
+        // replicas can lag and make find()/ownsBooking fail with "Booking not found".
+        $order = Booking::query()
+            ->useWritePdo()
+            ->with(['payment', 'bookingItems', 'customer'])
+            ->find($orderId);
         if (! $order || ! $this->ownsBooking($agent, $order)) {
             $data['message'] = __('Booking not found');
 
@@ -70,6 +75,12 @@ class AgentPaymentService
                 $payment->transaction_id = strtoupper(uniqid($order->id.'_', false));
                 $payment->status = 'pending';
             }
+        }
+
+        // Undo premature success written at booking create (before gateway pay).
+        if ($order->status === AppConst::BOOKING_PENDING && ! $payment->isCollected()) {
+            $payment->status = 'pending';
+            $payment->bank_tran_id = null;
         }
 
         $payment->gateway_id = $gatewayId;
@@ -129,7 +140,10 @@ class AgentPaymentService
      */
     public function status(Agent $agent, int $orderId): array
     {
-        $order = Booking::with(['payment', 'bookingItems'])->find($orderId);
+        $order = Booking::query()
+            ->useWritePdo()
+            ->with(['payment', 'bookingItems'])
+            ->find($orderId);
         if (! $order || ! $this->ownsBooking($agent, $order)) {
             return [
                 'success' => false,
@@ -139,20 +153,31 @@ class AgentPaymentService
         }
 
         $payment = $order->payment;
-        if ($payment && strtolower((string) $payment->status) === 'success'
+        if ($payment
+            && $payment->isCollected()
             && $order->status === AppConst::BOOKING_PENDING) {
             $this->markBookingPaid($order, $payment);
             $order->refresh();
+            $payment = $order->payment;
+        } elseif ($payment
+            && $order->status === AppConst::BOOKING_PENDING
+            && ! $payment->isCollected()
+            && strtolower((string) $payment->status) === 'success') {
+            // Heal rows created before live-gateway payments stayed pending.
+            $payment->update(['status' => 'pending', 'bank_tran_id' => null]);
+            $payment->refresh();
         }
 
         $paid = $order->status === AppConst::BOOKING_COMPLETE
-            || ($payment && strtolower((string) $payment->status) === 'success');
+            || ($payment && $payment->isCollected());
 
         $payload = [
             'success' => true,
             'paid' => $paid,
             'status' => $order->status,
-            'payment_status' => $payment?->status,
+            'payment_status' => $payment
+                ? $payment->displayStatusForBooking($order)
+                : null,
             'order_id' => $order->id,
             'booking_id' => $order->id,
             'message' => $paid
@@ -194,7 +219,13 @@ class AgentPaymentService
 
     public function ownsBooking(Agent $agent, Booking $booking): bool
     {
-        return (int) $booking->booked_by_id === (int) $agent->getKey()
-            && (string) $booking->booked_by_type === (string) $agent->getMorphClass();
+        if ((int) $booking->booked_by_id !== (int) $agent->getKey()) {
+            return false;
+        }
+
+        $type = (string) $booking->booked_by_type;
+
+        return $type === Agent::class
+            || $type === (string) $agent->getMorphClass();
     }
 }

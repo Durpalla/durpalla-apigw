@@ -41,7 +41,25 @@ return [
 
     'assets_base_url' => rtrim((string) env(
         'INVOICE_ASSETS_BASE_URL',
-        env('UPLOADS_PUBLIC_BASE_URL', '')
+        env('UPLOADS_PUBLIC_BASE_URL', 'https://assets.durpalla.com')
     ), '/'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Local filesystem roots that may contain uploaded logos
+    |--------------------------------------------------------------------------
+    |
+    | Checked in order so invoices can embed merchant logos as data URIs
+    | when the files live on shared disk (more reliable than remote URLs).
+    |
+    */
+
+    'local_asset_roots' => array_values(array_filter([
+        env('INVOICE_LOCAL_ASSETS_PATH'),
+        public_path(),
+        // Sibling main Durpalla app public (shared server layouts).
+        dirname(base_path()).'/durpalla/public',
+        '/var/www/html/durpalla/public',
+    ])),
 
 ];

@@ -49,7 +49,9 @@ class InvoiceBuilder
             'qr_payload' => $bookingReference !== '' ? $bookingReference : (string) $booking->id,
             'booking_date' => optional($booking->created_at)->format('Y-m-d H:i:s'),
             'booking_date_formated' => optional($booking->created_at)->format('d M, Y h:i A'),
-            'payment_status' => $payment->status ?? ($booking->payment_status ?? ''),
+            'payment_status' => $payment
+                ? $payment->displayStatusForBooking($booking)
+                : ($booking->payment_status ?? ''),
             'transaction_id' => $trx,
             'gateway_name' => $payment?->gateway?->name
                 ?? $payment?->payment_gateway
@@ -204,7 +206,74 @@ class InvoiceBuilder
             return null;
         }
 
-        return $this->absoluteAssetUrl($path);
+        // Normalize legacy bare filenames to public/images/{file}.
+        $normalized = $this->normalizeMerchantLogoPath($path);
+
+        // Prefer inlined data URI so WebView / print never depend on a remote host.
+        $embedded = $this->embedLocalAssetAsDataUri($normalized);
+        if ($embedded !== null) {
+            return $embedded;
+        }
+
+        return $this->absoluteAssetUrl($normalized);
+    }
+
+    private function normalizeMerchantLogoPath(string $pathOrUrl): string
+    {
+        $pathOrUrl = trim($pathOrUrl);
+        if (str_starts_with($pathOrUrl, 'http://') || str_starts_with($pathOrUrl, 'https://')) {
+            return $pathOrUrl;
+        }
+
+        $normalized = ltrim(str_replace('\\', '/', $pathOrUrl), '/');
+        if ($normalized === '') {
+            return $normalized;
+        }
+
+        // Legacy admin uploads: filename only → images/{filename}
+        if (! str_contains($normalized, '/')) {
+            return 'images/'.$normalized;
+        }
+
+        return $normalized;
+    }
+
+    private function embedLocalAssetAsDataUri(string $pathOrUrl): ?string
+    {
+        $normalized = $this->normalizeAssetPath($pathOrUrl);
+        if ($normalized === null) {
+            return null;
+        }
+
+        foreach ((array) config('invoice.local_asset_roots', []) as $root) {
+            $root = rtrim((string) $root, '/');
+            if ($root === '') {
+                continue;
+            }
+            $full = $root.'/'.$normalized;
+            if (! is_file($full) || ! is_readable($full)) {
+                continue;
+            }
+
+            $mime = @mime_content_type($full) ?: 'image/png';
+            if (! str_starts_with($mime, 'image/')) {
+                continue;
+            }
+
+            $binary = @file_get_contents($full);
+            if ($binary === false || $binary === '') {
+                continue;
+            }
+
+            // Keep invoices small; skip huge logos.
+            if (strlen($binary) > 512000) {
+                continue;
+            }
+
+            return 'data:'.$mime.';base64,'.base64_encode($binary);
+        }
+
+        return null;
     }
 
     private function absoluteAssetUrl(string $pathOrUrl): ?string
@@ -215,17 +284,32 @@ class InvoiceBuilder
         }
 
         if (str_starts_with($pathOrUrl, 'http://') || str_starts_with($pathOrUrl, 'https://')) {
+            // Rewrite known broken apigw-hosted logo URLs to the assets base.
+            $normalized = $this->normalizeAssetPath($pathOrUrl);
+            if ($normalized !== null && str_starts_with($normalized, 'logos/')) {
+                $host = (string) parse_url($pathOrUrl, PHP_URL_HOST);
+                $appHost = (string) parse_url((string) config('app.url'), PHP_URL_HOST);
+                if ($host !== '' && $appHost !== '' && strcasecmp($host, $appHost) === 0) {
+                    $base = rtrim((string) config('invoice.assets_base_url', 'https://admin.durpalla.com'), '/');
+
+                    return $base.'/'.$normalized;
+                }
+            }
+
             return $pathOrUrl;
         }
 
-        $normalized = ltrim(str_replace('\\', '/', $pathOrUrl), '/');
-        $invoiceBase = rtrim((string) config('invoice.assets_base_url', ''), '/');
-        $uploadsBase = rtrim((string) config('uploads.public_base_url', ''), '/');
+        $normalized = $this->normalizeAssetPath($pathOrUrl);
+        if ($normalized === null) {
+            return null;
+        }
 
+        $invoiceBase = rtrim((string) config('invoice.assets_base_url', ''), '/');
         if ($invoiceBase !== '') {
             return $invoiceBase.'/'.$normalized;
         }
 
+        $uploadsBase = rtrim((string) config('uploads.public_base_url', ''), '/');
         if ($uploadsBase !== '' && str_starts_with($normalized, 'logos/')) {
             return $uploadsBase.'/'.$normalized;
         }
@@ -238,6 +322,26 @@ class InvoiceBuilder
         }
 
         return rtrim((string) config('app.url', ''), '/').'/'.$normalized;
+    }
+
+    private function normalizeAssetPath(string $pathOrUrl): ?string
+    {
+        $pathOrUrl = trim($pathOrUrl);
+        if ($pathOrUrl === '') {
+            return null;
+        }
+
+        if (str_starts_with($pathOrUrl, 'http://') || str_starts_with($pathOrUrl, 'https://')) {
+            $path = (string) parse_url($pathOrUrl, PHP_URL_PATH);
+            $pathOrUrl = $path !== '' ? $path : $pathOrUrl;
+        }
+
+        $normalized = ltrim(str_replace('\\', '/', $pathOrUrl), '/');
+        if ($normalized === '' || str_contains($normalized, '..')) {
+            return null;
+        }
+
+        return $normalized;
     }
 
     private function qrUrl(string $payload): string

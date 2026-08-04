@@ -133,20 +133,9 @@ final class PendingBookingPaymentWindow
             return false;
         }
 
-        $status = strtolower(trim((string) $payment->status));
-        if (in_array($status, ['success', 'paid', 'complete', 'completed'], true)) {
-            return true;
-        }
-
-        if ($status === 'advance' && (float) $payment->dues <= 0) {
-            return true;
-        }
-
-        $upper = strtoupper((string) $payment->status);
-
-        return str_contains($upper, 'PAID')
-            || str_contains($upper, 'COMPLETE')
-            || str_contains($upper, 'SUCCESS');
+        // Require settlement evidence so premature status=success (agent live
+        // gateway create before pay) does not auto-complete on window expiry.
+        return $payment->isCollected();
     }
 
     /**

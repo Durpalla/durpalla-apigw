@@ -58,6 +58,55 @@ class Payment extends Model
         return Str::ucfirst($this->status);
     }
 
+    /**
+     * True when a gateway/fund settlement left an external receipt id.
+     * Local create() often sets status=success for counter flows without this evidence.
+     */
+    public function hasCollectionEvidence(): bool
+    {
+        if (trim((string) ($this->bank_tran_id ?? '')) !== '') {
+            return true;
+        }
+
+        return trim((string) ($this->external_reference ?? '')) !== '';
+    }
+
+    /**
+     * Payment row claims success and has settlement evidence (fund debit / gateway trx).
+     * Do not treat premature counter-style success on PENDING bookings as collected.
+     */
+    public function isCollected(): bool
+    {
+        $status = strtolower(trim((string) $this->status));
+        $okStatus = in_array($status, ['success', 'paid', 'complete', 'completed'], true)
+            || ($status === 'advance' && (float) $this->dues <= 0);
+
+        if (! $okStatus) {
+            $upper = strtoupper((string) $this->status);
+            $okStatus = str_contains($upper, 'PAID')
+                || str_contains($upper, 'COMPLETE')
+                || str_contains($upper, 'SUCCESS');
+        }
+
+        return $okStatus && $this->hasCollectionEvidence();
+    }
+
+    /**
+     * Status to show on invoices/APIs: PENDING bookings without settlement stay pending.
+     */
+    public function displayStatusForBooking(?Booking $booking = null): string
+    {
+        $booking ??= $this->relationLoaded('booking') ? $this->booking : $this->booking()->first();
+        $raw = strtolower(trim((string) ($this->status ?? '')));
+
+        if ($booking && strtoupper((string) $booking->status) === AppConst::BOOKING_PENDING
+            && ! $this->isCollected()) {
+            return 'pending';
+        }
+
+        return $raw !== '' ? $raw : (string) ($this->status ?? '');
+    }
+
     public function successful(): void
     {
         $hotelRes = HotelReservation::query()

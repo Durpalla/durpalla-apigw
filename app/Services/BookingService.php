@@ -607,13 +607,28 @@ class BookingService
     private function savePayment($booking)
     {
         $dues = (request()->input('paid_amount')) ? $booking->total_payable - request('paid_amount') : 0;
+        $user = auth()->user();
+        $method = (string) (request()->payment_method ?? '');
+        $gatewayId = request()->input('gateway_id');
+
+        // Customers and agent live-gateway checkouts stay pending until the
+        // gateway confirms; counter/fund flows can mark success immediately.
+        if ($user instanceof Customer) {
+            $status = 'pending';
+        } elseif ($user instanceof Agent
+            && app(AgentCounterPaymentService::class)->isLiveGateway($method, $gatewayId)) {
+            $status = 'pending';
+        } else {
+            $status = ($dues > 0) ? 'advance' : 'success';
+        }
+
         return Payment::create([
             'booking_id' => $booking->id,
             'transaction_id' => strtoupper(uniqid($booking->id, false)),
             'bank_tran_id' => (request()->trx_id) ? request()->trx_id : null,
             'customer_id' => $booking->customer_id,
             'payment_method' => request()->payment_method ? request()->payment_method : null,
-            'status' => (auth()->user() instanceof Customer) ? 'pending' : (($dues > 0) ? 'advance' : 'success'),
+            'status' => $status,
             'paid_amount' => request()->paid_amount ? request()->paid_amount : $booking->total_payable,
             'store_amount' => request()->paid_amount ? request()->paid_amount : 0,
             'dues' => $dues

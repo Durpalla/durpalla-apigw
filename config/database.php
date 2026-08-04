@@ -114,6 +114,9 @@ return [
                 'host' => [env('DB_HOST', '127.0.0.1')],
                 'port' => env('DB_WRITE_PORT', env('DB_PORT', '6446')),
             ],
+            // After any write in the request, subsequent reads use the write host
+            // so freshly created bookings are visible to payment initiate / status.
+            'sticky' => env('DB_STICKY', true),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',

@@ -264,7 +264,10 @@ class AgentTransportBookingController extends Controller
         }
 
         if (! empty($data['order_id'])) {
-            $booking = Booking::query()->with(['bookingItems', 'customer'])->find($data['order_id']);
+            $booking = Booking::query()
+                ->useWritePdo()
+                ->with(['bookingItems', 'customer'])
+                ->find($data['order_id']);
             if ($booking) {
                 $data['booking'] = \App\Support\AgentApiPresenter::booking($booking);
                 $data['total_amount'] = (float) $booking->total_amount;
