@@ -340,17 +340,20 @@ class TripService
                 ? ($cabinType->name . ' (' . (($cabinType->is_ac ?? false) ? 'AC' : 'Non-AC') . ')')
                 : 'Unknown';
 
-            if ($cabin->type === 'cabin') {
+            $type = strtolower(trim((string) ($cabin->type
+                ?: ($cabinType->type ?? ''))));
+
+            if ($type === 'cabin') {
                 $cabins[] = $row;
                 if ($cabin->type_id > 0) {
                     $cabin_types[$cabin->type_id] = $typeLabel;
                 }
-            } elseif ($cabin->type === 'seat') {
+            } elseif ($type === 'seat') {
                 $seats[] = $row;
                 if ($cabin->type_id > 0) {
                     $seat_types[$cabin->type_id] = $typeLabel;
                 }
-            } elseif ($cabin->type === 'sofa') {
+            } elseif ($type === 'sofa') {
                 $sofas[] = $row;
                 if ($cabin->type_id > 0) {
                     $sofa_types[$cabin->type_id] = $typeLabel;
@@ -368,6 +371,8 @@ class TripService
         // Safety net for legacy DB default cabin_position=99 (see durpalla migration
         // 2026_08_01_160000 + SeatCabinImport). Prefer fixing source data with
         // `php artisan cabins:fix-position-sentinels`. Both APIs use cabin_position.
+        // Also coerce missing floor/row — otherwise _my_group_by drops every cell and
+        // the agent app hides the Cabin tab even when mappings exist.
         $cabins = $this->normalizeLayoutPositions($cabins);
         $seats = $this->normalizeLayoutPositions($seats);
         $sofas = $this->normalizeLayoutPositions($sofas);
@@ -689,6 +694,7 @@ class TripService
      * Ensure each floor+row has unique sequential cabin_position values for map rendering.
      * Legacy data often stores cabin_position=99 for every unit, which collapses the grid
      * (and is dropped by the OOM position cap). Same fix as admin TripService.
+     * Also coerces missing/zero floor and cabin_row so _my_group_by does not drop the unit.
      *
      * @param  list<array<string, mixed>>  $items
      * @return list<array<string, mixed>>
@@ -698,6 +704,18 @@ class TripService
         if ($items === []) {
             return [];
         }
+
+        foreach ($items as &$item) {
+            $floor = (int) ($item['cabin_floor'] ?? 0);
+            if ($floor < 1) {
+                $item['cabin_floor'] = 1;
+            }
+            $row = (int) ($item['cabin_row'] ?? 0);
+            if ($row < 1) {
+                $item['cabin_row'] = 1;
+            }
+        }
+        unset($item);
 
         $grouped = [];
         foreach ($items as $item) {
