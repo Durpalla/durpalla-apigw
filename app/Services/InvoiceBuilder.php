@@ -163,7 +163,7 @@ class InvoiceBuilder
     {
         if (! $merchant) {
             return [
-                'name' => config('app.name', 'Durpalla'),
+                'name' => config('invoice.company_name', 'Durpalla Limited'),
                 'address' => 'Dhaka, Bangladesh',
                 'email' => 'support@durpalla.com',
                 'mobile' => '16374',

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'Durpalla') }} Invoice #{{ $invoice['pnr'] ?? '' }}</title>
+    <title>{{ config('invoice.company_name', 'Durpalla Limited') }} Invoice #{{ $invoice['pnr'] ?? '' }}</title>
     <style>
         #booking-invoice-document,
         #booking-invoice-document * { box-sizing: border-box; }
@@ -340,7 +340,8 @@
     $isFailed = str_contains($seal, 'FAIL') || str_contains($payRaw, 'FAIL');
     $payLabel = $isPaid ? 'Paid' : ($isFailed ? 'Failed' : (str_contains($payRaw, 'PARTIAL') ? 'Partial' : 'Pending'));
     $payBadge = $isPaid ? 'bi-badge-success' : ($isFailed ? 'bi-badge-danger' : 'bi-badge-warning');
-    $operatorName = (string) ($merchant['name'] ?? config('app.name', 'Durpalla'));
+    $invoiceCompany = (string) config('invoice.company_name', 'Durpalla Limited');
+    $operatorName = (string) ($merchant['name'] ?? $invoiceCompany);
     $operatorInitial = mb_strtoupper(mb_substr($operatorName !== '' ? $operatorName : 'M', 0, 1));
     $contactLines = array_values(array_unique(array_filter([
         (string) ($merchant['mobile'] ?? ''),
@@ -545,14 +546,14 @@
 
         <footer class="bi-footer">
             <p class="bi-third-party">
-                This booking was made through <strong>Durpalla</strong>, a third-party
+                This booking was made through <strong>{{ $invoiceCompany }}</strong>, a third-party
                 online booking platform. Transport service is operated by
                 <strong>{{ $operatorName }}</strong>.
             </p>
             <div class="bi-durpalla-contact">
                 <div class="bi-durpalla-mark">D</div>
                 <div>
-                    <p class="bi-durpalla-contact-title">Need help? Contact Durpalla</p>
+                    <p class="bi-durpalla-contact-title">Need help? Contact {{ $invoiceCompany }}</p>
                     <div class="bi-durpalla-contact-meta">
                         <span><strong>Address:</strong> Dhaka, Bangladesh</span>
                         <span><strong>Email:</strong> support@durpalla.com</span>
@@ -562,7 +563,7 @@
             </div>
             <div class="bi-powered-row">
                 <span>Thank you for your booking. Have a safe journey.</span>
-                <span class="bi-powered-brand">Powered by Durpalla</span>
+                <span class="bi-powered-brand">Powered by {{ $invoiceCompany }}</span>
             </div>
             <p class="bi-disclaimer">Computer-generated invoice. No signature required.</p>
         </footer>
