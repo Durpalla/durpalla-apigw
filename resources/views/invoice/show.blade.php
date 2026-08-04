@@ -502,8 +502,22 @@
     $payLabel = $isPaid ? 'Paid' : ($isFailed ? 'Failed' : (str_contains($payRaw, 'PARTIAL') ? 'Partial' : 'Pending'));
     $payBadge = $isPaid ? 'bi-badge-success' : ($isFailed ? 'bi-badge-danger' : 'bi-badge-warning');
     $invoiceCompany = (string) config('invoice.company_name', 'Durpalla Limited');
-    $companyLogo = (string) config('invoice.company_logo_url', '');
+    $companyLogo = (string) ($invoice['company_logo_url'] ?? '');
     $merchantLogo = (string) ($merchant['logo_url'] ?? '');
+    $companyLogoOk = $companyLogo !== '' && (
+        str_starts_with($companyLogo, 'data:')
+        || str_starts_with($companyLogo, 'http://')
+        || str_starts_with($companyLogo, 'https://')
+        || str_starts_with($companyLogo, '/')
+        || is_file($companyLogo)
+    );
+    $merchantLogoOk = $merchantLogo !== '' && (
+        str_starts_with($merchantLogo, 'data:')
+        || str_starts_with($merchantLogo, 'http://')
+        || str_starts_with($merchantLogo, 'https://')
+        || str_starts_with($merchantLogo, '/')
+        || is_file($merchantLogo)
+    );
     $hasRealMerchant = ! empty($merchant['name']) && strcasecmp((string) $merchant['name'], $invoiceCompany) !== 0;
     $operatorName = $hasRealMerchant
         ? (string) $merchant['name']
@@ -556,7 +570,7 @@
     <div class="bi-sheet">
         <div class="bi-brand-row">
             <div>
-                @if ($companyLogo !== '')
+                @if ($companyLogoOk)
                     <img src="{{ $companyLogo }}" alt="{{ $invoiceCompany }}">
                 @else
                     <strong>{{ $invoiceCompany }}</strong>
@@ -568,7 +582,7 @@
         <header class="bi-header">
             <div class="bi-merchant">
                 <div class="bi-logo">
-                    @if ($merchantLogo !== '')
+                    @if ($merchantLogoOk)
                         <img src="{{ $merchantLogo }}" alt="{{ $operatorName }}" referrerpolicy="no-referrer" loading="eager">
                     @else
                         {{ $operatorInitial }}
@@ -728,7 +742,7 @@
                 <strong>{{ $operatorName }}</strong>.
             </p>
             <div class="bi-durpalla-contact">
-                @if ($companyLogo !== '')
+                @if ($companyLogoOk)
                     <img src="{{ $companyLogo }}" alt="{{ $invoiceCompany }}" class="bi-durpalla-logo">
                 @else
                     <div class="bi-durpalla-mark">D</div>
@@ -745,7 +759,7 @@
             <div class="bi-powered-row">
                 <span>Thank you for your booking. Have a safe journey.</span>
                 <span class="bi-powered-brand">
-                    @if ($companyLogo !== '')
+                    @if ($companyLogoOk)
                         <img src="{{ $companyLogo }}" alt="{{ $invoiceCompany }}" class="bi-durpalla-logo" style="height:18px;max-width:110px">
                     @else
                         Powered by {{ $invoiceCompany }}

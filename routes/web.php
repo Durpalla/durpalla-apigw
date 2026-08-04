@@ -34,3 +34,7 @@ Route::get('payment/status', [GatewayCallbackController::class, 'paymentStatus']
 Route::get('/download/{id}', [FrontController::class, 'downloadInvoice'])
     ->name('invoice.download')
     ->middleware('signed');
+
+Route::get('/invoice/{id}', [FrontController::class, 'viewInvoice'])
+    ->name('invoice.view')
+    ->middleware('signed');

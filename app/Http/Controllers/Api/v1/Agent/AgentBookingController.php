@@ -219,6 +219,7 @@ class AgentBookingController extends Controller
                 'customer_name' => is_object($customer) ? ($customer->name ?? '') : ($customer['name'] ?? ''),
                 'customer_mobile' => is_object($customer) ? ($customer->mobile ?? '') : ($customer['mobile'] ?? ''),
                 'invoice' => BookingInvoice::signedUrl($booking, 60),
+                'invoice_html' => BookingInvoice::signedHtmlUrl($booking, 60),
                 'items' => $items,
                 'hotel' => $invoice['hotel'] ?? null,
                 'display_status' => AgentApiPresenter::displayStatus($booking),

@@ -574,8 +574,108 @@ class InvoiceBuilder
         return $normalized;
     }
 
+    /**
+     * Resolve logo bytes for mPDF imageVars (never a remote URL).
+     */
+    public function resolveLogoBinary(mixed $src): ?string
+    {
+        $src = is_string($src) ? trim($src) : '';
+        if ($src === '') {
+            // Fall through to company default candidates when empty string was company config.
+            foreach (['logos/logo-horizontal-colored-premium.png', 'logos/logo-horizontal-primary.png'] as $candidate) {
+                $embedded = $this->embedLocalAssetAsDataUri($candidate);
+                if ($embedded !== null) {
+                    return $this->binaryFromDataUri($embedded);
+                }
+                foreach ($this->candidatePublicUrls($candidate) as $url) {
+                    $binary = $this->fetchBinary($url);
+                    if ($binary !== null) {
+                        return $binary;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        if (str_starts_with($src, 'data:')) {
+            return $this->binaryFromDataUri($src);
+        }
+
+        if (is_file($src) && is_readable($src)) {
+            $binary = @file_get_contents($src);
+
+            return ($binary !== false && $binary !== '') ? $binary : null;
+        }
+
+        // Already a data URI / absolute path from build().
+        $tempDir = storage_path('app/mpdf');
+        $file = $this->materializeLogoForPdf($src, $tempDir, 'bin-'.substr(md5($src), 0, 10));
+        if ($file !== null && is_file($file)) {
+            $binary = @file_get_contents($file);
+
+            return ($binary !== false && $binary !== '') ? $binary : null;
+        }
+
+        return null;
+    }
+
+    public function resolveQrBinary(string $payload): ?string
+    {
+        $tempDir = storage_path('app/mpdf');
+        $file = $this->materializeQrForPdf($payload, $tempDir, 'qr-bin');
+        if ($file !== null && is_file($file)) {
+            $binary = @file_get_contents($file);
+
+            return ($binary !== false && $binary !== '') ? $binary : null;
+        }
+
+        return $this->fetchBinary($this->qrUrl($payload));
+    }
+
+    private function binaryFromDataUri(string $dataUri): ?string
+    {
+        if (! preg_match('#^data:image/[a-zA-Z0-9.+-]+;base64,(.+)$#s', $dataUri, $m)) {
+            return null;
+        }
+        $binary = base64_decode($m[1], true);
+        if ($binary === false || $binary === '') {
+            return null;
+        }
+
+        return $binary;
+    }
+
     private function qrUrl(string $payload): string
     {
         return 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data='.urlencode($payload);
+    }
+
+    /**
+     * Generate a local QR PNG for mPDF (avoids remote api.qrserver.com in PDF).
+     */
+    public function materializeQrForPdf(string $payload, string $tempDir, string $prefix): ?string
+    {
+        $payload = trim($payload);
+        if ($payload === '') {
+            return null;
+        }
+
+        if (! is_dir($tempDir) && ! @mkdir($tempDir, 0755, true) && ! is_dir($tempDir)) {
+            return null;
+        }
+
+        $path = rtrim($tempDir, '/').'/'.$prefix.'-'.substr(md5($payload), 0, 12).'.png';
+        if (is_file($path) && filesize($path) > 0) {
+            return $path;
+        }
+
+        // Prefer remote QR generation then cache locally.
+        $remote = $this->fetchBinary($this->qrUrl($payload));
+        if ($remote !== null && @file_put_contents($path, $remote) !== false) {
+            return $path;
+        }
+
+        return null;
     }
 }

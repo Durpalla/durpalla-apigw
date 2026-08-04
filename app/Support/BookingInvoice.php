@@ -45,4 +45,18 @@ final class BookingInvoice
             ['id' => $id]
         );
     }
+
+    /**
+     * Temporary signed URL for the HTML invoice preview (mobile WebView).
+     */
+    public static function signedHtmlUrl(int|Booking $booking, int $expiresMinutes = 60): string
+    {
+        $id = $booking instanceof Booking ? (int) $booking->id : $booking;
+
+        return URL::temporarySignedRoute(
+            'invoice.view',
+            now()->addMinutes(max(1, $expiresMinutes)),
+            ['id' => $id]
+        );
+    }
 }

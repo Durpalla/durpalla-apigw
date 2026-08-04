@@ -53,19 +53,14 @@
     $payLabel = $isPaid ? 'Paid' : ($isFailed ? 'Failed' : (str_contains($payRaw, 'PARTIAL') ? 'Partial' : 'Pending'));
     $payBadge = $isPaid ? 'badge-ok' : ($isFailed ? 'badge-fail' : 'badge-warn');
     $invoiceCompany = (string) config('invoice.company_name', 'Durpalla Limited');
-    $companyLogo = (string) ($invoice['company_logo_url'] ?? '');
-    $merchantLogo = (string) ($merchant['logo_url'] ?? '');
-    // Skip broken remote placeholders — only render when we have a local file or data URI.
-    $merchantLogoOk = $merchantLogo !== '' && (
-        str_starts_with($merchantLogo, 'data:')
-        || str_starts_with($merchantLogo, '/')
-        || is_file($merchantLogo)
-    );
-    $companyLogoOk = $companyLogo !== '' && (
-        str_starts_with($companyLogo, 'data:')
-        || str_starts_with($companyLogo, '/')
-        || is_file($companyLogo)
-    );
+    $pdfImages = is_array($invoice['pdf_images'] ?? null) ? $invoice['pdf_images'] : [];
+    // Prefer mPDF imageVars (var:name) — set by FrontController from binary bytes.
+    $merchantLogoOk = ! empty($pdfImages['merchant']);
+    $companyLogoOk = ! empty($pdfImages['company']);
+    $qrOk = ! empty($pdfImages['qr']);
+    $merchantLogo = $merchantLogoOk ? 'var:merchantLogo' : '';
+    $companyLogo = $companyLogoOk ? 'var:companyLogo' : '';
+    $qrSrc = $qrOk ? 'var:invoiceQr' : '';
     $hasRealMerchant = ! empty($merchant['name']) && strcasecmp((string) $merchant['name'], $invoiceCompany) !== 0;
     $operatorName = $hasRealMerchant
         ? (string) $merchant['name']
@@ -132,8 +127,8 @@
             <div class="muted">{{ $invoice['booking_date_formated'] ?? '' }}</div>
         </td>
         <td width="15%" style="text-align:right;">
-            @if (! empty($invoice['qr']))
-                <img class="qr" src="{{ $invoice['qr'] }}" alt="QR">
+            @if ($qrOk)
+                <img class="qr" src="{{ $qrSrc }}" alt="QR">
             @endif
         </td>
     </tr>
