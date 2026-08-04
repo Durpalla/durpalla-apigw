@@ -61,9 +61,31 @@ if ! grep -q '^REDIS_SENTINEL_ENABLED=true' "$DEPLOY_PATH/.env"; then
   docker_redis_env+=( -e "REDIS_HOST=${DOCKER_HOST_GATEWAY}" )
 fi
 
-if ! printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin; then
-  echo "ERROR: docker login ghcr.io failed."
-  echo "Check GHCR_PULL_TOKEN secret (PAT with read:packages) and package visibility for ${IMAGE%%:*}."
+# GHCR from BD hosts is often flaky (timeouts / slow TLS). Retry before failing.
+retry() {
+  local attempts="${1:?}"
+  local sleep_s="${2:?}"
+  shift 2
+  local n=1
+  until "$@"; do
+    if (( n >= attempts )); then
+      return 1
+    fi
+    echo "Retry ${n}/${attempts} failed; waiting ${sleep_s}s..."
+    sleep "$sleep_s"
+    n=$((n + 1))
+  done
+}
+
+docker_login_ghcr() {
+  printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+}
+
+echo "Logging in to ghcr.io as ${GHCR_USER}..."
+if ! retry 5 15 docker_login_ghcr; then
+  echo "ERROR: docker login ghcr.io failed after retries."
+  echo "If the error was 'context deadline exceeded' / timeout, the host cannot reach ghcr.io — check egress/DNS/firewall, then re-run the workflow."
+  echo "If it was 401/403, check GHCR_PULL_TOKEN (PAT with read:packages) and package visibility for ${IMAGE%%:*}."
   exit 1
 fi
 
@@ -94,7 +116,11 @@ else
   echo "WARNING: Shared assets not mounted at ${SHARED_ASSETS_ROOT}/uploads — avatar uploads will 404 on CDN"
 fi
 
-docker pull "$IMAGE"
+echo "Pulling ${IMAGE}..."
+if ! retry 5 20 docker pull "$IMAGE"; then
+  echo "ERROR: docker pull failed after retries (often ghcr.io timeout from this host)."
+  exit 1
+fi
 echo "Image pulled: $IMAGE"
 docker tag "$IMAGE" durpalla-apigw-app:local
 
