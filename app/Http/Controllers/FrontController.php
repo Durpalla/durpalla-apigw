@@ -39,6 +39,8 @@ class FrontController extends Controller
                 'margin_bottom' => 10,
                 'tempDir' => storage_path('app/mpdf'),
             ]);
+            $mpdf->showImageErrors = false;
+            $mpdf->curlAllowUnsafeSslRequests = true;
 
             $seal = (string) ($invoice['seal'] ?? '');
             if ($seal !== '') {
@@ -51,7 +53,7 @@ class FrontController extends Controller
 
             return response($pdf, 200, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
+                'Content-Disposition' => 'inline; filename="'.$fileName.'"',
                 'Cache-Control' => 'no-store, private',
                 'Content-Length' => (string) strlen($pdf),
             ]);

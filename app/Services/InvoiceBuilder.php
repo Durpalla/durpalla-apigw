@@ -153,6 +153,19 @@ class InvoiceBuilder
             if ($merchant instanceof Merchant) {
                 return $merchant;
             }
+
+            $merchantId = (int) (
+                data_get($item, 'trip.merchant_id')
+                ?: data_get($item, 'trip.launch.merchant_id')
+                ?: data_get($item, 'vehicle.merchant_id')
+                ?: 0
+            );
+            if ($merchantId > 0) {
+                $found = Merchant::query()->withTrashed()->find($merchantId);
+                if ($found) {
+                    return $found;
+                }
+            }
         }
 
         return null;
@@ -171,7 +184,9 @@ class InvoiceBuilder
                 'mobile' => '16374',
                 'phone' => '',
                 'registration_no' => '',
-                'logo_url' => $this->absoluteAssetUrl((string) config('invoice.company_logo_url', '')),
+                // Platform fallback only — never pretend Durpalla is the transport operator logo
+                // when a merchant exists but has no logo uploaded.
+                'logo_url' => null,
                 'cancellation_policy_lines' => [
                     'Cancellation refunds follow the operator policy configured at booking time.',
                 ],
@@ -215,7 +230,50 @@ class InvoiceBuilder
             return $embedded;
         }
 
-        return $this->absoluteAssetUrl($normalized);
+        $absolute = $this->absoluteAssetUrl($normalized);
+        if ($absolute !== null) {
+            $remoteEmbedded = $this->embedRemoteAssetAsDataUri($absolute);
+            if ($remoteEmbedded !== null) {
+                return $remoteEmbedded;
+            }
+        }
+
+        return $absolute;
+    }
+
+    private function embedRemoteAssetAsDataUri(string $url): ?string
+    {
+        if (! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://')) {
+            return null;
+        }
+
+        try {
+            $context = stream_context_create([
+                'http' => [
+                    'timeout' => 5,
+                    'follow_location' => 1,
+                    'user_agent' => 'DurpallaInvoice/1.0',
+                ],
+                'ssl' => [
+                    'verify_peer' => true,
+                    'verify_peer_name' => true,
+                ],
+            ]);
+            $binary = @file_get_contents($url, false, $context);
+            if ($binary === false || $binary === '' || strlen($binary) > 512000) {
+                return null;
+            }
+            $mime = 'image/png';
+            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+            $detected = $finfo->buffer($binary);
+            if (is_string($detected) && str_starts_with($detected, 'image/')) {
+                $mime = $detected;
+            }
+
+            return 'data:'.$mime.';base64,'.base64_encode($binary);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     private function normalizeMerchantLogoPath(string $pathOrUrl): string

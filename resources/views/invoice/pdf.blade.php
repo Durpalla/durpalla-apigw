@@ -5,11 +5,13 @@
     <title>{{ config('invoice.company_name', 'Durpalla Limited') }} Invoice #{{ $invoice['pnr'] ?? '' }}</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #0f172a; }
-        h1 { font-size: 18px; color: #1d4ed8; margin: 0 0 6px; }
+        h1 { font-size: 16px; color: #1d4ed8; margin: 0 0 4px; }
         h2 { font-size: 13px; margin: 0 0 4px; }
         .muted { color: #64748b; }
         .header { width: 100%; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 12px; }
         .header td { vertical-align: top; }
+        .logo { max-height: 52px; max-width: 140px; }
+        .logo-sm { max-height: 22px; max-width: 110px; }
         .box { border: 1px solid #e2e8f0; border-radius: 4px; padding: 8px; }
         .section { margin-bottom: 10px; }
         .label { color: #94a3b8; }
@@ -22,8 +24,18 @@
         .badge-ok { background: #ecfdf5; color: #047857; }
         .badge-warn { background: #fffbeb; color: #b45309; }
         .badge-fail { background: #fef2f2; color: #b91c1c; }
+        .policies { width: 100%; margin-top: 12px; }
+        .policy { border: 1px solid #e2e8f0; border-radius: 4px; padding: 8px; vertical-align: top; }
+        .policy strong { display: block; margin-bottom: 4px; font-size: 11px; }
+        .policy ul { margin: 0; padding-left: 14px; }
+        .policy li { margin-bottom: 2px; color: #475569; font-size: 10px; }
         .footer { margin-top: 14px; border-top: 1px solid #e2e8f0; padding-top: 8px; color: #64748b; font-size: 10px; }
         .qr { width: 70px; height: 70px; }
+        .initial {
+            width: 48px; height: 48px; line-height: 48px; text-align: center;
+            background: #eff6ff; color: #1d4ed8; font-size: 20px; font-weight: bold;
+            border-radius: 6px;
+        }
     </style>
 </head>
 <body>
@@ -41,7 +53,13 @@
     $payLabel = $isPaid ? 'Paid' : ($isFailed ? 'Failed' : (str_contains($payRaw, 'PARTIAL') ? 'Partial' : 'Pending'));
     $payBadge = $isPaid ? 'badge-ok' : ($isFailed ? 'badge-fail' : 'badge-warn');
     $invoiceCompany = (string) config('invoice.company_name', 'Durpalla Limited');
-    $operatorName = ! empty($merchant['name']) ? (string) $merchant['name'] : $invoiceCompany;
+    $companyLogo = (string) config('invoice.company_logo_url', '');
+    $merchantLogo = (string) ($merchant['logo_url'] ?? '');
+    $hasRealMerchant = ! empty($merchant['name']) && strcasecmp((string) $merchant['name'], $invoiceCompany) !== 0;
+    $operatorName = $hasRealMerchant
+        ? (string) $merchant['name']
+        : $invoiceCompany;
+    $operatorInitial = mb_strtoupper(mb_substr($operatorName !== '' ? $operatorName : 'M', 0, 1));
     $ticketsFlat = [];
     foreach (($invoice['items'] ?? []) as $group) {
         foreach (($group['tickets'] ?? []) as $ticket) {
@@ -59,19 +77,45 @@
     $boarding = is_array($firstTicket['boarding_point'] ?? null)
         ? (string) ($firstTicket['boarding_point']['name'] ?? '—')
         : '—';
+    $cancellationLines = $merchant['cancellation_policy_lines'] ?? [
+        'Cancellation refunds follow the operator policy configured at booking time.',
+    ];
+    if (! is_array($cancellationLines) || $cancellationLines === []) {
+        $cancellationLines = [
+            'Cancellation refunds follow the operator policy configured at booking time.',
+        ];
+    }
+    $terms = [
+        'Arrive at the boarding point at least 30 minutes before departure.',
+        'Valid ID and this booking reference are required at boarding.',
+        'This invoice is valid only for the trip and passengers listed above.',
+    ];
     $money = static fn ($amount) => 'BDT '.number_format((float) $amount, 2);
     $gateway = (string) ($invoice['gateway_name'] ?? '');
 @endphp
 
 <table class="header">
     <tr>
-        <td width="55%">
-            <h2>{{ $operatorName }}</h2>
-            <div class="muted">{{ $merchant['address'] ?? '' }}</div>
-            <div class="muted">{{ $merchant['mobile'] ?? ($merchant['phone'] ?? '') }}</div>
-            <div class="muted">{{ $merchant['email'] ?? '' }}</div>
+        <td width="50%">
+            <table>
+                <tr>
+                    <td width="56" style="vertical-align:middle;">
+                        @if ($merchantLogo !== '')
+                            <img class="logo" src="{{ $merchantLogo }}" alt="{{ $operatorName }}">
+                        @else
+                            <div class="initial">{{ $operatorInitial }}</div>
+                        @endif
+                    </td>
+                    <td style="padding-left:8px; vertical-align:middle;">
+                        <h2>{{ $operatorName }}</h2>
+                        <div class="muted">{{ $merchant['address'] ?? '' }}</div>
+                        <div class="muted">{{ $merchant['mobile'] ?? ($merchant['phone'] ?? '') }}</div>
+                        <div class="muted">{{ $merchant['email'] ?? '' }}</div>
+                    </td>
+                </tr>
+            </table>
         </td>
-        <td width="30%" style="text-align:center;">
+        <td width="35%" style="text-align:center;">
             <h1>BOOKING INVOICE</h1>
             <div><strong>{{ $bookingRef }}</strong></div>
             <div class="muted">{{ $invoice['booking_date_formated'] ?? '' }}</div>
@@ -172,9 +216,38 @@
     </tr>
 </table>
 
+<table class="policies" width="100%">
+    <tr>
+        <td width="49%" class="policy">
+            <strong>Terms &amp; Conditions</strong>
+            <ul>
+                @foreach ($terms as $term)
+                    <li>{{ $term }}</li>
+                @endforeach
+            </ul>
+        </td>
+        <td width="2%"></td>
+        <td width="49%" class="policy">
+            <strong>Cancellation Policy</strong>
+            <ul>
+                @foreach ($cancellationLines as $line)
+                    <li>{{ $line }}</li>
+                @endforeach
+            </ul>
+        </td>
+    </tr>
+</table>
+
 <div class="footer">
-    This booking was made through {{ $invoiceCompany }}. Transport service is operated by {{ $operatorName }}.
+    This booking was made through {{ $invoiceCompany }}, a third-party online booking platform.
+    Transport service is operated by {{ $operatorName }}.
     <br>Computer-generated invoice. No signature required. Status: {{ $seal }}
+    <br><br>
+    @if ($companyLogo !== '')
+        <img class="logo-sm" src="{{ $companyLogo }}" alt="{{ $invoiceCompany }}">
+        &nbsp;
+    @endif
+    Need help? {{ $invoiceCompany }} · support@durpalla.com · Hotline 16374
 </div>
 </body>
 </html>
