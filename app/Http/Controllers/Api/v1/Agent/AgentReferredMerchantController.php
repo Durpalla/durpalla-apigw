@@ -22,6 +22,9 @@ class AgentReferredMerchantController extends Controller
 
         $paginator = AgentReferredMerchant::query()
             ->withCount('documents')
+            ->with(['documents' => static function ($query) {
+                $query->where('type', 'logo')->orderByDesc('id');
+            }])
             ->where('agent_id', auth()->id())
             ->orderByDesc('created_at')
             ->paginate($size, ['*'], 'page', $page);

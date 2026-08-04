@@ -377,15 +377,11 @@ class AgentApiPresenter
             'merchantId' => $merchant->merchant_id,
             'documentCount' => (int) ($merchant->documents_count ?? $merchant->documents()->count()),
             'createdAt' => $merchant->created_at?->toIso8601String(),
+            'logoUrl' => self::resolveLogoUrl($merchant),
         ];
 
         if ($detailed) {
             $merchant->loadMissing('documents');
-            $logo = $merchant->documents
-                ->where('type', 'logo')
-                ->sortByDesc('id')
-                ->first();
-            $data['logoUrl'] = $logo?->url;
             $data['documents'] = $merchant->documents
                 ->map(fn (AgentReferredMerchantDocument $doc) => self::referredMerchantDocument($doc))
                 ->values()
@@ -407,6 +403,25 @@ class AgentApiPresenter
         }
 
         return $data;
+    }
+
+    private static function resolveLogoUrl(AgentReferredMerchant $merchant): ?string
+    {
+        if ($merchant->relationLoaded('documents')) {
+            $logo = $merchant->documents
+                ->where('type', 'logo')
+                ->sortByDesc('id')
+                ->first();
+
+            return $logo?->url;
+        }
+
+        $logo = $merchant->documents()
+            ->where('type', 'logo')
+            ->orderByDesc('id')
+            ->first();
+
+        return $logo?->url;
     }
 
     public static function referredMerchantDocument(AgentReferredMerchantDocument $doc): array
