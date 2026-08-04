@@ -11,24 +11,36 @@ use App\Models\ScheduleCabinMapping;
 /**
  * Agent cart + per-trip daily booking caps.
  *
- * Defaults: 2 cabins / 4 seats / 2 decks (cart at a time and daily per trip).
- * Admin options: agent_max_{cabin|seat|deck}_booking
+ * Per-agent overrides: agents.max_{cabin|seat|deck}_booking (nullable = use global).
+ * Global defaults: agent_max_{cabin|seat|deck}_booking options (fallback 2 / 4 / 2).
  */
 class AgentBookingQuotaService
 {
     public const DEFAULT_CABIN = 2;
+
     public const DEFAULT_SEAT = 4;
+
     public const DEFAULT_DECK = 2;
 
     /**
      * @return array{cabin:int,seat:int,deck:int}
      */
-    public function limits(): array
+    public function limits(?Agent $agent = null): array
     {
-        return [
+        $defaults = [
             'cabin' => max(0, (int) getOption('agent_max_cabin_booking', self::DEFAULT_CABIN)),
             'seat' => max(0, (int) getOption('agent_max_seat_booking', self::DEFAULT_SEAT)),
             'deck' => max(0, (int) getOption('agent_max_deck_booking', self::DEFAULT_DECK)),
+        ];
+
+        if (! $agent) {
+            return $defaults;
+        }
+
+        return [
+            'cabin' => $this->resolveLimit($agent->max_cabin_booking, $defaults['cabin']),
+            'seat' => $this->resolveLimit($agent->max_seat_booking, $defaults['seat']),
+            'deck' => $this->resolveLimit($agent->max_deck_booking, $defaults['deck']),
         ];
     }
 
@@ -39,7 +51,7 @@ class AgentBookingQuotaService
      */
     public function summaryForTrip(Agent $agent, int $tripId): array
     {
-        $limits = $this->limits();
+        $limits = $this->limits($agent);
         $types = ['cabin', 'seat', 'deck'];
         $booked = [];
         $locked = [];
@@ -70,7 +82,7 @@ class AgentBookingQuotaService
         }
 
         $tripId = (int) $mapping->schedule_id;
-        $limit = $this->limits()[$type] ?? 0;
+        $limit = $this->limits($agent)[$type] ?? 0;
         if ($limit <= 0) {
             return __('Agent booking for :type is not allowed.', ['type' => $type]);
         }
@@ -123,7 +135,7 @@ class AgentBookingQuotaService
             $byTripType[$key] = ($byTripType[$key] ?? 0) + 1;
         }
 
-        $limits = $this->limits();
+        $limits = $this->limits($agent);
         foreach ($byTripType as $key => $cartCount) {
             [$tripId, $type] = explode('|', $key, 2);
             $limit = $limits[$type] ?? 0;
@@ -178,6 +190,15 @@ class AgentBookingQuotaService
             ->where('trip_id', $tripId)
             ->whereHas('mapping', fn ($q) => $q->where('type', $type))
             ->count();
+    }
+
+    private function resolveLimit(mixed $override, int $fallback): int
+    {
+        if ($override === null || $override === '') {
+            return $fallback;
+        }
+
+        return max(0, (int) $override);
     }
 
     private function agentLockToken(Agent $agent): ?string
