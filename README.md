@@ -1,6 +1,6 @@
 # Durpalla API Gateway
 
-Lightweight Laravel API service for customer app and related endpoints. Same database as the main Durpalla application — **no migrations** in this project.
+Lightweight Laravel API service for customer app and related endpoints. Same database as the main Durpalla application — **no migrations** in this project. 
 
 ## Setup
 
