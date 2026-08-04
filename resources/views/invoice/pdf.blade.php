@@ -4,9 +4,9 @@
     <meta charset="utf-8">
     <title>{{ config('invoice.company_name', 'Durpalla Limited') }} {{ __('invoice.title') }} #{{ $invoice['pnr'] ?? '' }}</title>
     <style>
-        body { font-family: {{ (app()->getLocale() === 'bn') ? 'lohitbengali, DejaVu Sans, sans-serif' : 'DejaVu Sans, sans-serif' }}; font-size: 11px; color: #0f172a; }
-        h1 { font-size: 16px; color: #1d4ed8; margin: 0 0 4px; }
-        h2 { font-size: 13px; margin: 0 0 4px; }
+        body { font-family: {{ (app()->getLocale() === 'bn') ? 'freeserif, freesans, sans-serif' : 'DejaVu Sans, sans-serif' }}; font-size: 11px; color: #0f172a; @if(app()->getLocale() === 'bn') font-weight: normal; @endif }
+        h1 { font-size: 16px; color: #1d4ed8; margin: 0 0 4px; font-family: inherit; @if(app()->getLocale() === 'bn') font-weight: normal; @endif }
+        h2 { font-size: 13px; margin: 0 0 4px; font-family: inherit; @if(app()->getLocale() === 'bn') font-weight: normal; @endif }
         .muted { color: #64748b; }
         .header { width: 100%; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 12px; }
         .header td { vertical-align: top; }
@@ -16,30 +16,50 @@
         .section { margin-bottom: 10px; }
         .label { color: #94a3b8; }
         table.items { width: 100%; border-collapse: collapse; margin-top: 8px; }
-        table.items th, table.items td { border: 1px solid #e2e8f0; padding: 6px; text-align: left; }
-        table.items th { background: #f8fafc; font-size: 10px; text-transform: uppercase; color: #475569; }
-        .totals td { padding: 3px 0; }
-        .grand { font-size: 14px; font-weight: bold; color: #1d4ed8; }
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: bold; }
+        table.items th, table.items td { border: 1px solid #e2e8f0; padding: 6px; text-align: left; font-family: inherit; }
+        table.items th { background: #f8fafc; font-size: 10px; color: #475569; @if(app()->getLocale() !== 'bn') text-transform: uppercase; @endif @if(app()->getLocale() === 'bn') font-weight: normal; @endif }
+        .totals td { padding: 3px 0; font-family: inherit; }
+        .grand { font-size: 14px; color: #1d4ed8; @if(app()->getLocale() === 'bn') font-weight: normal; @else font-weight: bold; @endif }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10px; @if(app()->getLocale() === 'bn') font-weight: normal; @else font-weight: bold; @endif }
         .badge-ok { background: #ecfdf5; color: #047857; }
         .badge-warn { background: #fffbeb; color: #b45309; }
         .badge-fail { background: #fef2f2; color: #b91c1c; }
         .policies { width: 100%; margin-top: 12px; }
         .policy { border: 1px solid #e2e8f0; border-radius: 4px; padding: 8px; vertical-align: top; }
-        .policy strong { display: block; margin-bottom: 4px; font-size: 11px; }
+        .policy strong { display: block; margin-bottom: 4px; font-size: 11px; font-family: inherit; @if(app()->getLocale() === 'bn') font-weight: normal; @endif }
         .policy ul { margin: 0; padding-left: 14px; }
         .policy li { margin-bottom: 2px; color: #475569; font-size: 10px; }
         .footer { margin-top: 14px; border-top: 1px solid #e2e8f0; padding-top: 8px; color: #64748b; font-size: 10px; }
         .qr { width: 70px; height: 70px; }
+        .latin { font-family: freesans, DejaVu Sans, sans-serif; }
         .initial {
             width: 48px; height: 48px; line-height: 48px; text-align: center;
             background: #eff6ff; color: #1d4ed8; font-size: 20px; font-weight: bold;
             border-radius: 6px;
         }
+        @if(app()->getLocale() === 'bn')
+        /* Force Unicode FreeSerif into every table cell — mPDF often drops inherited fonts in nested tables. */
+        table, td, th, div, span, strong, b, h1, h2, li, p {
+            font-family: freeserif !important;
+            font-weight: normal !important;
+        }
+        .latin, .latin * { font-family: freesans !important; }
+        @else
+        strong, b { font-family: inherit; }
+        @endif
     </style>
 </head>
 <body>
 @php
+    $isBn = app()->getLocale() === 'bn';
+    $latin = static function ($value) use ($isBn): string {
+        $value = (string) $value;
+        if ($value === '' || ! $isBn) {
+            return e($value);
+        }
+
+        return '<span class="latin">'.e($value).'</span>';
+    };
     $customer = $invoice['customer'] ?? null;
     $payment = $invoice['payment'] ?? null;
     $merchant = $invoice['merchant'] ?? [];
@@ -108,7 +128,9 @@
         __('invoice.term_id'),
         __('invoice.term_valid'),
     ];
-    $money = static fn ($amount) => 'BDT '.number_format((float) $amount, 2);
+    $money = static function ($amount) use ($latin) {
+        return $latin('BDT '.number_format((float) $amount, 2));
+    };
     $gateway = (string) ($invoice['gateway_name'] ?? '');
 @endphp
 
@@ -125,18 +147,18 @@
                         @endif
                     </td>
                     <td style="padding-left:8px; vertical-align:middle;">
-                        <h2>{{ $operatorName }}</h2>
-                        <div class="muted">{{ $merchant['address'] ?? '' }}</div>
-                        <div class="muted">{{ $merchant['mobile'] ?? ($merchant['phone'] ?? '') }}</div>
-                        <div class="muted">{{ $merchant['email'] ?? '' }}</div>
+                        <h2>{!! $latin($operatorName) !!}</h2>
+                        <div class="muted">{!! $latin($merchant['address'] ?? '') !!}</div>
+                        <div class="muted">{!! $latin($merchant['mobile'] ?? ($merchant['phone'] ?? '')) !!}</div>
+                        <div class="muted">{!! $latin($merchant['email'] ?? '') !!}</div>
                     </td>
                 </tr>
             </table>
         </td>
         <td width="35%" style="text-align:center;">
             <h1>{{ __('invoice.title_upper') }}</h1>
-            <div><strong>{{ $bookingRef }}</strong></div>
-            <div class="muted">{{ $invoice['booking_date_formated'] ?? '' }}</div>
+            <div><strong>{!! $latin($bookingRef) !!}</strong></div>
+            <div class="muted">{!! $latin($invoice['booking_date_formated'] ?? '') !!}</div>
         </td>
         <td width="15%" style="text-align:right;">
             @if ($qrSrc !== '')
@@ -152,30 +174,30 @@
     <tr>
         <td width="33%" class="box">
             <strong>{{ __('invoice.section_booking') }}</strong><br>
-            <span class="label">{{ __('invoice.label_id') }}:</span> {{ $bookingRef }}<br>
-            <span class="label">{{ __('invoice.label_transaction') }}:</span> {{ ($invoice['transaction_id'] ?? '') !== '' ? $invoice['transaction_id'] : '—' }}<br>
+            <span class="label">{{ __('invoice.label_id') }}:</span> {!! $latin($bookingRef) !!}<br>
+            <span class="label">{{ __('invoice.label_transaction') }}:</span> {!! $latin(($invoice['transaction_id'] ?? '') !== '' ? $invoice['transaction_id'] : '—') !!}<br>
             <span class="label">{{ __('invoice.label_payment') }}:</span> <span class="badge {{ $payBadge }}">{{ $payLabel }}</span>
         </td>
         <td width="2%"></td>
         <td width="33%" class="box">
             <strong>{{ __('invoice.section_trip') }}</strong><br>
             @if (! empty($invoice['hotel']))
-                <span class="label">{{ __('invoice.label_hotel') }}:</span> {{ $invoice['hotel']['title'] ?? __('invoice.hotel_fallback') }}<br>
-                <span class="label">{{ __('invoice.label_check_in') }}:</span> {{ $invoice['hotel']['check_in'] ?? '—' }}<br>
-                <span class="label">{{ __('invoice.label_check_out') }}:</span> {{ $invoice['hotel']['check_out'] ?? '—' }}
+                <span class="label">{{ __('invoice.label_hotel') }}:</span> {!! $latin($invoice['hotel']['title'] ?? __('invoice.hotel_fallback')) !!}<br>
+                <span class="label">{{ __('invoice.label_check_in') }}:</span> {!! $latin($invoice['hotel']['check_in'] ?? '—') !!}<br>
+                <span class="label">{{ __('invoice.label_check_out') }}:</span> {!! $latin($invoice['hotel']['check_out'] ?? '—') !!}
             @else
-                <span class="label">{{ __('invoice.label_route') }}:</span> {{ $routeLabel }}<br>
-                <span class="label">{{ __('invoice.label_vehicle') }}:</span> {{ $vehicleName }}<br>
-                <span class="label">{{ __('invoice.label_date') }}:</span> {{ $scheduleDate }} · {{ $departure }}<br>
-                <span class="label">{{ __('invoice.label_boarding') }}:</span> {{ $boarding }}
+                <span class="label">{{ __('invoice.label_route') }}:</span> {!! $latin($routeLabel) !!}<br>
+                <span class="label">{{ __('invoice.label_vehicle') }}:</span> {!! $latin($vehicleName) !!}<br>
+                <span class="label">{{ __('invoice.label_date') }}:</span> {!! $latin($scheduleDate.' · '.$departure) !!}<br>
+                <span class="label">{{ __('invoice.label_boarding') }}:</span> {!! $latin($boarding) !!}
             @endif
         </td>
         <td width="2%"></td>
         <td width="30%" class="box">
             <strong>{{ __('invoice.section_customer') }}</strong><br>
-            {{ $customerName }}<br>
-            {{ $customerMobile }}<br>
-            <span class="label">{{ __('invoice.label_method') }}:</span> {{ $gateway !== '' ? $gateway : '—' }}
+            {!! $latin($customerName) !!}<br>
+            {!! $latin($customerMobile) !!}<br>
+            <span class="label">{{ __('invoice.label_method') }}:</span> {!! $latin($gateway !== '' ? $gateway : '—') !!}
         </td>
     </tr>
 </table>
@@ -183,12 +205,12 @@
 <table class="items">
     <thead>
     <tr>
-        <th>#</th>
-        <th>{{ __('invoice.col_passenger') }}</th>
-        <th>{{ __('invoice.col_phone') }}</th>
-        <th>{{ __('invoice.col_seat_cabin') }}</th>
-        <th>{{ __('invoice.col_type') }}</th>
-        <th>{{ __('invoice.col_fare') }}</th>
+        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:freeserif;">#</td>
+        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:freeserif;">{{ __('invoice.col_passenger') }}</td>
+        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:freeserif;">{{ __('invoice.col_phone') }}</td>
+        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:freeserif;">{{ __('invoice.col_seat_cabin') }}</td>
+        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:freeserif;">{{ __('invoice.col_type') }}</td>
+        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:freeserif;">{{ __('invoice.col_fare') }}</td>
     </tr>
     </thead>
     <tbody>
@@ -199,12 +221,12 @@
             $pMobile = (string) ($passenger['mobile'] ?? $customerMobile);
         @endphp
         <tr>
-            <td>{{ $index + 1 }}</td>
-            <td>{{ $pName !== '' ? $pName : '—' }}</td>
-            <td>{{ $pMobile !== '' ? $pMobile : '—' }}</td>
-            <td>{{ ! empty($ticket['cabin_no']) ? $ticket['cabin_no'] : '—' }}</td>
-            <td>{{ ucfirst((string) ($ticket['seat_cabin_type'] ?? $ticket['cabin_type'] ?? '—')) }}</td>
-            <td>{{ $money($ticket['price'] ?? 0) }}</td>
+            <td>{!! $latin((string) ($index + 1)) !!}</td>
+            <td>{!! $latin($pName !== '' ? $pName : '—') !!}</td>
+            <td>{!! $latin($pMobile !== '' ? $pMobile : '—') !!}</td>
+            <td>{!! $latin(! empty($ticket['cabin_no']) ? $ticket['cabin_no'] : '—') !!}</td>
+            <td>{!! $latin(ucfirst((string) ($ticket['seat_cabin_type'] ?? $ticket['cabin_type'] ?? '—'))) !!}</td>
+            <td>{!! $money($ticket['price'] ?? 0) !!}</td>
         </tr>
     @empty
         <tr>
@@ -219,17 +241,17 @@
         <td width="60%"></td>
         <td width="40%">
             <table width="100%">
-                <tr><td>{{ __('invoice.subtotal') }}</td><td align="right">{{ $money($invoice['total_amount'] ?? 0) }}</td></tr>
+                <tr><td style="font-family:freeserif;">{{ __('invoice.subtotal') }}</td><td align="right">{!! $money($invoice['total_amount'] ?? 0) !!}</td></tr>
                 @if ((float) ($invoice['charge_total'] ?? 0) > 0)
-                    <tr><td>{{ __('invoice.service_charge') }}</td><td align="right">{{ $money($invoice['charge_total']) }}</td></tr>
+                    <tr><td style="font-family:freeserif;">{{ __('invoice.service_charge') }}</td><td align="right">{!! $money($invoice['charge_total']) !!}</td></tr>
                 @endif
-                <tr><td>{{ __('invoice.vat_on_charge') }}</td><td align="right">{{ $money($invoice['vat_total'] ?? 0) }}</td></tr>
+                <tr><td style="font-family:freeserif;">{{ __('invoice.vat_on_charge') }}</td><td align="right">{!! $money($invoice['vat_total'] ?? 0) !!}</td></tr>
                 @if ((float) ($invoice['total_discount'] ?? 0) > 0)
-                    <tr><td>{{ __('invoice.discount') }}</td><td align="right">-{{ $money($invoice['total_discount']) }}</td></tr>
+                    <tr><td style="font-family:freeserif;">{{ __('invoice.discount') }}</td><td align="right">-{!! $money($invoice['total_discount']) !!}</td></tr>
                 @endif
                 <tr>
-                    <td class="grand">{{ __('invoice.total') }}</td>
-                    <td class="grand" align="right">{{ $money($invoice['total_payable'] ?? 0) }}</td>
+                    <td class="grand" style="font-family:freeserif;">{{ __('invoice.total') }}</td>
+                    <td class="grand" align="right">{!! $money($invoice['total_payable'] ?? 0) !!}</td>
                 </tr>
             </table>
         </td>
@@ -259,14 +281,27 @@
 </table>
 
 <div class="footer">
-    {{ __('invoice.footer_third_party', ['company' => $invoiceCompany, 'operator' => $operatorName]) }}
-    <br>{{ __('invoice.footer_computer_status', ['status' => $seal]) }}
+    {!! str_replace(
+        ['__COMPANY__', '__OPERATOR__'],
+        ['<span class="latin">'.e($invoiceCompany).'</span>', '<span class="latin">'.e($operatorName).'</span>'],
+        e(__('invoice.footer_third_party', ['company' => '__COMPANY__', 'operator' => '__OPERATOR__']))
+    ) !!}
+    <br>
+    {!! str_replace(
+        '__STATUS__',
+        '<span class="latin">'.e($seal).'</span>',
+        e(__('invoice.footer_computer_status', ['status' => '__STATUS__']))
+    ) !!}
     <br><br>
     @if ($companyLogoOk)
         <img class="logo-sm" src="{{ $companyLogo }}" alt="{{ $invoiceCompany }}">
         &nbsp;
     @endif
-    {{ __('invoice.footer_need_help', ['company' => $invoiceCompany]) }}
+    {!! str_replace(
+        '__COMPANY__',
+        '<span class="latin">'.e($invoiceCompany).'</span>',
+        e(__('invoice.footer_need_help', ['company' => '__COMPANY__']))
+    ) !!}
 </div>
 </body>
 </html>

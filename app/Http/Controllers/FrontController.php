@@ -182,14 +182,28 @@ class FrontController extends Controller
         $fontDirs[] = resource_path('fonts');
 
         $fontData = (new FontVariables)->getDefaults()['fontdata'];
-        $fontData['lohitbengali'] = [
-            'R' => 'Lohit-Bengali.ttf',
+
+        // Unicode FreeSerif covers Bangla + Latin in one face (best single-font
+        // option for mPDF). Bold uses the same file — FreeSerifBold misses glyphs.
+        $fontData['freeserif'] = [
+            'R' => 'FreeSerif.ttf',
+            'B' => 'FreeSerif.ttf',
+            'useOTL' => 0xFF,
+        ];
+        $fontData['freesans'] = [
+            'R' => 'FreeSans.ttf',
+            'B' => 'FreeSans.ttf',
+            'useOTL' => 0xFF,
+        ];
+        $fontData['mukti'] = [
+            'R' => 'Mukti.ttf',
+            'B' => 'Mukti.ttf',
             'useOTL' => 0xFF,
         ];
 
         $defaultFont = 'dejavusans';
-        if ($lang === BookingInvoice::LANG_BN && is_file(resource_path('fonts/Lohit-Bengali.ttf'))) {
-            $defaultFont = 'lohitbengali';
+        if ($lang === BookingInvoice::LANG_BN && is_file(resource_path('fonts/FreeSerif.ttf'))) {
+            $defaultFont = 'freeserif';
         }
 
         return new Mpdf([
@@ -203,6 +217,10 @@ class FrontController extends Controller
             'fontDir' => $fontDirs,
             'fontdata' => $fontData,
             'default_font' => $defaultFont,
+            // Keep off: autoLangToFont remaps bn→freeserif inconsistently and
+            // can still produce tofu when combined with other faces.
+            'autoScriptToLang' => false,
+            'autoLangToFont' => false,
         ]);
     }
 }

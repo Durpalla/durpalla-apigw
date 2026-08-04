@@ -3,13 +3,20 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('invoice.company_name', 'Durpalla Limited') }} Invoice #{{ $invoice['pnr'] ?? '' }}</title>
+    <title>{{ config('invoice.company_name', 'Durpalla Limited') }} {{ __('invoice.title') }} #{{ $invoice['pnr'] ?? '' }}</title>
+    @if (app()->getLocale() === 'bn')
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    @endif
     <style>
         #booking-invoice-document,
         #booking-invoice-document * { box-sizing: border-box; }
         #booking-invoice-document {
             margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: {{ app()->getLocale() === 'bn'
+                ? "'Noto Sans Bengali', 'Noto Sans', 'FreeSans', Arial, sans-serif"
+                : "Arial, Helvetica, sans-serif" }};
             color: #0f172a;
             background: #f1f5f9;
             font-size: 12px;
