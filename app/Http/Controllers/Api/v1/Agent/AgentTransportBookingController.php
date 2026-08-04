@@ -200,6 +200,14 @@ class AgentTransportBookingController extends Controller
             ], 422);
         }
 
+        if ($agentModel && $agentModel->mobile
+            && trim((string) $request->input('customer_mobile')) === trim((string) $agentModel->mobile)) {
+            return response()->json([
+                'success' => false,
+                'message' => __("You cannot use your own mobile number. Please enter the customer's mobile number."),
+            ], 422);
+        }
+
         $items = $request->input('items');
         if (! is_array($items)) {
             $items = json_decode(str_replace('\\', '', (string) $request->items), true) ?? [];
@@ -285,11 +293,7 @@ class AgentTransportBookingController extends Controller
                     ?? __('Booking created but payment could not be started. Retry payment.');
             }
         } elseif (! empty($data['order_id']) && empty($data['invoice'])) {
-            $data['invoice'] = \Illuminate\Support\Facades\URL::temporarySignedRoute(
-                'invoice.download',
-                now()->addMinutes(60),
-                ['id' => (int) $data['order_id']]
-            );
+            $data['invoice'] = \App\Support\BookingInvoice::signedUrl((int) $data['order_id'], 60);
         }
 
         $payload = array_merge([

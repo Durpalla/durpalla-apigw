@@ -6,7 +6,6 @@ use App\Constants\AppConst;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use App\Jobs\CabinMappingBookingJob;
 use App\Models\Agent;
@@ -23,6 +22,7 @@ use App\Models\Payment;
 use App\Models\PaymentCollector;
 use App\Repository\Interfaces\BookingItemRepositoryInterface;
 use App\Repository\Interfaces\BookingRepositoryInterface;
+use App\Support\BookingInvoice;
 use App\Models\ScheduleCabinMapping;
 use App\Models\User;
 use App\Events\BookingCompleteEvent;
@@ -224,11 +224,7 @@ class BookingService
                 $data['total_discount'] = $booking->total_discount;
                 $data['charge_total'] = $booking->charge_total;
                 $data['vat_total'] = $booking->vat_total;
-                $data['invoice'] = URL::temporarySignedRoute(
-                    'invoice.download',
-                    now()->addMinutes(30),
-                    ['id' => $booking->id]
-                );
+                $data['invoice'] = BookingInvoice::signedUrl($booking, 30);
                 $data['trans_id'] = (string)$payment->transaction_id;
                 $data['message'] = 'Your order has been confirmed.';
                 $booking->load(['bookingItems', 'customer']);
@@ -401,11 +397,7 @@ class BookingService
             BookingCompleteEvent::dispatch($booking);
             $data['success'] = true;
             $data['order_id'] = $booking->id;
-            $data['invoice'] = URL::temporarySignedRoute(
-                'invoice.download',
-                now()->addMinutes(30),
-                ['id' => $booking->id]
-            );
+            $data['invoice'] = BookingInvoice::signedUrl($booking, 30);
             $data['trans_id'] = $payment->transaction_id;
             $data['message'] = 'Your order has been confirmed.';
         }
@@ -420,7 +412,22 @@ class BookingService
             return $user;
         }
 
-        $mobile = request()->input('customer_mobile') ?: ($user->mobile ?? null);
+        $requestMobile = request()->input('customer_mobile');
+
+        // Agents must book on behalf of a real customer — never fall back to
+        // (or explicitly reuse) their own mobile number.
+        if ($user instanceof Agent) {
+            $ownMobile = trim((string) ($user->mobile ?? ''));
+            $givenMobile = trim((string) $requestMobile);
+            if ($givenMobile === '') {
+                throw new \Exception("Customer mobile number is required");
+            }
+            if ($ownMobile !== '' && $givenMobile === $ownMobile) {
+                throw new \Exception("You cannot use your own mobile number. Please enter the customer's mobile number.");
+            }
+        }
+
+        $mobile = $requestMobile ?: ($user->mobile ?? null);
         $name = request()->input('customer_name') ?: ($user->name ?? null);
 
         if (! $mobile) {

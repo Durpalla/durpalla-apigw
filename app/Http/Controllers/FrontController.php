@@ -15,7 +15,8 @@ class FrontController extends Controller
     }
 
     /**
-     * Signed invoice download/view used by apps after payment success.
+     * Signed invoice download/view used by all apps after payment success.
+     * Same HTML template for customer, agent, merchant, and web.
      * Route: GET /download/{id} (name: invoice.download)
      */
     public function downloadInvoice(Request $request, $id, InvoiceBuilder $builder)

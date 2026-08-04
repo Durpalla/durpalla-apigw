@@ -274,9 +274,16 @@ class AgentHotelBookingService
             ];
         }
 
+        $customerMobile = trim((string) ($input['customer_mobile'] ?? ''));
+        if ($agent->mobile && $customerMobile !== '' && $customerMobile === trim((string) $agent->mobile)) {
+            throw new \InvalidArgumentException(
+                "You cannot use your own mobile number. Please enter the customer's mobile number."
+            );
+        }
+
         $customer = $this->resolveCustomer(
             (string) ($input['customer_name'] ?? ''),
-            (string) ($input['customer_mobile'] ?? '')
+            $customerMobile
         );
 
         $method = $this->counterPayments->normalize(

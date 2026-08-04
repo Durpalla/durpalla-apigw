@@ -161,11 +161,7 @@ class AgentPaymentService
         ];
 
         if ($paid) {
-            $payload['invoice'] = \Illuminate\Support\Facades\URL::temporarySignedRoute(
-                'invoice.download',
-                now()->addMinutes(60),
-                ['id' => $order->id]
-            );
+            $payload['invoice'] = \App\Support\BookingInvoice::signedUrl($order, 60);
             $payload['paid_amount'] = (float) ($payment?->paid_amount ?: $order->total_payable);
             $payload['transaction_id'] = $payment?->transaction_id;
         }

@@ -92,8 +92,8 @@ class AgentDashboardService
     public function bookingsQuery(int $agentId, string $source = 'all'): Builder
     {
         // Write PDO: schema checks + queries must agree (MySQL Router read port 6447 can lag DDL).
-        if ($source === 'counter') {
-            return $this->counterBookingsQuery($agentId);
+        if ($source === 'agent') {
+            return $this->agentBookingsQuery($agentId);
         }
 
         if ($source === 'referral') {
@@ -104,8 +104,8 @@ class AgentDashboardService
 
         return $query->where(function (Builder $q) use ($agentId) {
             if ($this->hasBookedByColumns()) {
-                $q->where(function (Builder $counter) use ($agentId) {
-                    $this->applyCounterConstraints($counter, $agentId);
+                $q->where(function (Builder $agentBooked) use ($agentId) {
+                    $this->applyAgentConstraints($agentBooked, $agentId);
                 })->orWhere(function (Builder $referral) use ($agentId) {
                     $this->applyReferralConstraints($referral, $agentId);
                 });
@@ -145,7 +145,7 @@ class AgentDashboardService
             });
     }
 
-    private function counterBookingsQuery(int $agentId): Builder
+    private function agentBookingsQuery(int $agentId): Builder
     {
         $query = $this->newBookingQuery();
 
@@ -153,7 +153,7 @@ class AgentDashboardService
             return $query->whereRaw('0 = 1');
         }
 
-        $this->applyCounterConstraints($query, $agentId);
+        $this->applyAgentConstraints($query, $agentId);
 
         return $query;
     }
@@ -163,7 +163,7 @@ class AgentDashboardService
         return Booking::query()->useWritePdo();
     }
 
-    private function applyCounterConstraints(Builder $query, int $agentId): void
+    private function applyAgentConstraints(Builder $query, int $agentId): void
     {
         $query->where('bookings.booked_by_type', Agent::class)
             ->where('bookings.booked_by_id', $agentId);

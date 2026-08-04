@@ -15,8 +15,12 @@ class AgentCommissionController extends Controller
         $page = max(1, (int) $request->get('page', 1));
         $size = max(1, min(50, (int) $request->get('size', 15)));
 
+        // Only settled (credited) commission rows belong here - fund debits,
+        // cancellations, and withdrawals show up on the account statement instead.
         $paginator = AgentCommission::query()
             ->where('user_id', auth()->id())
+            ->where('type', 'credit')
+            ->where('purpose', 'commission')
             ->orderByDesc('commission_date')
             ->orderByDesc('id')
             ->paginate($size, ['*'], 'page', $page);

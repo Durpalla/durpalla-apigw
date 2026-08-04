@@ -7,6 +7,7 @@ use App\Models\AccountStatement;
 use App\Models\AgentBalance;
 use App\Models\AgentCommission;
 use App\Services\AccountStatementService;
+use App\Services\AgentJourneyCommissionService;
 use App\Services\BalanceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,7 @@ class AgentWalletController extends Controller
     public function __construct(
         private readonly BalanceService $balanceService,
         private readonly AccountStatementService $statements,
+        private readonly AgentJourneyCommissionService $journeyCommission,
     )
     {
     }
@@ -25,7 +27,17 @@ class AgentWalletController extends Controller
         $userId = auth()->id();
         $balance = (float) $this->balanceService->getMyBalance($userId);
         $agentBalance = AgentBalance::query()->where('user_id', $userId)->first();
-        $totalEarned = (float) AgentCommission::query()->where('user_id', $userId)->sum('amount');
+
+        // "Settled" = already credited via commission:journey-complete (added to
+        // the wallet balance). "Pending" = expected commission on confirmed
+        // bookings whose journey hasn't completed/settled yet - the customer
+        // could still cancel before then, so it isn't in the balance.
+        $totalEarned = (float) AgentCommission::query()
+            ->where('user_id', $userId)
+            ->where('type', 'credit')
+            ->where('purpose', 'commission')
+            ->sum('amount');
+        $pendingCommission = $this->journeyCommission->pendingAmountForAgent((int) $userId);
 
         return response()->json([
             'success' => true,
@@ -34,8 +46,11 @@ class AgentWalletController extends Controller
                 'balance' => $balance,
                 'available_balance' => $balance,
                 'total_earned' => $totalEarned,
-                'pending_commission' => max(0, $totalEarned - $balance),
-                'total_sale' => (float) AgentCommission::query()->where('user_id', $userId)->sum('total_sale'),
+                'pending_commission' => $pendingCommission,
+                'total_sale' => (float) AgentCommission::query()
+                    ->where('user_id', $userId)
+                    ->where('type', 'credit')
+                    ->sum('total_sale'),
                 'last_withdrawal' => $agentBalance ? (float) $agentBalance->last_withdrawal : 0,
             ],
         ]);

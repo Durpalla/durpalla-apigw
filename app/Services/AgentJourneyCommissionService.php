@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Constants\AppConst;
 use App\Models\AccountStatement;
+use App\Models\Agent;
 use App\Models\AgentBalance;
 use App\Models\AgentCommission;
 use App\Models\BookingItem;
@@ -30,8 +31,13 @@ class AgentJourneyCommissionService
         $credited = 0;
 
         BookingItem::query()
+            // NOTE: eager load the underlying "bookedBy" morphTo, not the
+            // "officer" alias - Eloquent's morphTo eager-load matching uses the
+            // relation name captured where morphTo() actually resolves
+            // (bookedBy()'s __FUNCTION__), so with('booking.officer') silently
+            // resolves to null on eager load even though it works when lazy.
             ->with([
-                'booking.officer',
+                'booking.bookedBy',
                 'vehicle.partners.incentive',
                 'trip',
             ])
@@ -51,6 +57,27 @@ class AgentJourneyCommissionService
             });
 
         return $credited;
+    }
+
+    /**
+     * Expected commission for an agent's confirmed bookings whose journey
+     * hasn't been settled yet - shown as "Pending" until the trip completes
+     * and {@see creditDueItems} credits it (the customer could still cancel
+     * before then, so nothing is added to the wallet balance yet).
+     */
+    public function pendingAmountForAgent(int $agentId): float
+    {
+        return (float) BookingItem::query()
+            ->where('status', AppConst::BOOKING_ITEM_ACTIVE)
+            ->whereNull('commission_settled_at')
+            ->whereNotNull('incentive')
+            ->whereHas('booking', function ($q) use ($agentId) {
+                $q->where('status', AppConst::BOOKING_COMPLETE)
+                    ->where('booked_by_type', Agent::class)
+                    ->where('booked_by_id', $agentId);
+            })
+            ->get()
+            ->sum(fn (BookingItem $item) => (float) $this->calculation->calculateAgentCommission($item->toArray()));
     }
 
     public function creditItem(BookingItem $item): int
@@ -76,7 +103,7 @@ class AgentJourneyCommissionService
         $count = 0;
 
         DB::transaction(function () use ($item, $booking, &$count) {
-            $count += $this->creditSeller($item, $booking->officer);
+            $count += $this->creditSeller($item, $booking->bookedBy);
             if ($booking->booking_party === AppConst::PARTY_DURPALLA) {
                 $count += $this->creditVehicleShare($item);
             }

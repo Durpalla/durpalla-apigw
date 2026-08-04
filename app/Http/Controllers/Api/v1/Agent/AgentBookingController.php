@@ -9,11 +9,11 @@ use App\Services\AgentDashboardService;
 use App\Services\CancellationService;
 use App\Services\InvoiceBuilder;
 use App\Support\AgentApiPresenter;
+use App\Support\BookingInvoice;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\URL;
 
 class AgentBookingController extends Controller
 {
@@ -28,7 +28,11 @@ class AgentBookingController extends Controller
         $page = max(1, (int) $request->get('page', 1));
         $size = max(1, min(50, (int) $request->get('size', 20)));
         $source = (string) $request->get('source', 'all');
-        if (! in_array($source, ['all', 'counter', 'referral'], true)) {
+        if ($source === 'counter') {
+            // Legacy alias - "counter" now refers to merchant panel/app bookings only.
+            $source = 'agent';
+        }
+        if (! in_array($source, ['all', 'agent', 'referral'], true)) {
             $source = 'all';
         }
 
@@ -92,6 +96,7 @@ class AgentBookingController extends Controller
             return response()->json(['success' => false, 'message' => __('Booking not found')], 404);
         }
 
+        $booking->loadMissing(['bookingItems.trip']);
         $invoice = $invoiceBuilder->build($booking);
         $payment = $booking->payment;
         $trx = (string) ($payment->transaction_id ?? '');
@@ -106,10 +111,12 @@ class AgentBookingController extends Controller
                     'fare' => (float) ($ticket['price'] ?? 0),
                     'is_ac' => (bool) ($ticket['is_ac'] ?? false),
                     'vehicle_name' => $ticket['vehicle_name'] ?? '',
+                    'vehicle_type' => $ticket['vehicle_type'] ?? '',
                     'route_name' => $ticket['route_name'] ?? '',
                     'schedule_date' => $ticket['schedule_date'] ?? '',
                     'leaving_time' => $ticket['leaving_time'] ?? '',
                     'leaving_time_formated' => $ticket['leaving_time_formated'] ?? '',
+                    'boarding_point' => $ticket['boarding_point'] ?? null,
                     'from' => $ticket['from'] ?? '',
                     'to' => $ticket['to'] ?? '',
                     'status' => $ticket['status'] ?? null,
@@ -142,6 +149,7 @@ class AgentBookingController extends Controller
             'booking' => [
                 'id' => $booking->id,
                 'pnr' => $booking->id,
+                'booking_reference' => AgentApiPresenter::formatBookingReference($booking),
                 'qr_code' => $trx !== '' ? $trx : (string) $booking->id,
                 'status' => $booking->status,
                 'payment_status' => $invoice['payment_status'] ?? ($payment->status ?? ''),
@@ -159,13 +167,12 @@ class AgentBookingController extends Controller
                 'seal' => $invoice['seal'] ?? '',
                 'customer_name' => is_object($customer) ? ($customer->name ?? '') : ($customer['name'] ?? ''),
                 'customer_mobile' => is_object($customer) ? ($customer->mobile ?? '') : ($customer['mobile'] ?? ''),
-                'invoice' => URL::temporarySignedRoute(
-                    'invoice.download',
-                    now()->addMinutes(60),
-                    ['id' => $booking->id]
-                ),
+                'invoice' => BookingInvoice::signedUrl($booking, 60),
                 'items' => $items,
                 'hotel' => $invoice['hotel'] ?? null,
+                'display_status' => AgentApiPresenter::displayStatus($booking),
+                'cancellable' => AgentApiPresenter::isBookingCancellable($booking),
+                'payment_date' => optional($payment?->created_at)->format('Y-m-d H:i:s'),
             ],
         ]);
     }
@@ -208,6 +215,15 @@ class AgentBookingController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => __('Booking is already cancelled'),
+            ], 422);
+        }
+
+        if (! AgentApiPresenter::isBookingCancellable($booking)) {
+            return response()->json([
+                'success' => false,
+                'message' => strtoupper((string) $booking->status) !== 'COMPLETE'
+                    ? __('Only confirmed bookings can be cancelled')
+                    : __('This booking can no longer be cancelled as the trip date has passed'),
             ], 422);
         }
 

@@ -28,6 +28,7 @@ use App\Services\CancellationService;
 use App\Services\MerchantCancellationPolicyResolver;
 use App\Services\SupervisorService;
 use App\Services\TwoFactorService;
+use App\Support\BookingInvoice;
 use App\Support\RasterImage;
 
 class MyApiController extends Controller
@@ -179,6 +180,7 @@ class MyApiController extends Controller
                     $row['downloadable'] = true;
                 }
             }
+            $this->attachCommonInvoiceFields($row, $booking);
             $responseArr[] = $row;
         }
 
@@ -294,6 +296,7 @@ class MyApiController extends Controller
                     $row['downloadable'] = true;
                 }
             }
+            $this->attachCommonInvoiceFields($row, $booking);
             $responseArr[] = $row;
         }
 
@@ -404,6 +407,7 @@ class MyApiController extends Controller
             if( !getOption('is_cancellation_enabled') ) {
                 $responseArr['cancellable'] = false;
             }
+            $this->attachCommonInvoiceFields($responseArr, $booking);
         }
 
         return response()->json(['success' => true, 'booking' => $responseArr ], $this->success );
@@ -532,6 +536,7 @@ class MyApiController extends Controller
             }
 
             $responseArr['items'] = $tickets;
+            $this->attachCommonInvoiceFields($responseArr, $booking);
         }
 
         return response()->json(['success' => true, 'booking' => $responseArr ], $this->success );
@@ -1493,6 +1498,24 @@ class MyApiController extends Controller
         }
 
         return array_values(array_unique($ids));
+    }
+
+    /**
+     * Attach the shared signed invoice URL used by customer, agent, and web apps.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function attachCommonInvoiceFields(array &$payload, Booking $booking): void
+    {
+        $downloadable = ! empty($payload['downloadable']) || $this->bookingPaymentLooksPaid($booking);
+        if (! $downloadable) {
+            return;
+        }
+
+        $payload['downloadable'] = true;
+        $payload['booking_reference'] = BookingInvoice::formatReference($booking);
+        $payload['invoice'] = BookingInvoice::signedUrl($booking, 60);
+        $payload['invoice_url'] = $payload['invoice'];
     }
 
     private function bookingPaymentLooksPaid(Booking $booking): bool
