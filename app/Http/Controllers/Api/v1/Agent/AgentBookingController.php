@@ -7,6 +7,7 @@ use App\Constants\AppConst;
 use App\Models\Agent;
 use App\Models\Booking;
 use App\Services\AgentDashboardService;
+use App\Services\CalculationService;
 use App\Services\CancellationService;
 use App\Services\InvoiceBuilder;
 use App\Support\AgentApiPresenter;
@@ -97,7 +98,7 @@ class AgentBookingController extends Controller
             return response()->json(['success' => false, 'message' => __('Booking not found')], 404);
         }
 
-        $booking->loadMissing(['bookingItems.trip']);
+        $booking->loadMissing(['bookingItems.trip', 'cancellations', 'payment']);
         $payment = $booking->payment;
         // Heal premature success on unpaid PENDING agent bookings (pre-gateway).
         if ($payment
@@ -111,11 +112,36 @@ class AgentBookingController extends Controller
         $invoice = $invoiceBuilder->build($booking);
         $trx = (string) ($payment->transaction_id ?? '');
 
+        $calculation = app(CalculationService::class);
+        $cancellationEnabled = filter_var(
+            getOption('is_cancellation_enabled', '1'),
+            FILTER_VALIDATE_BOOLEAN
+        );
+        $bookingLevelCancellable = AgentApiPresenter::isBookingCancellable($booking);
+        $cancellationItemIds = $this->cancellationRequestedItemIds($booking);
+        $itemsById = $booking->bookingItems->keyBy('id');
+        $anyItemCancellable = false;
+
         $items = [];
         foreach ($invoice['items'] ?? [] as $group) {
             foreach ($group['tickets'] ?? [] as $ticket) {
+                $itemId = isset($ticket['id']) ? (int) $ticket['id'] : null;
+                $bookingItem = $itemId ? $itemsById->get($itemId) : null;
+                $cancelRequested = $itemId !== null && in_array($itemId, $cancellationItemIds, true);
+                $itemCancellable = false;
+                if ($bookingItem
+                    && $cancellationEnabled
+                    && $bookingLevelCancellable
+                    && (int) $bookingItem->status === AppConst::BOOKING_ITEM_ACTIVE
+                    && ! $cancelRequested
+                    && $calculation->isItemCancellableByPolicy($bookingItem->toArray())
+                ) {
+                    $itemCancellable = true;
+                    $anyItemCancellable = true;
+                }
+
                 $items[] = [
-                    'id' => $ticket['id'] ?? null,
+                    'id' => $itemId,
                     'cabin_no' => $ticket['cabin_no'] ?? '',
                     'cabin_type' => $ticket['cabin_type'] ?? '',
                     'fare' => (float) ($ticket['price'] ?? 0),
@@ -131,6 +157,8 @@ class AgentBookingController extends Controller
                     'to' => $ticket['to'] ?? '',
                     'status' => $ticket['status'] ?? null,
                     'passenger' => $ticket['passenger'] ?? null,
+                    'cancellable' => $itemCancellable,
+                    'cancel_requested' => $cancelRequested,
                 ];
             }
         }
@@ -148,6 +176,8 @@ class AgentBookingController extends Controller
                 'children' => (int) ($hotel['children'] ?? 0),
                 'fare' => (float) ($booking->total_payable ?? $booking->total_amount ?? 0),
                 'cabin_type' => 'hotel',
+                'cancellable' => false,
+                'cancel_requested' => false,
             ];
         }
 
@@ -182,7 +212,7 @@ class AgentBookingController extends Controller
                 'items' => $items,
                 'hotel' => $invoice['hotel'] ?? null,
                 'display_status' => AgentApiPresenter::displayStatus($booking),
-                'cancellable' => AgentApiPresenter::isBookingCancellable($booking),
+                'cancellable' => $cancellationEnabled && $bookingLevelCancellable && $anyItemCancellable,
                 'payment_date' => optional($payment?->created_at)->format('Y-m-d H:i:s'),
             ],
         ]);
@@ -238,27 +268,30 @@ class AgentBookingController extends Controller
             ], 422);
         }
 
-        $itemIds = $request->input('items');
-        if (is_string($itemIds)) {
-            $itemIds = json_decode($itemIds, true);
-        }
-        if (! is_array($itemIds) || $itemIds === []) {
-            $itemIds = $booking->bookingItems->pluck('id')->map(fn ($v) => (int) $v)->values()->all();
-        }
-        if ($itemIds === []) {
-            return response()->json([
-                'success' => false,
-                'message' => __('No booking items to cancel'),
-            ], 422);
+        $validated = $request->validate([
+            'items' => ['required', 'array', 'min:1'],
+            'items.*' => ['integer'],
+            'type' => ['nullable', 'string'],
+        ]);
+
+        $itemIds = array_values(array_unique(array_map('intval', $validated['items'])));
+        $ownedIds = $booking->bookingItems->pluck('id')->map(fn ($v) => (int) $v)->all();
+        foreach ($itemIds as $itemId) {
+            if (! in_array($itemId, $ownedIds, true)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Booking item :id is not valid.', ['id' => $itemId]),
+                ], 422);
+            }
         }
 
         $data = ['success' => false, 'message' => __('Your cancellation request failed')];
         try {
-            DB::transaction(function () use ($id, $itemIds, &$data) {
+            DB::transaction(function () use ($id, $itemIds, $validated, &$data) {
                 $this->cancellationService->cancelBooking([
                     'booking_id' => $id,
                     'items' => $itemIds,
-                    'type' => request()->input('type'),
+                    'type' => $validated['type'] ?? null,
                 ]);
                 $data['success'] = true;
                 $data['message'] = __('Your cancellation request success');
@@ -268,5 +301,23 @@ class AgentBookingController extends Controller
         }
 
         return response()->json($data, $data['success'] ? 200 : 422);
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function cancellationRequestedItemIds(Booking $booking): array
+    {
+        $ids = [];
+        foreach ($booking->cancellations ?? [] as $cancellation) {
+            foreach (explode(',', (string) $cancellation->items) as $id) {
+                $id = (int) trim($id);
+                if ($id > 0) {
+                    $ids[] = $id;
+                }
+            }
+        }
+
+        return array_values(array_unique($ids));
     }
 }
