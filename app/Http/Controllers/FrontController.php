@@ -27,6 +27,21 @@ class FrontController extends Controller
             $invoice = $builder->build($booking);
             $reference = BookingInvoice::formatReference($booking);
             $fileName = 'invoice-'.$reference.'.pdf';
+            $tempDir = storage_path('app/mpdf');
+
+            // Materialize logos to local files — remote CDN URLs often 403 / fail inside mPDF.
+            $merchantLogo = $builder->materializeLogoForPdf(
+                $invoice['merchant']['logo_url'] ?? null,
+                $tempDir,
+                'merchant-'.$booking->id
+            );
+            $companyLogo = $builder->materializeLogoForPdf(
+                $invoice['company_logo_url'] ?? config('invoice.company_logo_url'),
+                $tempDir,
+                'company'
+            );
+            $invoice['merchant']['logo_url'] = $merchantLogo;
+            $invoice['company_logo_url'] = $companyLogo;
 
             $html = view('invoice.pdf', compact('invoice'))->render();
 
@@ -37,7 +52,7 @@ class FrontController extends Controller
                 'margin_right' => 10,
                 'margin_top' => 10,
                 'margin_bottom' => 10,
-                'tempDir' => storage_path('app/mpdf'),
+                'tempDir' => $tempDir,
             ]);
             $mpdf->showImageErrors = false;
             $mpdf->curlAllowUnsafeSslRequests = true;

@@ -53,8 +53,19 @@
     $payLabel = $isPaid ? 'Paid' : ($isFailed ? 'Failed' : (str_contains($payRaw, 'PARTIAL') ? 'Partial' : 'Pending'));
     $payBadge = $isPaid ? 'badge-ok' : ($isFailed ? 'badge-fail' : 'badge-warn');
     $invoiceCompany = (string) config('invoice.company_name', 'Durpalla Limited');
-    $companyLogo = (string) config('invoice.company_logo_url', '');
+    $companyLogo = (string) ($invoice['company_logo_url'] ?? '');
     $merchantLogo = (string) ($merchant['logo_url'] ?? '');
+    // Skip broken remote placeholders — only render when we have a local file or data URI.
+    $merchantLogoOk = $merchantLogo !== '' && (
+        str_starts_with($merchantLogo, 'data:')
+        || str_starts_with($merchantLogo, '/')
+        || is_file($merchantLogo)
+    );
+    $companyLogoOk = $companyLogo !== '' && (
+        str_starts_with($companyLogo, 'data:')
+        || str_starts_with($companyLogo, '/')
+        || is_file($companyLogo)
+    );
     $hasRealMerchant = ! empty($merchant['name']) && strcasecmp((string) $merchant['name'], $invoiceCompany) !== 0;
     $operatorName = $hasRealMerchant
         ? (string) $merchant['name']
@@ -100,7 +111,7 @@
             <table>
                 <tr>
                     <td width="56" style="vertical-align:middle;">
-                        @if ($merchantLogo !== '')
+                        @if ($merchantLogoOk)
                             <img class="logo" src="{{ $merchantLogo }}" alt="{{ $operatorName }}">
                         @else
                             <div class="initial">{{ $operatorInitial }}</div>
@@ -243,7 +254,7 @@
     Transport service is operated by {{ $operatorName }}.
     <br>Computer-generated invoice. No signature required. Status: {{ $seal }}
     <br><br>
-    @if ($companyLogo !== '')
+    @if ($companyLogoOk)
         <img class="logo-sm" src="{{ $companyLogo }}" alt="{{ $invoiceCompany }}">
         &nbsp;
     @endif

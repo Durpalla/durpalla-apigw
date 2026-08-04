@@ -41,7 +41,7 @@ return [
 
     'assets_base_url' => rtrim((string) env(
         'INVOICE_ASSETS_BASE_URL',
-        env('UPLOADS_PUBLIC_BASE_URL', 'https://assets.durpalla.com')
+        env('UPLOADS_PUBLIC_BASE_URL', 'https://admin.durpalla.com')
     ), '/'),
 
     /*

@@ -70,6 +70,7 @@ class InvoiceBuilder
             'items' => [],
             'hotel' => null,
             'merchant' => $this->formatMerchant($merchant, $serviceType),
+            'company_logo_url' => $this->resolveCompanyLogoUrl(),
             'status' => $status,
         ];
 
@@ -214,6 +215,177 @@ class InvoiceBuilder
         ];
     }
 
+    private function resolveCompanyLogoUrl(): ?string
+    {
+        $configured = trim((string) config('invoice.company_logo_url', ''));
+        $candidates = array_values(array_filter([
+            'logos/logo-horizontal-colored-premium.png',
+            'logos/logo-horizontal-primary.png',
+            $configured !== '' ? $configured : null,
+        ]));
+
+        foreach ($candidates as $candidate) {
+            $embedded = $this->embedLocalAssetAsDataUri($candidate);
+            if ($embedded !== null) {
+                return $embedded;
+            }
+        }
+
+        foreach ($candidates as $candidate) {
+            if (str_starts_with($candidate, 'http://') || str_starts_with($candidate, 'https://')) {
+                $embedded = $this->embedRemoteAssetAsDataUri($candidate);
+                if ($embedded !== null) {
+                    return $embedded;
+                }
+            } else {
+                foreach ($this->candidatePublicUrls($candidate) as $url) {
+                    $embedded = $this->embedRemoteAssetAsDataUri($url);
+                    if ($embedded !== null) {
+                        return $embedded;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Write a data-URI / remote / local logo into mPDF temp dir so the PDF never depends
+     * on live HTTP fetches (assets CDN often 403s; remote fetch can fail in containers).
+     */
+    public function materializeLogoForPdf(?string $src, string $tempDir, string $prefix): ?string
+    {
+        $src = trim((string) $src);
+        if ($src === '') {
+            return null;
+        }
+
+        if (! is_dir($tempDir) && ! @mkdir($tempDir, 0755, true) && ! is_dir($tempDir)) {
+            return null;
+        }
+
+        $binary = null;
+        $ext = 'png';
+
+        if (str_starts_with($src, 'data:')) {
+            if (! preg_match('#^data:(image/[a-zA-Z0-9.+-]+);base64,(.+)$#s', $src, $m)) {
+                return null;
+            }
+            $mime = strtolower($m[1]);
+            $binary = base64_decode($m[2], true);
+            $ext = match ($mime) {
+                'image/jpeg', 'image/jpg' => 'jpg',
+                'image/gif' => 'gif',
+                'image/webp' => 'webp',
+                default => 'png',
+            };
+        } elseif (str_starts_with($src, 'http://') || str_starts_with($src, 'https://')) {
+            $binary = $this->fetchBinary($src);
+            if ($binary === null) {
+                // assets.durpalla.com often 403 — retry known public hosts for same path.
+                $path = $this->normalizeAssetPath($src);
+                if ($path !== null) {
+                    foreach ($this->candidatePublicUrls($path) as $alt) {
+                        if (strcasecmp($alt, $src) === 0) {
+                            continue;
+                        }
+                        $binary = $this->fetchBinary($alt);
+                        if ($binary !== null) {
+                            break;
+                        }
+                    }
+                }
+            }
+        } elseif (is_file($src) && is_readable($src)) {
+            $binary = @file_get_contents($src);
+            $ext = pathinfo($src, PATHINFO_EXTENSION) ?: 'png';
+        } else {
+            $embedded = $this->embedLocalAssetAsDataUri($src);
+            if ($embedded !== null) {
+                return $this->materializeLogoForPdf($embedded, $tempDir, $prefix);
+            }
+            foreach ($this->candidatePublicUrls($src) as $url) {
+                $binary = $this->fetchBinary($url);
+                if ($binary !== null) {
+                    break;
+                }
+            }
+        }
+
+        if ($binary === false || $binary === null || $binary === '' || strlen($binary) > 1024000) {
+            return null;
+        }
+
+        $path = rtrim($tempDir, '/').'/'.$prefix.'-'.substr(md5($src), 0, 16).'.'.$ext;
+        if (@file_put_contents($path, $binary) === false) {
+            return null;
+        }
+
+        return $path;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function candidatePublicUrls(string $pathOrUrl): array
+    {
+        $path = $this->normalizeAssetPath($pathOrUrl);
+        if ($path === null) {
+            return [];
+        }
+
+        $bases = array_values(array_unique(array_filter([
+            rtrim((string) config('invoice.assets_base_url', ''), '/'),
+            rtrim((string) config('uploads.public_base_url', ''), '/'),
+            'https://admin.durpalla.com',
+            'https://web.durpalla.com',
+            rtrim((string) config('app.url', ''), '/'),
+        ])));
+
+        $urls = [];
+        foreach ($bases as $base) {
+            if ($base === '') {
+                continue;
+            }
+            $urls[] = $base.'/'.ltrim($path, '/');
+        }
+
+        return $urls;
+    }
+
+    private function fetchBinary(string $url): ?string
+    {
+        try {
+            $context = stream_context_create([
+                'http' => [
+                    'timeout' => 8,
+                    'follow_location' => 1,
+                    'user_agent' => 'DurpallaInvoice/1.0',
+                    'ignore_errors' => true,
+                ],
+                'ssl' => [
+                    'verify_peer' => true,
+                    'verify_peer_name' => true,
+                ],
+            ]);
+            $binary = @file_get_contents($url, false, $context);
+            if ($binary === false || $binary === '' || strlen($binary) > 1024000) {
+                return null;
+            }
+            // Cloudflare 403 body is tiny; reject non-images.
+            $finfo = new \finfo(FILEINFO_MIME_TYPE);
+            $detected = $finfo->buffer($binary);
+            if (! is_string($detected) || ! str_starts_with($detected, 'image/')) {
+                return null;
+            }
+
+            return $binary;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
     private function resolveMerchantLogoUrl(Merchant $merchant): ?string
     {
         $path = (string) ($merchant->logo ?? '');
@@ -230,11 +402,24 @@ class InvoiceBuilder
             return $embedded;
         }
 
+        // Try known public hosts (assets CDN currently 403s for logos/).
+        foreach ($this->candidatePublicUrls($normalized) as $url) {
+            $remoteEmbedded = $this->embedRemoteAssetAsDataUri($url);
+            if ($remoteEmbedded !== null) {
+                return $remoteEmbedded;
+            }
+        }
+
         $absolute = $this->absoluteAssetUrl($normalized);
         if ($absolute !== null) {
             $remoteEmbedded = $this->embedRemoteAssetAsDataUri($absolute);
             if ($remoteEmbedded !== null) {
                 return $remoteEmbedded;
+            }
+            // Prefer admin host over broken assets CDN for the raw URL fallback.
+            $pathOnly = $this->normalizeAssetPath($normalized);
+            if ($pathOnly !== null && str_starts_with($pathOnly, 'logos/')) {
+                return 'https://admin.durpalla.com/'.$pathOnly;
             }
         }
 
@@ -243,37 +428,19 @@ class InvoiceBuilder
 
     private function embedRemoteAssetAsDataUri(string $url): ?string
     {
-        if (! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://')) {
+        $binary = $this->fetchBinary($url);
+        if ($binary === null) {
             return null;
         }
 
-        try {
-            $context = stream_context_create([
-                'http' => [
-                    'timeout' => 5,
-                    'follow_location' => 1,
-                    'user_agent' => 'DurpallaInvoice/1.0',
-                ],
-                'ssl' => [
-                    'verify_peer' => true,
-                    'verify_peer_name' => true,
-                ],
-            ]);
-            $binary = @file_get_contents($url, false, $context);
-            if ($binary === false || $binary === '' || strlen($binary) > 512000) {
-                return null;
-            }
-            $mime = 'image/png';
-            $finfo = new \finfo(FILEINFO_MIME_TYPE);
-            $detected = $finfo->buffer($binary);
-            if (is_string($detected) && str_starts_with($detected, 'image/')) {
-                $mime = $detected;
-            }
-
-            return 'data:'.$mime.';base64,'.base64_encode($binary);
-        } catch (\Throwable) {
-            return null;
+        $mime = 'image/png';
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $detected = $finfo->buffer($binary);
+        if (is_string($detected) && str_starts_with($detected, 'image/')) {
+            $mime = $detected;
         }
+
+        return 'data:'.$mime.';base64,'.base64_encode($binary);
     }
 
     private function normalizeMerchantLogoPath(string $pathOrUrl): string
@@ -363,6 +530,11 @@ class InvoiceBuilder
         }
 
         $invoiceBase = rtrim((string) config('invoice.assets_base_url', ''), '/');
+        // Prefer admin origin for logos — assets.durpalla.com currently 403s logo paths.
+        if (str_starts_with($normalized, 'logos/')) {
+            return 'https://admin.durpalla.com/'.$normalized;
+        }
+
         if ($invoiceBase !== '') {
             return $invoiceBase.'/'.$normalized;
         }
