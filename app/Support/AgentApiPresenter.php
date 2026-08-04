@@ -12,6 +12,7 @@ use App\Models\AgentReferredProperty;
 use App\Models\Booking;
 use App\Models\BookingItem;
 use App\Models\Vehicle;
+use App\Services\PendingBookingPaymentWindow;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -149,6 +150,11 @@ class AgentApiPresenter
             'totalPayable' => (float) $booking->total_payable,
             'routeOrStay' => $routeOrStay,
             'cancellable' => self::hasCancellableItems($booking, $source, $firstItem),
+            'pendingPaymentCancellable' => self::isPendingPaymentCancellable($booking),
+            'paymentDueAt' => ($pw = PendingBookingPaymentWindow::paymentWindowPayload($booking))['payment_due_at'],
+            'paymentDueAtMs' => $pw['payment_due_at_ms'],
+            'canPay' => $pw['can_pay'],
+            'gatewayId' => $pw['gateway_id'],
         ];
     }
 
@@ -188,8 +194,8 @@ class AgentApiPresenter
     }
 
     /**
-     * Only confirmed agent-app bookings for an upcoming trip/check-in date can be
-     * cancelled - pending, failed, cancelled, or already-departed bookings cannot.
+     * Confirmed upcoming agent bookings (item cancel request) OR unpaid PENDING
+     * agent bookings (immediate void before/after payment window).
      */
     public static function isBookingCancellable(
         Booking $booking,
@@ -197,23 +203,45 @@ class AgentApiPresenter
         ?BookingItem $firstItem = null,
     ): bool {
         $source ??= $booking->booked_by_type === Agent::class ? 'agent' : 'referral';
-        $firstItem ??= $booking->bookingItems->first();
+        if ($source !== 'agent') {
+            return false;
+        }
 
+        if (self::isPendingPaymentCancellable($booking)) {
+            return true;
+        }
+
+        $firstItem ??= $booking->bookingItems->first();
         $isConfirmed = strtoupper((string) $booking->status) === 'COMPLETE';
         $isFutureEvent = self::resolveIsFutureEvent($firstItem?->trip_date ?: $booking->from_date);
 
-        return $source === 'agent' && $isConfirmed && $isFutureEvent;
+        return $isConfirmed && $isFutureEvent;
+    }
+
+    /** Unpaid PENDING agent counter booking — agent may void it entirely. */
+    public static function isPendingPaymentCancellable(Booking $booking): bool
+    {
+        if ($booking->booked_by_type !== Agent::class) {
+            return false;
+        }
+
+        return strtoupper((string) $booking->status) === strtoupper((string) AppConst::BOOKING_PENDING);
     }
 
     /**
      * True when the booking is eligible and at least one active item is not already
      * cancelled or covered by a pending cancellation request.
+     * PENDING unpaid bookings are cancellable as a whole (no per-item request).
      */
     public static function hasCancellableItems(
         Booking $booking,
         ?string $source = null,
         ?BookingItem $firstItem = null,
     ): bool {
+        if (self::isPendingPaymentCancellable($booking)) {
+            return true;
+        }
+
         if (! self::isBookingCancellable($booking, $source, $firstItem)) {
             return false;
         }

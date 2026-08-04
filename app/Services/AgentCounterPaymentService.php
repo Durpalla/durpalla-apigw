@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\Agent;
 use App\Models\AgentBalance;
-use App\Models\AgentCommission;
+use App\Models\AccountStatement;
 use App\Models\Booking;
 use App\Models\Gateway;
 use Illuminate\Support\Facades\Cache;
@@ -189,19 +189,31 @@ class AgentCounterPaymentService
             throw new \Exception(__('Insufficient fund balance'));
         }
 
-        $account->balance = (float) $account->balance - $amount;
+        $before = (float) $account->balance;
+        $account->balance = $before - $amount;
         $account->save();
+        $after = (float) $account->balance;
 
         Cache::forget('my_balance_'.$agent->id);
 
-        AgentCommission::query()->create([
-            'user_id' => $agent->id,
-            'commission_date' => now()->toDateString(),
-            'purpose' => 'booking',
-            'type' => 'debit',
-            'total_sale' => $amount,
-            'amount' => $amount,
-        ]);
+        // Wallet ledger (same pattern as withdrawals) — not agent_commissions
+        // (purpose enum has no "booking"; commission history is credits only).
+        app(AccountStatementService::class)->record(
+            accountType: AccountStatement::ACCOUNT_AGENT,
+            accountId: (int) $agent->id,
+            direction: AccountStatement::DIRECTION_DEBIT,
+            amount: $amount,
+            balanceBefore: $before,
+            balanceAfter: $after,
+            source: 'booking_fund',
+            reference: 'booking:'.$booking->id,
+            description: 'Fund payment for booking #'.$booking->id,
+            meta: [
+                'booking_id' => (int) $booking->id,
+                'payment_method' => self::METHOD_FUND,
+            ],
+            idempotencyKey: 'agent:booking:fund:'.$booking->id
+        );
     }
 
     /**

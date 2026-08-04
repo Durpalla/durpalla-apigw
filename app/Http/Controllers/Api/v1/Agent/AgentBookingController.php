@@ -98,7 +98,7 @@ class AgentBookingController extends Controller
             return response()->json(['success' => false, 'message' => __('Booking not found')], 404);
         }
 
-        $booking->loadMissing(['bookingItems.trip', 'cancellations', 'payment']);
+        $booking->loadMissing(['bookingItems.trip', 'cancellations', 'payment.gateway']);
         $payment = $booking->payment;
         // Heal premature success on unpaid PENDING agent bookings (pre-gateway).
         if ($payment
@@ -187,6 +187,10 @@ class AgentBookingController extends Controller
         }
 
         $customer = $invoice['customer'] ?? null;
+        $paymentWindow = \App\Services\PendingBookingPaymentWindow::paymentWindowPayload($booking);
+        $pendingVoid = AgentApiPresenter::isPendingPaymentCancellable($booking);
+        $cancellable = $pendingVoid
+            || ($cancellationEnabled && $bookingLevelCancellable && $anyItemCancellable);
 
         return response()->json([
             'success' => true,
@@ -203,6 +207,7 @@ class AgentBookingController extends Controller
                 'gateway_name' => $payment?->gateway?->name
                     ?? $payment?->payment_gateway
                     ?? '',
+                'gateway_id' => $paymentWindow['gateway_id'],
                 'booking_date' => $invoice['booking_date'] ?? null,
                 'booking_date_formated' => $invoice['booking_date_formated'] ?? null,
                 'total_amount' => (float) ($invoice['total_amount'] ?? 0),
@@ -217,7 +222,11 @@ class AgentBookingController extends Controller
                 'items' => $items,
                 'hotel' => $invoice['hotel'] ?? null,
                 'display_status' => AgentApiPresenter::displayStatus($booking),
-                'cancellable' => $cancellationEnabled && $bookingLevelCancellable && $anyItemCancellable,
+                'cancellable' => $cancellable,
+                'pending_payment_cancellable' => $pendingVoid,
+                'payment_due_at' => $paymentWindow['payment_due_at'],
+                'payment_due_at_ms' => $paymentWindow['payment_due_at_ms'],
+                'can_pay' => $paymentWindow['can_pay'],
                 'payment_date' => optional($payment?->created_at)->format('Y-m-d H:i:s'),
             ],
         ]);
@@ -262,6 +271,23 @@ class AgentBookingController extends Controller
                 'success' => false,
                 'message' => __('Booking is already cancelled'),
             ], 422);
+        }
+
+        // Unpaid PENDING: agent voids booking immediately (release seats).
+        if (AgentApiPresenter::isPendingPaymentCancellable($booking)) {
+            try {
+                \App\Services\PendingBookingPaymentWindow::cancelUnpaidPendingBooking($booking);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => __('Booking cancelled successfully'),
+                ]);
+            } catch (\Throwable $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage() ?: __('Your cancellation request failed'),
+                ], 422);
+            }
         }
 
         if (! AgentApiPresenter::isBookingCancellable($booking)) {

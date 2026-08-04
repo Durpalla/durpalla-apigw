@@ -34,6 +34,96 @@ final class PendingBookingPaymentWindow
         return Carbon::parse($booking->created_at)->addMinutes(self::deadlineMinutes());
     }
 
+    /**
+     * Effective payment due timestamp (hotel payment_due_at when set, else created_at + window).
+     */
+    public static function resolvePaymentDueAt(Booking $booking): Carbon
+    {
+        $hotelRes = HotelReservation::query()
+            ->where('booking_id', $booking->id)
+            ->where('status', HotelReservation::STATUS_PENDING_PAYMENT)
+            ->first();
+        if ($hotelRes?->payment_due_at) {
+            return Carbon::parse($hotelRes->payment_due_at);
+        }
+
+        return self::paymentDeadline($booking);
+    }
+
+    /**
+     * Payload for agent APIs: payment countdown / retry eligibility.
+     *
+     * @return array{payment_due_at:?string,payment_due_at_ms:?int,can_pay:bool,gateway_id:?int}
+     */
+    public static function paymentWindowPayload(Booking $booking): array
+    {
+        if ($booking->status !== AppConst::BOOKING_PENDING) {
+            return [
+                'payment_due_at' => null,
+                'payment_due_at_ms' => null,
+                'can_pay' => false,
+                'gateway_id' => null,
+            ];
+        }
+
+        $due = self::resolvePaymentDueAt($booking);
+        $payment = $booking->relationLoaded('payment')
+            ? $booking->payment
+            : $booking->payment()->first();
+        $gatewayId = $payment?->gateway_id ? (int) $payment->gateway_id : null;
+        $canPay = self::reasonPaymentBlocked($booking) === null;
+
+        return [
+            'payment_due_at' => $due->toIso8601String(),
+            'payment_due_at_ms' => (int) ($due->getTimestamp() * 1000),
+            'can_pay' => $canPay,
+            'gateway_id' => $gatewayId,
+        ];
+    }
+
+    /**
+     * Agent voids their own unpaid PENDING booking (releases seats / marks cancelled).
+     */
+    public static function cancelUnpaidPendingBooking(Booking $booking): void
+    {
+        DB::transaction(function () use ($booking) {
+            $booking->refresh();
+            if ($booking->status !== AppConst::BOOKING_PENDING) {
+                throw new \InvalidArgumentException(__('This booking is not awaiting payment.'));
+            }
+
+            $booking->update(['status' => AppConst::BOOKING_CANCELLED]);
+
+            Payment::query()
+                ->where('booking_id', $booking->id)
+                ->whereNotIn('status', ['success', 'paid', 'complete', 'completed', 'advance'])
+                ->update(['status' => 'cancel']);
+
+            $booking->loadMissing('bookingItems');
+            $booking->bookingItems->each(function (BookingItem $item): void {
+                $item->update(['status' => AppConst::BOOKING_ITEM_CANCELLED]);
+                if ($item->booking_type === 'deck') {
+                    return;
+                }
+                $mapping = ScheduleCabinMapping::query()
+                    ->where('schedule_id', $item->trip_id)
+                    ->where('cabin_id', $item->cabin_id)
+                    ->first();
+                if ($mapping) {
+                    $mapping->update([
+                        'booked' => AppConst::BOOKING_ITEM_PENDING,
+                        'booking_id' => null,
+                    ]);
+                }
+            });
+
+            HotelReservation::query()
+                ->where('booking_id', $booking->id)
+                ->where('status', HotelReservation::STATUS_PENDING_PAYMENT)
+                ->update(['status' => HotelReservation::STATUS_CANCELLED]);
+        });
+    }
+
     public static function hasNonPayableItems(Booking $booking): bool
     {
         if (! $booking->relationLoaded('bookingItems')) {

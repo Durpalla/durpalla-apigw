@@ -10,6 +10,10 @@ class CabinLock extends Model
 {
     protected $fillable = ['cabin_id', 'trip_id', 'mapping_id', 'customer_token', 'expire_at'];
 
+    protected $casts = [
+        'expire_at' => 'datetime',
+    ];
+
     public function mapping(): BelongsTo
     {
         return $this->belongsTo(ScheduleCabinMapping::class);

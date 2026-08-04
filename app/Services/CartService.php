@@ -252,10 +252,32 @@ class CartService
     {
         $cartItem = $this->buildCartItem($item);
 
-        if (!session()->has('user.carts')) {
+        $lock = null;
+        if (! empty($item->lock_id)) {
+            $lock = CabinLock::query()->find($item->lock_id);
+        }
+        if (! $lock) {
+            $lock = CabinLock::query()
+                ->where('mapping_id', $item->id)
+                ->orderByDesc('id')
+                ->first();
+        }
+        if ($lock && $lock->expire_at) {
+            $cartItem['expires_at'] = $lock->expire_at->toIso8601String();
+            $cartItem['expires_at_ms'] = (int) ($lock->expire_at->getTimestamp() * 1000);
+            $cartItem['expire_at'] = $cartItem['expires_at'];
+        } else {
+            $expires = now()->addMinutes((int) config('constants.cart_expires', 5));
+            $cartItem['expires_at'] = $expires->toIso8601String();
+            $cartItem['expires_at_ms'] = (int) ($expires->getTimestamp() * 1000);
+            $cartItem['expire_at'] = $cartItem['expires_at'];
+        }
+
+        if (! session()->has('user.carts')) {
             session()->put('user.carts', []);
         }
         session()->push('user.carts', $cartItem);
+
         return $cartItem;
     }
 
@@ -294,6 +316,10 @@ class CartService
                 $item->lock_id = $lock->id;
                 $payload = $this->buildCartItem($item);
                 $payload['expires_at'] = $lock->expire_at?->toIso8601String();
+                $payload['expires_at_ms'] = $lock->expire_at
+                    ? (int) ($lock->expire_at->getTimestamp() * 1000)
+                    : null;
+                $payload['expire_at'] = $payload['expires_at'];
                 $payload['price'] = $payload['fare'] ?? 0;
                 $payload['meta'] = [
                     'cabin_no' => $payload['cabin_no'] ?? null,
