@@ -131,9 +131,24 @@ class CancellationService
         }
         if($itemValidity == true) {
             if ($inCancellation == false) {
+                // booking_cancellations.type is total/partial: t = all active items, p = subset
+                $requestedType = strtolower((string) ($params['type'] ?? ''));
+                if (in_array($requestedType, ['t', 'p'], true)) {
+                    $cancelType = $requestedType;
+                } else {
+                    $selectedIds = collect($requestItems)->map(fn ($id) => (int) $id)->unique()->values();
+                    $activeIds = $bookingItems
+                        ->filter(fn ($item) => (int) $item->status === AppConst::BOOKING_ITEM_ACTIVE)
+                        ->pluck('id')
+                        ->map(fn ($id) => (int) $id)
+                        ->unique()
+                        ->values();
+                    $cancelType = $activeIds->diff($selectedIds)->isEmpty() ? 't' : 'p';
+                }
+
                 $cancellation = $this->cancellationRepository->create([
                     'booking_id' => $params['booking_id'],
-                    'type' => $bookingItem->type,
+                    'type' => $cancelType,
                     'service_type' => $serviceType,
                     'customer_id' => $booking->customer_id,
                     'user_id' => Auth::user()->id,
