@@ -43,7 +43,10 @@ class AgentDashboardService
                 'today' => $earningsToday,
                 'yesterday' => $earningsYesterday,
                 'delta' => round($earningsToday - $earningsYesterday, 2),
-                'total_earned' => (float) AgentCommission::query()->where('user_id', $agentId)->sum('amount'),
+                'total_earned' => (float) AgentCommission::query()
+                    ->where('user_id', $agentId)
+                    ->bookingEarnings()
+                    ->sum('amount'),
             ],
             'bookings' => [
                 'today_count' => $bookingsToday,
@@ -282,6 +285,7 @@ class AgentDashboardService
     {
         return (float) AgentCommission::query()
             ->where('user_id', $agentId)
+            ->bookingEarnings()
             ->whereDate('commission_date', $date)
             ->sum('amount');
     }
@@ -291,10 +295,13 @@ class AgentDashboardService
         $series = [];
         for ($i = $days - 1; $i >= 0; $i--) {
             $day = Carbon::today()->subDays($i);
+            $amount = $this->earningsOn($agentId, $day->toDateString());
             $series[] = [
                 'date' => $day->toDateString(),
                 'label' => $day->format('D'),
-                'amount' => $this->earningsOn($agentId, $day->toDateString()),
+                // Android DashboardDto expects "earnings"; keep "amount" for older clients.
+                'earnings' => $amount,
+                'amount' => $amount,
             ];
         }
 

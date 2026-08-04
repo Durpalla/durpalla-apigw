@@ -49,7 +49,7 @@ class AgentWalletController extends Controller
                 'pending_commission' => $pendingCommission,
                 'total_sale' => (float) AgentCommission::query()
                     ->where('user_id', $userId)
-                    ->where('type', 'credit')
+                    ->bookingEarnings()
                     ->sum('total_sale'),
                 'last_withdrawal' => $agentBalance ? (float) $agentBalance->last_withdrawal : 0,
             ],

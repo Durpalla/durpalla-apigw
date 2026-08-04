@@ -46,21 +46,72 @@ class AgentApiPresenter
 
     public static function commission(AgentCommission $commission): array
     {
+        $item = $commission->relationLoaded('bookingItem')
+            ? $commission->bookingItem
+            : $commission->bookingItem()->with(['booking', 'vehicle'])->first();
+
+        $booking = $item?->booking;
+        $routeOrVehicle = $item?->route_name
+            ?: ($item?->vehicle?->name)
+            ?: 'Commission';
+
         return [
             'id' => $commission->id,
             'propertyId' => null,
             'bookingItemId' => $commission->booking_item_id,
-            'propertyName' => $commission->purpose,
-            'bookingReference' => $commission->booking_item_id ? (string) $commission->booking_item_id : $commission->type,
+            'propertyName' => $routeOrVehicle,
+            'bookingReference' => $booking?->pnr
+                ?: $booking?->booking_code
+                ?: ($commission->booking_item_id ? '#'.$commission->booking_item_id : (string) $commission->type),
             'bookingAmount' => (float) $commission->total_sale,
             'commissionAmount' => (float) $commission->amount,
-            // Every row reaching this presenter is already a credited commission
-            // (see AgentCommissionController) - it was added to the wallet balance
-            // by commission:journey-complete once the trip settled.
+            // Settled rows are already credited to the wallet by commission:journey-complete.
             'status' => 'SETTLED',
             'commissionDate' => $commission->commission_date,
             'createdAt' => $commission->commission_date,
         ];
+    }
+
+    /**
+     * Virtual row for expected commission before journey settlement.
+     */
+    public static function pendingCommission(BookingItem $item, float $amount): array
+    {
+        $item->loadMissing(['booking', 'vehicle']);
+        $booking = $item->booking;
+        $routeOrVehicle = $item->route_name
+            ?: ($item->vehicle?->name)
+            ?: 'Commission';
+
+        return [
+            'id' => -1 * (int) $item->id,
+            'propertyId' => null,
+            'bookingItemId' => $item->id,
+            'propertyName' => $routeOrVehicle,
+            'bookingReference' => $booking?->pnr
+                ?: $booking?->booking_code
+                ?: '#'.$item->id,
+            'bookingAmount' => max(0, (float) $item->price - (float) $item->discount),
+            'commissionAmount' => $amount,
+            'status' => 'PENDING',
+            'commissionDate' => self::commissionDateString($item->booking_date)
+                ?: self::commissionDateString($booking?->booking_date)
+                ?: now()->toDateString(),
+            'createdAt' => optional($booking?->created_at)?->toDateString()
+                ?: now()->toDateString(),
+        ];
+    }
+
+    private static function commissionDateString(mixed $value): ?string
+    {
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('Y-m-d');
+        }
+        if (is_string($value) && trim($value) !== '') {
+            return substr(trim($value), 0, 10);
+        }
+
+        return null;
     }
 
     public static function booking(Booking $booking): array
@@ -308,10 +359,13 @@ class AgentApiPresenter
 
     public static function referredMerchant(AgentReferredMerchant $merchant, bool $detailed = false): array
     {
+        $types = self::parseBusinessTypes($merchant->business_type);
         $data = [
             'id' => $merchant->id,
             'name' => $merchant->name,
             'businessType' => $merchant->business_type,
+            'businessTypes' => $types,
+            'type' => $merchant->business_type,
             'contactPerson' => $merchant->contact_person,
             'contactMobile' => $merchant->contact_mobile,
             'address' => $merchant->address,
@@ -327,6 +381,11 @@ class AgentApiPresenter
 
         if ($detailed) {
             $merchant->loadMissing('documents');
+            $logo = $merchant->documents
+                ->where('type', 'logo')
+                ->sortByDesc('id')
+                ->first();
+            $data['logoUrl'] = $logo?->url;
             $data['documents'] = $merchant->documents
                 ->map(fn (AgentReferredMerchantDocument $doc) => self::referredMerchantDocument($doc))
                 ->values()
@@ -358,5 +417,34 @@ class AgentApiPresenter
             'url' => $doc->url,
             'createdAt' => $doc->created_at?->toIso8601String(),
         ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function parseBusinessTypes(?string $raw): array
+    {
+        if ($raw === null || trim($raw) === '') {
+            return [];
+        }
+
+        $parts = preg_split('/\s*,\s*/', trim($raw)) ?: [];
+        $out = [];
+        foreach ($parts as $part) {
+            $code = match (strtolower(trim($part))) {
+                'hotel', 'hotel_ops' => 'hotel',
+                'bus', 'bus_company', 'bus_ops' => 'bus',
+                'train' => 'train',
+                'air', 'airline', 'flight' => 'air',
+                'launch' => 'launch',
+                'mixed', 'contract_middleman', 'partner' => 'mixed',
+                default => strtolower(trim($part)),
+            };
+            if ($code !== '' && ! in_array($code, $out, true)) {
+                $out[] = $code;
+            }
+        }
+
+        return $out;
     }
 }

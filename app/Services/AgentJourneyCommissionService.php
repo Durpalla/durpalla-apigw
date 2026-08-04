@@ -67,17 +67,28 @@ class AgentJourneyCommissionService
      */
     public function pendingAmountForAgent(int $agentId): float
     {
-        return (float) BookingItem::query()
+        return (float) $this->pendingItemsForAgent($agentId)
+            ->sum(fn (BookingItem $item) => (float) $this->calculation->calculateAgentCommission($item->toArray()));
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, BookingItem>
+     */
+    public function pendingItemsForAgent(int $agentId)
+    {
+        return BookingItem::query()
+            ->with(['booking', 'trip', 'vehicle'])
             ->where('status', AppConst::BOOKING_ITEM_ACTIVE)
             ->whereNull('commission_settled_at')
             ->whereNotNull('incentive')
+            ->where('incentive', '>', 0)
             ->whereHas('booking', function ($q) use ($agentId) {
                 $q->where('status', AppConst::BOOKING_COMPLETE)
                     ->where('booked_by_type', Agent::class)
                     ->where('booked_by_id', $agentId);
             })
-            ->get()
-            ->sum(fn (BookingItem $item) => (float) $this->calculation->calculateAgentCommission($item->toArray()));
+            ->orderByDesc('id')
+            ->get();
     }
 
     public function creditItem(BookingItem $item): int

@@ -389,8 +389,8 @@ class CartService
             }
 
             if ($user instanceof Agent) {
-                $incentive = $user->incentive->incentive;
-                $incentive_type = $user->incentive->incentive_type;
+                $incentive = (float) ($user->incentive?->incentive ?? 0);
+                $incentive_type = (string) ($user->incentive?->incentive_type ?? 'percent');
             }
 
             if (($user instanceof Merchant || $user instanceof MerchantStaff) && $item->honorium) {

@@ -341,8 +341,8 @@ class BookingService
                 $charge_amount = 0;
             }
             if ($user instanceof Agent) {
-                $incentive = $user->incentive->incentive;
-                $incentive_type = $user->incentive->incentive_type;
+                $incentive = (float) ($user->incentive?->incentive ?? 0);
+                $incentive_type = (string) ($user->incentive?->incentive_type ?? 'percent');
             } else {
                 $incentive = abs($item['incentive']);
                 $incentive_type = $item['incentive_type'];
@@ -616,8 +616,8 @@ class BookingService
                     'merchant_id' => is_object($merchant) ? $merchant->id : ($merchant['id'] ?? null),
                 ];
                 if ($user instanceof Agent) {
-                    $data['incentive'] = $user->incentive->incentive;
-                    $data['incentive_type'] = $user->incentive->incentive_type;
+                    $data['incentive'] = (float) ($user->incentive?->incentive ?? 0);
+                    $data['incentive_type'] = (string) ($user->incentive?->incentive_type ?? 'percent');
                 }
                 return $data;
             }

@@ -58,8 +58,12 @@ class AgentReferredMerchantController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'bail|required|string|max:191',
-            'businessType' => 'bail|nullable|string|in:hotel_ops,bus_ops,mixed,HOTEL,BUS_COMPANY,CONTRACT_MIDDLEMAN',
-            'business_type' => 'bail|nullable|string|in:hotel_ops,bus_ops,mixed,HOTEL,BUS_COMPANY,CONTRACT_MIDDLEMAN',
+            'businessType' => 'bail|nullable|string|max:128',
+            'business_type' => 'bail|nullable|string|max:128',
+            'businessTypes' => 'bail|nullable|array|min:1',
+            'businessTypes.*' => 'bail|string|in:hotel,bus,train,air,launch,hotel_ops,bus_ops,mixed,HOTEL,BUS_COMPANY,CONTRACT_MIDDLEMAN',
+            'business_types' => 'bail|nullable|array|min:1',
+            'business_types.*' => 'bail|string|in:hotel,bus,train,air,launch,hotel_ops,bus_ops,mixed,HOTEL,BUS_COMPANY,CONTRACT_MIDDLEMAN',
             'contactPerson' => 'bail|required_without:contact_person|string|max:191',
             'contact_person' => 'bail|required_without:contactPerson|string|max:191',
             'contactMobile' => 'bail|required_without:contact_mobile|string|max:20',
@@ -75,12 +79,15 @@ class AgentReferredMerchantController extends Controller
             return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
         }
 
+        $businessType = $this->resolveBusinessTypes($request);
+        if ($businessType === '') {
+            return response()->json(['success' => false, 'message' => __('Select at least one property type')], 422);
+        }
+
         $merchant = AgentReferredMerchant::create([
             'agent_id' => auth()->id(),
             'name' => $request->input('name'),
-            'business_type' => $this->normalizeBusinessType(
-                $request->input('businessType', $request->input('business_type', 'mixed'))
-            ),
+            'business_type' => $businessType,
             'contact_person' => $request->input('contactPerson', $request->input('contact_person')),
             'contact_mobile' => $request->input('contactMobile', $request->input('contact_mobile')),
             'address' => $request->input('address'),
@@ -106,8 +113,12 @@ class AgentReferredMerchantController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'bail|sometimes|required|string|max:191',
-            'businessType' => 'bail|nullable|string|in:hotel_ops,bus_ops,mixed',
-            'business_type' => 'bail|nullable|string|in:hotel_ops,bus_ops,mixed',
+            'businessType' => 'bail|nullable|string|max:128',
+            'business_type' => 'bail|nullable|string|max:128',
+            'businessTypes' => 'bail|nullable|array|min:1',
+            'businessTypes.*' => 'bail|string|in:hotel,bus,train,air,launch,hotel_ops,bus_ops,mixed,HOTEL,BUS_COMPANY,CONTRACT_MIDDLEMAN',
+            'business_types' => 'bail|nullable|array|min:1',
+            'business_types.*' => 'bail|string|in:hotel,bus,train,air,launch,hotel_ops,bus_ops,mixed,HOTEL,BUS_COMPANY,CONTRACT_MIDDLEMAN',
             'contactPerson' => 'bail|nullable|string|max:191',
             'contact_person' => 'bail|nullable|string|max:191',
             'contactMobile' => 'bail|nullable|string|max:20',
@@ -123,11 +134,18 @@ class AgentReferredMerchantController extends Controller
             return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
         }
 
+        $businessType = $merchant->business_type;
+        if ($request->hasAny(['businessTypes', 'business_types', 'businessType', 'business_type'])) {
+            $resolved = $this->resolveBusinessTypes($request);
+            if ($resolved === '') {
+                return response()->json(['success' => false, 'message' => __('Select at least one property type')], 422);
+            }
+            $businessType = $resolved;
+        }
+
         $merchant->fill([
             'name' => $request->input('name', $merchant->name),
-            'business_type' => $this->normalizeBusinessType(
-                $request->input('businessType', $request->input('business_type', $merchant->business_type))
-            ),
+            'business_type' => $businessType,
             'contact_person' => $request->input('contactPerson', $request->input('contact_person', $merchant->contact_person)),
             'contact_mobile' => $request->input('contactMobile', $request->input('contact_mobile', $merchant->contact_mobile)),
             'address' => $request->input('address', $merchant->address),
@@ -169,12 +187,15 @@ class AgentReferredMerchantController extends Controller
     public function uploadDocument(Request $request, int $id): JsonResponse
     {
         $merchant = $this->owned($id);
-        if (! $merchant->isEditable() && $merchant->status !== AgentReferredMerchant::STATUS_SUBMITTED) {
+        if (! in_array($merchant->status, [
+            AgentReferredMerchant::STATUS_LEAD,
+            AgentReferredMerchant::STATUS_REJECTED,
+        ], true)) {
             return response()->json(['success' => false, 'message' => __('Cannot upload documents now')], 422);
         }
 
         $validator = Validator::make($request->all(), [
-            'type' => 'bail|required|string|in:nid,trade_license,contract,other',
+            'type' => 'bail|required|string|in:logo,nid,trade_license,contract,other',
             'document' => 'bail|required|file|mimes:jpg,jpeg,png,pdf|max:8192',
         ]);
 
@@ -182,6 +203,7 @@ class AgentReferredMerchantController extends Controller
             return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
         }
 
+        $type = (string) $request->input('type');
         $disk = config('filesystems.profile_disk', 'public');
         $file = $request->file('document');
         $ext = $file->getClientOriginalExtension() ?: 'jpg';
@@ -191,16 +213,28 @@ class AgentReferredMerchantController extends Controller
             Str::uuid()->toString().'.'.$ext
         );
 
-        $doc = AgentReferredMerchantDocument::create([
+        $existing = AgentReferredMerchantDocument::query()
+            ->where('referred_merchant_id', $merchant->id)
+            ->where('type', $type)
+            ->orderByDesc('id')
+            ->get();
+        foreach ($existing as $old) {
+            if (! empty($old->path)) {
+                Storage::disk($disk)->delete($old->path);
+            }
+            $old->delete();
+        }
+
+        AgentReferredMerchantDocument::create([
             'referred_merchant_id' => $merchant->id,
-            'type' => $request->input('type'),
+            'type' => $type,
             'path' => $path,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => __('Document uploaded'),
-            'data' => AgentApiPresenter::referredMerchantDocument($doc),
+            'data' => AgentApiPresenter::referredMerchant($merchant->fresh('documents'), true),
         ]);
     }
 
@@ -211,12 +245,43 @@ class AgentReferredMerchantController extends Controller
             ->findOrFail($id);
     }
 
+    private function resolveBusinessTypes(Request $request): string
+    {
+        $raw = $request->input('businessTypes', $request->input('business_types'));
+        if (! is_array($raw) || $raw === []) {
+            $single = $request->input('businessType', $request->input('business_type'));
+            if (is_string($single) && str_contains($single, ',')) {
+                $raw = preg_split('/\s*,\s*/', $single) ?: [];
+            } elseif ($single !== null && $single !== '') {
+                $raw = [$single];
+            } else {
+                $raw = [];
+            }
+        }
+
+        $normalized = [];
+        foreach ($raw as $type) {
+            $code = $this->normalizeBusinessType(is_string($type) ? $type : null);
+            if ($code !== '' && ! in_array($code, $normalized, true)) {
+                $normalized[] = $code;
+            }
+        }
+
+        return implode(',', $normalized);
+    }
+
     private function normalizeBusinessType(?string $type): string
     {
+        $type = strtolower(trim((string) $type));
+
         return match ($type) {
-            'HOTEL', 'hotel_ops' => 'hotel_ops',
-            'BUS_COMPANY', 'bus_ops' => 'bus_ops',
-            default => 'mixed',
+            'hotel', 'hotel_ops' => 'hotel',
+            'bus', 'bus_company', 'bus_ops' => 'bus',
+            'train' => 'train',
+            'air', 'airline', 'flight' => 'air',
+            'launch' => 'launch',
+            'mixed', 'contract_middleman', 'partner' => 'mixed',
+            default => '',
         };
     }
 }
