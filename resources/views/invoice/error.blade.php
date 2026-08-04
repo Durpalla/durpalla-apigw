@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Invoice unavailable</title>
+    <title>{{ __('invoice.unavailable') }}</title>
     <style>
         body { font-family: sans-serif; background:#F5F7FA; color:#1F2937; padding:24px; }
         .box { max-width:480px; margin:40px auto; background:#fff; border-radius:12px; padding:24px; border:1px solid #E5E7EB; }
@@ -13,10 +13,10 @@
 </head>
 <body>
 <div class="box">
-    <h1>Invoice unavailable</h1>
-    <p>{{ $message ?? 'Unable to load invoice.' }}</p>
+    <h1>{{ __('invoice.unavailable') }}</h1>
+    <p>{{ $message ?? __('invoice.load_failed') }}</p>
     @if (!empty($booking_id))
-        <p>Booking #{{ $booking_id }}</p>
+        <p>{{ __('invoice.booking_label', ['id' => $booking_id]) }}</p>
     @endif
 </div>
 </body>

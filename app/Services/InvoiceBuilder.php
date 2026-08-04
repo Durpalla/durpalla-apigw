@@ -189,7 +189,7 @@ class InvoiceBuilder
                 // when a merchant exists but has no logo uploaded.
                 'logo_url' => null,
                 'cancellation_policy_lines' => [
-                    'Cancellation refunds follow the operator policy configured at booking time.',
+                    __('invoice.policy_fallback'),
                 ],
             ];
         }
@@ -199,7 +199,7 @@ class InvoiceBuilder
 
         if ($lines === []) {
             $lines = [
-                'Cancellation refunds follow the operator policy configured at booking time.',
+                __('invoice.policy_fallback'),
             ];
         }
 
@@ -217,8 +217,15 @@ class InvoiceBuilder
 
     private function resolveCompanyLogoUrl(): ?string
     {
+        $packaged = $this->resolvePackagedCompanyLogoBinary();
+        if ($packaged !== null) {
+            return 'data:image/png;base64,'.base64_encode($packaged);
+        }
+
         $configured = trim((string) config('invoice.company_logo_url', ''));
         $candidates = array_values(array_filter([
+            'logo-company.png',
+            'logo-company-fallback.png',
             'logos/logo-horizontal-colored-premium.png',
             'logos/logo-horizontal-primary.png',
             $configured !== '' ? $configured : null,
@@ -336,10 +343,11 @@ class InvoiceBuilder
         }
 
         $bases = array_values(array_unique(array_filter([
-            rtrim((string) config('invoice.assets_base_url', ''), '/'),
-            rtrim((string) config('uploads.public_base_url', ''), '/'),
+            // Prefer admin/web — assets.durpalla.com currently 403s logo paths.
             'https://admin.durpalla.com',
             'https://web.durpalla.com',
+            rtrim((string) config('invoice.assets_base_url', ''), '/'),
+            rtrim((string) config('uploads.public_base_url', ''), '/'),
             rtrim((string) config('app.url', ''), '/'),
         ])));
 
@@ -575,46 +583,51 @@ class InvoiceBuilder
     }
 
     /**
-     * Resolve logo bytes for mPDF imageVars (never a remote URL).
+     * Company logo shipped with apigw (not via public/logos symlink).
      */
-    public function resolveLogoBinary(mixed $src): ?string
+    public function resolvePackagedCompanyLogoBinary(): ?string
+    {
+        foreach ([
+            resource_path('invoice-assets/logo-company.png'),
+            resource_path('invoice-assets/logo-company-fallback.png'),
+        ] as $path) {
+            $binary = $this->acceptImageBinary(@is_file($path) ? @file_get_contents($path) : null);
+            if ($binary !== null) {
+                return $binary;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Resolve logo bytes for mPDF (validated image only — never remote URL in HTML).
+     *
+     * @param  bool  $fallbackToCompany  When true and $src empty, use packaged Durpalla logo.
+     */
+    public function resolveLogoBinary(mixed $src, bool $fallbackToCompany = false): ?string
     {
         $src = is_string($src) ? trim($src) : '';
         if ($src === '') {
-            // Fall through to company default candidates when empty string was company config.
-            foreach (['logos/logo-horizontal-colored-premium.png', 'logos/logo-horizontal-primary.png'] as $candidate) {
-                $embedded = $this->embedLocalAssetAsDataUri($candidate);
-                if ($embedded !== null) {
-                    return $this->binaryFromDataUri($embedded);
-                }
-                foreach ($this->candidatePublicUrls($candidate) as $url) {
-                    $binary = $this->fetchBinary($url);
-                    if ($binary !== null) {
-                        return $binary;
-                    }
-                }
-            }
-
-            return null;
+            return $fallbackToCompany ? $this->resolvePackagedCompanyLogoBinary() : null;
         }
 
         if (str_starts_with($src, 'data:')) {
-            return $this->binaryFromDataUri($src);
+            return $this->acceptImageBinary($this->binaryFromDataUri($src));
         }
 
         if (is_file($src) && is_readable($src)) {
-            $binary = @file_get_contents($src);
-
-            return ($binary !== false && $binary !== '') ? $binary : null;
+            return $this->acceptImageBinary(@file_get_contents($src));
         }
 
-        // Already a data URI / absolute path from build().
         $tempDir = storage_path('app/mpdf');
         $file = $this->materializeLogoForPdf($src, $tempDir, 'bin-'.substr(md5($src), 0, 10));
         if ($file !== null && is_file($file)) {
-            $binary = @file_get_contents($file);
+            return $this->acceptImageBinary(@file_get_contents($file));
+        }
 
-            return ($binary !== false && $binary !== '') ? $binary : null;
+        if ($fallbackToCompany) {
+            return $this->resolvePackagedCompanyLogoBinary();
         }
 
         return null;
@@ -625,12 +638,51 @@ class InvoiceBuilder
         $tempDir = storage_path('app/mpdf');
         $file = $this->materializeQrForPdf($payload, $tempDir, 'qr-bin');
         if ($file !== null && is_file($file)) {
-            $binary = @file_get_contents($file);
-
-            return ($binary !== false && $binary !== '') ? $binary : null;
+            $binary = $this->acceptImageBinary(@file_get_contents($file), 16);
+            if ($binary !== null) {
+                return $binary;
+            }
         }
 
-        return $this->fetchBinary($this->qrUrl($payload));
+        return $this->acceptImageBinary($this->fetchBinary($this->qrUrl($payload)), 16);
+    }
+
+    /**
+     * Reject mPDF placeholders / tiny junk (e.g. 14×16 no_image.jpg).
+     */
+    private function acceptImageBinary(mixed $binary, int $minDimension = 40): ?string
+    {
+        if (! is_string($binary) || $binary === '' || strlen($binary) < 512) {
+            return null;
+        }
+
+        $info = @getimagesizefromstring($binary);
+        if (! is_array($info)) {
+            return null;
+        }
+
+        $width = (int) ($info[0] ?? 0);
+        $height = (int) ($info[1] ?? 0);
+        if ($width < $minDimension || $height < $minDimension) {
+            return null;
+        }
+
+        return $binary;
+    }
+
+    public function binaryToDataUri(string $binary): string
+    {
+        $mime = 'image/png';
+        try {
+            $detected = (new \finfo(FILEINFO_MIME_TYPE))->buffer($binary);
+            if (is_string($detected) && str_starts_with($detected, 'image/')) {
+                $mime = $detected;
+            }
+        } catch (\Throwable) {
+            // keep png
+        }
+
+        return 'data:'.$mime.';base64,'.base64_encode($binary);
     }
 
     private function binaryFromDataUri(string $dataUri): ?string

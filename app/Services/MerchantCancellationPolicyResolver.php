@@ -79,16 +79,15 @@ class MerchantCancellationPolicyResolver
 
             if ($hours <= 0) {
                 if ($pct <= 0) {
-                    $lines[] = 'Late cancellation or no-show: no refund.';
+                    $lines[] = __('invoice.policy_late');
                 }
                 continue;
             }
 
-            $lines[] = sprintf(
-                'Cancel %s or more before departure: %d%% refund.',
-                $this->formatHoursLabel($hours),
-                $pct
-            );
+            $lines[] = __('invoice.policy_cancel_before', [
+                'window' => $this->formatHoursLabel($hours),
+                'percent' => $pct,
+            ]);
         }
 
         return $lines;
@@ -99,9 +98,11 @@ class MerchantCancellationPolicyResolver
         if ($hours >= 24 && $hours % 24 === 0) {
             $days = (int) ($hours / 24);
 
-            return $days === 1 ? '24 hours' : "{$hours} hours ({$days} days)";
+            return $days === 1
+                ? __('invoice.hours_one_day')
+                : __('invoice.hours_with_days', ['hours' => $hours, 'days' => $days]);
         }
 
-        return "{$hours} hours";
+        return __('invoice.hours', ['count' => $hours]);
     }
 }

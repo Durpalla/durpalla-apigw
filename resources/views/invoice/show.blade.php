@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -499,7 +499,11 @@
     $seal = strtoupper((string) ($invoice['seal'] ?? $payRaw));
     $isPaid = str_contains($seal, 'PAID') || str_contains($payRaw, 'PAID') || str_contains($payRaw, 'COMPLETE') || str_contains($payRaw, 'SUCCESS');
     $isFailed = str_contains($seal, 'FAIL') || str_contains($payRaw, 'FAIL');
-    $payLabel = $isPaid ? 'Paid' : ($isFailed ? 'Failed' : (str_contains($payRaw, 'PARTIAL') ? 'Partial' : 'Pending'));
+    $payLabel = $isPaid
+        ? __('invoice.status_paid')
+        : ($isFailed
+            ? __('invoice.status_failed')
+            : (str_contains($payRaw, 'PARTIAL') ? __('invoice.status_partial') : __('invoice.status_pending')));
     $payBadge = $isPaid ? 'bi-badge-success' : ($isFailed ? 'bi-badge-danger' : 'bi-badge-warning');
     $invoiceCompany = (string) config('invoice.company_name', 'Durpalla Limited');
     $companyLogo = (string) ($invoice['company_logo_url'] ?? '');
@@ -550,13 +554,14 @@
             $seats[] = $ticket['cabin_no'];
         }
     }
-    $cancellationLines = $merchant['cancellation_policy_lines'] ?? [
-        'Cancellation refunds follow the operator policy configured at booking time.',
-    ];
+    $cancellationLines = $merchant['cancellation_policy_lines'] ?? [];
+    if (! is_array($cancellationLines) || $cancellationLines === []) {
+        $cancellationLines = [__('invoice.policy_fallback')];
+    }
     $terms = [
-        'Arrive at the boarding point at least 30 minutes before departure.',
-        'Valid ID and this booking reference are required at boarding.',
-        'This invoice is valid only for the trip and passengers listed above.',
+        __('invoice.term_arrive'),
+        __('invoice.term_id'),
+        __('invoice.term_valid'),
     ];
     $money = static fn ($amount) => '৳'.number_format((float) $amount, 2);
     $gateway = (string) ($invoice['gateway_name'] ?? '');
@@ -576,7 +581,7 @@
                     <strong>{{ $invoiceCompany }}</strong>
                 @endif
             </div>
-            <div class="bi-brand-label">Booking Invoice</div>
+            <div class="bi-brand-label">{{ __('invoice.brand_label') }}</div>
         </div>
 
         <header class="bi-header">
@@ -604,60 +609,60 @@
                 </div>
             </div>
             <div class="bi-title-wrap">
-                <h1 class="bi-title">BOOKING INVOICE</h1>
+                <h1 class="bi-title">{{ __('invoice.title_upper') }}</h1>
                 <div class="bi-barcode">{{ $bookingRef }}</div>
             </div>
             <div class="bi-qr">
-                <img src="{{ $invoice['qr'] ?? '' }}" alt="Scan to verify">
-                <span>Verify</span>
+                <img src="{{ $invoice['qr'] ?? '' }}" alt="{{ __('invoice.scan_to_verify') }}">
+                <span>{{ __('invoice.verify') }}</span>
             </div>
         </header>
 
         <div class="bi-grid-3">
             <section class="bi-card">
-                <h3 class="bi-card-title">Booking</h3>
-                <div class="bi-row"><span>ID</span><strong>{{ $bookingRef }}</strong></div>
-                <div class="bi-row"><span>Date</span><strong>{{ $invoice['booking_date_formated'] ?? '—' }}</strong></div>
-                <div class="bi-row"><span>Transaction</span><strong>{{ ($invoice['transaction_id'] ?? '') !== '' ? $invoice['transaction_id'] : '—' }}</strong></div>
+                <h3 class="bi-card-title">{{ __('invoice.section_booking') }}</h3>
+                <div class="bi-row"><span>{{ __('invoice.label_id') }}</span><strong>{{ $bookingRef }}</strong></div>
+                <div class="bi-row"><span>{{ __('invoice.label_date') }}</span><strong>{{ $invoice['booking_date_formated'] ?? '—' }}</strong></div>
+                <div class="bi-row"><span>{{ __('invoice.label_transaction') }}</span><strong>{{ ($invoice['transaction_id'] ?? '') !== '' ? $invoice['transaction_id'] : '—' }}</strong></div>
                 <div class="bi-row">
-                    <span>Payment</span>
+                    <span>{{ __('invoice.label_payment') }}</span>
                     <span class="bi-badge {{ $payBadge }}">{{ $payLabel }}</span>
                 </div>
             </section>
 
             <section class="bi-card">
-                <h3 class="bi-card-title">Trip</h3>
+                <h3 class="bi-card-title">{{ __('invoice.section_trip') }}</h3>
                 @if (!empty($invoice['hotel']))
-                    <div class="bi-row"><span>Hotel</span><strong>{{ $invoice['hotel']['title'] ?? 'Hotel' }}</strong></div>
-                    <div class="bi-row"><span>Check-in</span><strong>{{ $invoice['hotel']['check_in'] ?? '—' }}</strong></div>
-                    <div class="bi-row"><span>Check-out</span><strong>{{ $invoice['hotel']['check_out'] ?? '—' }}</strong></div>
-                    <div class="bi-row"><span>Guests</span><strong>{{ ($invoice['hotel']['adults'] ?? 0) }} adults{{ !empty($invoice['hotel']['children']) ? ', '.$invoice['hotel']['children'].' children' : '' }}</strong></div>
+                    <div class="bi-row"><span>{{ __('invoice.label_hotel') }}</span><strong>{{ $invoice['hotel']['title'] ?? __('invoice.hotel_fallback') }}</strong></div>
+                    <div class="bi-row"><span>{{ __('invoice.label_check_in') }}</span><strong>{{ $invoice['hotel']['check_in'] ?? '—' }}</strong></div>
+                    <div class="bi-row"><span>{{ __('invoice.label_check_out') }}</span><strong>{{ $invoice['hotel']['check_out'] ?? '—' }}</strong></div>
+                    <div class="bi-row"><span>{{ __('invoice.label_guests') }}</span><strong>{{ __('invoice.adults', ['count' => (int) ($invoice['hotel']['adults'] ?? 0)]) }}{{ !empty($invoice['hotel']['children']) ? ', '.__('invoice.children', ['count' => (int) $invoice['hotel']['children']]) : '' }}</strong></div>
                 @else
-                    <div class="bi-row"><span>Route</span><strong>{{ $routeLabel }}</strong></div>
-                    <div class="bi-row"><span>Vehicle</span><strong>{{ $vehicleName }}</strong></div>
-                    <div class="bi-row"><span>Date</span><strong>{{ $scheduleDate }}</strong></div>
-                    <div class="bi-row"><span>Departure</span><strong>{{ $departure }}</strong></div>
-                    <div class="bi-row"><span>Boarding</span><strong>{{ $boarding }}</strong></div>
+                    <div class="bi-row"><span>{{ __('invoice.label_route') }}</span><strong>{{ $routeLabel }}</strong></div>
+                    <div class="bi-row"><span>{{ __('invoice.label_vehicle') }}</span><strong>{{ $vehicleName }}</strong></div>
+                    <div class="bi-row"><span>{{ __('invoice.label_date') }}</span><strong>{{ $scheduleDate }}</strong></div>
+                    <div class="bi-row"><span>{{ __('invoice.label_departure') }}</span><strong>{{ $departure }}</strong></div>
+                    <div class="bi-row"><span>{{ __('invoice.label_boarding') }}</span><strong>{{ $boarding }}</strong></div>
                 @endif
             </section>
 
             <section class="bi-card">
-                <h3 class="bi-card-title">Payment &amp; Fare</h3>
-                <div class="bi-row"><span>Method</span><strong>{{ $gateway !== '' ? $gateway : '—' }}</strong></div>
-                <div class="bi-row"><span>Subtotal</span><strong>{{ $money($invoice['total_amount'] ?? 0) }}</strong></div>
+                <h3 class="bi-card-title">{{ __('invoice.section_payment_fare') }}</h3>
+                <div class="bi-row"><span>{{ __('invoice.label_method') }}</span><strong>{{ $gateway !== '' ? $gateway : '—' }}</strong></div>
+                <div class="bi-row"><span>{{ __('invoice.subtotal') }}</span><strong>{{ $money($invoice['total_amount'] ?? 0) }}</strong></div>
                 @if ((float) ($invoice['charge_total'] ?? 0) > 0)
-                    <div class="bi-row"><span>Service charge</span><strong>{{ $money($invoice['charge_total']) }}</strong></div>
+                    <div class="bi-row"><span>{{ __('invoice.service_charge') }}</span><strong>{{ $money($invoice['charge_total']) }}</strong></div>
                 @endif
-                <div class="bi-row"><span>VAT on charge</span><strong>{{ $money($invoice['vat_total'] ?? 0) }}</strong></div>
+                <div class="bi-row"><span>{{ __('invoice.vat_on_charge') }}</span><strong>{{ $money($invoice['vat_total'] ?? 0) }}</strong></div>
                 @if ((float) ($invoice['total_discount'] ?? 0) > 0)
-                    <div class="bi-row"><span>Discount</span><strong>-{{ $money($invoice['total_discount']) }}</strong></div>
+                    <div class="bi-row"><span>{{ __('invoice.discount') }}</span><strong>-{{ $money($invoice['total_discount']) }}</strong></div>
                 @endif
                 <div class="bi-fare-total">
                     <div class="bi-row">
-                        <span>Total</span>
+                        <span>{{ __('invoice.total') }}</span>
                         <span class="bi-fare-grand">{{ $money($invoice['total_payable'] ?? 0) }}</span>
                     </div>
-                    <div class="bi-row"><span>Paid</span><strong>{{ $isPaid ? $money($invoice['total_payable'] ?? 0) : $money(0) }}</strong></div>
+                    <div class="bi-row"><span>{{ __('invoice.paid_amount') }}</span><strong>{{ $isPaid ? $money($invoice['total_payable'] ?? 0) : $money(0) }}</strong></div>
                 </div>
             </section>
         </div>
@@ -666,12 +671,12 @@
             <thead>
             <tr>
                 <th>#</th>
-                <th>Passenger</th>
-                <th>Phone</th>
-                <th>Seat / Cabin</th>
-                <th>Type</th>
-                <th>AC</th>
-                <th>Fare</th>
+                <th>{{ __('invoice.col_passenger') }}</th>
+                <th>{{ __('invoice.col_phone') }}</th>
+                <th>{{ __('invoice.col_seat_cabin') }}</th>
+                <th>{{ __('invoice.col_type') }}</th>
+                <th>{{ __('invoice.col_ac') }}</th>
+                <th>{{ __('invoice.col_fare') }}</th>
             </tr>
             </thead>
             <tbody>
@@ -681,7 +686,7 @@
                     $pName = (string) ($passenger['name'] ?? $customerName);
                     $pMobile = (string) ($passenger['mobile'] ?? $customerMobile);
                     $ac = array_key_exists('is_ac', $ticket)
-                        ? (! empty($ticket['is_ac']) ? 'AC' : 'Non-AC')
+                        ? (! empty($ticket['is_ac']) ? __('invoice.ac') : __('invoice.non_ac'))
                         : '—';
                 @endphp
                 <tr>
@@ -695,7 +700,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7">No ticket lines</td>
+                    <td colspan="7">{{ __('invoice.no_ticket_lines') }}</td>
                 </tr>
             @endforelse
             </tbody>
@@ -703,7 +708,7 @@
 
         <div class="bi-meta-line">
             <span>
-                <strong>Seats:</strong>
+                <strong>{{ __('invoice.label_seats') }}:</strong>
                 @if ($seats)
                     @foreach($seats as $seat)
                         <span class="bi-seat">{{ $seat }}</span>
@@ -712,13 +717,13 @@
                     —
                 @endif
             </span>
-            <span><strong>Status:</strong> {{ $seal }}</span>
-            <span><strong>Route:</strong> {{ $routeLabel }}</span>
+            <span><strong>{{ __('invoice.label_status') }}:</strong> {{ $seal }}</span>
+            <span><strong>{{ __('invoice.label_route') }}:</strong> {{ $routeLabel }}</span>
         </div>
 
         <div class="bi-policies">
             <div class="bi-policy-block">
-                <strong>Terms &amp; Conditions</strong>
+                <strong>{{ __('invoice.terms_title') }}</strong>
                 <ul>
                     @foreach($terms as $term)
                         <li>{{ $term }}</li>
@@ -726,7 +731,7 @@
                 </ul>
             </div>
             <div class="bi-policy-block">
-                <strong>Cancellation Policy</strong>
+                <strong>{{ __('invoice.cancellation_title') }}</strong>
                 <ul>
                     @foreach($cancellationLines as $line)
                         <li>{{ $line }}</li>
@@ -737,9 +742,7 @@
 
         <footer class="bi-footer">
             <p class="bi-third-party">
-                This booking was made through <strong>{{ $invoiceCompany }}</strong>, a third-party
-                online booking platform. Transport service is operated by
-                <strong>{{ $operatorName }}</strong>.
+                {{ __('invoice.footer_third_party', ['company' => $invoiceCompany, 'operator' => $operatorName]) }}
             </p>
             <div class="bi-durpalla-contact">
                 @if ($companyLogoOk)
@@ -748,25 +751,25 @@
                     <div class="bi-durpalla-mark">D</div>
                 @endif
                 <div>
-                    <p class="bi-durpalla-contact-title">Need help? Contact {{ $invoiceCompany }}</p>
+                    <p class="bi-durpalla-contact-title">{{ __('invoice.footer_need_help_contact', ['company' => $invoiceCompany]) }}</p>
                     <div class="bi-durpalla-contact-meta">
-                        <span><strong>Address:</strong> Dhaka, Bangladesh</span>
-                        <span><strong>Email:</strong> support@durpalla.com</span>
-                        <span><strong>Hotline:</strong> 16374</span>
+                        <span><strong>{{ __('invoice.label_address') }}:</strong> {{ __('invoice.address_value') }}</span>
+                        <span><strong>{{ __('invoice.label_email') }}:</strong> support@durpalla.com</span>
+                        <span><strong>{{ __('invoice.label_hotline') }}:</strong> 16374</span>
                     </div>
                 </div>
             </div>
             <div class="bi-powered-row">
-                <span>Thank you for your booking. Have a safe journey.</span>
+                <span>{{ __('invoice.footer_thanks') }}</span>
                 <span class="bi-powered-brand">
                     @if ($companyLogoOk)
                         <img src="{{ $companyLogo }}" alt="{{ $invoiceCompany }}" class="bi-durpalla-logo" style="height:18px;max-width:110px">
                     @else
-                        Powered by {{ $invoiceCompany }}
+                        {{ __('invoice.powered_by', ['company' => $invoiceCompany]) }}
                     @endif
                 </span>
             </div>
-            <p class="bi-disclaimer">Computer-generated invoice. No signature required.</p>
+            <p class="bi-disclaimer">{{ __('invoice.footer_computer') }}</p>
         </footer>
     </div>
 </div>

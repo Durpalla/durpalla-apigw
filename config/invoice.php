@@ -55,6 +55,7 @@ return [
     */
 
     'local_asset_roots' => array_values(array_filter([
+        resource_path('invoice-assets'),
         env('INVOICE_LOCAL_ASSETS_PATH'),
         public_path(),
         // Sibling main Durpalla app public (shared server layouts).

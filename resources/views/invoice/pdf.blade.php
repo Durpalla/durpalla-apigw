@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="utf-8">
-    <title>{{ config('invoice.company_name', 'Durpalla Limited') }} Invoice #{{ $invoice['pnr'] ?? '' }}</title>
+    <title>{{ config('invoice.company_name', 'Durpalla Limited') }} {{ __('invoice.title') }} #{{ $invoice['pnr'] ?? '' }}</title>
     <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #0f172a; }
+        body { font-family: {{ (app()->getLocale() === 'bn') ? 'lohitbengali, DejaVu Sans, sans-serif' : 'DejaVu Sans, sans-serif' }}; font-size: 11px; color: #0f172a; }
         h1 { font-size: 16px; color: #1d4ed8; margin: 0 0 4px; }
         h2 { font-size: 13px; margin: 0 0 4px; }
         .muted { color: #64748b; }
@@ -50,17 +50,31 @@
     $seal = strtoupper((string) ($invoice['seal'] ?? $payRaw));
     $isPaid = str_contains($seal, 'PAID') || str_contains($payRaw, 'PAID') || str_contains($payRaw, 'COMPLETE') || str_contains($payRaw, 'SUCCESS');
     $isFailed = str_contains($seal, 'FAIL') || str_contains($payRaw, 'FAIL');
-    $payLabel = $isPaid ? 'Paid' : ($isFailed ? 'Failed' : (str_contains($payRaw, 'PARTIAL') ? 'Partial' : 'Pending'));
+    $payLabel = $isPaid
+        ? __('invoice.status_paid')
+        : ($isFailed
+            ? __('invoice.status_failed')
+            : (str_contains($payRaw, 'PARTIAL') ? __('invoice.status_partial') : __('invoice.status_pending')));
     $payBadge = $isPaid ? 'badge-ok' : ($isFailed ? 'badge-fail' : 'badge-warn');
     $invoiceCompany = (string) config('invoice.company_name', 'Durpalla Limited');
     $pdfImages = is_array($invoice['pdf_images'] ?? null) ? $invoice['pdf_images'] : [];
-    // Prefer mPDF imageVars (var:name) — set by FrontController from binary bytes.
-    $merchantLogoOk = ! empty($pdfImages['merchant']);
-    $companyLogoOk = ! empty($pdfImages['company']);
-    $qrOk = ! empty($pdfImages['qr']);
-    $merchantLogo = $merchantLogoOk ? 'var:merchantLogo' : '';
-    $companyLogo = $companyLogoOk ? 'var:companyLogo' : '';
-    $qrSrc = $qrOk ? 'var:invoiceQr' : '';
+    $pdfUris = is_array($invoice['pdf_data_uris'] ?? null) ? $invoice['pdf_data_uris'] : [];
+    // Prefer embedded data URIs (reliable on servers without public/logos symlink).
+    $merchantLogo = (string) ($pdfUris['merchant'] ?? '');
+    $companyLogo = (string) ($pdfUris['company'] ?? '');
+    $qrSrc = (string) ($pdfUris['qr'] ?? '');
+    if ($merchantLogo === '' && ! empty($pdfImages['merchant'])) {
+        $merchantLogo = 'var:merchantLogo';
+    }
+    if ($companyLogo === '' && ! empty($pdfImages['company'])) {
+        $companyLogo = 'var:companyLogo';
+    }
+    if ($qrSrc === '' && ! empty($pdfImages['qr'])) {
+        $qrSrc = 'var:invoiceQr';
+    }
+    $merchantLogoOk = $merchantLogo !== '';
+    $companyLogoOk = $companyLogo !== '';
+    $qrOk = $qrSrc !== '';
     $hasRealMerchant = ! empty($merchant['name']) && strcasecmp((string) $merchant['name'], $invoiceCompany) !== 0;
     $operatorName = $hasRealMerchant
         ? (string) $merchant['name']
@@ -83,18 +97,14 @@
     $boarding = is_array($firstTicket['boarding_point'] ?? null)
         ? (string) ($firstTicket['boarding_point']['name'] ?? '—')
         : '—';
-    $cancellationLines = $merchant['cancellation_policy_lines'] ?? [
-        'Cancellation refunds follow the operator policy configured at booking time.',
-    ];
+    $cancellationLines = $merchant['cancellation_policy_lines'] ?? [];
     if (! is_array($cancellationLines) || $cancellationLines === []) {
-        $cancellationLines = [
-            'Cancellation refunds follow the operator policy configured at booking time.',
-        ];
+        $cancellationLines = [__('invoice.policy_fallback')];
     }
     $terms = [
-        'Arrive at the boarding point at least 30 minutes before departure.',
-        'Valid ID and this booking reference are required at boarding.',
-        'This invoice is valid only for the trip and passengers listed above.',
+        __('invoice.term_arrive'),
+        __('invoice.term_id'),
+        __('invoice.term_valid'),
     ];
     $money = static fn ($amount) => 'BDT '.number_format((float) $amount, 2);
     $gateway = (string) ($invoice['gateway_name'] ?? '');
@@ -122,7 +132,7 @@
             </table>
         </td>
         <td width="35%" style="text-align:center;">
-            <h1>BOOKING INVOICE</h1>
+            <h1>{{ __('invoice.title_upper') }}</h1>
             <div><strong>{{ $bookingRef }}</strong></div>
             <div class="muted">{{ $invoice['booking_date_formated'] ?? '' }}</div>
         </td>
@@ -137,31 +147,31 @@
 <table width="100%" class="section">
     <tr>
         <td width="33%" class="box">
-            <strong>Booking</strong><br>
-            <span class="label">ID:</span> {{ $bookingRef }}<br>
-            <span class="label">Transaction:</span> {{ ($invoice['transaction_id'] ?? '') !== '' ? $invoice['transaction_id'] : '—' }}<br>
-            <span class="label">Payment:</span> <span class="badge {{ $payBadge }}">{{ $payLabel }}</span>
+            <strong>{{ __('invoice.section_booking') }}</strong><br>
+            <span class="label">{{ __('invoice.label_id') }}:</span> {{ $bookingRef }}<br>
+            <span class="label">{{ __('invoice.label_transaction') }}:</span> {{ ($invoice['transaction_id'] ?? '') !== '' ? $invoice['transaction_id'] : '—' }}<br>
+            <span class="label">{{ __('invoice.label_payment') }}:</span> <span class="badge {{ $payBadge }}">{{ $payLabel }}</span>
         </td>
         <td width="2%"></td>
         <td width="33%" class="box">
-            <strong>Trip</strong><br>
+            <strong>{{ __('invoice.section_trip') }}</strong><br>
             @if (! empty($invoice['hotel']))
-                <span class="label">Hotel:</span> {{ $invoice['hotel']['title'] ?? 'Hotel' }}<br>
-                <span class="label">Check-in:</span> {{ $invoice['hotel']['check_in'] ?? '—' }}<br>
-                <span class="label">Check-out:</span> {{ $invoice['hotel']['check_out'] ?? '—' }}
+                <span class="label">{{ __('invoice.label_hotel') }}:</span> {{ $invoice['hotel']['title'] ?? __('invoice.hotel_fallback') }}<br>
+                <span class="label">{{ __('invoice.label_check_in') }}:</span> {{ $invoice['hotel']['check_in'] ?? '—' }}<br>
+                <span class="label">{{ __('invoice.label_check_out') }}:</span> {{ $invoice['hotel']['check_out'] ?? '—' }}
             @else
-                <span class="label">Route:</span> {{ $routeLabel }}<br>
-                <span class="label">Vehicle:</span> {{ $vehicleName }}<br>
-                <span class="label">Date:</span> {{ $scheduleDate }} · {{ $departure }}<br>
-                <span class="label">Boarding:</span> {{ $boarding }}
+                <span class="label">{{ __('invoice.label_route') }}:</span> {{ $routeLabel }}<br>
+                <span class="label">{{ __('invoice.label_vehicle') }}:</span> {{ $vehicleName }}<br>
+                <span class="label">{{ __('invoice.label_date') }}:</span> {{ $scheduleDate }} · {{ $departure }}<br>
+                <span class="label">{{ __('invoice.label_boarding') }}:</span> {{ $boarding }}
             @endif
         </td>
         <td width="2%"></td>
         <td width="30%" class="box">
-            <strong>Customer</strong><br>
+            <strong>{{ __('invoice.section_customer') }}</strong><br>
             {{ $customerName }}<br>
             {{ $customerMobile }}<br>
-            <span class="label">Method:</span> {{ $gateway !== '' ? $gateway : '—' }}
+            <span class="label">{{ __('invoice.label_method') }}:</span> {{ $gateway !== '' ? $gateway : '—' }}
         </td>
     </tr>
 </table>
@@ -170,11 +180,11 @@
     <thead>
     <tr>
         <th>#</th>
-        <th>Passenger</th>
-        <th>Phone</th>
-        <th>Seat / Cabin</th>
-        <th>Type</th>
-        <th>Fare</th>
+        <th>{{ __('invoice.col_passenger') }}</th>
+        <th>{{ __('invoice.col_phone') }}</th>
+        <th>{{ __('invoice.col_seat_cabin') }}</th>
+        <th>{{ __('invoice.col_type') }}</th>
+        <th>{{ __('invoice.col_fare') }}</th>
     </tr>
     </thead>
     <tbody>
@@ -194,7 +204,7 @@
         </tr>
     @empty
         <tr>
-            <td colspan="6">No ticket lines</td>
+            <td colspan="6">{{ __('invoice.no_ticket_lines') }}</td>
         </tr>
     @endforelse
     </tbody>
@@ -205,16 +215,16 @@
         <td width="60%"></td>
         <td width="40%">
             <table width="100%">
-                <tr><td>Subtotal</td><td align="right">{{ $money($invoice['total_amount'] ?? 0) }}</td></tr>
+                <tr><td>{{ __('invoice.subtotal') }}</td><td align="right">{{ $money($invoice['total_amount'] ?? 0) }}</td></tr>
                 @if ((float) ($invoice['charge_total'] ?? 0) > 0)
-                    <tr><td>Service charge</td><td align="right">{{ $money($invoice['charge_total']) }}</td></tr>
+                    <tr><td>{{ __('invoice.service_charge') }}</td><td align="right">{{ $money($invoice['charge_total']) }}</td></tr>
                 @endif
-                <tr><td>VAT on charge</td><td align="right">{{ $money($invoice['vat_total'] ?? 0) }}</td></tr>
+                <tr><td>{{ __('invoice.vat_on_charge') }}</td><td align="right">{{ $money($invoice['vat_total'] ?? 0) }}</td></tr>
                 @if ((float) ($invoice['total_discount'] ?? 0) > 0)
-                    <tr><td>Discount</td><td align="right">-{{ $money($invoice['total_discount']) }}</td></tr>
+                    <tr><td>{{ __('invoice.discount') }}</td><td align="right">-{{ $money($invoice['total_discount']) }}</td></tr>
                 @endif
                 <tr>
-                    <td class="grand">Total</td>
+                    <td class="grand">{{ __('invoice.total') }}</td>
                     <td class="grand" align="right">{{ $money($invoice['total_payable'] ?? 0) }}</td>
                 </tr>
             </table>
@@ -225,7 +235,7 @@
 <table class="policies" width="100%">
     <tr>
         <td width="49%" class="policy">
-            <strong>Terms &amp; Conditions</strong>
+            <strong>{{ __('invoice.terms_title') }}</strong>
             <ul>
                 @foreach ($terms as $term)
                     <li>{{ $term }}</li>
@@ -234,7 +244,7 @@
         </td>
         <td width="2%"></td>
         <td width="49%" class="policy">
-            <strong>Cancellation Policy</strong>
+            <strong>{{ __('invoice.cancellation_title') }}</strong>
             <ul>
                 @foreach ($cancellationLines as $line)
                     <li>{{ $line }}</li>
@@ -245,15 +255,14 @@
 </table>
 
 <div class="footer">
-    This booking was made through {{ $invoiceCompany }}, a third-party online booking platform.
-    Transport service is operated by {{ $operatorName }}.
-    <br>Computer-generated invoice. No signature required. Status: {{ $seal }}
+    {{ __('invoice.footer_third_party', ['company' => $invoiceCompany, 'operator' => $operatorName]) }}
+    <br>{{ __('invoice.footer_computer_status', ['status' => $seal]) }}
     <br><br>
     @if ($companyLogoOk)
         <img class="logo-sm" src="{{ $companyLogo }}" alt="{{ $invoiceCompany }}">
         &nbsp;
     @endif
-    Need help? {{ $invoiceCompany }} · support@durpalla.com · Hotline 16374
+    {{ __('invoice.footer_need_help', ['company' => $invoiceCompany]) }}
 </div>
 </body>
 </html>
