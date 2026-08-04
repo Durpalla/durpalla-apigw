@@ -41,6 +41,8 @@ Route::prefix('agent')->middleware(['JsonResponse'])->group(function () {
         Route::post('my/withdrawal-request', [AgentWithdrawalController::class, 'store']);
         Route::get('my/withdrawal-method-list', [AgentWithdrawalMethodController::class, 'index']);
         Route::post('my/withdrawal-method-add', [AgentWithdrawalMethodController::class, 'store']);
+        Route::post('my/withdrawal-method-update/{id}', [AgentWithdrawalMethodController::class, 'update'])->whereNumber('id');
+        Route::post('my/withdrawal-method-delete/{id}', [AgentWithdrawalMethodController::class, 'destroy'])->whereNumber('id');
         Route::get('my/referred-properties', [AgentReferredPropertyController::class, 'index']);
         Route::get('my/referred-merchants', [AgentReferredMerchantController::class, 'index']);
         Route::get('my/referred-merchants/{id}', [AgentReferredMerchantController::class, 'show']);
