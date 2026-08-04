@@ -169,7 +169,7 @@ class InvoiceBuilder
                 'mobile' => '16374',
                 'phone' => '',
                 'registration_no' => '',
-                'logo_url' => null,
+                'logo_url' => $this->absoluteAssetUrl((string) config('invoice.company_logo_url', '')),
                 'cancellation_policy_lines' => [
                     'Cancellation refunds follow the operator policy configured at booking time.',
                 ],
@@ -192,9 +192,52 @@ class InvoiceBuilder
             'mobile' => (string) ($merchant->merchant_mobile ?? ''),
             'phone' => (string) ($merchant->merchant_phone ?? ''),
             'registration_no' => (string) ($merchant->merchant_reg_no ?? ''),
-            'logo_url' => $merchant->profile_pic_url,
+            'logo_url' => $this->resolveMerchantLogoUrl($merchant),
             'cancellation_policy_lines' => $lines,
         ];
+    }
+
+    private function resolveMerchantLogoUrl(Merchant $merchant): ?string
+    {
+        $path = (string) ($merchant->logo ?? '');
+        if ($path === '') {
+            return null;
+        }
+
+        return $this->absoluteAssetUrl($path);
+    }
+
+    private function absoluteAssetUrl(string $pathOrUrl): ?string
+    {
+        $pathOrUrl = trim($pathOrUrl);
+        if ($pathOrUrl === '') {
+            return null;
+        }
+
+        if (str_starts_with($pathOrUrl, 'http://') || str_starts_with($pathOrUrl, 'https://')) {
+            return $pathOrUrl;
+        }
+
+        $normalized = ltrim(str_replace('\\', '/', $pathOrUrl), '/');
+        $invoiceBase = rtrim((string) config('invoice.assets_base_url', ''), '/');
+        $uploadsBase = rtrim((string) config('uploads.public_base_url', ''), '/');
+
+        if ($invoiceBase !== '') {
+            return $invoiceBase.'/'.$normalized;
+        }
+
+        if ($uploadsBase !== '' && str_starts_with($normalized, 'logos/')) {
+            return $uploadsBase.'/'.$normalized;
+        }
+
+        if (function_exists('upload_asset')) {
+            $viaUpload = upload_asset($normalized);
+            if (is_string($viaUpload) && $viaUpload !== '') {
+                return $viaUpload;
+            }
+        }
+
+        return rtrim((string) config('app.url', ''), '/').'/'.$normalized;
     }
 
     private function qrUrl(string $payload): string

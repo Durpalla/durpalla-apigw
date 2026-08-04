@@ -89,7 +89,7 @@
             letter-spacing: 1px;
             color: #475569;
         }
-        #booking-invoice-document .bi-qr { width: 78px; text-align: center; }
+        #booking-invoice-document .bi-qr { width: 78px; text-align: center; flex-shrink: 0; }
         #booking-invoice-document .bi-qr img {
             width: 68px;
             height: 68px;
@@ -311,18 +311,179 @@
             font-size: 10px;
             color: #cbd5e1;
         }
-        @media (max-width: 720px) {
-            #booking-invoice-document .bi-header { grid-template-columns: 1fr auto; }
-            #booking-invoice-document .bi-title-wrap { grid-column: 1 / -1; order: -1; text-align: left; }
+        #booking-invoice-document .bi-durpalla-logo {
+            height: 26px;
+            width: auto;
+            max-width: 140px;
+            object-fit: contain;
+            display: block;
+            flex-shrink: 0;
+        }
+        #booking-invoice-document .bi-brand-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        #booking-invoice-document .bi-brand-row img {
+            height: 28px;
+            width: auto;
+            max-width: 160px;
+            object-fit: contain;
+            display: block;
+        }
+        #booking-invoice-document .bi-brand-row .bi-brand-label {
+            font-size: 10px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        /* Mobile-only: never apply when printing (print preview width can be narrow). */
+        @media screen and (max-width: 720px) {
+            #booking-invoice-document {
+                padding: 8px;
+                overflow-x: hidden;
+            }
+            #booking-invoice-document .bi-sheet {
+                padding: 12px;
+                overflow: hidden;
+            }
+            #booking-invoice-document .bi-header {
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            #booking-invoice-document .bi-title-wrap {
+                order: 0;
+                text-align: center;
+                width: 100%;
+            }
+            #booking-invoice-document .bi-merchant {
+                order: 1;
+                width: 100%;
+                min-width: 0;
+            }
+            #booking-invoice-document .bi-merchant > div:last-child {
+                min-width: 0;
+                overflow-wrap: anywhere;
+            }
+            #booking-invoice-document .bi-qr {
+                order: 2;
+                width: 100%;
+                margin: 0 auto;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            #booking-invoice-document .bi-qr img {
+                width: 96px;
+                height: 96px;
+            }
             #booking-invoice-document .bi-grid-3,
-            #booking-invoice-document .bi-policies { grid-template-columns: 1fr; }
-            #booking-invoice-document .bi-table { display: block; overflow-x: auto; }
+            #booking-invoice-document .bi-policies {
+                grid-template-columns: 1fr;
+            }
+            #booking-invoice-document .bi-table {
+                display: block;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            #booking-invoice-document .bi-brand-row img {
+                max-width: 130px;
+            }
         }
         @media print {
-            @page { margin: 10mm; }
-            body { background: #fff; }
-            #booking-invoice-document { padding: 0; background: #fff; }
-            #booking-invoice-document .bi-sheet { border: 0; max-width: none; }
+            @page {
+                size: A4 portrait;
+                margin: 8mm;
+            }
+            html, body {
+                background: #fff !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            #booking-invoice-document {
+                padding: 0 !important;
+                background: #fff !important;
+                font-size: 10.5px !important;
+                line-height: 1.35 !important;
+            }
+            #booking-invoice-document .bi-sheet {
+                border: 0 !important;
+                border-radius: 0 !important;
+                max-width: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+            }
+            #booking-invoice-document .bi-header {
+                display: grid !important;
+                grid-template-columns: 1.4fr 1fr auto !important;
+                gap: 8px !important;
+                margin-bottom: 8px !important;
+                padding-bottom: 8px !important;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            #booking-invoice-document .bi-grid-3 {
+                display: grid !important;
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+                gap: 8px !important;
+                margin-bottom: 8px !important;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            #booking-invoice-document .bi-policies {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 8px !important;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            #booking-invoice-document .bi-card,
+            #booking-invoice-document .bi-merchant,
+            #booking-invoice-document .bi-meta-line,
+            #booking-invoice-document .bi-footer,
+            #booking-invoice-document .bi-third-party,
+            #booking-invoice-document .bi-durpalla-contact,
+            #booking-invoice-document .bi-table,
+            #booking-invoice-document .bi-brand-row {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            #booking-invoice-document .bi-logo {
+                height: 48px;
+                width: 48px;
+                max-width: 64px;
+            }
+            #booking-invoice-document .bi-logo img {
+                height: 48px;
+                max-width: 64px;
+            }
+            #booking-invoice-document .bi-qr img {
+                width: 56px;
+                height: 56px;
+            }
+            #booking-invoice-document .bi-title { font-size: 15px !important; }
+            #booking-invoice-document .bi-merchant-name { font-size: 13px !important; }
+            #booking-invoice-document .bi-card { padding: 8px !important; }
+            #booking-invoice-document .bi-merchant { padding: 8px !important; }
+            #booking-invoice-document .bi-table th,
+            #booking-invoice-document .bi-table td { padding: 4px 6px !important; }
+            #booking-invoice-document .bi-meta-line { margin-bottom: 8px !important; padding: 6px 8px !important; }
+            #booking-invoice-document .bi-policies { margin-top: 8px !important; padding-top: 8px !important; }
+            #booking-invoice-document .bi-footer { margin-top: 8px !important; }
+            #booking-invoice-document img {
+                max-width: 100% !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
         }
     </style>
 </head>
@@ -341,7 +502,12 @@
     $payLabel = $isPaid ? 'Paid' : ($isFailed ? 'Failed' : (str_contains($payRaw, 'PARTIAL') ? 'Partial' : 'Pending'));
     $payBadge = $isPaid ? 'bi-badge-success' : ($isFailed ? 'bi-badge-danger' : 'bi-badge-warning');
     $invoiceCompany = (string) config('invoice.company_name', 'Durpalla Limited');
-    $operatorName = (string) ($merchant['name'] ?? $invoiceCompany);
+    $companyLogo = (string) config('invoice.company_logo_url', '');
+    $merchantLogo = (string) ($merchant['logo_url'] ?? '');
+    $hasRealMerchant = ! empty($merchant['name']) && strcasecmp((string) $merchant['name'], $invoiceCompany) !== 0;
+    $operatorName = $hasRealMerchant
+        ? (string) $merchant['name']
+        : $invoiceCompany;
     $operatorInitial = mb_strtoupper(mb_substr($operatorName !== '' ? $operatorName : 'M', 0, 1));
     $contactLines = array_values(array_unique(array_filter([
         (string) ($merchant['mobile'] ?? ''),
@@ -388,11 +554,22 @@
 @endphp
 <div id="booking-invoice-document">
     <div class="bi-sheet">
+        <div class="bi-brand-row">
+            <div>
+                @if ($companyLogo !== '')
+                    <img src="{{ $companyLogo }}" alt="{{ $invoiceCompany }}">
+                @else
+                    <strong>{{ $invoiceCompany }}</strong>
+                @endif
+            </div>
+            <div class="bi-brand-label">Booking Invoice</div>
+        </div>
+
         <header class="bi-header">
             <div class="bi-merchant">
                 <div class="bi-logo">
-                    @if (!empty($merchant['logo_url']))
-                        <img src="{{ $merchant['logo_url'] }}" alt="{{ $operatorName }}">
+                    @if ($merchantLogo !== '')
+                        <img src="{{ $merchantLogo }}" alt="{{ $operatorName }}">
                     @else
                         {{ $operatorInitial }}
                     @endif
@@ -551,7 +728,11 @@
                 <strong>{{ $operatorName }}</strong>.
             </p>
             <div class="bi-durpalla-contact">
-                <div class="bi-durpalla-mark">D</div>
+                @if ($companyLogo !== '')
+                    <img src="{{ $companyLogo }}" alt="{{ $invoiceCompany }}" class="bi-durpalla-logo">
+                @else
+                    <div class="bi-durpalla-mark">D</div>
+                @endif
                 <div>
                     <p class="bi-durpalla-contact-title">Need help? Contact {{ $invoiceCompany }}</p>
                     <div class="bi-durpalla-contact-meta">
@@ -563,7 +744,13 @@
             </div>
             <div class="bi-powered-row">
                 <span>Thank you for your booking. Have a safe journey.</span>
-                <span class="bi-powered-brand">Powered by {{ $invoiceCompany }}</span>
+                <span class="bi-powered-brand">
+                    @if ($companyLogo !== '')
+                        <img src="{{ $companyLogo }}" alt="{{ $invoiceCompany }}" class="bi-durpalla-logo" style="height:18px;max-width:110px">
+                    @else
+                        Powered by {{ $invoiceCompany }}
+                    @endif
+                </span>
             </div>
             <p class="bi-disclaimer">Computer-generated invoice. No signature required.</p>
         </footer>

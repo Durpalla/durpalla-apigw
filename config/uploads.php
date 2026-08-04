@@ -19,5 +19,6 @@ return [
         'vehicles/',
         'qrs/',
         'images/',
+        'logos/',
     ],
 ];

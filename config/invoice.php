@@ -15,4 +15,33 @@ return [
 
     'company_name' => env('INVOICE_COMPANY_NAME', 'Durpalla Limited'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Invoice company logo
+    |--------------------------------------------------------------------------
+    |
+    | Absolute URL for the Durpalla brand mark on invoices (header/footer).
+    |
+    */
+
+    'company_logo_url' => env(
+        'INVOICE_COMPANY_LOGO_URL',
+        'https://web.durpalla.com/logos/logo-horizontal-colored-premium.png'
+    ),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Public assets base for merchant logos on invoices
+    |--------------------------------------------------------------------------
+    |
+    | Used when merchant logo paths (e.g. logos/merchants/…) are not served
+    | from APP_URL. Prefer the shared CDN / admin public origin.
+    |
+    */
+
+    'assets_base_url' => rtrim((string) env(
+        'INVOICE_ASSETS_BASE_URL',
+        env('UPLOADS_PUBLIC_BASE_URL', '')
+    ), '/'),
+
 ];
