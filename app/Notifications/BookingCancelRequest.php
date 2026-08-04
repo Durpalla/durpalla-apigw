@@ -2,57 +2,48 @@
 
 namespace App\Notifications;
 
+use App\Channels\FcmChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Rajtika\Firebase\Services\Firebase;
 
 class BookingCancelRequest extends Notification implements ShouldQueue
 {
     use Queueable;
+
     public $cancellation;
 
     /**
      * Create a new notification instance.
      *
-     * @return void
+     * @param  mixed  $cancellation
      */
-    public function __construct( $cancellation )
+    public function __construct($cancellation)
     {
         $this->cancellation = $cancellation;
     }
 
     /**
-     * Get the notification's delivery channels.
-     *
      * @param  mixed  $notifiable
-     * @return array
+     * @return array<int, class-string|string>
      */
     public function via($notifiable): array
     {
-        return ['database', 'mail', 'fcm'];
+        return ['database', 'mail', FcmChannel::class];
     }
 
-    /**
-     * Get the mail representation of the notification.
-     *
-     * @param  mixed  $notifiable
-     * @return MailMessage
-     */
     public function toMail($notifiable): MailMessage
     {
         return (new MailMessage)
-                    ->subject('Booking cancellation')
-                    ->greeting('Dear ' . $notifiable->name . ',')
-                    ->line('Your booking (PNR:' . $this->cancellation->booking_id . ') cancellation request has been sent successfully');
+            ->subject('Booking cancellation')
+            ->greeting('Dear '.$notifiable->name.',')
+            ->line('Your booking (PNR:'.$this->cancellation->booking_id.') cancellation request has been sent successfully');
     }
 
     /**
-     * Get the array representation of the notification.
-     *
      * @param  mixed  $notifiable
-     * @return array
+     * @return array<string, mixed>
      */
     public function toArray($notifiable): array
     {
@@ -61,19 +52,31 @@ class BookingCancelRequest extends Notification implements ShouldQueue
             'email' => $notifiable->email,
             'type' => 'cancellation_request',
             'label' => 'info',
-            'property' => $this->cancellation
+            'property' => $this->cancellation,
         ];
     }
 
-    public function toFcm($notifiable)
+    /**
+     * @param  mixed  $notifiable
+     * @return array<string, mixed>|null
+     */
+    public function toFcm($notifiable): ?array
     {
-        if( strlen($notifiable->device_id) > 30 ) {
-            return Firebase::to($notifiable->device_id)
-                ->setID($this->cancellation->booking_id)
-                ->setTitle('Cancellation request received')
-                ->setBody('Your booking cancellation request has been sent successfully')
-                ->send();
+        $token = (string) ($notifiable->device_id ?? '');
+        if (strlen($token) <= 30) {
+            return null;
         }
-        return false;
+
+        return [
+            'token' => $token,
+            'notification' => [
+                'title' => 'Cancellation request received',
+                'body' => 'Your booking cancellation request has been sent successfully',
+            ],
+            'data' => [
+                'type' => 'cancellation_request',
+                'booking_id' => (string) $this->cancellation->booking_id,
+            ],
+        ];
     }
 }

@@ -18,6 +18,9 @@ class FcmChannel
     {
         try {
             $params = $notification->toFcm($notifiable);
+            if (! is_array($params) || $params === []) {
+                return;
+            }
             $gateway = Gateway::find(2);
             if (!$gateway) {
                 Log::warning('FCM: Gateway id 2 not found, push notification skipped.');

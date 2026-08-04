@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Constants\AppConst;
 use App\Models\Agent;
 use App\Models\AgentCommission;
 use App\Models\AgentIncentive;
@@ -147,7 +148,7 @@ class AgentApiPresenter
             'totalDiscount' => (float) $booking->total_discount,
             'totalPayable' => (float) $booking->total_payable,
             'routeOrStay' => $routeOrStay,
-            'cancellable' => self::isBookingCancellable($booking, $source, $firstItem),
+            'cancellable' => self::hasCancellableItems($booking, $source, $firstItem),
         ];
     }
 
@@ -202,6 +203,44 @@ class AgentApiPresenter
         $isFutureEvent = self::resolveIsFutureEvent($firstItem?->trip_date ?: $booking->from_date);
 
         return $source === 'agent' && $isConfirmed && $isFutureEvent;
+    }
+
+    /**
+     * True when the booking is eligible and at least one active item is not already
+     * cancelled or covered by a pending cancellation request.
+     */
+    public static function hasCancellableItems(
+        Booking $booking,
+        ?string $source = null,
+        ?BookingItem $firstItem = null,
+    ): bool {
+        if (! self::isBookingCancellable($booking, $source, $firstItem)) {
+            return false;
+        }
+
+        $requestedIds = [];
+        foreach ($booking->cancellations ?? [] as $cancellation) {
+            foreach (explode(',', (string) ($cancellation->items ?? '')) as $id) {
+                $id = (int) trim($id);
+                if ($id > 0) {
+                    $requestedIds[] = $id;
+                }
+            }
+        }
+        $requestedIds = array_values(array_unique($requestedIds));
+
+        foreach ($booking->bookingItems as $item) {
+            if ((int) $item->status !== AppConst::BOOKING_ITEM_ACTIVE) {
+                continue;
+            }
+            if (in_array((int) $item->id, $requestedIds, true)) {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     /**

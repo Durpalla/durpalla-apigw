@@ -74,7 +74,7 @@ class AgentDashboardService
         ?string $dateTo = null,
     ): LengthAwarePaginator {
         $query = $this->bookingsQuery($agentId, $source)
-            ->with(['customer', 'bookingItems']);
+            ->with(['customer', 'bookingItems', 'cancellations']);
 
         if ($dateFrom) {
             $query->whereDate('bookings.booking_date', '>=', $dateFrom);

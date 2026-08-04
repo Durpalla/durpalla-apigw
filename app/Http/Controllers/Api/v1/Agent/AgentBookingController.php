@@ -128,12 +128,15 @@ class AgentBookingController extends Controller
                 $itemId = isset($ticket['id']) ? (int) $ticket['id'] : null;
                 $bookingItem = $itemId ? $itemsById->get($itemId) : null;
                 $cancelRequested = $itemId !== null && in_array($itemId, $cancellationItemIds, true);
+                $itemCancelled = $bookingItem
+                    && (int) $bookingItem->status === AppConst::BOOKING_ITEM_CANCELLED;
                 $itemCancellable = false;
                 if ($bookingItem
                     && $cancellationEnabled
                     && $bookingLevelCancellable
                     && (int) $bookingItem->status === AppConst::BOOKING_ITEM_ACTIVE
                     && ! $cancelRequested
+                    && ! $itemCancelled
                     && $calculation->isItemCancellableByPolicy($bookingItem->toArray())
                 ) {
                     $itemCancellable = true;
@@ -159,6 +162,7 @@ class AgentBookingController extends Controller
                     'passenger' => $ticket['passenger'] ?? null,
                     'cancellable' => $itemCancellable,
                     'cancel_requested' => $cancelRequested,
+                    'cancelled' => (bool) $itemCancelled,
                 ];
             }
         }
@@ -178,6 +182,7 @@ class AgentBookingController extends Controller
                 'cabin_type' => 'hotel',
                 'cancellable' => false,
                 'cancel_requested' => false,
+                'cancelled' => false,
             ];
         }
 

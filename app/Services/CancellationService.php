@@ -165,8 +165,18 @@ class CancellationService
                     BookingCancellationItem::create($item);
                 });
 
-                $cancellation->customer->notify(new BookingCancelRequest($cancellation));
-                event(new NewNotification($cancellation->customer, ['type' => 'Cancellation request', 'message' => "Your booking cancellation request sent"]));
+                // Notifications must not roll back a successful cancel request.
+                try {
+                    if ($cancellation->customer) {
+                        $cancellation->customer->notify(new BookingCancelRequest($cancellation));
+                        event(new NewNotification($cancellation->customer, [
+                            'type' => 'Cancellation request',
+                            'message' => 'Your booking cancellation request sent',
+                        ]));
+                    }
+                } catch (\Throwable $notificationError) {
+                    report($notificationError);
+                }
             } else {
                 throw new \Exception('Your items is in cancellations list');
             }

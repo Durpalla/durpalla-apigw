@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Services\InvoiceBuilder;
+use App\Support\BookingInvoice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Mpdf\Mpdf;
 
 class FrontController extends Controller
 {
@@ -15,8 +17,7 @@ class FrontController extends Controller
     }
 
     /**
-     * Signed invoice download/view used by all apps after payment success.
-     * Same HTML template for customer, agent, merchant, and web.
+     * Signed invoice PDF download used by all apps after payment success.
      * Route: GET /download/{id} (name: invoice.download)
      */
     public function downloadInvoice(Request $request, $id, InvoiceBuilder $builder)
@@ -24,11 +25,36 @@ class FrontController extends Controller
         try {
             $booking = Booking::query()->findOrFail($id);
             $invoice = $builder->build($booking);
+            $reference = BookingInvoice::formatReference($booking);
+            $fileName = 'invoice-'.$reference.'.pdf';
 
-            return response()
-                ->view('invoice.show', compact('invoice'))
-                ->header('Content-Type', 'text/html; charset=UTF-8')
-                ->header('Cache-Control', 'no-store, private');
+            $html = view('invoice.pdf', compact('invoice'))->render();
+
+            $mpdf = new Mpdf([
+                'mode' => 'utf-8',
+                'format' => 'A4',
+                'margin_left' => 10,
+                'margin_right' => 10,
+                'margin_top' => 10,
+                'margin_bottom' => 10,
+                'tempDir' => storage_path('app/mpdf'),
+            ]);
+
+            $seal = (string) ($invoice['seal'] ?? '');
+            if ($seal !== '') {
+                $mpdf->SetWatermarkText($seal, 0.08);
+                $mpdf->showWatermarkText = true;
+            }
+
+            $mpdf->WriteHTML($html);
+            $pdf = $mpdf->Output($fileName, \Mpdf\Output\Destination::STRING_RETURN);
+
+            return response($pdf, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
+                'Cache-Control' => 'no-store, private',
+                'Content-Length' => (string) strlen($pdf),
+            ]);
         } catch (\Throwable $e) {
             Log::error('Invoice download failed', [
                 'booking_id' => $id,

@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\URL;
 
 /**
  * Channel-agnostic booking invoice helpers shared by customer, agent,
- * merchant, and web clients. All apps download/share the same signed
- * HTML invoice at route {@see invoice.download}.
+ * merchant, and web clients. All apps download the same signed
+ * PDF invoice at route {@see invoice.download}.
  */
 final class BookingInvoice
 {
@@ -33,7 +33,7 @@ final class BookingInvoice
     }
 
     /**
-     * Temporary signed URL for the common invoice HTML template.
+     * Temporary signed URL for the common invoice PDF download.
      */
     public static function signedUrl(int|Booking $booking, int $expiresMinutes = 60): string
     {
