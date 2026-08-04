@@ -308,9 +308,17 @@
         &nbsp;
     @endif
     {!! str_replace(
-        '__COMPANY__',
-        '<span class="latin">'.e($invoiceCompany).'</span>',
-        e(__('invoice.footer_need_help', ['company' => '__COMPANY__']))
+        ['__COMPANY__', '__EMAIL__', '__HOTLINE__'],
+        [
+            '<span class="latin">'.e($invoiceCompany).'</span>',
+            '<span class="latin">support@durpalla.com</span>',
+            '<span class="latin">16374</span>',
+        ],
+        e(__('invoice.footer_need_help', [
+            'company' => '__COMPANY__',
+            'email' => '__EMAIL__',
+            'hotline' => '__HOTLINE__',
+        ]))
     ) !!}
 </div>
 </body>

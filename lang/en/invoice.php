@@ -80,7 +80,7 @@ return [
     'footer_third_party' => 'This booking was made through :company, a third-party online booking platform. Transport service is operated by :operator.',
     'footer_computer' => 'Computer-generated invoice. No signature required.',
     'footer_computer_status' => 'Computer-generated invoice. No signature required. Status: :status',
-    'footer_need_help' => 'Need help? :company · support@durpalla.com · Hotline 16374',
+    'footer_need_help' => 'Need help? :company · :email · Hotline :hotline',
     'footer_need_help_contact' => 'Need help? Contact :company',
     'footer_thanks' => 'Thank you for your booking. Have a safe journey.',
     'powered_by' => 'Powered by :company',

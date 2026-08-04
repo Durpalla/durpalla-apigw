@@ -80,7 +80,7 @@ return [
     'footer_third_party' => 'এই বুকিং :company-এর মাধ্যমে হয়েছে, যা একটি তৃতীয় পক্ষের অনলাইন বুকিং প্ল্যাটফর্ম। পরিবহন সেবা পরিচালনা করে :operator।',
     'footer_computer' => 'কম্পিউটার-জেনারেটেড ইনভয়েস। স্বাক্ষরের প্রয়োজন নেই।',
     'footer_computer_status' => 'কম্পিউটার-জেনারেটেড ইনভয়েস। স্বাক্ষরের প্রয়োজন নেই। স্ট্যাটাস: :status',
-    'footer_need_help' => 'সাহায্য লাগবে? :company · support@durpalla.com · হটলাইন ১৬৩৭৪',
+    'footer_need_help' => 'সাহায্য লাগবে? :company · :email · হটলাইন :hotline',
     'footer_need_help_contact' => 'সাহায্য লাগবে? :company-এর সাথে যোগাযোগ করুন',
     'footer_thanks' => 'বুকিংয়ের জন্য ধন্যবাদ। নিরাপদ যাত্রা কামনা করি।',
     'powered_by' => ':company দ্বারা পরিচালিত',

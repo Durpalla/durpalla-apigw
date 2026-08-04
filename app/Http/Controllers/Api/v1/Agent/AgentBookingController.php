@@ -220,8 +220,9 @@ class AgentBookingController extends Controller
                 'customer_mobile' => is_object($customer) ? ($customer->mobile ?? '') : ($customer['mobile'] ?? ''),
                 'agent_name' => (string) ($invoice['agent']['name'] ?? ''),
                 'agent_mobile' => (string) ($invoice['agent']['mobile'] ?? ''),
-                'invoice' => BookingInvoice::signedUrl($booking, 60),
-                'invoice_html' => BookingInvoice::signedHtmlUrl($booking, 60),
+                // Longer TTL so agents can share the link with customers (WhatsApp, etc.).
+                'invoice' => BookingInvoice::signedUrl($booking, 60 * 24 * 7),
+                'invoice_html' => BookingInvoice::signedHtmlUrl($booking, 60 * 24 * 7),
                 'items' => $items,
                 'hotel' => $invoice['hotel'] ?? null,
                 'display_status' => AgentApiPresenter::displayStatus($booking),

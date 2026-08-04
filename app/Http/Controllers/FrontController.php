@@ -145,6 +145,11 @@ class FrontController extends Controller
 
             $seal = (string) ($invoice['seal'] ?? '');
             if ($seal !== '') {
+                // Seal is always Latin (PAID/FAILED). Bangla default font has no Latin
+                // glyphs — without this, the watermark renders as empty boxes.
+                $mpdf->watermark_font = is_file(resource_path('fonts/FreeSans.ttf'))
+                    ? 'freesans'
+                    : 'dejavusans';
                 $mpdf->SetWatermarkText($seal, 0.08);
                 $mpdf->showWatermarkText = true;
             }
