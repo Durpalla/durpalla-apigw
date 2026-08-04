@@ -11,6 +11,7 @@ return [
     'section_booking' => 'Booking',
     'section_trip' => 'Trip',
     'section_customer' => 'Customer',
+    'section_agent' => 'Agent',
     'section_payment_fare' => 'Payment & Fare',
 
     'label_id' => 'ID',
@@ -31,6 +32,8 @@ return [
     'label_address' => 'Address',
     'label_email' => 'Email',
     'label_hotline' => 'Hotline',
+    'label_agent' => 'Agent',
+    'label_agent_mobile' => 'Agent mobile',
 
     'col_passenger' => 'Passenger',
     'col_phone' => 'Phone',

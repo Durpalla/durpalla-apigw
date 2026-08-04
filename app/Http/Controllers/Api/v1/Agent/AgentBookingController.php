@@ -218,6 +218,8 @@ class AgentBookingController extends Controller
                 'seal' => $invoice['seal'] ?? '',
                 'customer_name' => is_object($customer) ? ($customer->name ?? '') : ($customer['name'] ?? ''),
                 'customer_mobile' => is_object($customer) ? ($customer->mobile ?? '') : ($customer['mobile'] ?? ''),
+                'agent_name' => (string) ($invoice['agent']['name'] ?? ''),
+                'agent_mobile' => (string) ($invoice['agent']['mobile'] ?? ''),
                 'invoice' => BookingInvoice::signedUrl($booking, 60),
                 'invoice_html' => BookingInvoice::signedHtmlUrl($booking, 60),
                 'items' => $items,

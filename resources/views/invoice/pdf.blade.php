@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>{{ config('invoice.company_name', 'Durpalla Limited') }} {{ __('invoice.title') }} #{{ $invoice['pnr'] ?? '' }}</title>
     <style>
-        body { font-family: {{ (app()->getLocale() === 'bn') ? 'freeserif, freesans, sans-serif' : 'DejaVu Sans, sans-serif' }}; font-size: 11px; color: #0f172a; @if(app()->getLocale() === 'bn') font-weight: normal; @endif }
+        body { font-family: {{ (app()->getLocale() === 'bn') ? 'notosansbengali, freesans, sans-serif' : 'DejaVu Sans, sans-serif' }}; font-size: 11px; color: #0f172a; @if(app()->getLocale() === 'bn') font-weight: normal; @endif }
         h1 { font-size: 16px; color: #1d4ed8; margin: 0 0 4px; font-family: inherit; @if(app()->getLocale() === 'bn') font-weight: normal; @endif }
         h2 { font-size: 13px; margin: 0 0 4px; font-family: inherit; @if(app()->getLocale() === 'bn') font-weight: normal; @endif }
         .muted { color: #64748b; }
@@ -38,9 +38,9 @@
             border-radius: 6px;
         }
         @if(app()->getLocale() === 'bn')
-        /* Force Unicode FreeSerif into every table cell — mPDF often drops inherited fonts in nested tables. */
+        /* Force Noto Sans Bengali into every table cell — mPDF often drops inherited fonts in nested tables. */
         table, td, th, div, span, strong, b, h1, h2, li, p {
-            font-family: freeserif !important;
+            font-family: notosansbengali !important;
             font-weight: normal !important;
         }
         .latin, .latin * { font-family: freesans !important; }
@@ -198,6 +198,16 @@
             {!! $latin($customerName) !!}<br>
             {!! $latin($customerMobile) !!}<br>
             <span class="label">{{ __('invoice.label_method') }}:</span> {!! $latin($gateway !== '' ? $gateway : '—') !!}
+            @if (! empty($invoice['agent']))
+                <br><br>
+                <strong>{{ __('invoice.section_agent') }}</strong><br>
+                @if (($invoice['agent']['name'] ?? '') !== '')
+                    {!! $latin($invoice['agent']['name']) !!}<br>
+                @endif
+                @if (($invoice['agent']['mobile'] ?? '') !== '')
+                    <span class="label">{{ __('invoice.label_agent_mobile') }}:</span> {!! $latin($invoice['agent']['mobile']) !!}
+                @endif
+            @endif
         </td>
     </tr>
 </table>
@@ -205,12 +215,12 @@
 <table class="items">
     <thead>
     <tr>
-        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:freeserif;">#</td>
-        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:freeserif;">{{ __('invoice.col_passenger') }}</td>
-        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:freeserif;">{{ __('invoice.col_phone') }}</td>
-        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:freeserif;">{{ __('invoice.col_seat_cabin') }}</td>
-        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:freeserif;">{{ __('invoice.col_type') }}</td>
-        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:freeserif;">{{ __('invoice.col_fare') }}</td>
+        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:notosansbengali;">#</td>
+        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:notosansbengali;">{{ __('invoice.col_passenger') }}</td>
+        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:notosansbengali;">{{ __('invoice.col_phone') }}</td>
+        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:notosansbengali;">{{ __('invoice.col_seat_cabin') }}</td>
+        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:notosansbengali;">{{ __('invoice.col_type') }}</td>
+        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:notosansbengali;">{{ __('invoice.col_fare') }}</td>
     </tr>
     </thead>
     <tbody>
@@ -241,16 +251,16 @@
         <td width="60%"></td>
         <td width="40%">
             <table width="100%">
-                <tr><td style="font-family:freeserif;">{{ __('invoice.subtotal') }}</td><td align="right">{!! $money($invoice['total_amount'] ?? 0) !!}</td></tr>
+                <tr><td style="font-family:notosansbengali;">{{ __('invoice.subtotal') }}</td><td align="right">{!! $money($invoice['total_amount'] ?? 0) !!}</td></tr>
                 @if ((float) ($invoice['charge_total'] ?? 0) > 0)
-                    <tr><td style="font-family:freeserif;">{{ __('invoice.service_charge') }}</td><td align="right">{!! $money($invoice['charge_total']) !!}</td></tr>
+                    <tr><td style="font-family:notosansbengali;">{{ __('invoice.service_charge') }}</td><td align="right">{!! $money($invoice['charge_total']) !!}</td></tr>
                 @endif
-                <tr><td style="font-family:freeserif;">{{ __('invoice.vat_on_charge') }}</td><td align="right">{!! $money($invoice['vat_total'] ?? 0) !!}</td></tr>
+                <tr><td style="font-family:notosansbengali;">{{ __('invoice.vat_on_charge') }}</td><td align="right">{!! $money($invoice['vat_total'] ?? 0) !!}</td></tr>
                 @if ((float) ($invoice['total_discount'] ?? 0) > 0)
-                    <tr><td style="font-family:freeserif;">{{ __('invoice.discount') }}</td><td align="right">-{!! $money($invoice['total_discount']) !!}</td></tr>
+                    <tr><td style="font-family:notosansbengali;">{{ __('invoice.discount') }}</td><td align="right">-{!! $money($invoice['total_discount']) !!}</td></tr>
                 @endif
                 <tr>
-                    <td class="grand" style="font-family:freeserif;">{{ __('invoice.total') }}</td>
+                    <td class="grand" style="font-family:notosansbengali;">{{ __('invoice.total') }}</td>
                     <td class="grand" align="right">{!! $money($invoice['total_payable'] ?? 0) !!}</td>
                 </tr>
             </table>

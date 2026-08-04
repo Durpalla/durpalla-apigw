@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Agent;
 use App\Models\Booking;
 use App\Models\Merchant;
 use App\Support\BookingInvoice;
@@ -18,6 +19,7 @@ class InvoiceBuilder
     {
         $booking->loadMissing([
             'customer',
+            'bookedBy',
             'payment.gateway',
             'cancellations',
             'hotelReservation.roomType',
@@ -72,6 +74,7 @@ class InvoiceBuilder
             'merchant' => $this->formatMerchant($merchant, $serviceType),
             'company_logo_url' => $this->resolveCompanyLogoUrl(),
             'status' => $status,
+            'agent' => $this->resolveAgent($booking),
         ];
 
         if ($booking->hotelReservation) {
@@ -212,6 +215,37 @@ class InvoiceBuilder
             'registration_no' => (string) ($merchant->merchant_reg_no ?? ''),
             'logo_url' => $this->resolveMerchantLogoUrl($merchant),
             'cancellation_policy_lines' => $lines,
+        ];
+    }
+
+    /**
+     * Agent counter booking only — null when booked by customer / admin / merchant.
+     *
+     * @return array{name:string,mobile:string}|null
+     */
+    private function resolveAgent(Booking $booking): ?array
+    {
+        if ($booking->booked_by_type !== Agent::class) {
+            return null;
+        }
+
+        $actor = $booking->bookedBy;
+        if (! $actor instanceof Agent) {
+            $actor = Agent::query()->find((int) $booking->booked_by_id);
+        }
+        if (! $actor instanceof Agent) {
+            return null;
+        }
+
+        $name = trim((string) ($actor->name ?? ''));
+        $mobile = trim((string) ($actor->mobile ?? ''));
+        if ($name === '' && $mobile === '') {
+            return null;
+        }
+
+        return [
+            'name' => $name,
+            'mobile' => $mobile,
         ];
     }
 

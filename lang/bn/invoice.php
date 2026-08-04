@@ -11,6 +11,7 @@ return [
     'section_booking' => 'বুকিং',
     'section_trip' => 'ট্রিপ',
     'section_customer' => 'গ্রাহক',
+    'section_agent' => 'এজেন্ট',
     'section_payment_fare' => 'পেমেন্ট ও ভাড়া',
 
     'label_id' => 'আইডি',
@@ -31,6 +32,8 @@ return [
     'label_address' => 'ঠিকানা',
     'label_email' => 'ইমেইল',
     'label_hotline' => 'হটলাইন',
+    'label_agent' => 'এজেন্ট',
+    'label_agent_mobile' => 'এজেন্ট মোবাইল',
 
     'col_passenger' => 'যাত্রী',
     'col_phone' => 'ফোন',

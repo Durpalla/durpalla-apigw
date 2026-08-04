@@ -631,10 +631,17 @@
                 <div class="bi-row"><span>{{ __('invoice.label_id') }}</span><strong>{{ $bookingRef }}</strong></div>
                 <div class="bi-row"><span>{{ __('invoice.label_date') }}</span><strong>{{ $invoice['booking_date_formated'] ?? '—' }}</strong></div>
                 <div class="bi-row"><span>{{ __('invoice.label_transaction') }}</span><strong>{{ ($invoice['transaction_id'] ?? '') !== '' ? $invoice['transaction_id'] : '—' }}</strong></div>
-                <div class="bi-row">
-                    <span>{{ __('invoice.label_payment') }}</span>
+                <div class="bi-row"><span>{{ __('invoice.label_payment') }}</span>
                     <span class="bi-badge {{ $payBadge }}">{{ $payLabel }}</span>
                 </div>
+                @if (!empty($invoice['agent']))
+                    @if (($invoice['agent']['name'] ?? '') !== '')
+                        <div class="bi-row"><span>{{ __('invoice.label_agent') }}</span><strong>{{ $invoice['agent']['name'] }}</strong></div>
+                    @endif
+                    @if (($invoice['agent']['mobile'] ?? '') !== '')
+                        <div class="bi-row"><span>{{ __('invoice.label_agent_mobile') }}</span><strong>{{ $invoice['agent']['mobile'] }}</strong></div>
+                    @endif
+                @endif
             </section>
 
             <section class="bi-card">

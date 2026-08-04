@@ -183,16 +183,22 @@ class FrontController extends Controller
 
         $fontData = (new FontVariables)->getDefaults()['fontdata'];
 
-        // Unicode FreeSerif covers Bangla + Latin in one face (best single-font
-        // option for mPDF). Bold uses the same file — FreeSerifBold misses glyphs.
-        $fontData['freeserif'] = [
-            'R' => 'FreeSerif.ttf',
-            'B' => 'FreeSerif.ttf',
+        // Noto Sans Bengali for bn invoices (complex-script OTL). Latin/DPB/emails
+        // stay on FreeSans via .latin spans — Noto Sans Bengali is Bengali-script only.
+        $fontData['notosansbengali'] = [
+            'R' => 'NotoSansBengali-Regular.ttf',
+            'B' => 'NotoSansBengali-Bold.ttf',
             'useOTL' => 0xFF,
         ];
         $fontData['freesans'] = [
             'R' => 'FreeSans.ttf',
             'B' => 'FreeSans.ttf',
+            'useOTL' => 0xFF,
+        ];
+        // Kept as fallbacks if Noto files are missing from the image.
+        $fontData['freeserif'] = [
+            'R' => 'FreeSerif.ttf',
+            'B' => 'FreeSerif.ttf',
             'useOTL' => 0xFF,
         ];
         $fontData['mukti'] = [
@@ -202,8 +208,12 @@ class FrontController extends Controller
         ];
 
         $defaultFont = 'dejavusans';
-        if ($lang === BookingInvoice::LANG_BN && is_file(resource_path('fonts/FreeSerif.ttf'))) {
-            $defaultFont = 'freeserif';
+        if ($lang === BookingInvoice::LANG_BN) {
+            if (is_file(resource_path('fonts/NotoSansBengali-Regular.ttf'))) {
+                $defaultFont = 'notosansbengali';
+            } elseif (is_file(resource_path('fonts/FreeSerif.ttf'))) {
+                $defaultFont = 'freeserif';
+            }
         }
 
         return new Mpdf([
@@ -217,8 +227,7 @@ class FrontController extends Controller
             'fontDir' => $fontDirs,
             'fontdata' => $fontData,
             'default_font' => $defaultFont,
-            // Keep off: autoLangToFont remaps bn→freeserif inconsistently and
-            // can still produce tofu when combined with other faces.
+            // Keep off: autoLangToFont remaps bn inconsistently and can produce tofu.
             'autoScriptToLang' => false,
             'autoLangToFont' => false,
         ]);
