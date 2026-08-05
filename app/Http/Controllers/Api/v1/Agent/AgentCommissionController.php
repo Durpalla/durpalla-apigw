@@ -24,7 +24,7 @@ class AgentCommissionController extends Controller
         $pendingTotal = (clone $pendingQuery)->count();
         $pendingRows = $offset < $pendingTotal
             ? (clone $pendingQuery)
-                ->with(['booking', 'bookingItem.vehicle'])
+                ->with(['booking.payment.gateway', 'bookingItem.vehicle'])
                 ->orderByDesc('id')
                 ->skip($offset)
                 ->take($size)
@@ -35,7 +35,7 @@ class AgentCommissionController extends Controller
             : [];
 
         $settledQuery = AgentCommission::query()
-            ->with(['accrual.booking', 'bookingItem.booking', 'bookingItem.vehicle'])
+            ->with(['accrual.booking.payment.gateway', 'bookingItem.booking.payment.gateway', 'bookingItem.vehicle'])
             ->where('user_id', $agentId)
             ->commissionLedger();
         $settledTotal = (clone $settledQuery)->count();

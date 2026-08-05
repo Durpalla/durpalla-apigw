@@ -2,27 +2,21 @@
 
 namespace App\Services;
 
-use App\Models\Agent;
 use App\Models\AgentReferredMerchant;
 use App\Models\Booking;
-use App\Models\Merchant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class AgentReferralAttributionService
 {
     /**
-     * Attribute booking to the referring agent who referred the merchant that owns the inventory.
-     *
-     * Agent counter bookings (booked_by = Agent) earn seller commission, not referral credit.
+     * Stamp bookings.referring_agent_id from the merchant who owns the inventory.
+     * Runs for customer and agent bookings so referrers can earn referral commission
+     * alongside (or instead of) the booking agent's direct commission.
      */
     public function attribute(Booking $booking): void
     {
         if ($booking->referring_agent_id) {
-            return;
-        }
-
-        if ($booking->booked_by_type === Agent::class) {
             return;
         }
 
@@ -60,7 +54,7 @@ class AgentReferralAttributionService
             ->first();
 
         if (! $referred) {
-            $referredAgentId = Merchant::query()
+            $referredAgentId = DB::table('merchants')
                 ->whereIn('id', $merchantIds)
                 ->whereNotNull('referring_agent_id')
                 ->value('referring_agent_id');

@@ -13,9 +13,11 @@ use App\Models\AgentReferredProperty;
 use App\Models\Booking;
 use App\Models\BookingItem;
 use App\Models\Vehicle;
+use App\Services\CalculationService;
 use App\Services\PendingBookingPaymentWindow;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class AgentApiPresenter
 {
@@ -36,6 +38,9 @@ class AgentApiPresenter
             'address' => $user->meta?->address,
             'profilePicUrl' => $user->profile_pic_url,
             'commissionRate' => $incentive ? (float) $incentive->incentive : 0,
+            'commissionType' => $incentive
+                ? (($incentive->incentive_type === 'fixed') ? 'fixed' : 'percent')
+                : 'percent',
             'status' => $status,
             'statusLabel' => match ($status) {
                 1 => 'active',
@@ -51,23 +56,29 @@ class AgentApiPresenter
             ? $commission->bookingItem
             : $commission->bookingItem()->with(['booking', 'vehicle'])->first();
 
-        $booking = $item?->booking ?: $commission->accrual?->booking;
-        $routeOrVehicle = $item?->route_name
-            ?: ($item?->vehicle?->name)
-            ?: 'Commission';
+        $accrual = $commission->accrual;
+        $booking = $item?->booking ?: $accrual?->booking;
+        $vehicleName = self::commissionVehicleName($item, $accrual);
+        $chargeAmount = (float) ($accrual?->base_amount ?? $commission->total_sale ?? 0);
+        $money = self::commissionMoneyBreakdown($booking, $chargeAmount);
 
         return [
             'id' => $commission->id,
             'propertyId' => null,
             'bookingItemId' => $commission->booking_item_id,
-            'propertyName' => $routeOrVehicle,
+            'propertyName' => $vehicleName,
+            'vehicleName' => $vehicleName,
             'bookingReference' => $booking?->pnr
                 ?: $booking?->booking_code
                 ?: ($commission->booking_item_id ? '#'.$commission->booking_item_id : (string) $commission->type),
-            'bookingAmount' => (float) $commission->total_sale,
+            'bookingAmount' => $chargeAmount,
+            'chargeAmount' => $chargeAmount,
+            'gatewayCharge' => $money['gatewayCharge'],
+            'durpallaReceived' => $money['durpallaReceived'],
+            'paymentMethod' => $money['paymentMethod'],
             'commissionAmount' => ($commission->type === 'debit' ? -1 : 1) * (float) $commission->amount,
-            'kind' => $commission->accrual?->kind ?? 'booking',
-            'serviceType' => $commission->accrual?->service_type,
+            'kind' => $accrual?->kind ?? 'booking',
+            'serviceType' => $accrual?->service_type,
             'status' => $commission->type === 'debit' ? 'REVERSED' : 'SETTLED',
             'commissionDate' => $commission->commission_date,
             'createdAt' => $commission->commission_date,
@@ -76,20 +87,28 @@ class AgentApiPresenter
 
     public static function pendingAccrual(AgentCommissionAccrual $accrual): array
     {
-        $item = $accrual->bookingItem;
+        $item = $accrual->relationLoaded('bookingItem')
+            ? $accrual->bookingItem
+            : $accrual->bookingItem()->with('vehicle')->first();
         $booking = $accrual->booking;
+        $vehicleName = self::commissionVehicleName($item, $accrual);
+        $chargeAmount = (float) $accrual->base_amount;
+        $money = self::commissionMoneyBreakdown($booking, $chargeAmount);
 
         return [
             'id' => -1 * (int) $accrual->id,
             'propertyId' => null,
             'bookingItemId' => $accrual->booking_item_id,
-            'propertyName' => $item?->route_name
-                ?: $item?->vehicle?->name
-                ?: ucfirst($accrual->service_type).' commission',
+            'propertyName' => $vehicleName,
+            'vehicleName' => $vehicleName,
             'bookingReference' => $booking?->pnr
                 ?: $booking?->booking_code
                 ?: '#'.$accrual->booking_id,
-            'bookingAmount' => (float) $accrual->base_amount,
+            'bookingAmount' => $chargeAmount,
+            'chargeAmount' => $chargeAmount,
+            'gatewayCharge' => $money['gatewayCharge'],
+            'durpallaReceived' => $money['durpallaReceived'],
+            'paymentMethod' => $money['paymentMethod'],
             'commissionAmount' => (float) $accrual->amount,
             'kind' => $accrual->kind,
             'serviceType' => $accrual->service_type,
@@ -101,25 +120,122 @@ class AgentApiPresenter
     }
 
     /**
+     * Line service-charge vs gateway fee (0 when paid via agent fund).
+     *
+     * @return array{gatewayCharge: float, durpallaReceived: float, paymentMethod: string}
+     */
+    private static function commissionMoneyBreakdown(?Booking $booking, float $lineChargeAmount): array
+    {
+        $payment = $booking?->relationLoaded('payment')
+            ? $booking->payment
+            : $booking?->payment()->with('gateway')->first();
+
+        $method = strtolower(trim((string) (
+            $payment?->payment_method
+            ?: $payment?->gateway?->code
+            ?: $payment?->payment_gateway
+            ?: ''
+        )));
+        $isFund = $method === '' || $method === 'fund' || $method === 'cash';
+
+        if ($isFund || ! $booking) {
+            return [
+                'gatewayCharge' => 0.0,
+                'durpallaReceived' => round(max(0, $lineChargeAmount), 2),
+                'paymentMethod' => $method !== '' ? $method : 'fund',
+            ];
+        }
+
+        $payable = (float) ($booking->total_payable ?? 0);
+        $store = (float) ($payment?->store_amount ?? 0);
+        $paid = (float) ($payment?->paid_amount ?? 0);
+
+        $bookingGatewayCharge = 0.0;
+        if ($store > 0 && $payable > $store + 0.0001) {
+            $bookingGatewayCharge = round($payable - $store, 2);
+        } elseif ($store > 0 && $paid > $store + 0.0001) {
+            $bookingGatewayCharge = round($paid - $store, 2);
+        } else {
+            $bankRate = (float) (function_exists('getOption') ? getOption('service_charge_bank', 2.5) : 2.5);
+            $bookingGatewayCharge = round(max(0, $payable) * $bankRate / 100, 2);
+        }
+
+        $bookingChargeTotal = (float) ($booking->charge_total ?? 0);
+        $lineGateway = $bookingChargeTotal > 0
+            ? round($bookingGatewayCharge * ($lineChargeAmount / $bookingChargeTotal), 2)
+            : round($bookingGatewayCharge, 2);
+
+        return [
+            'gatewayCharge' => max(0, $lineGateway),
+            'durpallaReceived' => round(max(0, $lineChargeAmount - $lineGateway), 2),
+            'paymentMethod' => $method,
+        ];
+    }
+
+    /**
+     * Prefer vehicle/hotel name for commission history titles.
+     */
+    private static function commissionVehicleName(?BookingItem $item, ?AgentCommissionAccrual $accrual = null): string
+    {
+        if ($item) {
+            $item->loadMissing('vehicle');
+            if ($item->vehicle?->name) {
+                return (string) $item->vehicle->name;
+            }
+            if (is_string($item->route_name) && trim($item->route_name) !== '') {
+                return trim($item->route_name);
+            }
+        }
+
+        if ($accrual && $accrual->service_type === 'hotel') {
+            $hotelId = null;
+            if ($accrual->source_type === 'hotel_reservation' && Schema::hasTable('hotel_reservations')) {
+                $hotelId = DB::table('hotel_reservations')->where('id', $accrual->source_id)->value('hotel_id');
+            } elseif ($accrual->source_type === 'booking_hotel_item' && Schema::hasTable('booking_hotel_items')) {
+                $hotelId = DB::table('booking_hotel_items')->where('id', $accrual->source_id)->value('hotel_id');
+            }
+            if ($hotelId && Schema::hasTable('hotels')) {
+                $name = DB::table('hotels')->where('id', $hotelId)->value('name');
+                if ($name) {
+                    return (string) $name;
+                }
+            }
+
+            return 'Hotel commission';
+        }
+
+        return $accrual?->service_type
+            ? ucfirst((string) $accrual->service_type).' commission'
+            : 'Commission';
+    }
+
+    /**
      * Virtual row for expected commission before journey settlement.
      */
     public static function pendingCommission(BookingItem $item, float $amount): array
     {
         $item->loadMissing(['booking', 'vehicle']);
         $booking = $item->booking;
-        $routeOrVehicle = $item->route_name
-            ?: ($item->vehicle?->name)
-            ?: 'Commission';
+        $vehicleName = self::commissionVehicleName($item, null);
+        $chargeAmount = $item->charge_type === 'percent'
+            ? (float) $item->price * (float) $item->charge_amount / 100
+            : (float) $item->charge_amount;
+        $money = self::commissionMoneyBreakdown($booking, (float) $chargeAmount);
 
         return [
             'id' => -1 * (int) $item->id,
             'propertyId' => null,
             'bookingItemId' => $item->id,
-            'propertyName' => $routeOrVehicle,
+            'propertyName' => $vehicleName,
+            'vehicleName' => $vehicleName,
             'bookingReference' => $booking?->pnr
                 ?: $booking?->booking_code
                 ?: '#'.$item->id,
-            'bookingAmount' => max(0, (float) $item->price - (float) $item->discount),
+            'bookingAmount' => round($chargeAmount, 2),
+            'chargeAmount' => round($chargeAmount, 2),
+            'gatewayCharge' => $money['gatewayCharge'],
+            'durpallaReceived' => $money['durpallaReceived'],
+            'paymentMethod' => $money['paymentMethod'],
             'commissionAmount' => $amount,
             'status' => 'PENDING',
             'commissionDate' => self::commissionDateString($item->booking_date)
@@ -142,7 +258,7 @@ class AgentApiPresenter
         return null;
     }
 
-    public static function booking(Booking $booking): array
+    public static function booking(Booking $booking, ?int $forAgentId = null): array
     {
         $booking->loadMissing(['customer', 'bookingItems', 'bookingItems.vehicle', 'bookingItems.item', 'bookingItems.trip']);
         $firstItem = $booking->bookingItems->first();
@@ -227,6 +343,7 @@ class AgentApiPresenter
             'vatTotal' => (float) $booking->vat_total,
             'totalDiscount' => (float) $booking->total_discount,
             'totalPayable' => (float) $booking->total_payable,
+            'commissionAmount' => self::bookingCommissionAmount($booking, $forAgentId),
             'routeOrStay' => $routeOrStay,
             'cancellable' => self::hasCancellableItems($booking, $source, $firstItem),
             'pendingPaymentCancellable' => self::isPendingPaymentCancellable($booking),
@@ -235,6 +352,52 @@ class AgentApiPresenter
             'canPay' => $pw['can_pay'],
             'gatewayId' => $pw['gateway_id'],
         ];
+    }
+
+    /**
+     * Expected / accrued agent commission for a booking (service-charge based).
+     * When $agentId is set, only that agent's accruals / estimate are returned.
+     */
+    public static function bookingCommissionAmount(Booking $booking, ?int $agentId = null): float
+    {
+        $booking->loadMissing('bookingItems');
+
+        $accrualQuery = AgentCommissionAccrual::query()
+            ->where('booking_id', $booking->id)
+            ->whereIn('status', [
+                AgentCommissionAccrual::STATUS_PENDING,
+                AgentCommissionAccrual::STATUS_SETTLED,
+            ]);
+        if ($agentId !== null && $agentId > 0) {
+            $accrualQuery->where('agent_id', $agentId);
+        }
+
+        $accrued = (float) $accrualQuery->sum('amount');
+        if ($accrued > 0) {
+            return round($accrued, 2);
+        }
+
+        if ($agentId !== null && $agentId > 0) {
+            $bookerId = $booking->booked_by_type === Agent::class ? (int) $booking->booked_by_id : 0;
+            $referrerId = (int) ($booking->referring_agent_id ?? 0);
+            $isBooker = $bookerId === $agentId;
+            $isReferrer = $referrerId === $agentId;
+            // Booker who is also referrer still earns (referral); other agents do not.
+            if (! $isBooker && ! $isReferrer) {
+                return 0.0;
+            }
+        }
+
+        $calc = app(CalculationService::class);
+        $total = 0.0;
+        foreach ($booking->bookingItems as $item) {
+            if ((int) $item->status === AppConst::BOOKING_ITEM_CANCELLED) {
+                continue;
+            }
+            $total += (float) $calc->calculateAgentCommission($item->toArray());
+        }
+
+        return round($total, 2);
     }
 
     /**

@@ -83,31 +83,42 @@ class AgentJourneyCommissionService
                 return 0;
             }
 
-            if (! $this->bookedByAgent($booking)) {
-                $this->attribution->attribute($booking);
-                $booking->refresh();
+            $this->attribution->attribute($booking);
+            $booking->refresh();
+
+            $bookerId = $this->bookedByAgent($booking) ? (int) $booking->booked_by_id : 0;
+            $referrerId = (int) ($booking->referring_agent_id ?? 0);
+
+            // Dual commission:
+            // - Booking agent gets kind=booking unless they are also the referrer
+            // - Referring agent always gets kind=referral (including self-book on own referral)
+            $beneficiaries = [];
+            if ($bookerId > 0 && $bookerId !== $referrerId) {
+                $beneficiaries[] = ['agent_id' => $bookerId, 'kind' => 'booking'];
             }
-            $isAgentBooking = $this->bookedByAgent($booking);
-            $agentId = $isAgentBooking
-                ? (int) $booking->booked_by_id
-                : (int) ($booking->referring_agent_id ?? 0);
-            if ($agentId <= 0) {
+            if ($referrerId > 0) {
+                $beneficiaries[] = ['agent_id' => $referrerId, 'kind' => 'referral'];
+            }
+
+            if ($beneficiaries === []) {
                 $this->markBookingChecked($booking);
 
                 return 0;
             }
 
-            $incentive = AgentIncentive::query()->where('agent_id', $agentId)->first();
-            if (! $incentive || (float) $incentive->incentive <= 0) {
-                $this->markBookingChecked($booking);
-
-                return 0;
+            $count = 0;
+            foreach ($beneficiaries as $beneficiary) {
+                $incentive = AgentIncentive::query()
+                    ->where('agent_id', $beneficiary['agent_id'])
+                    ->first();
+                if (! $incentive || (float) $incentive->incentive <= 0) {
+                    continue;
+                }
+                $count += $this->accrueTransport($booking, $beneficiary['agent_id'], $beneficiary['kind'], $incentive)
+                    + $this->accrueHotelReservations($booking, $beneficiary['agent_id'], $beneficiary['kind'], $incentive)
+                    + $this->accrueHotelItems($booking, $beneficiary['agent_id'], $beneficiary['kind'], $incentive);
             }
 
-            $kind = $isAgentBooking ? 'booking' : 'referral';
-            $count = $this->accrueTransport($booking, $agentId, $kind, $incentive)
-                + $this->accrueHotelReservations($booking, $agentId, $kind, $incentive)
-                + $this->accrueHotelItems($booking, $agentId, $kind, $incentive);
             $this->markBookingChecked($booking);
 
             return $count;
@@ -202,7 +213,7 @@ class AgentJourneyCommissionService
             return 0;
         }
         $row = AgentCommissionAccrual::query()->firstOrCreate(
-            ['source_key' => "{$serviceType}:{$sourceType}:{$sourceId}"],
+            ['source_key' => "{$agentId}:{$kind}:{$serviceType}:{$sourceType}:{$sourceId}"],
             [
                 'agent_id' => $agentId,
                 'booking_id' => $booking->id,

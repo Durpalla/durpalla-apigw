@@ -269,7 +269,10 @@ class AgentTransportBookingController extends Controller
                 ->with(['bookingItems', 'customer', 'payment'])
                 ->find($data['order_id']);
             if ($booking) {
-                $data['booking'] = \App\Support\AgentApiPresenter::booking($booking);
+                $data['booking'] = \App\Support\AgentApiPresenter::booking(
+                    $booking,
+                    $agentModel ? (int) $agentModel->id : null
+                );
                 $data['total_amount'] = (float) $booking->total_amount;
                 $data['charge_total'] = (float) $booking->charge_total;
                 $data['vat_total'] = (float) $booking->vat_total;
@@ -318,7 +321,10 @@ class AgentTransportBookingController extends Controller
             $data['success'] = true;
             $data['requires_payment'] = false;
             $data['message'] = $pay['message'] ?? __('Payment successful');
-            $data['booking'] = \App\Support\AgentApiPresenter::booking($booking);
+            $data['booking'] = \App\Support\AgentApiPresenter::booking(
+                $booking,
+                $agentModel ? (int) $agentModel->id : null
+            );
             $data['total_payable'] = (float) $booking->total_payable;
             $data['invoice'] = \App\Support\BookingInvoice::signedUrl($booking, 60);
             $data['trans_id'] = $booking->payment?->transaction_id;

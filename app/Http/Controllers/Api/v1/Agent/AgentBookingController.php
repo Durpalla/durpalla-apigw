@@ -60,7 +60,7 @@ class AgentBookingController extends Controller
             'message' => '',
             'total' => $paginator->total(),
             'data' => collect($paginator->items())
-                ->map(fn (Booking $booking) => AgentApiPresenter::booking($booking))
+                ->map(fn (Booking $booking) => AgentApiPresenter::booking($booking, (int) auth()->id()))
                 ->values()
                 ->all(),
             'page' => max(0, $page - 1),
@@ -215,6 +215,7 @@ class AgentBookingController extends Controller
                 'vat_total' => (float) ($invoice['vat_total'] ?? 0),
                 'charge_total' => (float) ($invoice['charge_total'] ?? 0),
                 'total_payable' => (float) str_replace(',', '', (string) ($invoice['total_payable'] ?? 0)),
+                'commission_amount' => AgentApiPresenter::bookingCommissionAmount($booking, (int) $agent->id),
                 'seal' => $invoice['seal'] ?? '',
                 'customer_name' => is_object($customer) ? ($customer->name ?? '') : ($customer['name'] ?? ''),
                 'customer_mobile' => is_object($customer) ? ($customer->mobile ?? '') : ($customer['mobile'] ?? ''),
