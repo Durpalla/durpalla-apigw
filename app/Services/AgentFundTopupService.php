@@ -39,7 +39,7 @@ class AgentFundTopupService
                     'branch' => (string) getOption('company_bank_branch', ''),
                     'instructions' => (string) getOption(
                         'agent_fund_bank_transfer_note',
-                        'Transfer amount and submit reference. Admin will approve and adjust fund.'
+                        'Transfer the amount, take a live photo of the bank receipt, and submit. Admin will approve and credit your fund.'
                     ),
                 ],
             ],
@@ -130,11 +130,27 @@ class AgentFundTopupService
     /**
      * @return array{success:bool,message:string,data?:array<string,mixed>}
      */
-    public function createBankTransferRequest(Agent $agent, float $amount, ?string $reference, ?string $note): array
-    {
+    public function createBankTransferRequest(
+        Agent $agent,
+        float $amount,
+        ?string $reference,
+        ?string $note,
+        ?\Illuminate\Http\UploadedFile $receipt = null
+    ): array {
         if ($amount <= 0) {
             return ['success' => false, 'message' => __('Invalid amount')];
         }
+        if (! $receipt) {
+            return ['success' => false, 'message' => __('Bank receipt photo is required')];
+        }
+
+        $disk = config('filesystems.profile_disk', 'public');
+        $filename = uniqid('fund_receipt_', true).'.'.$receipt->getClientOriginalExtension();
+        $receiptPath = $receipt->storeAs('agents/fund-receipts', $filename, [
+            'disk' => $disk,
+            'visibility' => 'public',
+        ]);
+
         $topup = AgentFundTopup::create([
             'user_id' => $agent->id,
             'amount' => round($amount, 2),
@@ -142,6 +158,7 @@ class AgentFundTopupService
             'status' => 'pending_admin',
             'bank_reference' => $reference ?: null,
             'note' => $note ?: null,
+            'receipt_path' => $receiptPath,
             'transaction_ref' => 'BFT'.time().$agent->id.random_int(100, 999),
         ]);
 

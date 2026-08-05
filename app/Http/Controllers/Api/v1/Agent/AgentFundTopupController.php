@@ -56,13 +56,15 @@ class AgentFundTopupController extends Controller
             'amount' => 'required|numeric|min:1',
             'bank_reference' => 'nullable|string|max:120',
             'note' => 'nullable|string|max:500',
+            'receipt' => 'required|image|max:5120',
         ]);
 
         $result = $this->topups->createBankTransferRequest(
             $agent,
             (float) $data['amount'],
             $data['bank_reference'] ?? null,
-            $data['note'] ?? null
+            $data['note'] ?? null,
+            $request->file('receipt')
         );
 
         return response()->json($result, ! empty($result['success']) ? 201 : 422);

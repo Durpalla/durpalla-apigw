@@ -22,6 +22,7 @@ class AgentFundTopup extends Model
         'payment_url',
         'bank_reference',
         'note',
+        'receipt_path',
         'approved_by',
         'approved_at',
         'credited_at',

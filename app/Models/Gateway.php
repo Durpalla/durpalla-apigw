@@ -23,6 +23,7 @@ class Gateway extends Model
         'for_merchant',
         'requires_trx',
         'sort_order',
+        'charge_percent',
         'media_id',
         'is_editable',
     ];
@@ -35,7 +36,32 @@ class Gateway extends Model
         'status' => 'integer',
         'sort_order' => 'integer',
         'merchant_id' => 'integer',
+        'charge_percent' => 'decimal:2',
     ];
+
+    /**
+     * Display/estimate gateway PG fee for a fare base (e.g. ticket fare 2000 × 2.1% = 42).
+     */
+    public static function estimateCost(float $fareBase, float|string|null $percent): float
+    {
+        $rate = max(0, (float) $percent);
+
+        return round(max(0, $fareBase) * $rate / 100, 2);
+    }
+
+    public function resolvedChargePercent(bool $isLiveGateway = true): float
+    {
+        if (! $isLiveGateway) {
+            return 0.0;
+        }
+
+        $configured = (float) ($this->charge_percent ?? 0);
+        if ($configured > 0) {
+            return $configured;
+        }
+
+        return max(0, (float) (function_exists('getOption') ? getOption('service_charge_bank', 0) : 0));
+    }
 
     public function credentials(): HasMany
     {

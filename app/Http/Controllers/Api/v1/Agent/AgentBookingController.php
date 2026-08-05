@@ -208,6 +208,17 @@ class AgentBookingController extends Controller
                     ?? $payment?->payment_gateway
                     ?? '',
                 'gateway_id' => $paymentWindow['gateway_id'],
+                'gateway_charge_percent' => ($gwPercent = (float) (
+                    $payment?->gateway
+                        ? $payment->gateway->resolvedChargePercent(
+                            ! in_array(strtolower((string) ($payment->payment_gateway ?? '')), ['fund', 'cash'], true)
+                        )
+                        : 0
+                )),
+                'gateway_cost' => \App\Models\Gateway::estimateCost(
+                    (float) ($invoice['total_amount'] ?? $booking->total_amount ?? 0),
+                    $gwPercent
+                ),
                 'booking_date' => $invoice['booking_date'] ?? null,
                 'booking_date_formated' => $invoice['booking_date_formated'] ?? null,
                 'total_amount' => (float) ($invoice['total_amount'] ?? 0),

@@ -156,8 +156,16 @@ class AgentApiPresenter
         } elseif ($store > 0 && $paid > $store + 0.0001) {
             $bookingGatewayCharge = round($paid - $store, 2);
         } else {
-            $bankRate = (float) (function_exists('getOption') ? getOption('service_charge_bank', 2.5) : 2.5);
-            $bookingGatewayCharge = round(max(0, $payable) * $bankRate / 100, 2);
+            $gateway = $payment?->relationLoaded('gateway')
+                ? $payment->gateway
+                : $payment?->gateway()->first();
+            $fareBase = (float) ($booking->total_amount ?? $payable);
+            if ($gateway) {
+                $bankRate = $gateway->resolvedChargePercent(true);
+            } else {
+                $bankRate = (float) (function_exists('getOption') ? getOption('service_charge_bank', 2.5) : 2.5);
+            }
+            $bookingGatewayCharge = \App\Models\Gateway::estimateCost($fareBase, $bankRate);
         }
 
         $bookingChargeTotal = (float) ($booking->charge_total ?? 0);

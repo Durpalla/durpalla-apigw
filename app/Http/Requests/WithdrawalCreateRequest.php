@@ -16,6 +16,9 @@ class WithdrawalCreateRequest extends FormRequest
 
     public function rules(): array
     {
+        $min = max(1, (float) getOption('withdrawal_limit_agent', 100));
+        $max = max($min, (float) getOption('withdrawal_max_agent', 5000));
+
         return [
             'agent_payment_method_id' => [
                 'bail',
@@ -27,7 +30,26 @@ class WithdrawalCreateRequest extends FormRequest
                 }),
             ],
             'balance' => 'bail|required|numeric',
-            'amount' => 'bail|required|numeric|lte:balance',
+            'amount' => [
+                'bail',
+                'required',
+                'numeric',
+                'min:'.$min,
+                'max:'.$max,
+                'lte:balance',
+            ],
+        ];
+    }
+
+    public function messages(): array
+    {
+        $min = max(1, (float) getOption('withdrawal_limit_agent', 100));
+        $max = max($min, (float) getOption('withdrawal_max_agent', 5000));
+
+        return [
+            'amount.min' => __('Minimum withdrawal amount is :min', ['min' => $min]),
+            'amount.max' => __('Maximum withdrawal amount is :max', ['max' => $max]),
+            'amount.lte' => __('Amount cannot exceed available balance'),
         ];
     }
 

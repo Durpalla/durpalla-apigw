@@ -39,6 +39,11 @@ class AgentWithdrawalController extends Controller
                 'balance' => $balance,
                 'last_withdrawal' => $agentBalance ? (float) $agentBalance->last_withdrawal : 0,
             ],
+            'min_amount' => max(1, (float) getOption('withdrawal_limit_agent', 100)),
+            'max_amount' => max(
+                max(1, (float) getOption('withdrawal_limit_agent', 100)),
+                (float) getOption('withdrawal_max_agent', 5000)
+            ),
             'payment_methods' => $this->withdrawalService->getMyPaymentMethod($user),
         ]);
     }

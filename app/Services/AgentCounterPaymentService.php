@@ -55,10 +55,12 @@ class AgentCounterPaymentService
                     'channel' => self::CHANNEL_OFFLINE,
                     'icon' => $gateway->icon,
                     'live_gateway' => false,
+                    'charge_percent' => 0.0,
                 ];
                 continue;
             }
 
+            $percent = $gateway->resolvedChargePercent(true);
             $methods[] = [
                 'id' => (int) $gateway->id,
                 'code' => $code,
@@ -69,6 +71,7 @@ class AgentCounterPaymentService
                 'channel' => self::CHANNEL_LIVE,
                 'icon' => $gateway->icon,
                 'live_gateway' => true,
+                'charge_percent' => $percent,
             ];
         }
 
@@ -81,6 +84,7 @@ class AgentCounterPaymentService
                 'balance' => $balance,
                 'channel' => self::CHANNEL_OFFLINE,
                 'live_gateway' => false,
+                'charge_percent' => 0.0,
             ]);
         }
 
@@ -271,14 +275,17 @@ class AgentCounterPaymentService
             'type' => 'wallet',
             'requires_trx' => false,
             'balance' => $balance,
+            'charge_percent' => 0.0,
         ]];
         foreach ($this->legacyActiveGateways() as $gateway) {
+            $model = Gateway::query()->find($gateway['id']);
             $methods[] = [
                 'code' => $this->normalize($gateway['name']),
                 'label' => $gateway['name'],
                 'type' => 'gateway',
                 'requires_trx' => false,
                 'gateway_id' => $gateway['id'],
+                'charge_percent' => $model ? $model->resolvedChargePercent(true) : 0.0,
             ];
         }
 
