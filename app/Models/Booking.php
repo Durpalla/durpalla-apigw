@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -116,6 +117,11 @@ class Booking extends Model
     public function payment(): HasOne
     {
         return $this->hasOne(Payment::class, 'booking_id', 'id')->latestOfMany();
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class, 'booking_id', 'id');
     }
 
     public function hotelReservation()
