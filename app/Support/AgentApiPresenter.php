@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Constants\AppConst;
 use App\Models\Agent;
 use App\Models\AgentCommission;
+use App\Models\AgentCommissionAccrual;
 use App\Models\AgentIncentive;
 use App\Models\AgentReferredMerchant;
 use App\Models\AgentReferredMerchantDocument;
@@ -50,7 +51,7 @@ class AgentApiPresenter
             ? $commission->bookingItem
             : $commission->bookingItem()->with(['booking', 'vehicle'])->first();
 
-        $booking = $item?->booking;
+        $booking = $item?->booking ?: $commission->accrual?->booking;
         $routeOrVehicle = $item?->route_name
             ?: ($item?->vehicle?->name)
             ?: 'Commission';
@@ -64,11 +65,38 @@ class AgentApiPresenter
                 ?: $booking?->booking_code
                 ?: ($commission->booking_item_id ? '#'.$commission->booking_item_id : (string) $commission->type),
             'bookingAmount' => (float) $commission->total_sale,
-            'commissionAmount' => (float) $commission->amount,
-            // Settled rows are already credited to the wallet by commission:journey-complete.
-            'status' => 'SETTLED',
+            'commissionAmount' => ($commission->type === 'debit' ? -1 : 1) * (float) $commission->amount,
+            'kind' => $commission->accrual?->kind ?? 'booking',
+            'serviceType' => $commission->accrual?->service_type,
+            'status' => $commission->type === 'debit' ? 'REVERSED' : 'SETTLED',
             'commissionDate' => $commission->commission_date,
             'createdAt' => $commission->commission_date,
+        ];
+    }
+
+    public static function pendingAccrual(AgentCommissionAccrual $accrual): array
+    {
+        $item = $accrual->bookingItem;
+        $booking = $accrual->booking;
+
+        return [
+            'id' => -1 * (int) $accrual->id,
+            'propertyId' => null,
+            'bookingItemId' => $accrual->booking_item_id,
+            'propertyName' => $item?->route_name
+                ?: $item?->vehicle?->name
+                ?: ucfirst($accrual->service_type).' commission',
+            'bookingReference' => $booking?->pnr
+                ?: $booking?->booking_code
+                ?: '#'.$accrual->booking_id,
+            'bookingAmount' => (float) $accrual->base_amount,
+            'commissionAmount' => (float) $accrual->amount,
+            'kind' => $accrual->kind,
+            'serviceType' => $accrual->service_type,
+            'eligibleAt' => $accrual->eligible_at?->toIso8601String(),
+            'status' => 'PENDING',
+            'commissionDate' => optional($accrual->created_at)?->toDateString(),
+            'createdAt' => optional($accrual->created_at)?->toDateString(),
         ];
     }
 

@@ -35,6 +35,8 @@ class Booking extends Model
         'to_date',
         'supplier_id',
         'supplier_booking_reference',
+        'referring_agent_id',
+        'commission_accruals_checked_at',
         // Reseller channel
         'payment_token',
         'payment_deadline',
@@ -42,6 +44,11 @@ class Booking extends Model
         'reseller_commission_amount',
         'commission_share_percent',
         'wallet_debit_amount',
+    ];
+
+    protected $casts = [
+        'payment_deadline' => 'datetime',
+        'commission_accruals_checked_at' => 'datetime',
     ];
 
     public function party()

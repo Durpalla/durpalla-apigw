@@ -1,9 +1,6 @@
 <?php
 
-require __DIR__ . '/../vendor/autoload.php';
-
-$app = require_once __DIR__ . '/../bootstrap/app.php';
-$app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+require __DIR__.'/../vendor/autoload.php';
 
 // Ensure MySQL test database exists (when using mysql connection).
 if (getenv('DB_CONNECTION') === 'mysql' && getenv('DB_DATABASE')) {
@@ -15,7 +12,7 @@ if (getenv('DB_CONNECTION') === 'mysql' && getenv('DB_DATABASE')) {
         $db = getenv('DB_DATABASE');
         $dsn = "mysql:host=$host;port=$port;charset=utf8mb4";
         $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-        $pdo->exec("CREATE DATABASE IF NOT EXISTS `" . str_replace('`', '``', $db) . "`");
+        $pdo->exec('CREATE DATABASE IF NOT EXISTS `'.str_replace('`', '``', $db).'`');
     } catch (Throwable $e) {
         // Ignore; tests will fail with clear "unknown database" if needed.
     }
@@ -30,8 +27,8 @@ if (! getenv('PASSPORT_PUBLIC_KEY')) {
         $details = openssl_pkey_get_details($res);
         $pub = $details['key'] ?? '';
         if ($priv !== false && $pub !== '') {
-            putenv('PASSPORT_PRIVATE_KEY=' . $priv);
-            putenv('PASSPORT_PUBLIC_KEY=' . $pub);
+            putenv('PASSPORT_PRIVATE_KEY='.$priv);
+            putenv('PASSPORT_PUBLIC_KEY='.$pub);
             $_ENV['PASSPORT_PRIVATE_KEY'] = $priv;
             $_ENV['PASSPORT_PUBLIC_KEY'] = $pub;
         }

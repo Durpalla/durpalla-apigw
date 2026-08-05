@@ -284,7 +284,13 @@ class CalculationService
 
     public function calculateAgentCommission(array $item)
     {
-        return ($item['incentive_type'] == 'fixed') ?  call_user_func([$this, $this->resolveNumberFormat()], $item['incentive']) : call_user_func([$this, $this->resolveNumberFormat()], ($item['price'] * ($item['incentive'] / 100)));
+        $serviceCharge = ($item['charge_type'] ?? 'fixed') === 'percent'
+            ? (float) ($item['price'] ?? 0) * (float) ($item['charge_amount'] ?? 0) / 100
+            : (float) ($item['charge_amount'] ?? 0);
+
+        return ($item['incentive_type'] ?? 'percent') === 'fixed'
+            ? call_user_func([$this, $this->resolveNumberFormat()], $item['incentive'] ?? 0)
+            : call_user_func([$this, $this->resolveNumberFormat()], $serviceCharge * ((float) ($item['incentive'] ?? 0) / 100));
     }
 
     public function calculatePartnerCommission($price, $partner)
@@ -299,7 +305,7 @@ class CalculationService
         if ($user instanceof \App\Models\Agent) {
             return $order->bookingItems->map(function ($item, $key) {
                 return [
-                    'incentive' => ($item->incentive_type === 'percent') ? ($item->price * ($item->incentive / 100)) : $item->incentive
+                    'incentive' => $this->calculateAgentCommission($item->toArray())
                 ];
             })->sum('incentive');
         }

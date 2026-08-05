@@ -7,6 +7,7 @@ use App\Models\AgentReferredMerchant;
 use App\Models\Booking;
 use App\Models\Merchant;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class AgentReferralAttributionService
 {
@@ -25,18 +26,25 @@ class AgentReferralAttributionService
             return;
         }
 
-        $booking->loadMissing(['bookingItems.vehicle', 'bookingItems.hotel']);
-
         $merchantIds = [];
-        foreach ($booking->bookingItems as $item) {
-            if ($item->vehicle?->merchant_id) {
-                $merchantIds[] = (int) $item->vehicle->merchant_id;
+        if (Schema::hasTable('booking_items')) {
+            $merchantIds = array_merge($merchantIds, DB::table('booking_items')
+                ->join('vehicles', 'vehicles.id', '=', 'booking_items.vehicle_id')
+                ->where('booking_items.booking_id', $booking->id)
+                ->pluck('vehicles.merchant_id')->all());
+            if (Schema::hasColumn('booking_items', 'hotel_id')) {
+                $merchantIds = array_merge($merchantIds, DB::table('booking_items')
+                    ->join('hotels', 'hotels.id', '=', 'booking_items.hotel_id')
+                    ->where('booking_items.booking_id', $booking->id)
+                    ->pluck('hotels.merchant_id')->all());
             }
-            if ($item->hotel_id) {
-                $hotelMerchantId = DB::table('hotels')->where('id', $item->hotel_id)->value('merchant_id');
-                if ($hotelMerchantId) {
-                    $merchantIds[] = (int) $hotelMerchantId;
-                }
+        }
+        foreach (['hotel_reservations', 'booking_hotel_items'] as $table) {
+            if (Schema::hasTable($table)) {
+                $merchantIds = array_merge($merchantIds, DB::table($table)
+                    ->join('hotels', 'hotels.id', '=', "{$table}.hotel_id")
+                    ->where("{$table}.booking_id", $booking->id)
+                    ->pluck('hotels.merchant_id')->all());
             }
         }
 

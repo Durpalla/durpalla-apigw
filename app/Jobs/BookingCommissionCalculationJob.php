@@ -46,6 +46,9 @@ class BookingCommissionCalculationJob implements ShouldQueue
      */
     public function handle()
     {
+        // Disabled: durable accruals are exclusively owned by commission:journey-complete.
+        return;
+
         $data = ['total_sale' => 0, 'amount' => 0];
         $this->booking->bookingItems()->each(function ($item, $key) use (&$data) {
             $data['total_sale'] += $item->price - $item->discount;

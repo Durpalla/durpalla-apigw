@@ -32,11 +32,7 @@ class AgentWalletController extends Controller
         // the wallet balance). "Pending" = expected commission on confirmed
         // bookings whose journey hasn't completed/settled yet - the customer
         // could still cancel before then, so it isn't in the balance.
-        $totalEarned = (float) AgentCommission::query()
-            ->where('user_id', $userId)
-            ->where('type', 'credit')
-            ->where('purpose', 'commission')
-            ->sum('amount');
+        $totalEarned = AgentCommission::netSettledForAgent((int) $userId);
         $pendingCommission = $this->journeyCommission->pendingAmountForAgent((int) $userId);
 
         return response()->json([

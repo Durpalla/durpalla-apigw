@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Agent;
 use App\Models\AgentCommission;
+use App\Models\AgentCommissionAccrual;
 use App\Models\AgentReferredMerchant;
 use App\Models\Booking;
 use App\Models\Customer;
@@ -43,10 +44,12 @@ class AgentDashboardService
                 'today' => $earningsToday,
                 'yesterday' => $earningsYesterday,
                 'delta' => round($earningsToday - $earningsYesterday, 2),
-                'total_earned' => (float) AgentCommission::query()
-                    ->where('user_id', $agentId)
-                    ->bookingEarnings()
-                    ->sum('amount'),
+                'total_earned' => AgentCommission::netSettledForAgent($agentId),
+                'total_commission' => AgentCommission::netSettledForAgent($agentId),
+                'pending' => (float) AgentCommissionAccrual::query()
+                    ->where('agent_id', $agentId)->pending()->sum('amount'),
+                'pending_amount' => (float) AgentCommissionAccrual::query()
+                    ->where('agent_id', $agentId)->pending()->sum('amount'),
             ],
             'bookings' => [
                 'today_count' => $bookingsToday,
@@ -283,11 +286,7 @@ class AgentDashboardService
 
     private function earningsOn(int $agentId, string $date): float
     {
-        return (float) AgentCommission::query()
-            ->where('user_id', $agentId)
-            ->bookingEarnings()
-            ->whereDate('commission_date', $date)
-            ->sum('amount');
+        return AgentCommission::netSettledForAgent($agentId, $date);
     }
 
     private function chartSeries(int $agentId, int $days): array

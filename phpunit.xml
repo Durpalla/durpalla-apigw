@@ -1,15 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Laravel registers/restores error and exception handlers during HTTP requests,
-  so PHPUnit marks feature tests as "risky" (handler stack changed). Those
-  warnings are expected; tests still pass. failOnRisky="false" keeps exit code 0.
--->
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
          bootstrap="tests/bootstrap.php"
          colors="true"
          beStrictAboutChangesToGlobalState="false"
-         failOnRisky="false"
+         failOnRisky="true"
 >
     <testsuites>
         <testsuite name="Unit">

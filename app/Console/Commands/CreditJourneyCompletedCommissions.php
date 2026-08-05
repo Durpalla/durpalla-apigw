@@ -7,15 +7,21 @@ use Illuminate\Console\Command;
 
 class CreditJourneyCompletedCommissions extends Command
 {
-    protected $signature = 'commission:journey-complete {--limit=200 : Max booking items to process}';
+    protected $signature = 'commission:journey-complete {--limit=200 : Max bookings to reconcile}';
 
-    protected $description = 'Credit agent commissions for journey-completed (non-cancelled) booking items';
+    protected $description = 'Reconcile, settle, void and reverse agent commission accruals';
 
     public function handle(AgentJourneyCommissionService $service): int
     {
         $limit = max(1, (int) $this->option('limit'));
-        $credited = $service->creditDueItems($limit);
-        $this->info("Credited {$credited} commission row(s).");
+        $stats = $service->reconcile($limit);
+        $this->info(sprintf(
+            'Accrued %d, settled %d, voided %d, reversed %d.',
+            $stats['accrued'],
+            $stats['settled'],
+            $stats['voided'],
+            $stats['reversed'],
+        ));
 
         return self::SUCCESS;
     }
