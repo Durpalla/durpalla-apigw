@@ -21,6 +21,7 @@ class AgentJourneyCommissionService
     public function __construct(
         private readonly AccountStatementService $statements,
         private readonly AgentReferralAttributionService $attribution,
+        private readonly FinancialLedgerService $ledger,
     ) {}
 
     public function reconcile(int $limit = 200): array
@@ -220,6 +221,16 @@ class AgentJourneyCommissionService
             ]
         );
 
+        if ($row->wasRecentlyCreated) {
+            $this->ledger->recordAgentCommissionAccrued(
+                (int) $agentId,
+                $amount,
+                (int) $row->id,
+                (int) $booking->id,
+                $bookingItemId
+            );
+        }
+
         return $row->wasRecentlyCreated ? 1 : 0;
     }
 
@@ -259,6 +270,13 @@ class AgentJourneyCommissionService
                 'commission_id' => $commission->id,
                 'settled_at' => now(),
             ]);
+            $this->ledger->recordAgentCommissionSettled(
+                (int) $accrual->agent_id,
+                (float) $accrual->amount,
+                (int) $accrual->id,
+                (int) $accrual->booking_id,
+                $accrual->booking_item_id ? (int) $accrual->booking_item_id : null
+            );
 
             return 'settled';
         }, 3);
@@ -267,6 +285,11 @@ class AgentJourneyCommissionService
     private function void(AgentCommissionAccrual $accrual): string
     {
         $accrual->update(['status' => AgentCommissionAccrual::STATUS_VOID, 'voided_at' => now()]);
+        $this->ledger->recordAgentCommissionVoided(
+            (int) $accrual->agent_id,
+            (float) $accrual->amount,
+            (int) $accrual->id
+        );
 
         return 'voided';
     }
@@ -287,6 +310,11 @@ class AgentJourneyCommissionService
         );
         if ($commission->wasRecentlyCreated) {
             $this->changeBalance($accrual, (float) $accrual->amount, true);
+            $this->ledger->recordAgentCommissionReversed(
+                (int) $accrual->agent_id,
+                (float) $accrual->amount,
+                (int) $accrual->id
+            );
         }
         $accrual->update([
             'status' => AgentCommissionAccrual::STATUS_REVERSED,

@@ -43,6 +43,8 @@ use App\Observers\SupervisorObserver;
 use App\Observers\UserObserver;
 use App\Observers\VehicleObserver;
 use App\Observers\VehicleRouteObserver;
+use App\Events\BookingCompleteEvent as AppBookingCompleteEvent;
+use App\Listeners\RecordFinancialEventsOnBookingPaid;
 use App\Models\User;
 use Laravel\Passport\Events\AccessTokenCreated;
 use Laravel\Passport\Events\RefreshTokenCreated;
@@ -72,6 +74,9 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
             SendNewUserNotification::class,
+        ],
+        AppBookingCompleteEvent::class => [
+            RecordFinancialEventsOnBookingPaid::class,
         ],
         'Laravel\Passport\Events\AccessTokenCreated' => [
             'App\Listeners\RevokeOldTokens',
