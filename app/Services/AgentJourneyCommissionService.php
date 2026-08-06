@@ -32,8 +32,9 @@ class AgentJourneyCommissionService
         $stats = ['accrued' => 0, 'settled' => 0, 'voided' => 0, 'reversed' => 0];
 
         Booking::query()->useWritePdo()
-            ->whereIn('status', [AppConst::BOOKING_COMPLETE, 'ACTIVE', 'active', 'CONFIRMED', 'confirmed'])
+            // Most selective indexed predicate first (unchecked backlog).
             ->whereNull('commission_accruals_checked_at')
+            ->whereIn('status', [AppConst::BOOKING_COMPLETE, 'ACTIVE', 'active', 'CONFIRMED', 'confirmed'])
             ->orderBy('id')->limit($limit)->pluck('id')
             ->each(function (int $id) use (&$stats) {
                 $stats['accrued'] += $this->accrueBooking($id);
@@ -122,13 +123,11 @@ class AgentJourneyCommissionService
         $open = [AgentCommissionAccrual::STATUS_PENDING, AgentCommissionAccrual::STATUS_SETTLED];
 
         $base = Booking::query()->useWritePdo()
-            ->whereIn('status', $statuses)
-            ->whereNull('deleted_at')
+            // Range on checked_at first (candidates already have checked_at set).
+            ->where('commission_accruals_checked_at', '>=', $since)
             ->whereNotNull('commission_accruals_checked_at')
-            ->where(function ($q) use ($since) {
-                $q->where('commission_accruals_checked_at', '>=', $since)
-                    ->orWhere('created_at', '>=', $since);
-            })
+            ->whereNull('deleted_at')
+            ->whereIn('status', $statuses)
             ->where(function ($q) {
                 // Agent counter bookings OR Durpalla customer bookings of referred inventory.
                 $q->where(function ($agent) {
@@ -562,8 +561,11 @@ class AgentJourneyCommissionService
         $ids = DB::table('agent_commission_accruals as a')->join('bookings as b', 'b.id', '=', 'a.booking_id')
             ->whereIn('a.status', $open)
             ->where(function ($q) {
-                $q->whereIn(DB::raw('UPPER(b.status)'), ['CANCELLED', 'CANCELED', 'FAILED', 'REJECTED', 'REFUNDED'])
-                    ->orWhereNotNull('b.deleted_at');
+                // Plain whereIn keeps bookings.status index usable (no UPPER()).
+                $q->whereIn('b.status', [
+                    'CANCELLED', 'CANCELED', 'FAILED', 'REJECTED', 'REFUNDED',
+                    'cancelled', 'canceled', 'failed', 'rejected', 'refunded',
+                ])->orWhereNotNull('b.deleted_at');
             })->limit($limit)->pluck('a.id');
 
         $sources = [
@@ -583,7 +585,10 @@ class AgentJourneyCommissionService
                     if ($type === 'booking_item') {
                         $q->orWhere("{$alias}.{$statusColumn}", '!=', AppConst::BOOKING_ITEM_ACTIVE);
                     } elseif ($type === 'hotel_reservation') {
-                        $q->orWhereIn(DB::raw("LOWER({$alias}.{$statusColumn})"), ['cancelled', 'canceled', 'failed', 'refunded']);
+                        $q->orWhereIn("{$alias}.{$statusColumn}", [
+                            'cancelled', 'canceled', 'failed', 'refunded',
+                            'CANCELLED', 'CANCELED', 'FAILED', 'REFUNDED',
+                        ]);
                     }
                 });
             $ids = $ids->merge($query->limit($limit)->pluck('a.id'));

@@ -39,8 +39,19 @@ class ScheduleRepository extends BaseRepository implements ScheduleRepositoryInt
         $this->normalizeTripSearchRequest($request);
 
         $data = $request->all();
-        $query = $this->model->with(['launch', 'route', 'startingPoint.ghat', 'endingPoint.ghat', 'boardingVias.ghat', 'cabinMappings', 'seatMappings', 'locks', 'bookingItems', 'routeProperties.ghat'])
+        // Load only what trip list formatters need (layout loads mappings separately).
+        $query = $this->model->with([
+            'vehicle',
+            'launch',
+            'route',
+            'startFrom',
+            'stopTo',
+            'startingPoint.ghat',
+            'endingPoint.ghat',
+            'mappings.cabinType',
+        ])
             ->withCount('cabins')
+            // status + schedule_date first for vs_status_date* indexes.
             ->where('status', AppConst::SCHEDULE_ACTIVE);
 
         // Customer/agent public search: only Durpalla-admin approved vehicles.
@@ -76,60 +87,65 @@ class ScheduleRepository extends BaseRepository implements ScheduleRepositoryInt
         }
 
         if ($request->filled('trip_from') && $request->filled('trip_to')) {
-            $tripFrom = trim((string) $data['trip_from']);
-            $tripTo = trim((string) $data['trip_to']);
+            $fromIds = \App\Support\GhatPlaceName::resolveGhatIds((string) $data['trip_from']);
+            $toIds = \App\Support\GhatPlaceName::resolveGhatIds((string) $data['trip_to']);
             $tableName = $this->model->getTable();
-            [$fromSql, $fromBindings] = \App\Support\GhatPlaceName::sqlMatch('g1.name', $tripFrom);
-            [$toSql, $toBindings] = \App\Support\GhatPlaceName::sqlMatch('g2.name', $tripTo);
 
-            $query->whereRaw("
-                EXISTS (
-                    SELECT 1 FROM route_properties as rp1
-                    JOIN ghats as g1 ON rp1.ghat_id = g1.id
-                    JOIN route_properties as rp2 ON rp1.route_id = rp2.route_id
-                    JOIN ghats as g2 ON rp2.ghat_id = g2.id
-                    WHERE rp1.route_id = {$tableName}.route_id
-                    AND {$fromSql}
-                    AND {$toSql}
-                    AND rp1.ghat_id <> rp2.ghat_id
-                    AND (
-                        (
-                            {$tableName}.schedule_type = 'straight'
-                            AND (
-                                rp1.serial_num < rp2.serial_num
-                                OR (rp1.serial_num = rp2.serial_num AND rp1.id < rp2.id)
+            if ($fromIds === [] || $toIds === []) {
+                $query->whereRaw('0 = 1');
+            } else {
+                $fromPlaceholders = implode(',', array_fill(0, count($fromIds), '?'));
+                $toPlaceholders = implode(',', array_fill(0, count($toIds), '?'));
+                // ghat_id IN (...) uses rp_route_ghat_idx — avoid functions on ghats.name.
+                $query->whereRaw("
+                    EXISTS (
+                        SELECT 1 FROM route_properties as rp1
+                        JOIN route_properties as rp2 ON rp1.route_id = rp2.route_id
+                        WHERE rp1.route_id = {$tableName}.route_id
+                        AND rp1.ghat_id IN ({$fromPlaceholders})
+                        AND rp2.ghat_id IN ({$toPlaceholders})
+                        AND rp1.ghat_id <> rp2.ghat_id
+                        AND (
+                            (
+                                {$tableName}.schedule_type = 'straight'
+                                AND (
+                                    rp1.serial_num < rp2.serial_num
+                                    OR (rp1.serial_num = rp2.serial_num AND rp1.id < rp2.id)
+                                )
                             )
-                        )
-                        OR
-                        (
-                            {$tableName}.schedule_type = 'reverse'
-                            AND (
-                                rp1.serial_num > rp2.serial_num
-                                OR (rp1.serial_num = rp2.serial_num AND rp1.id > rp2.id)
+                            OR
+                            (
+                                {$tableName}.schedule_type = 'reverse'
+                                AND (
+                                    rp1.serial_num > rp2.serial_num
+                                    OR (rp1.serial_num = rp2.serial_num AND rp1.id > rp2.id)
+                                )
                             )
                         )
                     )
-                )
-            ", array_merge($fromBindings, $toBindings));
+                ", array_merge($fromIds, $toIds));
+            }
         } else {
             if ($request->filled('trip_from')) {
-                $tripFrom = trim((string) $data['trip_from']);
-                [$fromSql, $fromBindings] = \App\Support\GhatPlaceName::sqlMatch('name', $tripFrom);
-                $query->whereHas('routeProperties', function ($q) use ($fromSql, $fromBindings) {
-                    $q->whereHas('ghat', function ($q) use ($fromSql, $fromBindings) {
-                        $q->whereRaw($fromSql, $fromBindings);
+                $fromIds = \App\Support\GhatPlaceName::resolveGhatIds((string) $data['trip_from']);
+                if ($fromIds === []) {
+                    $query->whereRaw('0 = 1');
+                } else {
+                    $query->whereHas('routeProperties', function ($q) use ($fromIds) {
+                        $q->whereIn('ghat_id', $fromIds);
                     });
-                });
+                }
             }
 
             if ($request->filled('trip_to')) {
-                $tripTo = trim((string) $data['trip_to']);
-                [$toSql, $toBindings] = \App\Support\GhatPlaceName::sqlMatch('name', $tripTo);
-                $query->whereHas('routeProperties', function ($q) use ($toSql, $toBindings) {
-                    $q->whereHas('ghat', function ($q) use ($toSql, $toBindings) {
-                        $q->whereRaw($toSql, $toBindings);
+                $toIds = \App\Support\GhatPlaceName::resolveGhatIds((string) $data['trip_to']);
+                if ($toIds === []) {
+                    $query->whereRaw('0 = 1');
+                } else {
+                    $query->whereHas('routeProperties', function ($q) use ($toIds) {
+                        $q->whereIn('ghat_id', $toIds);
                     });
-                });
+                }
             }
         }
 

@@ -221,7 +221,7 @@ class FrontApiController extends Controller
 
         $results = $query
             ->orderBy('schedule_date', 'asc')
-            ->orderByRaw('TIME(leaving_at) asc')
+            ->orderBy('leaving_at', 'asc')
             ->limit($limit)
             ->get();
 

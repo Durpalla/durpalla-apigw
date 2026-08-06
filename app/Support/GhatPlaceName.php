@@ -2,6 +2,9 @@
 
 namespace App\Support;
 
+use App\Models\Ghat;
+use Illuminate\Support\Facades\Schema;
+
 /**
  * Ghat names are often stored as "City (Boarding Point)" e.g. "Dhaka (Sadar Ghat)".
  * Search From/To should use the city key; boarding points are chosen at checkout.
@@ -54,7 +57,7 @@ final class GhatPlaceName
 
     /**
      * SQL predicate: column matches place (exact or city-key).
-     * Bindings: [$place, $place, $cityKey] (cityKey may equal place).
+     * Prefer {@see resolveGhatIds()} + ghat_id IN (...) on the hot path.
      *
      * @return array{0: string, 1: list<string>}
      */
@@ -63,14 +66,40 @@ final class GhatPlaceName
         $place = trim($place);
         $city = self::cityKey($place);
 
-        // exact OR "City (...)" when searching City OR city-key equality via SUBSTRING_INDEX
+        // Prefix LIKE keeps ghats.name index usable for the city branch.
         $sql = "(
             {$column} = ?
             OR {$column} LIKE CONCAT(?, ' (%')
-            OR LOWER(TRIM(SUBSTRING_INDEX({$column}, ' (', 1))) = LOWER(?)
         )";
 
-        return [$sql, [$place, $city, $city]];
+        return [$sql, [$place, $city]];
+    }
+
+    /**
+     * Resolve a search place string to ghat ids (index-friendly trip EXISTS).
+     *
+     * @return list<int>
+     */
+    public static function resolveGhatIds(string $place): array
+    {
+        $place = trim($place);
+        if ($place === '' || ! Schema::hasTable('ghats')) {
+            return [];
+        }
+
+        $city = self::cityKey($place);
+
+        return Ghat::query()
+            ->where(function ($q) use ($place, $city) {
+                $q->where('name', $place)
+                    ->orWhere('name', 'like', $city.' (%');
+            })
+            ->limit(50)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
     }
 
     /**
