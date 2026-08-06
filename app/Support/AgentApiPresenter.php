@@ -65,7 +65,7 @@ class AgentApiPresenter
         $bookingAmount = (float) ($item?->price
             ?? $booking?->total_amount
             ?? 0);
-        $money = self::commissionMoneyBreakdown($booking, $chargeAmount);
+        $money = self::commissionMoneyBreakdown($booking, $chargeAmount, $bookingAmount, $item);
 
         return [
             'id' => $commission->id,
@@ -77,7 +77,7 @@ class AgentApiPresenter
                 ?: $booking?->booking_code
                 ?: ($commission->booking_item_id ? '#'.$commission->booking_item_id : (string) $commission->type),
             'bookingAmount' => round($bookingAmount, 2),
-            'chargeAmount' => $chargeAmount,
+            'chargeAmount' => round($chargeAmount, 2),
             'vatAmount' => $money['vatAmount'],
             'gatewayCharge' => $money['gatewayCharge'],
             'durpallaReceived' => $money['durpallaReceived'],
@@ -105,7 +105,7 @@ class AgentApiPresenter
         $bookingAmount = (float) ($item?->price
             ?? $booking?->total_amount
             ?? 0);
-        $money = self::commissionMoneyBreakdown($booking, $chargeAmount);
+        $money = self::commissionMoneyBreakdown($booking, $chargeAmount, $bookingAmount, $item);
 
         return [
             'id' => -1 * (int) $accrual->id,
@@ -117,7 +117,7 @@ class AgentApiPresenter
                 ?: $booking?->booking_code
                 ?: '#'.$accrual->booking_id,
             'bookingAmount' => round($bookingAmount, 2),
-            'chargeAmount' => $chargeAmount,
+            'chargeAmount' => round($chargeAmount, 2),
             'vatAmount' => $money['vatAmount'],
             'gatewayCharge' => $money['gatewayCharge'],
             'durpallaReceived' => $money['durpallaReceived'],
@@ -137,9 +137,13 @@ class AgentApiPresenter
      *
      * @return array{vatAmount: float, gatewayCharge: float, durpallaReceived: float, paymentMethod: string}
      */
-    private static function commissionMoneyBreakdown(?Booking $booking, float $lineChargeAmount): array
-    {
-        $lineVat = self::commissionLineVat($booking, $lineChargeAmount);
+    private static function commissionMoneyBreakdown(
+        ?Booking $booking,
+        float $lineChargeAmount,
+        float $lineBookingAmount = 0.0,
+        ?BookingItem $item = null,
+    ): array {
+        $lineVat = self::commissionLineVat($booking, $lineChargeAmount, $item);
 
         $payment = $booking?->relationLoaded('payment')
             ? $booking->payment
@@ -151,13 +155,11 @@ class AgentApiPresenter
             ?: $payment?->payment_gateway
             ?: ''
         )));
-        // Only treat explicit wallet/offline methods as fund. Empty method with a
-        // live payment row should still expose gateway cost.
         $isFund = in_array($method, ['fund', 'cash'], true);
 
         if (! $booking) {
             return [
-                'vatAmount' => 0.0,
+                'vatAmount' => $lineVat,
                 'gatewayCharge' => 0.0,
                 'durpallaReceived' => round(max(0, $lineChargeAmount), 2),
                 'paymentMethod' => $method !== '' ? $method : 'fund',
@@ -174,31 +176,34 @@ class AgentApiPresenter
         }
 
         $payable = (float) ($booking->total_payable ?? 0);
-        $store = (float) ($payment?->store_amount ?? 0);
-        $paid = (float) ($payment?->paid_amount ?? 0);
+        $store = (float) ($payment->store_amount ?? 0);
+        $paid = (float) ($payment->paid_amount ?? 0);
+        $fareBase = $lineBookingAmount > 0
+            ? $lineBookingAmount
+            : (float) ($booking->total_amount ?? $payable);
 
-        $bookingGatewayCharge = 0.0;
+        $lineGateway = 0.0;
         if ($store > 0 && $payable > $store + 0.0001) {
             $bookingGatewayCharge = round($payable - $store, 2);
+            $bookingFareTotal = (float) ($booking->total_amount ?? 0);
+            $lineGateway = ($bookingFareTotal > 0 && $lineBookingAmount > 0)
+                ? round($bookingGatewayCharge * ($lineBookingAmount / $bookingFareTotal), 2)
+                : self::proRateByCharge($bookingGatewayCharge, $lineChargeAmount, $booking);
         } elseif ($store > 0 && $paid > $store + 0.0001) {
             $bookingGatewayCharge = round($paid - $store, 2);
+            $bookingFareTotal = (float) ($booking->total_amount ?? 0);
+            $lineGateway = ($bookingFareTotal > 0 && $lineBookingAmount > 0)
+                ? round($bookingGatewayCharge * ($lineBookingAmount / $bookingFareTotal), 2)
+                : self::proRateByCharge($bookingGatewayCharge, $lineChargeAmount, $booking);
         } else {
-            $gateway = $payment?->relationLoaded('gateway')
+            $gateway = $payment->relationLoaded('gateway')
                 ? $payment->gateway
-                : $payment?->gateway()->first();
-            $fareBase = (float) ($booking->total_amount ?? $payable);
-            if ($gateway) {
-                $bankRate = $gateway->resolvedChargePercent(true);
-            } else {
-                $bankRate = (float) (function_exists('getOption') ? getOption('service_charge_bank', 2.5) : 2.5);
-            }
-            $bookingGatewayCharge = \App\Models\Gateway::estimateCost($fareBase, $bankRate);
+                : $payment->gateway()->first();
+            $bankRate = $gateway
+                ? $gateway->resolvedChargePercent(true)
+                : (float) (function_exists('getOption') ? getOption('service_charge_bank', 2.5) : 2.5);
+            $lineGateway = \App\Models\Gateway::estimateCost($fareBase, $bankRate);
         }
-
-        $bookingChargeTotal = (float) ($booking->charge_total ?? 0);
-        $lineGateway = $bookingChargeTotal > 0
-            ? round($bookingGatewayCharge * ($lineChargeAmount / $bookingChargeTotal), 2)
-            : round($bookingGatewayCharge, 2);
 
         return [
             'vatAmount' => $lineVat,
@@ -208,25 +213,57 @@ class AgentApiPresenter
         ];
     }
 
-    /**
-     * Pro-rate booking VAT onto this commission line by service-charge share.
-     */
-    private static function commissionLineVat(?Booking $booking, float $lineChargeAmount): float
+    private static function proRateByCharge(float $bookingAmount, float $lineChargeAmount, Booking $booking): float
     {
-        if (! $booking) {
-            return 0.0;
-        }
-
-        $bookingVatTotal = (float) ($booking->vat_total ?? 0);
-        if ($bookingVatTotal <= 0) {
-            return 0.0;
-        }
-
         $bookingChargeTotal = (float) ($booking->charge_total ?? 0);
 
         return $bookingChargeTotal > 0
-            ? round($bookingVatTotal * ($lineChargeAmount / $bookingChargeTotal), 2)
-            : round($bookingVatTotal, 2);
+            ? round($bookingAmount * ($lineChargeAmount / $bookingChargeTotal), 2)
+            : round($bookingAmount, 2);
+    }
+
+    /**
+     * VAT on service charge: prefer booking.vat_total share, else rate × line charge.
+     */
+    private static function commissionLineVat(
+        ?Booking $booking,
+        float $lineChargeAmount,
+        ?BookingItem $item = null,
+    ): float {
+        if ($lineChargeAmount <= 0) {
+            return 0.0;
+        }
+
+        if ($booking) {
+            $bookingVatTotal = (float) ($booking->vat_total ?? 0);
+            $bookingChargeTotal = (float) ($booking->charge_total ?? 0);
+            if ($bookingVatTotal > 0) {
+                return $bookingChargeTotal > 0
+                    ? round($bookingVatTotal * ($lineChargeAmount / $bookingChargeTotal), 2)
+                    : round($bookingVatTotal, 2);
+            }
+        }
+
+        $applicable = strtolower(trim((string) (
+            $item?->vat_applicable_to
+            ?: (function_exists('getOption') ? getOption('vat_applicable_to', 'customer') : 'customer')
+        )));
+        if ($applicable !== '' && $applicable !== 'customer') {
+            return 0.0;
+        }
+
+        $rate = (float) (
+            (($item?->vat_amount ?? 0) > 0 ? $item->vat_amount : null)
+            ?? (($booking?->vat_amount ?? 0) > 0 ? $booking->vat_amount : null)
+            ?? (function_exists('getOption') ? getOption('vat_amount', 0) : 0)
+        );
+
+        // vat_amount on item/booking is a percent rate (e.g. 15), not a money total.
+        if ($rate <= 0 || $rate > 100) {
+            return 0.0;
+        }
+
+        return round($lineChargeAmount * ($rate / 100), 2);
     }
 
     /**
@@ -277,7 +314,8 @@ class AgentApiPresenter
         $chargeAmount = $item->charge_type === 'percent'
             ? (float) $item->price * (float) $item->charge_amount / 100
             : (float) $item->charge_amount;
-        $money = self::commissionMoneyBreakdown($booking, (float) $chargeAmount);
+        $bookingAmount = round((float) $item->price, 2);
+        $money = self::commissionMoneyBreakdown($booking, (float) $chargeAmount, $bookingAmount, $item);
 
         return [
             'id' => -1 * (int) $item->id,
@@ -288,7 +326,7 @@ class AgentApiPresenter
             'bookingReference' => $booking?->pnr
                 ?: $booking?->booking_code
                 ?: '#'.$item->id,
-            'bookingAmount' => round((float) $item->price, 2),
+            'bookingAmount' => $bookingAmount,
             'chargeAmount' => round($chargeAmount, 2),
             'vatAmount' => $money['vatAmount'],
             'gatewayCharge' => $money['gatewayCharge'],

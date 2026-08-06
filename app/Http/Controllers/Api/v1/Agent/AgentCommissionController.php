@@ -35,7 +35,11 @@ class AgentCommissionController extends Controller
             : [];
 
         $settledQuery = AgentCommission::query()
-            ->with(['accrual.booking.payment.gateway', 'bookingItem.booking.payment.gateway', 'bookingItem.vehicle'])
+            ->with([
+                'accrual.booking.payment.gateway',
+                'bookingItem.booking.payment.gateway',
+                'bookingItem.vehicle',
+            ])
             ->where('user_id', $agentId)
             ->commissionLedger();
         $settledTotal = (clone $settledQuery)->count();
