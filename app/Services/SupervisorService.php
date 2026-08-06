@@ -130,7 +130,7 @@ class SupervisorService
                         $query->where('status', 1);
                     },
                     'payment' => function ($query) {
-                        $query->select('booking_id', 'paid_amount', 'dues');
+                        $query->select('payments.id', 'payments.booking_id', 'payments.paid_amount', 'payments.dues');
                     },
                     'collections' => function ($query) use ($supervisor) {
                         $query->select('booking_id', 'supervisor_id', 'amount', 'payment_type');

@@ -58,7 +58,7 @@ class BookingRepository extends BaseRepository implements BookingRepositoryInter
                 $query->where('status', 1);
             },
             'payment' => function ($query) {
-                $query->select('booking_id', 'paid_amount', 'dues');
+                $query->select('payments.id', 'payments.booking_id', 'payments.paid_amount', 'payments.dues');
             },
             'collections' => function ($query) use ($params) {
                 $query->with(['supervisor' => function ($query) use ($params) {
@@ -109,7 +109,7 @@ class BookingRepository extends BaseRepository implements BookingRepositoryInter
                 $query->where(['status' => 1, 'vehicle_id' => $params['vehicle_id']]);
             },
             'payment' => function ($query) {
-                $query->select('booking_id', 'paid_amount', 'dues');
+                $query->select('payments.id', 'payments.booking_id', 'payments.paid_amount', 'payments.dues');
             },
             'collections' => function ($query) use ($params) {
                 $query->with(['supervisor' => function ($query) use ($params) {
