@@ -204,7 +204,11 @@ class ResellerBookingService
                 'dues' => 0,
             ]);
 
-            return $booking->load(['bookingItems', 'customer', 'payment']);
+            $booking = $booking->load(['bookingItems', 'customer', 'payment']);
+            // Ledger + cabin map / SMS after the wallet debit commits.
+            app(BookingCompletionService::class)->dispatchCompleteEvent($booking);
+
+            return $booking;
         }, 3);
     }
 

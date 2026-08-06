@@ -44,24 +44,11 @@ use App\Observers\UserObserver;
 use App\Observers\VehicleObserver;
 use App\Observers\VehicleRouteObserver;
 use App\Events\BookingCompleteEvent as AppBookingCompleteEvent;
+use App\Listeners\BookingCompleteSideEffectsListener;
 use App\Listeners\RecordFinancialEventsOnBookingPaid;
 use App\Models\User;
 use Laravel\Passport\Events\AccessTokenCreated;
 use Laravel\Passport\Events\RefreshTokenCreated;
-use Modules\Booking\Events\BookingCancelledEvent;
-use Modules\Booking\Events\BookingCompleteEvent;
-use Modules\Booking\Events\BookingFailedEvent;
-use Modules\Booking\Events\BookingPendingHandleEvent;
-use Modules\Booking\Listeners\BookingCancelledEventListener;
-use Modules\Booking\Listeners\BookingCompleteEventListener;
-use Modules\Booking\Listeners\BookingFailedEventListener;
-use Modules\Booking\Listeners\BookingPendingHandleEventListener;
-use Modules\Cancellation\Events\CancellationRequestEvent;
-use Modules\Cancellation\Listeners\CancellationRequestEventListener;
-use Modules\Payment\Events\PaymentCompleteEvent;
-use Modules\Payment\Listeners\PaymentSuccessListener;
-use Modules\Vehicle\Events\VehicleInactiveEvent;
-use Modules\Vehicle\Listeners\VehicleInactiveEventListener;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -76,6 +63,7 @@ class EventServiceProvider extends ServiceProvider
             SendNewUserNotification::class,
         ],
         AppBookingCompleteEvent::class => [
+            BookingCompleteSideEffectsListener::class,
             RecordFinancialEventsOnBookingPaid::class,
         ],
         'Laravel\Passport\Events\AccessTokenCreated' => [

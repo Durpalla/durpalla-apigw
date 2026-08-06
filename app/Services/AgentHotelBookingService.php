@@ -314,10 +314,11 @@ class AgentHotelBookingService
             $quote = is_array($hold->quote_json) ? $hold->quote_json : [];
             $total = (float) ($quote['total'] ?? $hold->total_amount);
 
-            $bookingStatus = $isLiveGateway
+            // Fund also starts PENDING; BookingCompletionService stamps COMPLETE after debit.
+            $bookingStatus = ($isLiveGateway || $isFund)
                 ? AppConst::BOOKING_PENDING
                 : AppConst::BOOKING_COMPLETE;
-            $reservationStatus = $isLiveGateway
+            $reservationStatus = ($isLiveGateway || $isFund)
                 ? HotelReservation::STATUS_PENDING_PAYMENT
                 : HotelReservation::STATUS_CONFIRMED;
 
@@ -388,10 +389,10 @@ class AgentHotelBookingService
                 'gateway_id' => isset($input['gateway_id']) ? (int) $input['gateway_id'] : null,
                 'payment_method' => $method,
                 'channel' => $isLiveGateway ? 'live' : 'offline',
-                'status' => $isLiveGateway ? 'pending' : ($dues > 0 ? 'advance' : 'success'),
-                'paid_amount' => $isLiveGateway ? 0 : $paidAmount,
-                'store_amount' => $isLiveGateway ? 0 : $paidAmount,
-                'dues' => $isLiveGateway ? $total : $dues,
+                'status' => ($isLiveGateway || $isFund) ? 'pending' : ($dues > 0 ? 'advance' : 'success'),
+                'paid_amount' => ($isLiveGateway || $isFund) ? 0 : $paidAmount,
+                'store_amount' => ($isLiveGateway || $isFund) ? 0 : $paidAmount,
+                'dues' => ($isLiveGateway || $isFund) ? $total : $dues,
             ]);
 
             if ($isFund) {
@@ -401,6 +402,13 @@ class AgentHotelBookingService
                 if (empty($payData['success'])) {
                     throw new \InvalidArgumentException($payData['message'] ?? 'Fund payment failed');
                 }
+                $payment->refresh();
+                $booking = app(BookingCompletionService::class)->complete($booking, $payment, [
+                    'paid_amount' => $total,
+                    'store_amount' => $total,
+                    'dues' => 0,
+                ]);
+                $reservation->refresh();
             }
 
             return compact('reservation', 'booking', 'payment');

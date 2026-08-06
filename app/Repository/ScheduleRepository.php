@@ -46,6 +46,7 @@ class ScheduleRepository extends BaseRepository implements ScheduleRepositoryInt
             'route',
             'startFrom',
             'stopTo',
+            'boardingVias.ghat',
             'startingPoint.ghat',
             'endingPoint.ghat',
             'mappings.cabinType',

@@ -25,7 +25,6 @@ use App\Repository\Interfaces\BookingRepositoryInterface;
 use App\Support\BookingInvoice;
 use App\Models\ScheduleCabinMapping;
 use App\Models\User;
-use App\Events\BookingCompleteEvent;
 use App\Jobs\BookingChargeAdjustmentJob;
 use App\Support\AuthActor;
 use App\Services\Promotion\DTO\PromotionContext;
@@ -236,7 +235,8 @@ class BookingService
                     $payment->save();
                 }
                 dispatch(new BookingChargeAdjustmentJob($booking, $this->calculation));
-                BookingCompleteEvent::dispatch($booking);
+                // Boundary B: paid ledger + side-effects only when already COMPLETE/ADVANCE.
+                app(BookingCompletionService::class)->dispatchCompleteEvent($booking->fresh(['bookingItems', 'customer', 'payment']) ?? $booking);
                 $data['success'] = true;
                 $data['order_id'] = $booking->id;
                 $data['booking_id'] = $booking->id;
@@ -414,7 +414,9 @@ class BookingService
                 'remarks' => ($booking->total_payable == $payment->paid_amount) ? 'Full payment' : 'Partial payment'
             ]);
 
-            BookingCompleteEvent::dispatch($booking);
+            app(BookingCompletionService::class)->dispatchCompleteEvent(
+                $booking->fresh(['bookingItems', 'customer', 'payment']) ?? $booking
+            );
             $data['success'] = true;
             $data['order_id'] = $booking->id;
             $data['invoice'] = BookingInvoice::signedUrl($booking, 30);

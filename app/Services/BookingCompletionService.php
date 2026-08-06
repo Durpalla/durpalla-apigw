@@ -38,7 +38,7 @@ class BookingCompletionService
 
             if (in_array($locked->status, [AppConst::BOOKING_COMPLETE, AppConst::BOOKING_ADVANCE], true)
                 && $this->hasSuccessfulPayment($locked, $payment)) {
-                return $locked->fresh(['bookingItems', 'customer', 'payment', 'payments']);
+                return $locked->fresh(['bookingItems', 'payment', 'payments']);
             }
 
             $pay = $this->resolvePayment($locked, $payment);
@@ -65,17 +65,17 @@ class BookingCompletionService
 
             $this->confirmHotelReservations($locked);
 
-            $locked = $locked->fresh(['bookingItems', 'customer', 'payment', 'payments']);
+            $locked = $locked->fresh(['bookingItems', 'payment', 'payments']);
             $this->ledger->recordBookingPaid($locked);
 
             return $locked;
         }, 3);
 
         DB::afterCommit(function () use ($completed) {
-            BookingCompleteEvent::dispatch($completed->fresh(['bookingItems', 'customer', 'payment']) ?? $completed);
+            BookingCompleteEvent::dispatch($completed->fresh(['bookingItems', 'payment']) ?? $completed);
         });
 
-        return $completed->fresh(['bookingItems', 'customer', 'payment', 'payments']) ?? $completed;
+        return $completed->fresh(['bookingItems', 'payment', 'payments']) ?? $completed;
     }
 
     /**
@@ -87,7 +87,7 @@ class BookingCompletionService
             return;
         }
 
-        $fresh = $booking->fresh(['bookingItems', 'customer', 'payment', 'payments']) ?? $booking;
+        $fresh = $booking->fresh(['bookingItems', 'payment', 'payments']) ?? $booking;
 
         if (DB::transactionLevel() > 0) {
             DB::afterCommit(fn () => BookingCompleteEvent::dispatch($fresh));
@@ -116,7 +116,7 @@ class BookingCompletionService
 
         $status = strtolower((string) $pay->status);
 
-        return in_array($status, ['success', 'paid', 'advance', AppConst::PAYMENT_SUCCESS], true)
+        return in_array($status, ['success', 'paid', 'advance', 'verified', AppConst::PAYMENT_SUCCESS], true)
             || (method_exists($pay, 'isCollected') && $pay->isCollected());
     }
 

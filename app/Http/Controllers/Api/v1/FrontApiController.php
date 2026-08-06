@@ -236,7 +236,10 @@ class FrontApiController extends Controller
     {
         $results = null;
         $log = 'Search trip ';
-        $query = VehicleSchedule::with(['route', 'startingPoint.ghat', 'endingPoint.ghat', 'boardingVias.ghat', 'startFrom', 'stopTo', 'cabinMappings', 'seatMappings', 'locks', 'bookingItems', 'vehicle'])->where('status', 'ACTIVE')->where('schedule_date', '>=', date('Y-m-d'));
+        $query = VehicleSchedule::with([
+            'route', 'startingPoint.ghat', 'endingPoint.ghat', 'boardingVias.ghat',
+            'startFrom', 'stopTo', 'mappings', 'vehicle',
+        ])->where('status', 'ACTIVE')->where('schedule_date', '>=', date('Y-m-d'));
         \App\Support\PublicListingVisibility::applyApprovedVehicle($query, 'vehicle');
 
         if ($request->trip_date) {

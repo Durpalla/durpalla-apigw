@@ -6,10 +6,8 @@ use App\Constants\AppConst;
 use App\Helpers\CommonHelper;
 use App\Models\Agent;
 use App\Models\Booking;
-use App\Models\BookingItem;
 use App\Models\Payment;
 use Illuminate\Http\Request;
-use App\Events\BookingCompleteEvent;
 use App\Models\Gateway;
 
 /**
@@ -200,21 +198,11 @@ class AgentPaymentService
             return;
         }
 
-        $payment->update([
-            'status' => 'success',
-            'dues' => 0,
+        app(BookingCompletionService::class)->complete($booking, $payment, [
             'paid_amount' => (float) ($payment->paid_amount ?: $booking->total_payable),
             'store_amount' => (float) ($payment->store_amount ?: $booking->total_payable),
+            'dues' => 0,
         ]);
-
-        $booking->update(['status' => AppConst::BOOKING_COMPLETE]);
-        BookingItem::query()
-            ->where('booking_id', $booking->id)
-            ->update(['status' => AppConst::BOOKING_ITEM_ACTIVE]);
-
-        $booking->refresh();
-        $booking->load(['bookingItems', 'customer', 'payment']);
-        BookingCompleteEvent::dispatch($booking);
     }
 
     public function ownsBooking(Agent $agent, Booking $booking): bool

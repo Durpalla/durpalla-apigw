@@ -116,25 +116,23 @@ class ApiPaymentController extends Controller
                     $validation = $sslc->orderValidate($request->tran_id, $request->amount, $request->currency, $request->all());
 
                     if ($validation == TRUE) {
-                        $transaction->paid_amount = floatval($request->input('amount'));
                         $transaction->bank_tran_id = $request->bank_tran_id;
                         $transaction->payment_method = $request->card_type;
                         $transaction->account_no = $request->card_no;
-                        $transaction->store_amount = $request->store_amount;
                         $transaction->currency = $request->currency;
-                        $transaction->status = 'success';
+                        $transaction->save();
 
-                        if ($transaction->save()) {
+                        $order = app(\App\Services\BookingCompletionService::class)->complete(
+                            $transaction->booking,
+                            $transaction,
+                            [
+                                'paid_amount' => floatval($request->input('amount')),
+                                'store_amount' => (float) $request->store_amount,
+                                'dues' => 0,
+                            ]
+                        );
 
-                            Booking::where('id', $transaction->booking_id)->update([
-                                'status' => 'COMPLETE'
-                            ]);
-
-                            BookingItem::where('booking_id', $transaction->booking_id)->update([
-                                'status' => 1
-                            ]);
-
-                            $order = Booking::find($transaction->booking_id);
+                        if ($order) {
                             $message = 'Ticket-' . $order->id . '%0A';
                             $scheduleSms = [];
                             if ($order->bookingItems) {
