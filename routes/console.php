@@ -57,3 +57,10 @@ Schedule::command('commission:journey-complete')
     ->everyFifteenMinutes()
     ->runInBackground()
     ->withoutOverlapping();
+
+// Re-open bookings that were marked checked but are missing expected accruals
+// (e.g. dual booker/referrer gaps, locked zero-accrual hotel bookings).
+Schedule::command('commission:repair-missing --hours=1 --limit=100')
+    ->hourly()
+    ->runInBackground()
+    ->withoutOverlapping();

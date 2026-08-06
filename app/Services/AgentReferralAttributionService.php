@@ -20,6 +20,24 @@ class AgentReferralAttributionService
             return;
         }
 
+        $referredAgentId = $this->resolveReferringAgentId($booking);
+        if (! $referredAgentId) {
+            return;
+        }
+
+        $booking->referring_agent_id = $referredAgentId;
+        $booking->saveQuietly();
+    }
+
+    /**
+     * Resolve referring agent without mutating the booking (admin verify / dry checks).
+     */
+    public function resolveReferringAgentId(Booking $booking): ?int
+    {
+        if ($booking->referring_agent_id) {
+            return (int) $booking->referring_agent_id;
+        }
+
         $merchantIds = [];
         if (Schema::hasTable('booking_items')) {
             $merchantIds = array_merge($merchantIds, DB::table('booking_items')
@@ -44,7 +62,7 @@ class AgentReferralAttributionService
 
         $merchantIds = array_values(array_unique(array_filter($merchantIds)));
         if ($merchantIds === []) {
-            return;
+            return null;
         }
 
         $referred = AgentReferredMerchant::query()
@@ -53,20 +71,15 @@ class AgentReferralAttributionService
             ->orderBy('id')
             ->first();
 
-        if (! $referred) {
-            $referredAgentId = DB::table('merchants')
-                ->whereIn('id', $merchantIds)
-                ->whereNotNull('referring_agent_id')
-                ->value('referring_agent_id');
-            if ($referredAgentId) {
-                $booking->referring_agent_id = (int) $referredAgentId;
-                $booking->saveQuietly();
-            }
-
-            return;
+        if ($referred) {
+            return (int) $referred->agent_id;
         }
 
-        $booking->referring_agent_id = $referred->agent_id;
-        $booking->saveQuietly();
+        $referredAgentId = DB::table('merchants')
+            ->whereIn('id', $merchantIds)
+            ->whereNotNull('referring_agent_id')
+            ->value('referring_agent_id');
+
+        return $referredAgentId ? (int) $referredAgentId : null;
     }
 }

@@ -11,6 +11,9 @@ use App\Models\AgentCommissionAccrual;
 use App\Models\AgentIncentive;
 use App\Models\Booking;
 use App\Models\BookingItem;
+use App\Models\Customer;
+use App\Models\Merchant;
+use App\Models\MerchantStaff;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -60,6 +63,152 @@ class AgentJourneyCommissionService
         return $this->reconcile($limit)['settled'];
     }
 
+    /**
+     * Find bookings that were marked commission-checked but are missing expected
+     * accruals (zero rows, or dual booker/referrer gap), clear the lock, and re-accrue.
+     *
+     * Cron should pass a short lookback (default 1 hour) so each hourly run only
+     * inspects recent bookings — not the full history. Older claims use admin repair.
+     *
+     * @return array{candidates: int, repaired: int, accrued: int, booking_ids: list<int>, hours: int}
+     */
+    public function repairMissingAccruals(int $limit = 100, bool $dryRun = false, int $hours = 1): array
+    {
+        $hours = max(1, $hours);
+        $ids = $this->missingCommissionBookingIds($limit, $hours);
+        $stats = [
+            'candidates' => count($ids),
+            'repaired' => 0,
+            'accrued' => 0,
+            'booking_ids' => $ids,
+            'hours' => $hours,
+        ];
+
+        if ($dryRun || $ids === []) {
+            return $stats;
+        }
+
+        foreach ($ids as $bookingId) {
+            $created = $this->reinitiateBookingCommission($bookingId);
+            $stats['repaired']++;
+            $stats['accrued'] += $created;
+        }
+
+        return $stats;
+    }
+
+    /**
+     * Force clear the checked lock and re-accrue a single booking (admin / repair).
+     */
+    public function reinitiateBookingCommission(int $bookingId): int
+    {
+        Booking::query()->useWritePdo()
+            ->where('id', $bookingId)
+            ->update(['commission_accruals_checked_at' => null]);
+
+        return $this->accrueBooking($bookingId);
+    }
+
+    /**
+     * Bookings in the lookback window that look commissionable but lack expected accruals.
+     *
+     * @return list<int>
+     */
+    public function missingCommissionBookingIds(int $limit = 100, int $hours = 1): array
+    {
+        $hours = max(1, $hours);
+        $since = now()->subHours($hours);
+        $statuses = [AppConst::BOOKING_COMPLETE, 'ACTIVE', 'active', 'CONFIRMED', 'confirmed'];
+        $open = [AgentCommissionAccrual::STATUS_PENDING, AgentCommissionAccrual::STATUS_SETTLED];
+
+        $base = Booking::query()->useWritePdo()
+            ->whereIn('status', $statuses)
+            ->whereNull('deleted_at')
+            ->whereNotNull('commission_accruals_checked_at')
+            ->where(function ($q) use ($since) {
+                $q->where('commission_accruals_checked_at', '>=', $since)
+                    ->orWhere('created_at', '>=', $since);
+            })
+            ->where(function ($q) {
+                // Agent counter bookings OR Durpalla customer bookings of referred inventory.
+                $q->where(function ($agent) {
+                    $agent->where('booked_by_type', Agent::class)
+                        ->where('booked_by_id', '>', 0);
+                })->orWhere(function ($referral) {
+                    $referral->where('referring_agent_id', '>', 0)
+                        ->where(function ($booker) {
+                            $booker->whereNull('booked_by_type')
+                                ->orWhere('booked_by_type', Customer::class)
+                                ->orWhere('booked_by_type', Agent::class);
+                        });
+                });
+            });
+        $this->applyExcludeMerchantSideBookingConstraints($base);
+        $columns = ['id', 'booked_by_type', 'booked_by_id', 'referring_agent_id', 'charge_total'];
+        if (Schema::hasColumn('bookings', 'booking_party')) {
+            $columns[] = 'booking_party';
+        }
+        if (Schema::hasColumn('bookings', 'platform')) {
+            $columns[] = 'platform';
+        }
+        $base = $base
+            ->orderByDesc('commission_accruals_checked_at')
+            ->limit(max(1, $limit))
+            ->get($columns);
+
+        $missing = [];
+        foreach ($base as $booking) {
+            if (count($missing) >= $limit) {
+                break;
+            }
+            if ($this->isMerchantSideBooking($booking) || ! $this->isAgentCommissionScopeBooking($booking)) {
+                continue;
+            }
+            if (! $this->bookingLooksCommissionable($booking)) {
+                continue;
+            }
+
+            $this->attribution->attribute($booking);
+            $booking->refresh();
+
+            $expected = $this->expectedBeneficiaries($booking);
+            if ($expected === []) {
+                continue;
+            }
+
+            $payable = [];
+            foreach ($expected as $beneficiary) {
+                $incentive = AgentIncentive::query()
+                    ->where('agent_id', $beneficiary['agent_id'])
+                    ->first();
+                if ($incentive && (float) $incentive->incentive > 0) {
+                    $payable[] = $beneficiary;
+                }
+            }
+            if ($payable === []) {
+                continue;
+            }
+
+            $existing = AgentCommissionAccrual::query()
+                ->where('booking_id', $booking->id)
+                ->whereIn('status', $open)
+                ->get(['agent_id', 'kind']);
+
+            foreach ($payable as $beneficiary) {
+                $has = $existing->contains(function ($row) use ($beneficiary) {
+                    return (int) $row->agent_id === (int) $beneficiary['agent_id']
+                        && (string) $row->kind === (string) $beneficiary['kind'];
+                });
+                if (! $has) {
+                    $missing[] = (int) $booking->id;
+                    break;
+                }
+            }
+        }
+
+        return $missing;
+    }
+
     public function pendingAmountForAgent(int $agentId): float
     {
         return (float) AgentCommissionAccrual::query()
@@ -83,8 +232,22 @@ class AgentJourneyCommissionService
                 return 0;
             }
 
+            // Merchant desk / merchant-party bookings never earn agent commission.
+            if ($this->isMerchantSideBooking($booking)) {
+                $this->markBookingChecked($booking);
+
+                return 0;
+            }
+
             $this->attribution->attribute($booking);
             $booking->refresh();
+
+            // Only agent counter bookings and Durpalla customer bookings of referred inventory.
+            if (! $this->isAgentCommissionScopeBooking($booking)) {
+                $this->markBookingChecked($booking);
+
+                return 0;
+            }
 
             $bookerId = $this->bookedByAgent($booking) ? (int) $booking->booked_by_id : 0;
             $referrerId = (int) ($booking->referring_agent_id ?? 0);
@@ -446,6 +609,121 @@ class AgentJourneyCommissionService
         return is_string($booking->booked_by_type)
             && is_a($booking->booked_by_type, Agent::class, true)
             && (int) $booking->booked_by_id > 0;
+    }
+
+    /**
+     * Merchant desk / merchant-party bookings are out of scope for agent commission.
+     */
+    private function isMerchantSideBooking(Booking $booking): bool
+    {
+        if (Schema::hasColumn('bookings', 'booking_party')
+            && strtolower((string) ($booking->booking_party ?? '')) === 'merchant') {
+            return true;
+        }
+        if (Schema::hasColumn('bookings', 'platform')
+            && strtolower((string) ($booking->platform ?? '')) === 'merchant_desk') {
+            return true;
+        }
+        $type = (string) ($booking->booked_by_type ?? '');
+        if ($type === '') {
+            return false;
+        }
+
+        return is_a($type, Merchant::class, true) || is_a($type, MerchantStaff::class, true);
+    }
+
+    /**
+     * Agent commission applies to:
+     * - agent counter bookings, and
+     * - Durpalla customer bookings of agent-referred inventory.
+     */
+    private function isAgentCommissionScopeBooking(Booking $booking): bool
+    {
+        if ($this->isMerchantSideBooking($booking)) {
+            return false;
+        }
+        if ($this->bookedByAgent($booking)) {
+            return true;
+        }
+        if ((int) ($booking->referring_agent_id ?? 0) <= 0) {
+            return false;
+        }
+        if (Schema::hasColumn('bookings', 'booking_party')) {
+            $party = strtolower((string) ($booking->booking_party ?? ''));
+            if ($party !== '' && $party !== 'durpalla' && $party !== AppConst::OWNER) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * SQL constraints that drop merchant desk / merchant-party bookings.
+     */
+    private function applyExcludeMerchantSideBookingConstraints($query): void
+    {
+        if (Schema::hasColumn('bookings', 'booking_party')) {
+            $query->where(function ($q) {
+                $q->whereNull('booking_party')
+                    ->orWhere('booking_party', '!=', 'merchant');
+            });
+        }
+        if (Schema::hasColumn('bookings', 'platform')) {
+            $query->where(function ($q) {
+                $q->whereNull('platform')
+                    ->orWhere('platform', '!=', 'merchant_desk');
+            });
+        }
+        $query->where(function ($q) {
+            $q->whereNull('booked_by_type')
+                ->orWhereNotIn('booked_by_type', [Merchant::class, MerchantStaff::class]);
+        });
+    }
+
+    /**
+     * @return list<array{agent_id: int, kind: string}>
+     */
+    private function expectedBeneficiaries(Booking $booking): array
+    {
+        $bookerId = $this->bookedByAgent($booking) ? (int) $booking->booked_by_id : 0;
+        $referrerId = (int) ($booking->referring_agent_id ?? 0);
+        $beneficiaries = [];
+        if ($bookerId > 0 && $bookerId !== $referrerId) {
+            $beneficiaries[] = ['agent_id' => $bookerId, 'kind' => 'booking'];
+        }
+        if ($referrerId > 0) {
+            $beneficiaries[] = ['agent_id' => $referrerId, 'kind' => 'referral'];
+        }
+
+        return $beneficiaries;
+    }
+
+    private function bookingLooksCommissionable(Booking $booking): bool
+    {
+        if ((float) ($booking->charge_total ?? 0) > 0) {
+            return true;
+        }
+        if ($booking->bookingItems()->where('status', AppConst::BOOKING_ITEM_ACTIVE)
+            ->where(function ($q) {
+                $q->whereNull('item_type')->orWhere('item_type', '!=', 'hotel');
+            })
+            ->where(function ($q) {
+                $q->where('charge_amount', '>', 0)->orWhere('price', '>', 0);
+            })
+            ->exists()) {
+            return true;
+        }
+        if (Schema::hasTable('hotel_reservations')
+            && DB::table('hotel_reservations')->where('booking_id', $booking->id)->exists()) {
+            return true;
+        }
+        if (Schema::hasTable('booking_hotel_items')
+            && DB::table('booking_hotel_items')->where('booking_id', $booking->id)->exists()) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
