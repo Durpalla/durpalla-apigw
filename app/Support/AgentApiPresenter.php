@@ -53,12 +53,18 @@ class AgentApiPresenter
     {
         $item = $commission->relationLoaded('bookingItem')
             ? $commission->bookingItem
-            : $commission->bookingItem()->with(['booking', 'vehicle'])->first();
+            : $commission->bookingItem()->with(['booking.payment.gateway', 'vehicle'])->first();
 
-        $accrual = $commission->accrual;
+        $accrual = $commission->relationLoaded('accrual')
+            ? $commission->accrual
+            : $commission->accrual()->with(['booking.payment.gateway'])->first();
         $booking = $item?->booking ?: $accrual?->booking;
+        $booking?->loadMissing('payment.gateway');
         $vehicleName = self::commissionVehicleName($item, $accrual);
         $chargeAmount = (float) ($accrual?->base_amount ?? $commission->total_sale ?? 0);
+        $bookingAmount = (float) ($item?->price
+            ?? $booking?->total_amount
+            ?? 0);
         $money = self::commissionMoneyBreakdown($booking, $chargeAmount);
 
         return [
@@ -70,8 +76,9 @@ class AgentApiPresenter
             'bookingReference' => $booking?->pnr
                 ?: $booking?->booking_code
                 ?: ($commission->booking_item_id ? '#'.$commission->booking_item_id : (string) $commission->type),
-            'bookingAmount' => $chargeAmount,
+            'bookingAmount' => round($bookingAmount, 2),
             'chargeAmount' => $chargeAmount,
+            'vatAmount' => $money['vatAmount'],
             'gatewayCharge' => $money['gatewayCharge'],
             'durpallaReceived' => $money['durpallaReceived'],
             'paymentMethod' => $money['paymentMethod'],
@@ -89,9 +96,15 @@ class AgentApiPresenter
         $item = $accrual->relationLoaded('bookingItem')
             ? $accrual->bookingItem
             : $accrual->bookingItem()->with('vehicle')->first();
-        $booking = $accrual->booking;
+        $booking = $accrual->relationLoaded('booking')
+            ? $accrual->booking
+            : $accrual->booking()->with('payment.gateway')->first();
+        $booking?->loadMissing('payment.gateway');
         $vehicleName = self::commissionVehicleName($item, $accrual);
         $chargeAmount = (float) $accrual->base_amount;
+        $bookingAmount = (float) ($item?->price
+            ?? $booking?->total_amount
+            ?? 0);
         $money = self::commissionMoneyBreakdown($booking, $chargeAmount);
 
         return [
@@ -103,8 +116,9 @@ class AgentApiPresenter
             'bookingReference' => $booking?->pnr
                 ?: $booking?->booking_code
                 ?: '#'.$accrual->booking_id,
-            'bookingAmount' => $chargeAmount,
+            'bookingAmount' => round($bookingAmount, 2),
             'chargeAmount' => $chargeAmount,
+            'vatAmount' => $money['vatAmount'],
             'gatewayCharge' => $money['gatewayCharge'],
             'durpallaReceived' => $money['durpallaReceived'],
             'paymentMethod' => $money['paymentMethod'],
@@ -119,12 +133,14 @@ class AgentApiPresenter
     }
 
     /**
-     * Line service-charge vs gateway fee (0 when paid via agent fund).
+     * Line service-charge, VAT, and gateway fee (gateway 0 when paid via agent fund).
      *
-     * @return array{gatewayCharge: float, durpallaReceived: float, paymentMethod: string}
+     * @return array{vatAmount: float, gatewayCharge: float, durpallaReceived: float, paymentMethod: string}
      */
     private static function commissionMoneyBreakdown(?Booking $booking, float $lineChargeAmount): array
     {
+        $lineVat = self::commissionLineVat($booking, $lineChargeAmount);
+
         $payment = $booking?->relationLoaded('payment')
             ? $booking->payment
             : $booking?->payment()->with('gateway')->first();
@@ -135,13 +151,25 @@ class AgentApiPresenter
             ?: $payment?->payment_gateway
             ?: ''
         )));
-        $isFund = $method === '' || $method === 'fund' || $method === 'cash';
+        // Only treat explicit wallet/offline methods as fund. Empty method with a
+        // live payment row should still expose gateway cost.
+        $isFund = in_array($method, ['fund', 'cash'], true);
 
-        if ($isFund || ! $booking) {
+        if (! $booking) {
             return [
+                'vatAmount' => 0.0,
                 'gatewayCharge' => 0.0,
                 'durpallaReceived' => round(max(0, $lineChargeAmount), 2),
                 'paymentMethod' => $method !== '' ? $method : 'fund',
+            ];
+        }
+
+        if ($isFund || $payment === null) {
+            return [
+                'vatAmount' => $lineVat,
+                'gatewayCharge' => 0.0,
+                'durpallaReceived' => round(max(0, $lineChargeAmount), 2),
+                'paymentMethod' => $isFund ? $method : ($method !== '' ? $method : 'fund'),
             ];
         }
 
@@ -173,10 +201,32 @@ class AgentApiPresenter
             : round($bookingGatewayCharge, 2);
 
         return [
+            'vatAmount' => $lineVat,
             'gatewayCharge' => max(0, $lineGateway),
             'durpallaReceived' => round(max(0, $lineChargeAmount - $lineGateway), 2),
             'paymentMethod' => $method,
         ];
+    }
+
+    /**
+     * Pro-rate booking VAT onto this commission line by service-charge share.
+     */
+    private static function commissionLineVat(?Booking $booking, float $lineChargeAmount): float
+    {
+        if (! $booking) {
+            return 0.0;
+        }
+
+        $bookingVatTotal = (float) ($booking->vat_total ?? 0);
+        if ($bookingVatTotal <= 0) {
+            return 0.0;
+        }
+
+        $bookingChargeTotal = (float) ($booking->charge_total ?? 0);
+
+        return $bookingChargeTotal > 0
+            ? round($bookingVatTotal * ($lineChargeAmount / $bookingChargeTotal), 2)
+            : round($bookingVatTotal, 2);
     }
 
     /**
@@ -238,8 +288,9 @@ class AgentApiPresenter
             'bookingReference' => $booking?->pnr
                 ?: $booking?->booking_code
                 ?: '#'.$item->id,
-            'bookingAmount' => round($chargeAmount, 2),
+            'bookingAmount' => round((float) $item->price, 2),
             'chargeAmount' => round($chargeAmount, 2),
+            'vatAmount' => $money['vatAmount'],
             'gatewayCharge' => $money['gatewayCharge'],
             'durpallaReceived' => $money['durpallaReceived'],
             'paymentMethod' => $money['paymentMethod'],
