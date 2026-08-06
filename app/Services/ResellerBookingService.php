@@ -28,6 +28,7 @@ class ResellerBookingService
     public function __construct(
         private readonly ResellerWalletService $wallet,
         private readonly ResellerCommissionService $commission,
+        private readonly CalculationService $calculation,
     ) {
     }
 
@@ -89,14 +90,25 @@ class ResellerBookingService
             foreach ($mappings as $mapping) {
                 $schedule = $mapping->schedule;
                 $merchant = $schedule->vehicle['merchant'] ?? null;
-                $vatApplicableTo = $merchant['vat_applicable_to'] ?? 'merchant';
-                $chargeType = getOption('service_charge_platform', 'global');
-                $chargeAmount = ($chargeType === 'global') ? getOption('service_charge_web', 0) : $mapping->service_charge;
-                $chargeTypeVal = ($chargeType === 'global') ? 'percent' : $mapping->service_charge_type;
+                $vatApplicableTo = $this->calculation->resolveVatApplicableTo();
+                $charges = $this->calculation->getCharges([
+                    'fare' => $mapping->fare,
+                    'price' => $mapping->fare,
+                    'service_charge' => $mapping->service_charge,
+                    'service_charge_type' => $mapping->service_charge_type ?? 'percent',
+                    'merchant_service_charge' => is_object($merchant)
+                        ? $merchant->getAttribute('service_charge')
+                        : ($merchant['service_charge'] ?? null),
+                    'merchant_service_charge_type' => is_object($merchant)
+                        ? ($merchant->getAttribute('service_charge_type') ?? 'percent')
+                        : ($merchant['service_charge_type'] ?? 'percent'),
+                ], 'web');
+                $chargeAmount = $charges['amount'];
+                $chargeTypeVal = $charges['type'];
 
                 $price = (float) $mapping->fare;
-                $vat = ($vatApplicableTo === 'customer') ? ($price * (abs((float) getOption('vat_amount', 0)) / 100)) : 0;
-                $charge = ($chargeTypeVal === 'percent') ? ($price * ((float) $chargeAmount / 100)) : (float) $chargeAmount;
+                $charge = (float) $charges['total'];
+                $vat = $this->calculation->vatOnCharge($charge);
 
                 $totalAmount += $price;
                 $vatTotal += $vat;

@@ -172,6 +172,7 @@ class CalculationService
     /**
      * Map request/booking platform labels to options keys:
      * service_charge_web | service_charge_mobile | service_charge_counter.
+     * Agent / agent_app → mobile Options.
      */
     public function resolveChargeOptionKey(?string $platform): string
     {
@@ -179,17 +180,20 @@ class CalculationService
 
         return match ($p) {
             'web' => 'web',
-            'android', 'ios', 'mobile', 'app', 'flutter', 'iphone' => 'mobile',
-            'counter', 'agent', 'agent_app', 'office', 'supervisor_app', 'merchant_desk' => 'counter',
+            // Agent app uses mobile Options (service_charge_mobile).
+            'android', 'ios', 'mobile', 'app', 'flutter', 'iphone',
+            'agent', 'agent_app', 'supervisor_app' => 'mobile',
+            'counter', 'office', 'merchant_desk' => 'counter',
             default => 'mobile',
         };
     }
 
     /**
-     * Priority (Durpalla-admin configured; merchants cannot manage):
-     * 1) seat/cabin/item service_charge
-     * 2) merchant service_charge
-     * 3) global Options platform charge (web/mobile/counter)
+     * Priority (web + agent app + counter desk):
+     * 1) per-item (seat/cabin) service_charge
+     * 2) per-merchant service_charge
+     * 3) global Options for the platform (web / mobile / counter)
+     *    Agent app → mobile Options.
      *
      * @return array{amount: float, type: string, total: float}
      */
@@ -208,11 +212,7 @@ class CalculationService
             $amount = abs((float) $item['merchant_service_charge']);
         } else {
             $type = $this->normalizeChargeType(getOption('service_charge_type', 'percent'));
-            $raw = getOption('service_charge_' . $optionKey, null);
-            if (($raw === null || $raw === '') && $optionKey !== 'mobile') {
-                $raw = getOption('service_charge_mobile', null);
-            }
-            $amount = ($raw === null || $raw === '') ? 5.0 : abs((float) $raw);
+            $amount = $this->resolveOptionChargeAmount($optionKey);
         }
 
         $total = ($type === 'percent')
@@ -224,6 +224,28 @@ class CalculationService
             'type' => $type,
             'total' => (float) call_user_func([$this, $this->resolveNumberFormat()], $total),
         ];
+    }
+
+    /**
+     * Prefer the requested platform option, then other platforms, then a safe default.
+     * Admin often sets only Counter (agent); web was reading service_charge_web=0 and charging nothing.
+     */
+    private function resolveOptionChargeAmount(string $optionKey): float
+    {
+        $order = match ($optionKey) {
+            'web' => ['web', 'mobile', 'counter'],
+            'counter' => ['counter', 'mobile', 'web'],
+            default => ['mobile', 'web', 'counter'],
+        };
+
+        foreach ($order as $key) {
+            $raw = getOption('service_charge_' . $key, null);
+            if ($this->hasChargeValue($raw)) {
+                return abs((float) $raw);
+            }
+        }
+
+        return 5.0;
     }
 
     private function hasChargeValue(mixed $value): bool
