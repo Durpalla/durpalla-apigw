@@ -155,6 +155,8 @@ class InvoiceBuilder
                 ?? data_get($item, 'trip.launch.merchant')
                 ?? data_get($item, 'vehicle.merchant');
             if ($merchant instanceof Merchant) {
+                $merchant->loadMissing('offices');
+
                 return $merchant;
             }
 
@@ -165,7 +167,7 @@ class InvoiceBuilder
                 ?: 0
             );
             if ($merchantId > 0) {
-                $found = Merchant::query()->withTrashed()->find($merchantId);
+                $found = Merchant::query()->withTrashed()->with('offices')->find($merchantId);
                 if ($found) {
                     return $found;
                 }
@@ -208,7 +210,7 @@ class InvoiceBuilder
 
         return [
             'name' => (string) ($merchant->merchant_name ?? ''),
-            'address' => (string) ($merchant->merchant_address ?? ''),
+            'address' => $this->resolveMerchantAddress($merchant),
             'email' => (string) ($merchant->merchant_email ?? ''),
             'mobile' => (string) ($merchant->merchant_mobile ?? ''),
             'phone' => (string) ($merchant->merchant_phone ?? ''),
@@ -216,6 +218,33 @@ class InvoiceBuilder
             'logo_url' => $this->resolveMerchantLogoUrl($merchant),
             'cancellation_policy_lines' => $lines,
         ];
+    }
+
+    /**
+     * Prefer merchant_address; fall back to the first office address when blank.
+     */
+    private function resolveMerchantAddress(Merchant $merchant): string
+    {
+        $address = trim((string) ($merchant->merchant_address ?? ''));
+        if ($address !== '') {
+            return $address;
+        }
+
+        $merchant->loadMissing('offices');
+        foreach ($merchant->offices as $office) {
+            $officeAddress = trim((string) ($office->address ?? ''));
+            if ($officeAddress === '') {
+                continue;
+            }
+
+            $officeName = trim((string) ($office->name ?? ''));
+
+            return $officeName !== ''
+                ? $officeName.' — '.$officeAddress
+                : $officeAddress;
+        }
+
+        return '';
     }
 
     /**
