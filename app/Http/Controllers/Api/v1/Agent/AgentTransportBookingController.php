@@ -20,7 +20,8 @@ use Illuminate\Http\Request;
 /**
  * Agent counter booking — thin wrappers around common TransportApiController methods.
  * Separate /api/v1/agent/* URLs + agent auth; search/suggest/lock/unlock share core logic.
- * Counter bookings earn seller commission — they are not referral bookings.
+ * Counter bookings earn booking commission; if inventory is a live referred merchant,
+ * the referring agent also earns referral commission (dual pay).
  * Cash payment is not eligible for agents.
  */
 class AgentTransportBookingController extends Controller

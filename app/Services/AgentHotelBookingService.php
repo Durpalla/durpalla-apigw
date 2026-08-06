@@ -359,6 +359,10 @@ class AgentHotelBookingService
                 'payment_due_at' => $isLiveGateway ? now()->addHours(24) : null,
             ]);
 
+            // Stamp after reservation exists — attribution resolves merchant via hotel_id.
+            // Enables dual commission (booker + referrer) on live referred merchants.
+            app(AgentReferralAttributionService::class)->attribute($booking);
+
             $hold->update([
                 'status' => HotelHold::STATUS_CONSUMED,
                 'user_id' => $customer->id,

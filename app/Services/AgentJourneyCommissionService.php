@@ -107,6 +107,7 @@ class AgentJourneyCommissionService
             }
 
             $count = 0;
+            $hadPayableIncentive = false;
             foreach ($beneficiaries as $beneficiary) {
                 $incentive = AgentIncentive::query()
                     ->where('agent_id', $beneficiary['agent_id'])
@@ -114,12 +115,16 @@ class AgentJourneyCommissionService
                 if (! $incentive || (float) $incentive->incentive <= 0) {
                     continue;
                 }
+                $hadPayableIncentive = true;
                 $count += $this->accrueTransport($booking, $beneficiary['agent_id'], $beneficiary['kind'], $incentive)
                     + $this->accrueHotelReservations($booking, $beneficiary['agent_id'], $beneficiary['kind'], $incentive)
                     + $this->accrueHotelItems($booking, $beneficiary['agent_id'], $beneficiary['kind'], $incentive);
             }
 
-            $this->markBookingChecked($booking);
+            // Leave unchecked only when transport lines exist but departure is not ready yet.
+            if ($count > 0 || ! $hadPayableIncentive || ! $this->hasUnreadyTransportLines($booking)) {
+                $this->markBookingChecked($booking);
+            }
 
             return $count;
         }, 3);
@@ -441,6 +446,26 @@ class AgentJourneyCommissionService
         return is_string($booking->booked_by_type)
             && is_a($booking->booked_by_type, Agent::class, true)
             && (int) $booking->booked_by_id > 0;
+    }
+
+    /**
+     * True when an active transport line cannot yet be accrued (no departure time).
+     */
+    private function hasUnreadyTransportLines(Booking $booking): bool
+    {
+        foreach ($booking->bookingItems()->where('status', AppConst::BOOKING_ITEM_ACTIVE)->get() as $item) {
+            if (($item->item_type ?? 'transport') === 'hotel') {
+                continue;
+            }
+            $leavingAt = $item->trip_id
+                ? DB::table('vehicle_schedules')->where('id', $item->trip_id)->value('leaving_at')
+                : $item->trip_date;
+            if (! $leavingAt) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function hotelEligibleAt(string $checkOut, int $hotelId): Carbon

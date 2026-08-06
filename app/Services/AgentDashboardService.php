@@ -128,27 +128,37 @@ class AgentDashboardService
         $query = $this->newBookingQuery();
         $this->applyReferralConstraints($query, $agentId);
 
-        if (Schema::hasColumn('bookings', 'platform')) {
-            $query->whereIn('bookings.platform', self::CUSTOMER_PLATFORMS);
-        }
+        // Referral feed = customer bookings of referred inventory OR another agent's
+        // counter booking of this agent's live referred merchant (dual commission).
+        return $query->where(function (Builder $outer) use ($agentId) {
+            $outer->where(function (Builder $customer) {
+                if (Schema::hasColumn('bookings', 'platform')) {
+                    $customer->whereIn('bookings.platform', self::CUSTOMER_PLATFORMS);
+                }
+                if (! $this->hasBookedByColumns()) {
+                    return;
+                }
+                $customer->where(function (Builder $q) {
+                    $q->whereNull('bookings.booked_by_type')
+                        ->orWhere('bookings.booked_by_type', Customer::class)
+                        ->orWhereColumn('bookings.booked_by_id', 'bookings.customer_id');
+                })->where(function (Builder $q) {
+                    $q->whereNull('bookings.booked_by_type')
+                        ->orWhereNotIn('bookings.booked_by_type', [
+                            Agent::class,
+                            User::class,
+                        ]);
+                });
+            })->orWhere(function (Builder $otherAgent) use ($agentId) {
+                if (! $this->hasBookedByColumns()) {
+                    $otherAgent->whereRaw('0 = 1');
 
-        if (! $this->hasBookedByColumns()) {
-            return $query;
-        }
-
-        return $query
-            ->where(function (Builder $q) {
-                $q->whereNull('bookings.booked_by_type')
-                    ->orWhere('bookings.booked_by_type', Customer::class)
-                    ->orWhereColumn('bookings.booked_by_id', 'bookings.customer_id');
-            })
-            ->where(function (Builder $q) {
-                $q->whereNull('bookings.booked_by_type')
-                    ->orWhereNotIn('bookings.booked_by_type', [
-                        Agent::class,
-                        User::class,
-                    ]);
+                    return;
+                }
+                $otherAgent->where('bookings.booked_by_type', Agent::class)
+                    ->where('bookings.booked_by_id', '!=', $agentId);
             });
+        });
     }
 
     private function agentBookingsQuery(int $agentId): Builder

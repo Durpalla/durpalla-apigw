@@ -13,7 +13,6 @@ use App\Models\AgentReferredProperty;
 use App\Models\Booking;
 use App\Models\BookingItem;
 use App\Models\Vehicle;
-use App\Services\CalculationService;
 use App\Services\PendingBookingPaymentWindow;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -365,6 +364,9 @@ class AgentApiPresenter
     /**
      * Expected / accrued agent commission for a booking (service-charge based).
      * When $agentId is set, only that agent's accruals / estimate are returned.
+     *
+     * Estimate covers transport booking_items and hotel_reservations / booking_hotel_items
+     * using the beneficiary agent's own incentive (booker = booking, referrer = referral).
      */
     public static function bookingCommissionAmount(Booking $booking, ?int $agentId = null): float
     {
@@ -385,27 +387,94 @@ class AgentApiPresenter
             return round($accrued, 2);
         }
 
+        $bookerId = $booking->booked_by_type === Agent::class ? (int) $booking->booked_by_id : 0;
+        $referrerId = (int) ($booking->referring_agent_id ?? 0);
+
         if ($agentId !== null && $agentId > 0) {
-            $bookerId = $booking->booked_by_type === Agent::class ? (int) $booking->booked_by_id : 0;
-            $referrerId = (int) ($booking->referring_agent_id ?? 0);
             $isBooker = $bookerId === $agentId;
             $isReferrer = $referrerId === $agentId;
             // Booker who is also referrer still earns (referral); other agents do not.
             if (! $isBooker && ! $isReferrer) {
                 return 0.0;
             }
+            // Self-book on own referral accrues as referral only (no double estimate).
+            if ($isBooker && $isReferrer) {
+                // still estimate once below using this agent's incentive
+            }
         }
 
-        $calc = app(CalculationService::class);
+        $rateAgentId = ($agentId !== null && $agentId > 0)
+            ? $agentId
+            : ($bookerId > 0 ? $bookerId : $referrerId);
+        if ($rateAgentId <= 0) {
+            return 0.0;
+        }
+
+        $incentive = AgentIncentive::query()->where('agent_id', $rateAgentId)->first();
+        if (! $incentive || (float) $incentive->incentive <= 0) {
+            return 0.0;
+        }
+
+        $rate = (float) $incentive->incentive;
+        $fixed = $incentive->incentive_type === 'fixed';
         $total = 0.0;
+
         foreach ($booking->bookingItems as $item) {
             if ((int) $item->status === AppConst::BOOKING_ITEM_CANCELLED) {
                 continue;
             }
-            $total += (float) $calc->calculateAgentCommission($item->toArray());
+            if (($item->item_type ?? 'transport') === 'hotel') {
+                continue;
+            }
+            $base = $item->charge_type === 'percent'
+                ? (float) $item->price * (float) $item->charge_amount / 100
+                : (float) $item->charge_amount;
+            $total += $fixed ? $rate : max(0, $base) * $rate / 100;
         }
 
+        $total += self::estimateHotelCommissionBases($booking, $rate, $fixed);
+
         return round($total, 2);
+    }
+
+    /**
+     * Sum expected commission for hotel lines on a booking (mirrors accrual bases).
+     */
+    private static function estimateHotelCommissionBases(Booking $booking, float $rate, bool $fixed): float
+    {
+        $total = 0.0;
+
+        if (Schema::hasTable('hotel_reservations')) {
+            $rows = DB::table('hotel_reservations')->where('booking_id', $booking->id)->get();
+            if ($rows->isNotEmpty()) {
+                foreach ($rows as $row) {
+                    $quote = is_string($row->quote_json ?? null)
+                        ? (json_decode((string) $row->quote_json, true) ?: [])
+                        : (is_array($row->quote_json ?? null) ? $row->quote_json : []);
+                    $base = (float) ($quote['charge_amount'] ?? $booking->charge_total ?? 0);
+                    $total += $fixed ? $rate : max(0, $base) * $rate / 100;
+                }
+
+                return $total;
+            }
+        }
+
+        if (! Schema::hasTable('booking_hotel_items')) {
+            return $total;
+        }
+
+        $rows = DB::table('booking_hotel_items')->where('booking_id', $booking->id)->get();
+        if ($rows->isEmpty()) {
+            return $total;
+        }
+
+        $fareTotal = max(0.01, (float) $rows->sum('total_price'));
+        foreach ($rows as $row) {
+            $base = (float) $booking->charge_total * ((float) $row->total_price / $fareTotal);
+            $total += $fixed ? $rate : max(0, $base) * $rate / 100;
+        }
+
+        return $total;
     }
 
     /**
