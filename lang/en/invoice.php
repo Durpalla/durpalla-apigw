@@ -4,6 +4,7 @@ return [
     'title' => 'Booking Invoice',
     'title_upper' => 'BOOKING INVOICE',
     'brand_label' => 'Booking Invoice',
+    'download_pdf' => 'Download PDF',
     'unavailable' => 'Invoice unavailable',
     'load_failed' => 'Unable to load invoice. Please try again from your bookings.',
     'booking_label' => 'Booking #:id',

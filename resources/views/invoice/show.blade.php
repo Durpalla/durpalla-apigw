@@ -348,6 +348,36 @@
             text-transform: uppercase;
             letter-spacing: 0.04em;
         }
+        #booking-invoice-document .bi-brand-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        #booking-invoice-document .bi-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 12px;
+            border-radius: 8px;
+            background: #1d4ed8;
+            color: #fff !important;
+            text-decoration: none !important;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.2;
+            border: 1px solid #1d4ed8;
+            white-space: nowrap;
+        }
+        #booking-invoice-document .bi-download:hover {
+            background: #1e40af;
+            border-color: #1e40af;
+        }
+        #booking-invoice-document .bi-download svg {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+        }
         /* Mobile-only: never apply when printing (print preview width can be narrow). */
         @media screen and (max-width: 720px) {
             #booking-invoice-document {
@@ -401,6 +431,16 @@
             }
             #booking-invoice-document .bi-brand-row img {
                 max-width: 130px;
+            }
+            #booking-invoice-document .bi-brand-row {
+                flex-wrap: wrap;
+            }
+            #booking-invoice-document .bi-brand-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            #booking-invoice-document .bi-download {
+                padding: 9px 14px;
             }
         }
         @media print {
@@ -476,6 +516,10 @@
             #booking-invoice-document .bi-qr img {
                 width: 56px;
                 height: 56px;
+            }
+            #booking-invoice-document .bi-download,
+            #booking-invoice-document .bi-brand-actions .bi-download {
+                display: none !important;
             }
             #booking-invoice-document .bi-title { font-size: 15px !important; }
             #booking-invoice-document .bi-merchant-name { font-size: 13px !important; }
@@ -588,7 +632,17 @@
                     <strong>{{ $invoiceCompany }}</strong>
                 @endif
             </div>
-            <div class="bi-brand-label">{{ __('invoice.brand_label') }}</div>
+            <div class="bi-brand-actions">
+                <div class="bi-brand-label">{{ __('invoice.brand_label') }}</div>
+                @if (!empty($invoice['download_url']))
+                    <a class="bi-download" href="{{ $invoice['download_url'] }}" target="_blank" rel="noopener">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M12 3v12m0 0l4-4m-4 4l-4-4M4 21h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        {{ __('invoice.download_pdf') }}
+                    </a>
+                @endif
+            </div>
         </div>
 
         <header class="bi-header">

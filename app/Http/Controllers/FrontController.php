@@ -31,6 +31,13 @@ class FrontController extends Controller
             $invoice = $builder->build($booking);
             $invoice['lang'] = $lang;
 
+            // PDF link lasts at least as long as the HTML signed URL when ?expires= is present.
+            $expiresAt = (int) $request->query('expires');
+            $downloadMinutes = ($expiresAt > time())
+                ? max(1, (int) ceil(($expiresAt - time()) / 60))
+                : (60 * 24);
+            $invoice['download_url'] = BookingInvoice::signedUrl($booking, $downloadMinutes, $lang);
+
             return response()
                 ->view('invoice.show', compact('invoice'))
                 ->header('Content-Type', 'text/html; charset=UTF-8')
