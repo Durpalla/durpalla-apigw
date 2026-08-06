@@ -5,7 +5,6 @@ namespace App\Gateways;
 use App\Constants\AppConst;
 use App\Models\Agent;
 use App\Models\Booking;
-use App\Models\Gateway;
 use App\Services\AgentCounterPaymentService;
 use App\Services\AgentPaymentService;
 use Illuminate\Support\Facades\DB;
@@ -43,18 +42,13 @@ class Fund implements GatewayInterface
 
         try {
             DB::transaction(function () use ($agent, $booking, $payment, &$data) {
-                app(AgentCounterPaymentService::class)->debitFund($agent, $booking);
+                $counterPayments = app(AgentCounterPaymentService::class);
+                $counterPayments->debitFund($agent, $booking);
 
                 $amount = (float) $booking->total_payable;
-                if (! $payment->gateway_id) {
-                    $fundGw = Gateway::query()
-                        ->where('code', AgentCounterPaymentService::METHOD_FUND)
-                        ->where('status', 1)
-                        ->whereNull('merchant_id')
-                        ->first();
-                    if ($fundGw) {
-                        $payment->gateway_id = $fundGw->id;
-                    }
+                $fundGatewayId = $counterPayments->defaultGatewayId(AgentCounterPaymentService::METHOD_FUND);
+                if ($fundGatewayId) {
+                    $payment->gateway_id = $fundGatewayId;
                 }
                 $payment->update([
                     'payment_method' => AgentCounterPaymentService::METHOD_FUND,

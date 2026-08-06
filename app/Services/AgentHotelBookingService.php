@@ -381,12 +381,16 @@ class AgentHotelBookingService
                 : (isset($input['paid_amount']) ? (float) $input['paid_amount'] : $total);
             $dues = max(0, $total - $paidAmount);
 
+            $resolvedGatewayId = $isFund
+                ? $this->counterPayments->defaultGatewayId(AgentCounterPaymentService::METHOD_FUND)
+                : (isset($input['gateway_id']) ? (int) $input['gateway_id'] : null);
+
             $payment = Payment::create([
                 'booking_id' => $booking->id,
                 'transaction_id' => strtoupper(uniqid((string) $booking->id, false)),
                 'bank_tran_id' => $input['trx_id'] ?? null,
                 'customer_id' => $customer->id,
-                'gateway_id' => isset($input['gateway_id']) ? (int) $input['gateway_id'] : null,
+                'gateway_id' => $resolvedGatewayId,
                 'payment_method' => $method,
                 'channel' => $isLiveGateway ? 'live' : 'offline',
                 'status' => ($isLiveGateway || $isFund) ? 'pending' : ($dues > 0 ? 'advance' : 'success'),

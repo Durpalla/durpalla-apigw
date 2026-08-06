@@ -18,6 +18,8 @@ class AgentCounterPaymentService
 {
     public const METHOD_FUND = 'fund';
 
+    public const METHOD_CASH = 'cash';
+
     public const CHANNEL_OFFLINE = 'offline';
 
     public const CHANNEL_LIVE = 'live';
@@ -35,6 +37,8 @@ class AgentCounterPaymentService
             ? (float) $this->balanceService->getMyBalance($agent->id)
             : 0.0;
 
+        $this->ensureDefaultOfflineGateways();
+
         if (! $this->hasChannelColumns()) {
             return $this->legacyFallbackMethods($balance);
         }
@@ -42,8 +46,10 @@ class AgentCounterPaymentService
         $methods = [];
 
         foreach ($this->listForAgent() as $gateway) {
-            $code = $this->normalize((string) ($gateway->code ?: self::METHOD_FUND));
-            if ($code === self::METHOD_FUND || (string) $gateway->channel === self::CHANNEL_OFFLINE) {
+            $code = $this->normalize((string) ($gateway->code ?: ''));
+            // Fund is the only agent wallet method. Cash stays a system default
+            // offline gateway but is not offered for agent app checkout.
+            if ($code === self::METHOD_FUND) {
                 $methods[] = [
                     'id' => (int) $gateway->id,
                     'code' => self::METHOD_FUND,
@@ -60,10 +66,14 @@ class AgentCounterPaymentService
                 continue;
             }
 
+            if ((string) $gateway->channel !== self::CHANNEL_LIVE) {
+                continue;
+            }
+
             $percent = $gateway->resolvedChargePercent(true);
             $methods[] = [
                 'id' => (int) $gateway->id,
-                'code' => $code,
+                'code' => $code !== '' ? $code : $this->normalize((string) $gateway->name),
                 'label' => (string) $gateway->name,
                 'type' => 'gateway',
                 'requires_trx' => false,
@@ -76,12 +86,15 @@ class AgentCounterPaymentService
         }
 
         if (! collect($methods)->contains(fn ($m) => $m['code'] === self::METHOD_FUND)) {
+            $fund = $this->resolveOfflineGateway(self::METHOD_FUND);
             array_unshift($methods, [
+                'id' => $fund?->id ? (int) $fund->id : null,
                 'code' => self::METHOD_FUND,
-                'label' => 'Fund',
+                'label' => (string) ($fund?->name ?: 'Fund'),
                 'type' => 'wallet',
                 'requires_trx' => false,
                 'balance' => $balance,
+                'gateway_id' => $fund?->id ? (int) $fund->id : null,
                 'channel' => self::CHANNEL_OFFLINE,
                 'live_gateway' => false,
                 'charge_percent' => 0.0,
@@ -89,6 +102,86 @@ class AgentCounterPaymentService
         }
 
         return $methods;
+    }
+
+    /**
+     * System-default offline gateway (fund / cash) from the gateway catalog.
+     */
+    public function resolveOfflineGateway(string $code): ?Gateway
+    {
+        $code = $this->normalize($code);
+        if (! in_array($code, [self::METHOD_FUND, self::METHOD_CASH], true)) {
+            return null;
+        }
+
+        $this->ensureDefaultOfflineGateways();
+
+        $query = Gateway::query()
+            ->where('code', $code)
+            ->whereNull('merchant_id')
+            ->where('status', 1);
+
+        if ($this->hasChannelColumns()) {
+            $query->where('channel', self::CHANNEL_OFFLINE);
+        }
+
+        return $query->orderBy('id')->first();
+    }
+
+    public function defaultGatewayId(string $code): ?int
+    {
+        $gateway = $this->resolveOfflineGateway($code);
+
+        return $gateway?->id ? (int) $gateway->id : null;
+    }
+
+    /**
+     * Fund and Cash are platform defaults and must always exist in gateways.
+     */
+    public function ensureDefaultOfflineGateways(): void
+    {
+        static $ensured = false;
+        if ($ensured || ! $this->hasChannelColumns()) {
+            return;
+        }
+
+        $defaults = [
+            self::METHOD_CASH => [
+                'name' => 'Cash',
+                'class_name' => 'App\\Gateways\\Offline',
+                'for_public' => false,
+                'for_agent' => false,
+                'for_merchant' => true,
+                'requires_trx' => false,
+                'sort_order' => 10,
+            ],
+            self::METHOD_FUND => [
+                'name' => 'Fund',
+                'class_name' => 'App\\Gateways\\Fund',
+                'for_public' => false,
+                'for_agent' => true,
+                'for_merchant' => false,
+                'requires_trx' => false,
+                'sort_order' => 20,
+            ],
+        ];
+
+        foreach ($defaults as $code => $attrs) {
+            Gateway::query()->firstOrCreate(
+                [
+                    'code' => $code,
+                    'merchant_id' => null,
+                ],
+                array_merge($attrs, [
+                    'type' => 'payment',
+                    'channel' => self::CHANNEL_OFFLINE,
+                    'status' => 1,
+                    'charge_percent' => 0,
+                ])
+            );
+        }
+
+        $ensured = true;
     }
 
     /**
@@ -225,13 +318,10 @@ class AgentCounterPaymentService
      */
     private function listForAgent()
     {
-        $fund = Gateway::query()
-            ->with('media')
-            ->where('status', 1)
-            ->whereNull('merchant_id')
-            ->where('code', self::METHOD_FUND)
-            ->where('channel', self::CHANNEL_OFFLINE)
-            ->first();
+        $fund = $this->resolveOfflineGateway(self::METHOD_FUND);
+        if ($fund) {
+            $fund->loadMissing('media');
+        }
 
         $live = Gateway::query()
             ->with('media')
@@ -269,23 +359,40 @@ class AgentCounterPaymentService
      */
     private function legacyFallbackMethods(float $balance): array
     {
+        $fund = Gateway::query()
+            ->where('status', 1)
+            ->where(function ($q) {
+                $q->where('code', self::METHOD_FUND)
+                    ->orWhereRaw('LOWER(name) = ?', [self::METHOD_FUND]);
+            })
+            ->orderBy('id')
+            ->first();
+
         $methods = [[
+            'id' => $fund?->id ? (int) $fund->id : null,
             'code' => self::METHOD_FUND,
-            'label' => 'Fund',
+            'label' => (string) ($fund?->name ?: 'Fund'),
             'type' => 'wallet',
             'requires_trx' => false,
             'balance' => $balance,
+            'gateway_id' => $fund?->id ? (int) $fund->id : null,
             'charge_percent' => 0.0,
+            'live_gateway' => false,
         ]];
         foreach ($this->legacyActiveGateways() as $gateway) {
             $model = Gateway::query()->find($gateway['id']);
+            $code = $this->normalize($gateway['name']);
+            if (in_array($code, [self::METHOD_FUND, self::METHOD_CASH], true)) {
+                continue;
+            }
             $methods[] = [
-                'code' => $this->normalize($gateway['name']),
+                'code' => $code,
                 'label' => $gateway['name'],
                 'type' => 'gateway',
                 'requires_trx' => false,
                 'gateway_id' => $gateway['id'],
                 'charge_percent' => $model ? $model->resolvedChargePercent(true) : 0.0,
+                'live_gateway' => true,
             ];
         }
 

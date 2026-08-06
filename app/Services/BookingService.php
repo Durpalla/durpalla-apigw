@@ -222,16 +222,12 @@ class BookingService
                     $payment->paid_amount = (float) $booking->total_payable;
                     $payment->store_amount = (float) $booking->total_payable;
                     $payment->dues = 0;
-                    if (! $payment->gateway_id) {
-                        $fundGw = \App\Models\Gateway::query()
-                            ->where('code', AgentCounterPaymentService::METHOD_FUND)
-                            ->where('status', 1)
-                            ->whereNull('merchant_id')
-                            ->first();
-                        if ($fundGw) {
-                            $payment->gateway_id = $fundGw->id;
-                        }
+                    $fundGatewayId = app(AgentCounterPaymentService::class)
+                        ->defaultGatewayId(AgentCounterPaymentService::METHOD_FUND);
+                    if ($fundGatewayId) {
+                        $payment->gateway_id = $fundGatewayId;
                     }
+                    $payment->payment_method = AgentCounterPaymentService::METHOD_FUND;
                     $payment->save();
                 }
                 dispatch(new BookingChargeAdjustmentJob($booking, $this->calculation));

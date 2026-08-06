@@ -26,6 +26,14 @@ class AgentPaymentService
             return ['success' => false, 'message' => __('Booking not found')];
         }
 
+        $fundGatewayId = app(AgentCounterPaymentService::class)
+            ->defaultGatewayId(AgentCounterPaymentService::METHOD_FUND);
+        if ($fundGatewayId && (int) ($payment->gateway_id ?? 0) !== $fundGatewayId) {
+            $payment->gateway_id = $fundGatewayId;
+            $payment->payment_method = AgentCounterPaymentService::METHOD_FUND;
+            $payment->save();
+        }
+
         $data = [];
         CommonHelper::purseGatewayByCode(AgentCounterPaymentService::METHOD_FUND)
             ->create($payment, $request ?? request(), $data);
@@ -100,6 +108,15 @@ class AgentPaymentService
             $data['message'] = __('Invalid payment gateway.');
 
             return $data;
+        }
+
+        // Fund gateway_id from catalog → wallet debit path (no WebView).
+        $gatewayCode = strtolower(trim((string) ($gateway->code ?: '')));
+        if ($gatewayCode === AgentCounterPaymentService::METHOD_FUND) {
+            return array_merge(
+                $this->payWithFund($agent, $payment, $request),
+                ['order_id' => $order->id]
+            );
         }
 
         $data['data']['id'] = $payment->id;

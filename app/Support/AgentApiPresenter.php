@@ -80,8 +80,13 @@ class AgentApiPresenter
             'chargeAmount' => round($chargeAmount, 2),
             'vatAmount' => $money['vatAmount'],
             'gatewayCharge' => $money['gatewayCharge'],
+            'gatewayChargePercent' => $money['gatewayChargePercent'],
             'durpallaReceived' => $money['durpallaReceived'],
             'paymentMethod' => $money['paymentMethod'],
+            'totalPayable' => round(
+                max(0, $bookingAmount) + max(0, $chargeAmount) + max(0, $money['vatAmount']),
+                2
+            ),
             'commissionAmount' => ($commission->type === 'debit' ? -1 : 1) * (float) $commission->amount,
             'kind' => $accrual?->kind ?? 'booking',
             'serviceType' => $accrual?->service_type,
@@ -120,8 +125,13 @@ class AgentApiPresenter
             'chargeAmount' => round($chargeAmount, 2),
             'vatAmount' => $money['vatAmount'],
             'gatewayCharge' => $money['gatewayCharge'],
+            'gatewayChargePercent' => $money['gatewayChargePercent'],
             'durpallaReceived' => $money['durpallaReceived'],
             'paymentMethod' => $money['paymentMethod'],
+            'totalPayable' => round(
+                max(0, $bookingAmount) + max(0, $chargeAmount) + max(0, $money['vatAmount']),
+                2
+            ),
             'commissionAmount' => (float) $accrual->amount,
             'kind' => $accrual->kind,
             'serviceType' => $accrual->service_type,
@@ -135,7 +145,7 @@ class AgentApiPresenter
     /**
      * Line service-charge, VAT, and gateway fee (gateway 0 when paid via agent fund).
      *
-     * @return array{vatAmount: float, gatewayCharge: float, durpallaReceived: float, paymentMethod: string}
+     * @return array{vatAmount: float, gatewayCharge: float, gatewayChargePercent: float, durpallaReceived: float, paymentMethod: string}
      */
     private static function commissionMoneyBreakdown(
         ?Booking $booking,
@@ -161,6 +171,7 @@ class AgentApiPresenter
             return [
                 'vatAmount' => $lineVat,
                 'gatewayCharge' => 0.0,
+                'gatewayChargePercent' => 0.0,
                 'durpallaReceived' => round(max(0, $lineChargeAmount), 2),
                 'paymentMethod' => $method !== '' ? $method : 'fund',
             ];
@@ -170,6 +181,7 @@ class AgentApiPresenter
             return [
                 'vatAmount' => $lineVat,
                 'gatewayCharge' => 0.0,
+                'gatewayChargePercent' => 0.0,
                 'durpallaReceived' => round(max(0, $lineChargeAmount), 2),
                 'paymentMethod' => $isFund ? $method : ($method !== '' ? $method : 'fund'),
             ];
@@ -181,6 +193,13 @@ class AgentApiPresenter
         $fareBase = $lineBookingAmount > 0
             ? $lineBookingAmount
             : (float) ($booking->total_amount ?? $payable);
+
+        $gateway = $payment->relationLoaded('gateway')
+            ? $payment->gateway
+            : $payment->gateway()->first();
+        $bankRate = $gateway
+            ? $gateway->resolvedChargePercent(true)
+            : (float) (function_exists('getOption') ? getOption('service_charge_bank', 2.5) : 2.5);
 
         $lineGateway = 0.0;
         if ($store > 0 && $payable > $store + 0.0001) {
@@ -196,18 +215,13 @@ class AgentApiPresenter
                 ? round($bookingGatewayCharge * ($lineBookingAmount / $bookingFareTotal), 2)
                 : self::proRateByCharge($bookingGatewayCharge, $lineChargeAmount, $booking);
         } else {
-            $gateway = $payment->relationLoaded('gateway')
-                ? $payment->gateway
-                : $payment->gateway()->first();
-            $bankRate = $gateway
-                ? $gateway->resolvedChargePercent(true)
-                : (float) (function_exists('getOption') ? getOption('service_charge_bank', 2.5) : 2.5);
             $lineGateway = \App\Models\Gateway::estimateCost($fareBase, $bankRate);
         }
 
         return [
             'vatAmount' => $lineVat,
             'gatewayCharge' => max(0, $lineGateway),
+            'gatewayChargePercent' => max(0, (float) $bankRate),
             'durpallaReceived' => round(max(0, $lineChargeAmount - $lineGateway), 2),
             'paymentMethod' => $method,
         ];
@@ -330,8 +344,13 @@ class AgentApiPresenter
             'chargeAmount' => round($chargeAmount, 2),
             'vatAmount' => $money['vatAmount'],
             'gatewayCharge' => $money['gatewayCharge'],
+            'gatewayChargePercent' => $money['gatewayChargePercent'],
             'durpallaReceived' => $money['durpallaReceived'],
             'paymentMethod' => $money['paymentMethod'],
+            'totalPayable' => round(
+                max(0, $bookingAmount) + max(0, (float) $chargeAmount) + max(0, $money['vatAmount']),
+                2
+            ),
             'commissionAmount' => $amount,
             'status' => 'PENDING',
             'commissionDate' => self::commissionDateString($item->booking_date)

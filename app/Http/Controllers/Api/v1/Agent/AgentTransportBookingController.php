@@ -333,6 +333,9 @@ class AgentTransportBookingController extends Controller
                 'id' => $booking->payment?->id,
                 'transaction_id' => $booking->payment?->transaction_id,
                 'payment_method' => AgentCounterPaymentService::METHOD_FUND,
+                'gateway_id' => $booking->payment?->gateway_id
+                    ? (int) $booking->payment->gateway_id
+                    : $this->counterPayments->defaultGatewayId(AgentCounterPaymentService::METHOD_FUND),
                 'status' => $booking->payment?->status,
                 'paid_amount' => (float) ($booking->payment?->paid_amount ?? 0),
             ];

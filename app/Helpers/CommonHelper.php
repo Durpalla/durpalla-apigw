@@ -37,13 +37,25 @@ class CommonHelper
 
     /**
      * Resolve a gateway handler by payment method code (e.g. fund, bkash).
+     * Prefers the gateway catalog row (class_name + id) so fund/cash use system defaults.
      */
     public static function purseGatewayByCode(string $code): GatewayInterface
     {
         $code = strtolower(trim($code));
+        if ($code === 'wallet') {
+            $code = 'fund';
+        }
+
+        if (in_array($code, ['fund', 'cash'], true)
+            && class_exists(\App\Services\AgentCounterPaymentService::class)) {
+            $gateway = app(\App\Services\AgentCounterPaymentService::class)->resolveOfflineGateway($code);
+            if ($gateway) {
+                return self::purseGateway($gateway);
+            }
+        }
 
         return match ($code) {
-            'fund', 'wallet' => new \App\Gateways\Fund(),
+            'fund' => new \App\Gateways\Fund(),
             default => throw new \InvalidArgumentException(__('Unknown payment gateway: :code', ['code' => $code])),
         };
     }
