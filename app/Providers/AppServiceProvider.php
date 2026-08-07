@@ -77,6 +77,19 @@ class AppServiceProvider extends ServiceProvider
                     $paths[] = $file;
                 }
             }
+
+            // Home offers / promotion APIs need the Coupon module promotions tables.
+            $couponDir = $root.DIRECTORY_SEPARATOR.'Modules'.DIRECTORY_SEPARATOR.'Coupon'.DIRECTORY_SEPARATOR.'Database'.DIRECTORY_SEPARATOR.'migrations';
+            foreach ([
+                '2026_07_17_000001_create_promotions_table.php',
+                '2026_07_17_000002_create_promotion_targets_table.php',
+                '2026_07_17_000003_create_promotion_redemptions_table.php',
+            ] as $basename) {
+                $file = $couponDir.DIRECTORY_SEPARATOR.$basename;
+                if (is_file($file)) {
+                    $paths[] = $file;
+                }
+            }
         }
 
         if ($paths === []) {

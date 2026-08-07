@@ -5,6 +5,7 @@ use Illuminate\Http\JsonResponse;
 use App\Models\CabinType;
 use App\Models\Coupon;
 use App\Models\Ghat;
+use App\Models\Promotion;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -107,6 +108,30 @@ class FrontApiController extends Controller
      */
     private function homeOffersList(int $limit): array
     {
+        // Prefer promotions (current Coupon module schema); fall back to legacy coupons.
+        if (Schema::hasTable('promotions')) {
+            $q = Promotion::query()
+                ->where('is_offer', 1)
+                ->where('status', 'active')
+                ->where(function ($query) {
+                    $query->whereNull('ends_at')
+                        ->orWhere('ends_at', '>=', now());
+                });
+            if (Schema::hasColumn('promotions', 'show_on_home')) {
+                $q->where('show_on_home', 1);
+            }
+            if (Schema::hasColumn('promotions', 'home_sort_order')) {
+                $q->orderByDesc('home_sort_order');
+            }
+            $rows = $q->orderByDesc('id')->limit($limit)->get();
+
+            return $rows->map(fn ($row) => $this->mapOfferForHome($row, 'promotions'))->values()->all();
+        }
+
+        if (! Schema::hasTable('coupons')) {
+            return [];
+        }
+
         $q = Coupon::query()
             ->where('is_offer', 1)
             ->where('status', 1)
@@ -119,47 +144,56 @@ class FrontApiController extends Controller
         }
         $rows = $q->orderByDesc('id')->limit($limit)->get();
 
-        return $rows->map(fn ($c) => $this->mapCouponForHome($c))->values()->all();
+        return $rows->map(fn ($row) => $this->mapOfferForHome($row, 'coupons'))->values()->all();
     }
 
     /**
      * @return array<string, mixed>
      */
-    private function mapCouponForHome(Coupon $coupon): array
+    private function mapOfferForHome(Coupon|Promotion $offer, string $table): array
     {
-        $poster = $coupon->poster;
+        $poster = $offer->poster ?? null;
         $abs = $poster ? upload_asset($poster) : '';
 
-        $title = (Schema::hasColumn('coupons', 'home_title') && $coupon->getAttribute('home_title'))
-            ? (string) $coupon->getAttribute('home_title')
-            : (string) $coupon->name;
+        $title = (Schema::hasColumn($table, 'home_title') && $offer->getAttribute('home_title'))
+            ? (string) $offer->getAttribute('home_title')
+            : (string) $offer->name;
         $subtitle = '';
-        if (Schema::hasColumn('coupons', 'home_subtitle')) {
-            $subtitle = (string) ($coupon->getAttribute('home_subtitle') ?? '');
+        if (Schema::hasColumn($table, 'home_subtitle')) {
+            $subtitle = (string) ($offer->getAttribute('home_subtitle') ?? '');
         }
+
         $discountPercent = null;
-        if (($coupon->discount_type ?? '') === 'percent' && $coupon->discount_amount !== null) {
-            $discountPercent = (int) $coupon->discount_amount;
+        if ($offer instanceof Promotion) {
+            if (($offer->discount_type ?? '') === 'percent' && $offer->discount_value !== null) {
+                $discountPercent = (int) $offer->discount_value;
+            }
+            $offerEnd = optional($offer->ends_at)->toDateString();
+        } else {
+            if (($offer->discount_type ?? '') === 'percent' && $offer->discount_amount !== null) {
+                $discountPercent = (int) $offer->discount_amount;
+            }
+            $offerEnd = $offer->offer_end;
         }
 
         $payload = [
-            'id' => (int) $coupon->id,
-            'name' => (string) $coupon->name,
+            'id' => (int) $offer->id,
+            'name' => (string) $offer->name,
             'title' => $title,
             'subtitle' => $subtitle,
             'thumbnail' => $abs,
             'poster' => $abs,
             'discount_percent' => $discountPercent,
-            'offer_end' => $coupon->offer_end,
+            'offer_end' => $offerEnd,
         ];
-        if (Schema::hasColumn('coupons', 'link_slug')) {
-            $payload['link_slug'] = $coupon->getAttribute('link_slug');
+        if (Schema::hasColumn($table, 'link_slug')) {
+            $payload['link_slug'] = $offer->getAttribute('link_slug');
         }
-        if (Schema::hasColumn('coupons', 'external_url')) {
-            $payload['external_url'] = $coupon->getAttribute('external_url');
+        if (Schema::hasColumn($table, 'external_url')) {
+            $payload['external_url'] = $offer->getAttribute('external_url');
         }
-        if (Schema::hasColumn('coupons', 'home_sort_order')) {
-            $payload['home_sort_order'] = (int) $coupon->getAttribute('home_sort_order');
+        if (Schema::hasColumn($table, 'home_sort_order')) {
+            $payload['home_sort_order'] = (int) $offer->getAttribute('home_sort_order');
         }
 
         return $payload;

@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
+use App\Models\Customer;
 use App\Models\UserOtp;
 use Tests\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -16,11 +16,11 @@ class ApiAuthTest extends TestCase
 
     public function test_login_accepts_request(): void
     {
-        User::factory()->create([
+        Customer::factory()->create([
             'mobile' => '01700000001',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
-            'type' => 'customer',
+            'status' => 1,
         ]);
 
         $response = $this->postJson($this->base . '/login', [

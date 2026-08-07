@@ -168,6 +168,25 @@ return [
             'prefix_indexes' => true,
         ],
 
+        // Durpalla audit_logs migration uses this connection. In tests, point it
+        // at the same DB as mysql via AUDIT_CONNECTION=mysql (phpunit.xml).
+        'audit' => [
+            'driver' => 'mysql',
+            'url' => env('AUDIT_DB_URL'),
+            'host' => env('AUDIT_DB_HOST', env('DB_HOST', '127.0.0.1')),
+            'port' => env('AUDIT_DB_PORT', env('DB_PORT', '6446')),
+            'database' => env('AUDIT_DB_DATABASE', env('DB_DATABASE', 'forge')),
+            'username' => env('AUDIT_DB_USERNAME', env('DB_USERNAME', 'forge')),
+            'password' => env('AUDIT_DB_PASSWORD', env('DB_PASSWORD', '')),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+        ],
+
         'mongodb' => [
             'driver'   => 'mongodb',
             'dsn'      => env('MONGODB_URI', 'mongodb://127.0.0.1:27017'),
