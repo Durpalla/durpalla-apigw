@@ -117,11 +117,15 @@ class AppServiceProvider extends ServiceProvider
         Schema::defaultStringLength(191);
         VehicleSchedule::observe(VehicleScheduleObserver::class);
 
+        // Payment gateways (e.g. bKash) redirect back to route('gateway.callback').
+        // Android WebViews block cleartext HTTP (net::ERR_CLEARTEXT_NOT_PERMITTED),
+        // so generated absolute URLs must be HTTPS even if APP_URL was set to http://.
         if ($this->app->environment('production', 'staging')) {
             $appUrl = rtrim((string) config('app.url'), '/');
-            if (str_starts_with($appUrl, 'https://')) {
+            if ($appUrl !== '') {
+                $httpsUrl = (string) preg_replace('#^http://#i', 'https://', $appUrl);
                 URL::forceScheme('https');
-                URL::forceRootUrl($appUrl);
+                URL::forceRootUrl($httpsUrl);
             }
         }
 

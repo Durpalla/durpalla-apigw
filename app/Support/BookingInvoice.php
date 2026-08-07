@@ -3,7 +3,7 @@
 namespace App\Support;
 
 use App\Models\Booking;
-use Illuminate\Support\Carbon;
+use App\Services\BookingPnrService;
 use Illuminate\Support\Facades\URL;
 
 /**
@@ -22,18 +22,11 @@ final class BookingInvoice
     }
 
     /**
-     * Human-friendly booking reference, e.g. "DPB-20260804-0015".
+     * Public booking reference (PNR), e.g. "D260807-K48210-Q03945".
      */
     public static function formatReference(Booking $booking): string
     {
-        $datePart = '00000000';
-        try {
-            $datePart = Carbon::parse($booking->booking_date ?: $booking->created_at)->format('Ymd');
-        } catch (\Exception) {
-            // fall back to zero date part
-        }
-
-        return 'DPB-'.$datePart.'-'.str_pad((string) $booking->id, 4, '0', STR_PAD_LEFT);
+        return app(BookingPnrService::class)->ensureFor($booking);
     }
 
     /**

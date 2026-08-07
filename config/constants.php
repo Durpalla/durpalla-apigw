@@ -1,6 +1,6 @@
 <?php
 return [
-    'cart_expires' => env("CART_EXPIRE_IN_MINUTES", 5),
+    'cart_expires' => env("CART_EXPIRE_IN_MINUTES", 3),
     'cancellation' => [
         0 => 'pending',
         1 => 'approved',

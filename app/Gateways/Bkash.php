@@ -65,7 +65,8 @@ class Bkash implements GatewayInterface, BkashInterface
 
             $payload = [
                 'mode' => '0011',
-                'callbackURL' => route('gateway.callback', $payment->gateway_id),
+                // Absolute HTTPS callback — Android WebView rejects cleartext HTTP.
+                'callbackURL' => secure_url(route('gateway.callback', $payment->gateway_id, absolute: false)),
                 'amount' => $payment->paid_amount,
                 'currency' => $this->attributes['params']['currency'] ?? 'BDT',
                 'intent' => 'sale',

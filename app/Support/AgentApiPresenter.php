@@ -73,9 +73,9 @@ class AgentApiPresenter
             'bookingItemId' => $commission->booking_item_id,
             'propertyName' => $vehicleName,
             'vehicleName' => $vehicleName,
-            'bookingReference' => $booking?->pnr
-                ?: $booking?->booking_code
-                ?: ($commission->booking_item_id ? '#'.$commission->booking_item_id : (string) $commission->type),
+            'bookingReference' => $booking
+                ? $booking->publicReference()
+                : ($commission->booking_item_id ? '#'.$commission->booking_item_id : (string) $commission->type),
             'bookingAmount' => round($bookingAmount, 2),
             'chargeAmount' => round($chargeAmount, 2),
             'vatAmount' => $money['vatAmount'],
@@ -118,9 +118,9 @@ class AgentApiPresenter
             'bookingItemId' => $accrual->booking_item_id,
             'propertyName' => $vehicleName,
             'vehicleName' => $vehicleName,
-            'bookingReference' => $booking?->pnr
-                ?: $booking?->booking_code
-                ?: '#'.$accrual->booking_id,
+            'bookingReference' => $booking
+                ? $booking->publicReference()
+                : '#'.$accrual->booking_id,
             'bookingAmount' => round($bookingAmount, 2),
             'chargeAmount' => round($chargeAmount, 2),
             'vatAmount' => $money['vatAmount'],
@@ -337,9 +337,9 @@ class AgentApiPresenter
             'bookingItemId' => $item->id,
             'propertyName' => $vehicleName,
             'vehicleName' => $vehicleName,
-            'bookingReference' => $booking?->pnr
-                ?: $booking?->booking_code
-                ?: '#'.$item->id,
+            'bookingReference' => $booking
+                ? $booking->publicReference()
+                : '#'.$item->id,
             'bookingAmount' => $bookingAmount,
             'chargeAmount' => round($chargeAmount, 2),
             'vatAmount' => $money['vatAmount'],
@@ -586,7 +586,7 @@ class AgentApiPresenter
     }
 
     /**
-     * Human-friendly booking reference for display, e.g. "DPB-20260804-0015".
+     * Public booking reference (PNR), e.g. "D260807-K48210-Q03945".
      */
     public static function formatBookingReference(Booking $booking): string
     {

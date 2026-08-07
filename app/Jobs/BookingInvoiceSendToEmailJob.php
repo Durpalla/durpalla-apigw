@@ -41,7 +41,7 @@ class BookingInvoiceSendToEmailJob implements ShouldQueue
         $responseArr = [];
         if ($this->booking && in_array($this->booking->status, [AppConst::BOOKING_COMPLETE, AppConst::BOOKING_ADVANCE])) {
             $responseArr['id'] = $this->booking->id;
-            $responseArr['pnr'] = $this->booking->id;
+            $responseArr['pnr'] = $this->booking->publicReference();
             $responseArr['qr'] = upload_asset('qrs/' . $this->booking->id . '.png');
             $responseArr['booking_date'] = date('Y-m-d H:i:s', strtotime($this->booking->created_at));
             $responseArr['booking_date_formated'] = date('d M, Y h:i A', strtotime($this->booking->created_at));

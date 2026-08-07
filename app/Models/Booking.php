@@ -12,6 +12,7 @@ class Booking extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'pnr',
         'booking_date',
         'customer_id',
         'user_id', // maps to booked_by_id via mutator for mass assignment
@@ -51,6 +52,14 @@ class Booking extends Model
         'payment_deadline' => 'datetime',
         'commission_accruals_checked_at' => 'datetime',
     ];
+
+    /**
+     * Public support-friendly booking reference (never expose primary key publicly).
+     */
+    public function publicReference(bool $persist = true): string
+    {
+        return app(\App\Services\BookingPnrService::class)->ensureFor($this, $persist);
+    }
 
     public function party()
     {
@@ -167,13 +176,17 @@ class Booking extends Model
 
     public function format(): array
     {
+        $pnr = $this->publicReference();
+
         return $this->only(['id', 'status', 'created_at']) +
             [
+                'pnr' => $pnr,
+                'booking_reference' => $pnr,
                 'customer' => $this->customer->only('id', 'name'),
                 'items' => $this->bookingItems->map(function ($item) {
                     return $item->format();
                 }),
-                'qr' => upload_asset('qrs/' . $this->id . '.png'),
+                'qr' => upload_asset('qrs/'.$this->id.'.png'),
             ];
     }
 

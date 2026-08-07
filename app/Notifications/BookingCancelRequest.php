@@ -38,7 +38,7 @@ class BookingCancelRequest extends Notification implements ShouldQueue
         return (new MailMessage)
             ->subject('Booking cancellation')
             ->greeting('Dear '.$notifiable->name.',')
-            ->line('Your booking (PNR:'.$this->cancellation->booking_id.') cancellation request has been sent successfully');
+            ->line('Your booking (PNR:'.($this->cancellation->booking?->publicReference() ?? $this->cancellation->booking_id).') cancellation request has been sent successfully');
     }
 
     /**

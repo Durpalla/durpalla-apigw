@@ -267,7 +267,7 @@ class CartService
             $cartItem['expires_at_ms'] = (int) ($lock->expire_at->getTimestamp() * 1000);
             $cartItem['expire_at'] = $cartItem['expires_at'];
         } else {
-            $expires = now()->addMinutes((int) config('constants.cart_expires', 5));
+            $expires = now()->addMinutes((int) config('constants.cart_expires', 3));
             $cartItem['expires_at'] = $expires->toIso8601String();
             $cartItem['expires_at_ms'] = (int) ($expires->getTimestamp() * 1000);
             $cartItem['expire_at'] = $cartItem['expires_at'];

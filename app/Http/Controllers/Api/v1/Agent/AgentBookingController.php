@@ -197,7 +197,7 @@ class AgentBookingController extends Controller
             'message' => '',
             'booking' => [
                 'id' => $booking->id,
-                'pnr' => $booking->id,
+                'pnr' => $booking->publicReference(),
                 'booking_reference' => AgentApiPresenter::formatBookingReference($booking),
                 'qr_code' => $trx !== '' ? $trx : (string) $booking->id,
                 'status' => $booking->status,

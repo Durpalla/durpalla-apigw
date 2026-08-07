@@ -25,7 +25,7 @@ class AgentPushNotificationService
             (int) $booking->id,
             __('Booking confirmed'),
             __('PNR :pnr confirmed for :customer', [
-                'pnr' => $booking->id,
+                'pnr' => $booking->publicReference(),
                 'customer' => $customer,
             ])
         );
@@ -44,7 +44,7 @@ class AgentPushNotificationService
             (int) $booking->id,
             __('Booking cancellation'),
             __('PNR :pnr cancellation: :status', [
-                'pnr' => $booking->id,
+                'pnr' => $booking->publicReference(),
                 'status' => $statusLabel,
             ])
         );
@@ -63,7 +63,7 @@ class AgentPushNotificationService
             (int) $booking->id,
             __('Refund processed'),
             __('PNR :pnr refund has been completed', [
-                'pnr' => $booking->id,
+                'pnr' => $booking->publicReference(),
             ])
         );
     }

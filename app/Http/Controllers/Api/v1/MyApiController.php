@@ -117,7 +117,8 @@ class MyApiController extends Controller
                 $recentDate = date('Y-m-d', strtotime($booking->created_at));
             }
             $row['id'] = $booking->id;
-            $row['pnr'] = $booking->id;
+            $row['pnr'] = $booking->publicReference();
+            $row['booking_reference'] = $row['pnr'];
             $row['booking_date'] = date('Y-m-d H:i:s', strtotime( $booking->created_at ) );
             $row['booking_date_formated'] = date('d M, Y h:i A', strtotime( $booking->created_at ) );
             $row['payment_status'] = $booking->payment['status'];
@@ -230,7 +231,8 @@ class MyApiController extends Controller
         $responseArr = [];
         foreach( $bookings as $key => $booking ) {
             $row['id'] = $booking->id;
-            $row['pnr'] = $booking->id;
+            $row['pnr'] = $booking->publicReference();
+            $row['booking_reference'] = $row['pnr'];
             $row['booking_date'] = date('Y-m-d H:i:s', strtotime( $booking->created_at ) );
             $row['booking_date_formated'] = date('d M, Y h:i A', strtotime( $booking->created_at ) );
             $row['payment_status'] = $booking->payment['status'];
@@ -329,7 +331,8 @@ class MyApiController extends Controller
         if( $booking ) {
             $responseArr['order_id'] = $booking->id;
             $responseArr['id'] = $booking->id;
-            $responseArr['pnr'] = $booking->id;
+            $responseArr['pnr'] = $booking->publicReference();
+            $responseArr['booking_reference'] = $responseArr['pnr'];
             $responseArr['qr_code'] = $booking->payment['transaction_id'];
             $responseArr['qr'] = upload_asset('qrs/' . $booking->id . '.png');
             $responseArr['booking_date'] = date('Y-m-d H:i:s', strtotime( $booking->created_at ) );
@@ -431,7 +434,8 @@ class MyApiController extends Controller
         $responseArr = [];
         if( $booking ) {
             $responseArr['id'] = $booking->id;
-            $responseArr['pnr'] = $booking->id;
+            $responseArr['pnr'] = $booking->publicReference();
+            $responseArr['booking_reference'] = $responseArr['pnr'];
             $responseArr['qr_code'] = $booking->payment['transaction_id'];
             $responseArr['qr'] = upload_asset('qrs/' . $booking->id . '.png');
             $responseArr['booking_date'] = date('Y-m-d H:i:s', strtotime( $booking->created_at ) );
@@ -676,7 +680,7 @@ class MyApiController extends Controller
         $responseArr = [];
         foreach( $cancellations as $cancellation ) {
             $row['id'] = $cancellation->id;
-            $row['pnr'] = $cancellation->booking_id;
+            $row['pnr'] = $cancellation->booking?->publicReference() ?? (string) $cancellation->booking_id;
             $row['request_date'] = date('Y-m-d H:i:s', strtotime( $cancellation->created_at ) );
             $row['total_amount'] = 0;
             $row['total_discount'] = 0;
@@ -1513,7 +1517,9 @@ class MyApiController extends Controller
         }
 
         $payload['downloadable'] = true;
-        $payload['booking_reference'] = BookingInvoice::formatReference($booking);
+        $ref = BookingInvoice::formatReference($booking);
+        $payload['pnr'] = $ref;
+        $payload['booking_reference'] = $ref;
         $payload['invoice'] = BookingInvoice::signedUrl($booking, 60);
         $payload['invoice_url'] = $payload['invoice'];
     }

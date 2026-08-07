@@ -251,7 +251,7 @@ class BookingService
                         'vehicle_name' => $vehicleName,
                         'trip_date' => $trip_date,
                         'route_name' => $route_name,
-                        'pnr' => $booking->id,
+                        'pnr' => $booking->publicReference(),
                         'booking_time' => date('Y-m-d H:i:s', strtotime($booking->created_at)),
                         'leaving_at' => $leaving_time,
                         'transaction_id' => $payment->transaction_id,

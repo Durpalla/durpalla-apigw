@@ -256,9 +256,10 @@ class CancellationService
                     $info[$item->bookingItem->booking_type] += 1;
                 }
             });
+            $booking = $item->booking ?? \App\Models\Booking::query()->find($item->booking_id);
             array_push($results, [
                 'id' => $item->id,
-                'pnr' => $item->booking_id,
+                'pnr' => $booking ? $booking->publicReference() : (string) $item->booking_id,
                 'booking_id' => $item->booking_id,
                 'booking_date' => date('Y-m-d H:i:s', strtotime($item->booking['created_at'])),
                 'booking_info' => $info,
@@ -279,9 +280,10 @@ class CancellationService
     {
         $item = $this->cancellationRepository->get($id);
         if($item) {
+            $booking = $item->booking ?? \App\Models\Booking::query()->find($item->booking_id);
             $response = [
                 'id' => $item->id,
-                'pnr' => $item->booking_id,
+                'pnr' => $booking ? $booking->publicReference() : (string) $item->booking_id,
                 'refund_amount' => $item->refund_amount,
                 'cancellation_time' => date('Y-m-d H:i:s', strtotime($item->created_at)),
                 'last_update' => date('Y-m-d H:i:s', strtotime($item->updated_at)),

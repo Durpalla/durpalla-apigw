@@ -199,6 +199,8 @@ class TripService
     {
         $user = auth()->user();
         $activeBookings = $this->activeBookingIndex((int) $trip->id);
+        $minFare = $this->resolveListMinFare($trip);
+
         return [
             'trip_id' => $trip->id,
             'route_id' => $trip->route_id,
@@ -250,8 +252,49 @@ class TripService
             'starting_point' => $trip->startFrom['name'],
             'ending_point' => $trip->stopTo['name'],
             'stoppages' => $this->formatStoppages($trip),
-            'service_type' => $trip->vehicle->vehicle_type
+            'service_type' => $trip->vehicle->vehicle_type,
+            // Lowest bookable unit/deck fare for search cards (Flutter "Total fare").
+            'fare' => $minFare,
+            'min_fare' => $minFare,
         ];
+    }
+
+    /**
+     * Lowest positive fare from seat/cabin mappings, else deck fares.
+     */
+    private function resolveListMinFare($trip): float
+    {
+        $mappingFares = collect($trip->mappings ?? [])
+            ->map(function ($item) {
+                $fare = $item->fare ?? null;
+
+                return is_numeric($fare) ? (float) $fare : null;
+            })
+            ->filter(fn ($fare) => $fare !== null && $fare > 0);
+
+        if ($mappingFares->isNotEmpty()) {
+            return round((float) $mappingFares->min(), 2);
+        }
+
+        try {
+            $deckFares = collect($trip->decks ?? [])
+                ->map(function ($item) use ($trip) {
+                    $fare = ($trip->schedule_type == 'reverse')
+                        ? ($item->reverse_fare ?? $item->fare)
+                        : $item->fare;
+
+                    return is_numeric($fare) ? (float) $fare : null;
+                })
+                ->filter(fn ($fare) => $fare !== null && $fare > 0);
+
+            if ($deckFares->isNotEmpty()) {
+                return round((float) $deckFares->min(), 2);
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        return 0.0;
     }
 
     public function formatTriplayout($trip, $floor = null): array

@@ -167,7 +167,7 @@ class QuickBookController extends Controller
                         }
                         array_push($responseArr, [
                             'id' => $booking->id,
-                            'pnr' => $booking->id,
+                            'pnr' => $booking->publicReference(),
                             'qr' => upload_asset('qrs/' . $booking->id . '.png'),
                             'booking_date' => date('Y-m-d H:i:s', strtotime($booking->created_at)),
                             'payment_status' => $booking->payment['status'],
@@ -298,7 +298,7 @@ class QuickBookController extends Controller
                         }
                     } else {
                         $responseArr['id'] = $booking->id;
-                        $responseArr['pnr'] = $booking->id;
+                         $responseArr['pnr'] = $booking->publicReference();
                         $responseArr['qr'] = upload_asset('qrs/' . $booking->id . '.png');
                         $responseArr['booking_date'] = date('Y-m-d H:i:s', strtotime($booking->created_at));
                         $responseArr['payment_status'] = $booking->payment['status'];
@@ -1152,7 +1152,7 @@ class QuickBookController extends Controller
         if ($booking) {
             $dues = round(($booking->total_payable - $booking->payment->paid_amount), 2);
             $responseArr['id'] = $booking->id;
-            $responseArr['pnr'] = $booking->id;
+             $responseArr['pnr'] = $booking->publicReference();
             $responseArr['qr'] = upload_asset('qrs/' . $booking->id . '.png');
             $responseArr['booking_date'] = date('Y-m-d H:i:s', strtotime($booking->created_at));
             $responseArr['booking_date_formated'] = date('d M, Y h:i A', strtotime($booking->created_at));

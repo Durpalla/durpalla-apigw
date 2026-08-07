@@ -41,7 +41,7 @@ class SendBookingInvoiceJob implements ShouldQueue
         $responseArr = [];
         if( $booking ) {
             $responseArr['id'] = $booking->id;
-            $responseArr['pnr'] = $booking->id;
+             $responseArr['pnr'] = $booking->publicReference();
             $responseArr['qr'] = upload_asset('qrs/' . $booking->id . '.png');
             $responseArr['booking_date'] = date('Y-m-d H:i:s', strtotime( $booking->created_at ) );
             $responseArr['booking_date_formated'] = date('d M, Y h:i A', strtotime( $booking->created_at ) );

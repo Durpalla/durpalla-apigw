@@ -44,11 +44,12 @@ class InvoiceBuilder
         $serviceType = (string) ($booking->service_type ?? 'transport');
 
         $invoice = [
-            'id' => $booking->id,
-            'pnr' => $booking->id,
+            'id' => $bookingReference,
+            'booking_id' => $booking->id,
+            'pnr' => $bookingReference,
             'booking_reference' => $bookingReference,
-            'qr' => $this->qrUrl($bookingReference !== '' ? $bookingReference : (string) $booking->id),
-            'qr_payload' => $bookingReference !== '' ? $bookingReference : (string) $booking->id,
+            'qr' => $this->qrUrl($bookingReference),
+            'qr_payload' => $bookingReference,
             'booking_date' => optional($booking->created_at)->format('Y-m-d H:i:s'),
             'booking_date_formated' => optional($booking->created_at)->format('d M, Y h:i A'),
             'payment_status' => $payment

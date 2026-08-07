@@ -82,14 +82,16 @@ class SupervisorService
         $responseArr = ['info' => [], 'payments' => null];
         if ($cancellations->count()) {
             $lists = $cancellations->map(function ($item, $key) {
+                $booking = $item->booking ?? \App\Models\Booking::query()->find($item->booking_id);
+
                 return [
                     'booking_id' => $item->booking_id,
-                    'pnr' => $item->booking_id,
+                    'pnr' => $booking ? $booking->publicReference() : (string) $item->booking_id,
                     'type' => $item->payment_method,
                     'amount' => $item->refund_amount
                 ];
             });
-            $lists->groupBy('booking_id')
+            $lists->groupBy('pnr')
                 ->each(function ($items, $key) use (&$responseArr) {
                     array_push($responseArr['info'], [
                         'pnr' => $key,
@@ -167,7 +169,7 @@ class SupervisorService
                         }
                     }
                     if ($booking->payment['dues'] > 0) {
-                        array_push($items['dues'], ['pnr' => $booking->id, 'amount' => $booking->payment['dues']]);
+                        array_push($items['dues'], ['pnr' => $booking->publicReference(), 'amount' => $booking->payment['dues']]);
                     }
                     $items['payments'][$booking->id] = $booking->collections;
                 }
@@ -251,7 +253,16 @@ class SupervisorService
             ->where('total_payable', '>', 0);
 
         if (array_key_exists('pnr', $data) && $data['pnr'] !== null) {
-            $query->where('id', $data['pnr']);
+            $raw = trim((string) $data['pnr']);
+            $normalized = app(\App\Services\BookingPnrService::class)->normalize($raw);
+            if ($normalized !== null) {
+                $query->where('pnr', $normalized);
+            } elseif (ctype_digit($raw)) {
+                // Trusted supervisor channel may still resolve numeric internal ids.
+                $query->where('id', (int) $raw);
+            } else {
+                $query->where('pnr', $raw);
+            }
         } else {
             $query->whereHas('bookingItems', function ($q) use ($tripDate) {
                 $q->where(['trip_date' => $tripDate, 'status' => 1]);
@@ -302,7 +313,7 @@ class SupervisorService
                 array_push($response, [
                     'booking_id' => $booking->id,
                     'order_id' => $booking->id,
-                    'pnr' => $booking->id,
+                    'pnr' => $booking->publicReference(),
                     'booking_at' => date('Y-m-d H:i:s', strtotime($booking->created_at)),
                     'total_payable' => round($booking->total_payable, 2),
                     'total_paid' => round($booking->payment['paid_amount'], 2),
