@@ -1561,19 +1561,23 @@ final class HotelBookingService
                 (int) $hold->adults,
                 (int) $hold->children
             );
-            $total = (float) $quote['total'];
+            // Mirror transport booking fields: fare / charge / VAT-on-charge / payable.
+            $fare = (float) ($quote['room_subtotal'] ?? $quote['total'] ?? 0);
+            $chargeTotal = (float) ($quote['charge_amount'] ?? 0);
+            $vatTotal = (float) ($quote['vat_amount'] ?? 0);
+            $total = (float) ($quote['total'] ?? round($fare + $chargeTotal + $vatTotal, 2));
 
             $booking = Booking::create([
                 'booking_date' => date('Y-m-d'),
                 'customer_id' => $user->id,
                 'user_id' => $user->id,
-                'total_amount' => $total,
+                'total_amount' => $fare,
                 'total_discount' => 0,
                 'total_payable' => $total,
                 'vat_amount' => (float) getOption('vat_amount', 0),
-                'vat_total' => (float) ($quote['vat_amount'] ?? 0),
+                'vat_total' => $vatTotal,
                 'charge_amount' => (float) ($quote['charge_percent'] ?? 0),
-                'charge_total' => (float) ($quote['charge_amount'] ?? 0),
+                'charge_total' => $chargeTotal,
                 'booking_party' => 'durpalla',
                 'platform' => 'android',
                 'status' => AppConst::BOOKING_PENDING,

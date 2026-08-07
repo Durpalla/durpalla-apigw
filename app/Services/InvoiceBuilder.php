@@ -35,14 +35,14 @@ class InvoiceBuilder
 
         $sealMap = config('constants.seals', []);
         $status = (string) ($booking->status ?? '');
-        $payable = (float) ($booking->total_payable
-            ?? ((float) $booking->total_amount + (float) $booking->vat_total + (float) $booking->charge_total - (float) $booking->total_discount));
+        $serviceType = (string) ($booking->service_type ?? 'transport');
+        $fareBreakdown = $this->resolveFareBreakdown($booking, $serviceType);
+        $payable = $fareBreakdown['total_payable'];
 
         $payment = $booking->payment;
         $trx = (string) ($payment->transaction_id ?? '');
         $bookingReference = BookingInvoice::formatReference($booking);
         $merchant = $this->resolveMerchant($booking);
-        $serviceType = (string) ($booking->service_type ?? 'transport');
 
         $invoice = [
             'id' => $bookingReference,
@@ -60,12 +60,12 @@ class InvoiceBuilder
             'gateway_name' => $payment?->gateway?->name
                 ?? $payment?->payment_gateway
                 ?? '',
-            'total_amount' => (float) ($booking->total_amount ?? 0),
-            'total_discount' => (float) ($booking->total_discount ?? 0),
-            'vat_amount' => (float) ($booking->vat_amount ?? 0),
-            'vat_total' => (float) ($booking->vat_total ?? 0),
-            'charge_amount' => (float) ($booking->charge_amount ?? 0),
-            'charge_total' => (float) ($booking->charge_total ?? 0),
+            'total_amount' => $fareBreakdown['total_amount'],
+            'total_discount' => $fareBreakdown['total_discount'],
+            'vat_amount' => $fareBreakdown['vat_amount'],
+            'vat_total' => $fareBreakdown['vat_total'],
+            'charge_amount' => $fareBreakdown['charge_amount'],
+            'charge_total' => $fareBreakdown['charge_total'],
             'total_payable' => number_format($payable, 2, '.', ''),
             'payment' => $payment,
             'customer' => $booking->customer,
@@ -98,7 +98,10 @@ class InvoiceBuilder
                 .($children > 0 ? ', '.__('invoice.children', ['count' => $children]) : '')
             );
             $stayLabel = trim(($checkIn ?: '—').' → '.($checkOut ?: '—'));
-            $lineTotal = (float) ($res->total_payable ?? $payable);
+            $lineFare = (float) ($invoice['total_amount'] ?? 0);
+            if ($lineFare <= 0) {
+                $lineFare = (float) ($res->total_payable ?? $payable);
+            }
 
             $invoice['hotel'] = [
                 'name' => $hotelName,
@@ -116,7 +119,7 @@ class InvoiceBuilder
                 'id' => $res->id,
                 'cabin_no' => $roomTitle,
                 'cabin_type' => 'hotel',
-                'price' => $lineTotal > 0 ? $lineTotal : $payable,
+                'price' => $lineFare,
                 'cabin_position' => null,
                 'discount' => 0,
                 'is_ac' => null,
@@ -197,6 +200,91 @@ class InvoiceBuilder
         $invoice['items'] = $tickets;
 
         return $invoice;
+    }
+
+    /**
+     * Transport: use stored booking totals.
+     * Hotel: fare = room subtotal; VAT on service charge only (never on room fare).
+     *
+     * @return array{
+     *     total_amount: float,
+     *     total_discount: float,
+     *     vat_amount: float,
+     *     vat_total: float,
+     *     charge_amount: float,
+     *     charge_total: float,
+     *     total_payable: float
+     * }
+     */
+    private function resolveFareBreakdown(Booking $booking, string $serviceType): array
+    {
+        $discount = (float) ($booking->total_discount ?? 0);
+        $vatRate = (float) ($booking->vat_amount ?? 0);
+        $chargeAmount = (float) ($booking->charge_amount ?? 0);
+
+        if ($serviceType !== 'hotel') {
+            $payable = (float) ($booking->total_payable
+                ?? ((float) $booking->total_amount + (float) $booking->vat_total + (float) $booking->charge_total - $discount));
+
+            return [
+                'total_amount' => (float) ($booking->total_amount ?? 0),
+                'total_discount' => $discount,
+                'vat_amount' => $vatRate,
+                'vat_total' => (float) ($booking->vat_total ?? 0),
+                'charge_amount' => $chargeAmount,
+                'charge_total' => (float) ($booking->charge_total ?? 0),
+                'total_payable' => $payable,
+            ];
+        }
+
+        $booking->loadMissing('hotelReservation', 'payment');
+        $quote = is_array($booking->hotelReservation?->quote_json)
+            ? $booking->hotelReservation->quote_json
+            : [];
+
+        $fare = (float) ($quote['room_subtotal'] ?? 0);
+        if ($fare <= 0) {
+            $storedFare = (float) ($booking->total_amount ?? 0);
+            $storedPayable = (float) ($booking->total_payable ?? 0);
+            $storedVat = (float) ($booking->vat_total ?? 0);
+            // Legacy rows stored inclusive total in total_amount; recover room fare.
+            if ($storedFare > 0 && $storedPayable > 0 && abs($storedFare - $storedPayable) < 0.009 && $storedVat > 0) {
+                $fare = round($storedFare - $storedVat - (float) ($booking->charge_total ?? 0), 2);
+            } else {
+                $fare = $storedFare;
+            }
+        }
+
+        $chargeTotal = (float) ($quote['charge_amount'] ?? $booking->charge_total ?? 0);
+        if ($vatRate <= 0 && function_exists('getOption')) {
+            $vatRate = (float) abs((float) getOption('vat_amount', 0));
+        }
+
+        // Prefer quote snapshot. VAT base: charge (default) or total (merchant config).
+        if (array_key_exists('vat_amount', $quote)) {
+            $vatTotal = round((float) $quote['vat_amount'], 2);
+        } else {
+            $vatBase = strtolower((string) ($quote['vat_base'] ?? 'charge'));
+            $vatTotal = match ($vatBase) {
+                'total' => round($fare * ($vatRate / 100), 2),
+                'none' => 0.0,
+                default => round($chargeTotal * ($vatRate / 100), 2),
+            };
+        }
+
+        $payable = isset($quote['total'])
+            ? round((float) $quote['total'] - $discount, 2)
+            : round($fare + $chargeTotal + $vatTotal - $discount, 2);
+
+        return [
+            'total_amount' => $fare,
+            'total_discount' => $discount,
+            'vat_amount' => $vatRate,
+            'vat_total' => $vatTotal,
+            'charge_amount' => $chargeAmount,
+            'charge_total' => $chargeTotal,
+            'total_payable' => $payable,
+        ];
     }
 
     private function resolveMerchant(Booking $booking): ?Merchant

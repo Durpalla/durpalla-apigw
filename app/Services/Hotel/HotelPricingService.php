@@ -10,6 +10,12 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Computes per-stay totals from nightly rates + global VAT/charge options.
  *
+ * VAT base:
+ * - Default: service charge only (platform rule).
+ * - Merchant-level: when `vat_applicable_to === customer`, VAT on room total
+ *   (same as transport ApiOrder / merchant fare VAT).
+ * - When applicable to merchant/vendor: not billed to the customer.
+ *
  * For module-synced room types (`code` = mod_hr_{hotel_rooms.id}), each night uses
  * `hotel_rooms` prices: peak_price on peak **weekdays** (from `hotel_peak_day_rules`
  * by hotel country + supplier, then global "All"), off_peak_price on other days,
@@ -18,7 +24,17 @@ use Illuminate\Support\Facades\Schema;
 final class HotelPricingService
 {
     /**
-     * @return array{nights: int, room_subtotal: float, vat_amount: float, charge_amount: float, total: float, currency: string, lines: list<array{date: string, rate: float}>}
+     * @return array{
+     *     nights: int,
+     *     room_subtotal: float,
+     *     vat_amount: float,
+     *     charge_amount: float,
+     *     total: float,
+     *     currency: string,
+     *     vat_base: string,
+     *     vat_applicable_to: string,
+     *     lines: list<array{date: string, rate: float}>
+     * }
      */
     public function quoteStay(
         HotelRoomType $roomType,
@@ -26,6 +42,7 @@ final class HotelPricingService
         Carbon $checkOut,
         int $adults,
         int $children,
+        ?string $vatApplicableTo = null,
     ): array {
         $checkOutDay = $checkOut->copy()->startOfDay();
         $checkInDay = $checkIn->copy()->startOfDay();
@@ -69,10 +86,13 @@ final class HotelPricingService
         $vatPct = (float) abs((float) getOption('vat_amount', 0));
         $platform = 'android';
         $chargePct = (float) abs((float) getOption('service_charge_'.$platform, getOption('service_charge_web', 0)));
-
-        $vatAmount = round($roomSubtotal * ($vatPct / 100), 2);
         $chargeAmount = round($roomSubtotal * ($chargePct / 100), 2);
-        $total = round($roomSubtotal + $vatAmount + $chargeAmount, 2);
+
+        $applicableTo = $this->normalizeVatApplicableTo(
+            $vatApplicableTo ?? $this->resolveMerchantVatApplicableTo($roomType)
+        );
+        [$vatAmount, $vatBase] = $this->calculateVat($roomSubtotal, $chargeAmount, $vatPct, $applicableTo);
+        $total = round($roomSubtotal + $chargeAmount + $vatAmount, 2);
 
         return [
             'nights' => $nights,
@@ -83,10 +103,67 @@ final class HotelPricingService
             'charge_amount' => $chargeAmount,
             'total' => $total,
             'currency' => $currency,
+            'vat_base' => $vatBase,
+            'vat_applicable_to' => $applicableTo,
             'lines' => $lines,
             'adults' => $adults,
             'children' => $children,
         ];
+    }
+
+    /**
+     * @return array{0: float, 1: string} [vatAmount, vatBase]
+     */
+    private function calculateVat(
+        float $roomSubtotal,
+        float $chargeAmount,
+        float $vatPct,
+        string $applicableTo,
+    ): array {
+        // Merchant/vendor absorbs VAT — not billed to the customer.
+        if (in_array($applicableTo, ['merchant', 'vendor'], true)) {
+            return [0.0, 'none'];
+        }
+
+        // Merchant-level config: VAT on room total (fare).
+        if ($applicableTo === 'customer') {
+            return [round($roomSubtotal * ($vatPct / 100), 2), 'total'];
+        }
+
+        // Default: VAT on service charge only.
+        return [round($chargeAmount * ($vatPct / 100), 2), 'charge'];
+    }
+
+    private function normalizeVatApplicableTo(?string $value): string
+    {
+        $v = strtolower(trim((string) $value));
+        if (in_array($v, ['customer', 'merchant', 'vendor'], true)) {
+            return $v;
+        }
+
+        // No merchant-level VAT config → default base is service charge.
+        return 'default';
+    }
+
+    private function resolveMerchantVatApplicableTo(HotelRoomType $roomType): ?string
+    {
+        try {
+            if (! Schema::hasTable('hotels') || ! Schema::hasColumn('hotels', 'merchant_id')) {
+                return null;
+            }
+            $merchantId = DB::table('hotels')->where('id', (int) $roomType->hotel_id)->value('merchant_id');
+            if (! $merchantId || ! Schema::hasTable('merchants')) {
+                return null;
+            }
+            if (! Schema::hasColumn('merchants', 'vat_applicable_to')) {
+                return null;
+            }
+            $raw = DB::table('merchants')->where('id', (int) $merchantId)->value('vat_applicable_to');
+
+            return $raw !== null ? (string) $raw : null;
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     /**
@@ -128,4 +205,3 @@ final class HotelPricingService
         return app(PeakDayRuleResolver::class);
     }
 }
-
