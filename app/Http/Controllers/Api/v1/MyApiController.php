@@ -92,6 +92,8 @@ class MyApiController extends Controller
             'cancellations',
             'bookingItems.item.cabinType',
             'bookingItems.trip.launch',
+            'bookingItems.trip.vehicle',
+            'bookingItems.vehicle',
             'payment',
             'hotelReservation.hotel',
             'hotelReservation.roomType',
@@ -145,6 +147,7 @@ class MyApiController extends Controller
                 if (empty($item['trip'])) {
                     continue;
                 }
+                $vehiclePhoto = $this->vehiclePhotoForBookingItem($item);
                 $irow = [
                     'id' => $item['id'],
                     'cabin_id' => $item['cabin_id'],
@@ -153,6 +156,9 @@ class MyApiController extends Controller
                     'fare' => $item['price'],
                     'is_ac' => ( $item['cabin_type'] != 'deck' && $item['item']) ? $item['item']['cabinType']['is_ac'] : 0,
                     'vehicle_name' => ($item['trip'] && $item['trip']['launch']) ? $item['trip']['launch']['name'] : '',
+                    'vehicle_photo' => $vehiclePhoto,
+                    'vehicle_logo' => $vehiclePhoto,
+                    'vehicle_image' => $vehiclePhoto,
                     'route_name' => ($item['trip'] && $item['trip']['route']) ? $item['trip']['route']['route_name'] : '',
                     'schedule_date' => $item['trip_date'],
                     'leaving_time' => ($item['trip']) ? $item['trip']['leaving_at'] : date('Y-m-d H:i:s', 0),
