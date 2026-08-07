@@ -586,7 +586,7 @@ class AgentApiPresenter
     }
 
     /**
-     * Public booking reference (PNR), e.g. "D260807-K48210-Q03945".
+     * Public booking reference (PNR), e.g. "D260807-K4821-Q0394".
      */
     public static function formatBookingReference(Booking $booking): string
     {

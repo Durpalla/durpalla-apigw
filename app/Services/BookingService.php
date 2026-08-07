@@ -236,6 +236,8 @@ class BookingService
                 $data['success'] = true;
                 $data['order_id'] = $booking->id;
                 $data['booking_id'] = $booking->id;
+                $data['pnr'] = $booking->publicReference();
+                $data['booking_reference'] = $data['pnr'];
                 $data['total_payable'] = $booking->total_payable;
                 $data['total_discount'] = $booking->total_discount;
                 $data['charge_total'] = $booking->charge_total;

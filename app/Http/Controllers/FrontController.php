@@ -27,7 +27,13 @@ class FrontController extends Controller
         $lang = BookingInvoice::applyLocale($request->query('lang'));
 
         try {
-            $booking = Booking::query()->findOrFail($id);
+            $booking = Booking::query()->with('payment')->findOrFail($id);
+            if (! $this->bookingAllowsInvoice($booking)) {
+                return response()->view('invoice.error', [
+                    'message' => __('Invoice is available only for successful bookings.'),
+                    'booking_id' => $id,
+                ], 403);
+            }
             $invoice = $builder->build($booking);
             $invoice['lang'] = $lang;
 
@@ -67,7 +73,13 @@ class FrontController extends Controller
         $lang = BookingInvoice::applyLocale($request->query('lang'));
 
         try {
-            $booking = Booking::query()->findOrFail($id);
+            $booking = Booking::query()->with('payment')->findOrFail($id);
+            if (! $this->bookingAllowsInvoice($booking)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('Invoice is available only for successful bookings.'),
+                ], 403);
+            }
             $invoice = $builder->build($booking);
             $reference = BookingInvoice::formatReference($booking);
             $fileName = 'invoice-'.$reference.'.pdf';
@@ -243,5 +255,32 @@ class FrontController extends Controller
             'autoScriptToLang' => false,
             'autoLangToFont' => false,
         ]);
+    }
+
+    /**
+     * Invoice view/download only for successful bookings with paid/settled payment.
+     */
+    private function bookingAllowsInvoice(Booking $booking): bool
+    {
+        $bookingStatus = strtoupper(trim((string) ($booking->status ?? '')));
+        if (in_array($bookingStatus, ['PENDING', 'FAILED', 'CANCELLED', 'REJECTED', ''], true)) {
+            return false;
+        }
+
+        $payment = $booking->payment;
+        if ($payment === null) {
+            return false;
+        }
+
+        if (method_exists($payment, 'isCollected') && $payment->isCollected()) {
+            return true;
+        }
+
+        $st = strtoupper(trim((string) ($payment->status ?? '')));
+
+        return str_contains($st, 'PAID')
+            || str_contains($st, 'COMPLETE')
+            || str_contains($st, 'SUCCESS')
+            || $st === 'ADVANCE';
     }
 }

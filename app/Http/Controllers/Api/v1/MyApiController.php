@@ -168,7 +168,6 @@ class MyApiController extends Controller
                 array_push($row['items'], $irow);
                 if( $item['status'] == 1 && $item['trip_date'] >= date('Y-m-d') ) {
                     $row['cancellable'] = true;
-                    $row['downloadable'] = true;
                 }
             }
             if( !getOption('is_cancellation_enabled') ) {
@@ -177,10 +176,9 @@ class MyApiController extends Controller
             $hotelItem = $this->hotelStayAsAndroidBookingItem($booking);
             if ($hotelItem !== null) {
                 $row['items'][] = $hotelItem;
-                if (! $row['downloadable'] && $this->bookingPaymentLooksPaid($booking)) {
-                    $row['downloadable'] = true;
-                }
+
             }
+            $row['downloadable'] = $this->bookingAllowsInvoiceDownload($booking);
             $this->attachCommonInvoiceFields($row, $booking);
             $responseArr[] = $row;
         }
@@ -285,7 +283,6 @@ class MyApiController extends Controller
                 array_push($row['items'], $irow);
                 if( $item['status'] == 1 && $item['trip_date'] >= date('Y-m-d') ) {
                     $row['cancellable'] = true;
-                    $row['downloadable'] = true;
                 }
             }
             if( !getOption('is_cancellation_enabled') ) {
@@ -294,10 +291,9 @@ class MyApiController extends Controller
             $hotelItem = $this->hotelStayAsAndroidBookingItem($booking);
             if ($hotelItem !== null) {
                 $row['items'][] = $hotelItem;
-                if (! $row['downloadable'] && $this->bookingPaymentLooksPaid($booking)) {
-                    $row['downloadable'] = true;
-                }
+
             }
+            $row['downloadable'] = $this->bookingAllowsInvoiceDownload($booking);
             $this->attachCommonInvoiceFields($row, $booking);
             $responseArr[] = $row;
         }
@@ -394,7 +390,6 @@ class MyApiController extends Controller
                 }
                 if( $item['status'] == 1 && $item['trip_date'] >= date('Y-m-d') ) {
                     $responseArr['cancellable'] = true;
-                    $responseArr['downloadable'] = true;
                 }
                 array_push($responseArr['items'], $row);
             }
@@ -402,14 +397,13 @@ class MyApiController extends Controller
             $hotelRow = $this->hotelStayAsAndroidBookingItem($booking);
             if ($hotelRow !== null) {
                 $responseArr['items'][] = $hotelRow;
-                if (! $responseArr['downloadable'] && $this->bookingPaymentLooksPaid($booking)) {
-                    $responseArr['downloadable'] = true;
-                }
+
             }
 
             if( !getOption('is_cancellation_enabled') ) {
                 $responseArr['cancellable'] = false;
             }
+            $responseArr['downloadable'] = $this->bookingAllowsInvoiceDownload($booking);
             $this->attachCommonInvoiceFields($responseArr, $booking);
         }
 
@@ -540,6 +534,7 @@ class MyApiController extends Controller
             }
 
             $responseArr['items'] = $tickets;
+            $responseArr['downloadable'] = $this->bookingAllowsInvoiceDownload($booking);
             $this->attachCommonInvoiceFields($responseArr, $booking);
         }
 
@@ -1511,17 +1506,40 @@ class MyApiController extends Controller
      */
     private function attachCommonInvoiceFields(array &$payload, Booking $booking): void
     {
-        $downloadable = ! empty($payload['downloadable']) || $this->bookingPaymentLooksPaid($booking);
-        if (! $downloadable) {
+        // Always expose the public PNR, even when invoice download is not allowed.
+        $ref = BookingInvoice::formatReference($booking);
+        $payload['pnr'] = $ref;
+        $payload['booking_reference'] = $ref;
+
+        // Invoice URL only for successful (paid) bookings.
+        if (! $this->bookingAllowsInvoiceDownload($booking)) {
+            $payload['downloadable'] = false;
+            unset($payload['invoice'], $payload['invoice_url']);
+
             return;
         }
 
         $payload['downloadable'] = true;
-        $ref = BookingInvoice::formatReference($booking);
-        $payload['pnr'] = $ref;
-        $payload['booking_reference'] = $ref;
         $payload['invoice'] = BookingInvoice::signedUrl($booking, 60);
         $payload['invoice_url'] = $payload['invoice'];
+    }
+
+    /**
+     * Invoice download/share is allowed only for successful bookings with collected payment.
+     */
+    private function bookingAllowsInvoiceDownload(Booking $booking): bool
+    {
+        $bookingStatus = strtoupper(trim((string) ($booking->status ?? '')));
+        if (in_array($bookingStatus, ['PENDING', 'FAILED', 'CANCELLED', 'REJECTED', ''], true)) {
+            return false;
+        }
+
+        if (! in_array($bookingStatus, ['COMPLETE', 'ADVANCE', 'SUCCESS', 'PAID'], true)) {
+            // Unknown status: require a clearly collected payment.
+            return $this->bookingPaymentLooksPaid($booking);
+        }
+
+        return $this->bookingPaymentLooksPaid($booking);
     }
 
     private function bookingPaymentLooksPaid(Booking $booking): bool
@@ -1530,17 +1548,19 @@ class MyApiController extends Controller
         if ($p === null) {
             return false;
         }
-        $status = is_array($p) ? ($p['status'] ?? '') : ($p->status ?? '');
-        $dues = is_array($p) ? ($p['dues'] ?? null) : ($p->dues ?? null);
-        $st = strtoupper((string) $status);
 
-        if ($dues !== null && (float) $dues <= 0) {
+        if (! is_array($p) && method_exists($p, 'isCollected') && $p->isCollected()) {
             return true;
         }
 
+        $status = is_array($p) ? ($p['status'] ?? '') : ($p->status ?? '');
+        $st = strtoupper(trim((string) $status));
+
+        // Require an explicit paid/success payment status — do not treat dues=0 alone as paid.
         return str_contains($st, 'PAID')
             || str_contains($st, 'COMPLETE')
-            || str_contains($st, 'SUCCESS');
+            || str_contains($st, 'SUCCESS')
+            || $st === 'ADVANCE';
     }
 
     /**
