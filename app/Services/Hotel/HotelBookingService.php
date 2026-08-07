@@ -4,12 +4,12 @@ namespace App\Services\Hotel;
 
 use App\Constants\AppConst;
 use App\Models\Booking;
+use App\Models\Customer;
 use App\Models\Hotel;
 use App\Models\HotelHold;
 use App\Models\HotelReservation;
 use App\Models\HotelRoomType;
 use App\Models\Payment;
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -1305,7 +1305,7 @@ final class HotelBookingService
     /**
      * @throws \Throwable
      */
-    public function createHold(User $user, array $input, string $idempotencyKey): HotelHold
+    public function createHold(Customer $user, array $input, string $idempotencyKey): HotelHold
     {
         $existing = HotelHold::query()
             ->where('idempotency_key', $idempotencyKey)
@@ -1508,7 +1508,7 @@ final class HotelBookingService
         return $out;
     }
 
-    public function releaseHold(User $user, int $holdId): bool
+    public function releaseHold(Customer $user, int $holdId): bool
     {
         $hold = HotelHold::query()->where('id', $holdId)->where('user_id', $user->id)->first();
         if (! $hold || $hold->status !== HotelHold::STATUS_PENDING) {
@@ -1533,7 +1533,7 @@ final class HotelBookingService
     /**
      * @return array{reservation: HotelReservation, booking: Booking, payment: Payment}
      */
-    public function confirmFromHold(User $user, int $holdId): array
+    public function confirmFromHold(Customer $user, int $holdId): array
     {
         $hold = HotelHold::query()
             ->where('id', $holdId)

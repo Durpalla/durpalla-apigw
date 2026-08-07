@@ -26,6 +26,7 @@ php artisan test tests/Feature/ApiSupportDownloadTest.php
 php artisan test tests/Feature/ApiMyTest.php
 php artisan test tests/Feature/ApiQuickbookTest.php
 php artisan test tests/Feature/ApiSupervisorTest.php
+php artisan test tests/Feature/HotelBookingApiTest.php tests/Unit/HotelBookingServiceTest.php tests/Unit/HotelInventoryServiceTest.php
 ```
 
 ## Test coverage by route group
@@ -41,8 +42,11 @@ php artisan test tests/Feature/ApiSupervisorTest.php
 | **ApiMyTest** | All `GET/POST /api/v1/my/*` (profile, bookings, cancellations, journey, notifications, etc.) – assert 401 without token |
 | **ApiQuickbookTest** | All `GET/POST /api/v1/quickbook/*` – assert 401 without token |
 | **ApiSupervisorTest** | All `GET/POST /api/v1/supervisor/*` – assert 401 without token |
-| **HotelApiTest** | `GET /api/v1/hotel/search` (skipped if DB unavailable), `POST /api/v1/hotel/hold` → 401 without token |
+| **HotelApiTest** | Smoke: `GET /api/v1/hotel/search`, `POST /api/v1/hotel/hold` / `hold/release` → 401 without token |
+| **HotelBookingApiTest** | Quote, hold (+ idempotency / inventory), release, confirm, foreign-hold reject (`RefreshDatabase`) |
 | **HotelPricingServiceTest** (Unit) | Nightly quote math (single night, multi-night) |
+| **HotelBookingServiceTest** (Unit) | `createHold`/`releaseHold`/`confirmFromHold` with `Customer` (rejects staff `User`) |
+| **HotelInventoryServiceTest** (Unit) | Night dates, apply/release hold, sold-out `RuntimeException` |
 
 Hotel tables (`hotels`, `hotel_holds`, inventory, etc.) are created by Laravel migrations in **`/var/www/html/durpalla`** (see `database/migrations/2026_04_24_120000_create_hotel_tables.php`). Run `php artisan migrate` from **durpalla** against the DB this API uses; **durpalla-apigw** does not ship app migrations.
 

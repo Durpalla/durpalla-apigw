@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Customer;
 use App\Models\Hotel;
 use App\Models\HotelFavorite;
 use App\Models\HotelHold;
@@ -166,6 +167,14 @@ class HotelController extends Controller
             ], 422);
         }
 
+        $customer = $this->authenticatedCustomer();
+        if ($customer === null) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Customer authentication required.'),
+            ], 401);
+        }
+
         $payload = $validator->validated();
         $lines = $payload['lines'] ?? null;
         if (! is_array($lines) || $lines === []) {
@@ -177,7 +186,7 @@ class HotelController extends Controller
 
         try {
             $hold = $this->hotelBooking->createHold(
-                Auth::user(),
+                $customer,
                 $payload,
                 $idempotencyKey,
             );
@@ -186,12 +195,14 @@ class HotelController extends Controller
                 'success' => true,
                 'data' => $this->formatHold($hold),
             ]);
-        } catch (\InvalidArgumentException $e) {
+        } catch (\InvalidArgumentException|\RuntimeException $e) {
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
             ], 422);
         } catch (\Throwable $e) {
+            report($e);
+
             return response()->json([
                 'success' => false,
                 'message' => config('app.debug') ? $e->getMessage() : __('Could not create hold. Please try again.'),
@@ -201,7 +212,15 @@ class HotelController extends Controller
 
     public function releaseHold(Request $request, int $hold): JsonResponse
     {
-        $ok = $this->hotelBooking->releaseHold(Auth::user(), $hold);
+        $customer = $this->authenticatedCustomer();
+        if ($customer === null) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Customer authentication required.'),
+            ], 401);
+        }
+
+        $ok = $this->hotelBooking->releaseHold($customer, $hold);
         if (! $ok) {
             return response()->json([
                 'success' => false,
@@ -352,9 +371,17 @@ class HotelController extends Controller
             ], 422);
         }
 
+        $customer = $this->authenticatedCustomer();
+        if ($customer === null) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Customer authentication required.'),
+            ], 401);
+        }
+
         try {
             $result = $this->hotelBooking->confirmFromHold(
-                Auth::user(),
+                $customer,
                 (int) $request->input('hold_id'),
             );
             $booking = $result['booking'];
@@ -413,6 +440,16 @@ class HotelController extends Controller
             'quote' => $hold->quote_json,
             'status' => $hold->status,
         ];
+    }
+
+    /**
+     * Hotel holds/reservations FK `user_id` → `customers.id` (not `users`).
+     */
+    private function authenticatedCustomer(): ?Customer
+    {
+        $user = Auth::guard('customer')->user() ?? Auth::user();
+
+        return $user instanceof Customer ? $user : null;
     }
 
     private function refreshHotelReviewStats(Hotel $hotel): void
