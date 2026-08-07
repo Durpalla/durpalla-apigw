@@ -1577,6 +1577,9 @@ final class HotelBookingService
                 'booking_party' => 'durpalla',
                 'platform' => 'android',
                 'status' => AppConst::BOOKING_PENDING,
+                'service_type' => 'hotel',
+                'from_date' => $checkIn->toDateString(),
+                'to_date' => $checkOut->toDateString(),
             ]);
 
             $paymentWindow = max(1, (int) config('hotel.payment_window_minutes', 10));

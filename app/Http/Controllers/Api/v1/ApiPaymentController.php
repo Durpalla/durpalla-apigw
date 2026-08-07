@@ -195,7 +195,12 @@ class ApiPaymentController extends Controller
         $data = ['success' => false, 'message' => __('Your payment cannot be validate')];
 
         try {
-            $payment = Payment::with(['booking'])->where('booking_id', $request->input('booking_id'))->first();
+            $payment = Payment::with([
+                'booking.customer',
+                'booking.bookingItems',
+                'booking.hotelReservation.hotel',
+                'booking.hotelReservation.roomType',
+            ])->where('booking_id', $request->input('booking_id'))->first();
 
             if ($payment) {
                 $gwt = CommonHelper::purseGateway($payment->gateway);
@@ -203,6 +208,12 @@ class ApiPaymentController extends Controller
                 $gwt->verify($payment, $request, $data);
 
                 $payment->refresh();
+                $payment->loadMissing([
+                    'booking.customer',
+                    'booking.bookingItems',
+                    'booking.hotelReservation.hotel',
+                    'booking.hotelReservation.roomType',
+                ]);
                 $data['success'] = true;
                 $data['message'] = __('Your payment has been verified');
                 $data['data'] = $payment->format();

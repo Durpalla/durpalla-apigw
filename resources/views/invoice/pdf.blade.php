@@ -52,14 +52,19 @@
 <body>
 @php
     $isBn = app()->getLocale() === 'bn';
+    // Only wrap pure Latin/ASCII in FreeSans. Bengali (or mixed) stays on Noto Sans Bengali.
     $latin = static function ($value) use ($isBn): string {
         $value = (string) $value;
         if ($value === '' || ! $isBn) {
             return e($value);
         }
+        if (preg_match('/\p{Bengali}/u', $value)) {
+            return e($value);
+        }
 
         return '<span class="latin">'.e($value).'</span>';
     };
+    $bnFont = $isBn ? 'notosansbengali' : 'DejaVu Sans, sans-serif';
     $customer = $invoice['customer'] ?? null;
     $payment = $invoice['payment'] ?? null;
     $merchant = $invoice['merchant'] ?? [];
@@ -123,11 +128,17 @@
     if (! is_array($cancellationLines) || $cancellationLines === []) {
         $cancellationLines = [__('invoice.policy_fallback')];
     }
-    $terms = [
-        __('invoice.term_arrive'),
-        __('invoice.term_id'),
-        __('invoice.term_valid'),
-    ];
+    $terms = ! empty($invoice['hotel'])
+        ? [
+            __('invoice.term_hotel_checkin'),
+            __('invoice.term_hotel_policy'),
+            __('invoice.term_hotel_valid'),
+        ]
+        : [
+            __('invoice.term_arrive'),
+            __('invoice.term_id'),
+            __('invoice.term_valid'),
+        ];
     $money = static function ($amount) use ($latin) {
         return $latin('BDT '.number_format((float) $amount, 2));
     };
@@ -180,11 +191,13 @@
         </td>
         <td width="2%"></td>
         <td width="33%" class="box">
-            <strong>{{ __('invoice.section_trip') }}</strong><br>
+            <strong>{{ ! empty($invoice['hotel']) ? __('invoice.section_stay') : __('invoice.section_trip') }}</strong><br>
             @if (! empty($invoice['hotel']))
-                <span class="label">{{ __('invoice.label_hotel') }}:</span> {!! $latin($invoice['hotel']['title'] ?? __('invoice.hotel_fallback')) !!}<br>
+                <span class="label">{{ __('invoice.label_hotel') }}:</span> {!! $latin($invoice['hotel']['name'] ?? $invoice['hotel']['title'] ?? __('invoice.hotel_fallback')) !!}<br>
+                <span class="label">{{ __('invoice.label_room') }}:</span> {!! $latin($invoice['hotel']['title'] ?? '—') !!}<br>
                 <span class="label">{{ __('invoice.label_check_in') }}:</span> {!! $latin($invoice['hotel']['check_in'] ?? '—') !!}<br>
-                <span class="label">{{ __('invoice.label_check_out') }}:</span> {!! $latin($invoice['hotel']['check_out'] ?? '—') !!}
+                <span class="label">{{ __('invoice.label_check_out') }}:</span> {!! $latin($invoice['hotel']['check_out'] ?? '—') !!}<br>
+                <span class="label">{{ __('invoice.label_guests') }}:</span> {!! $latin($invoice['hotel']['guests_label'] ?? '—') !!}
             @else
                 <span class="label">{{ __('invoice.label_route') }}:</span> {!! $latin($routeLabel) !!}<br>
                 <span class="label">{{ __('invoice.label_vehicle') }}:</span> {!! $latin($vehicleName) !!}<br>
@@ -212,15 +225,21 @@
     </tr>
 </table>
 
+@php
+    $isHotelInvoice = ! empty($invoice['hotel']);
+    $colSeat = $isHotelInvoice ? __('invoice.col_room') : __('invoice.col_seat_cabin');
+    $colGuest = $isHotelInvoice ? __('invoice.col_guest') : __('invoice.col_passenger');
+    $th = 'background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:'.$bnFont.';';
+@endphp
 <table class="items">
     <thead>
     <tr>
-        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:notosansbengali;">#</td>
-        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:notosansbengali;">{{ __('invoice.col_passenger') }}</td>
-        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:notosansbengali;">{{ __('invoice.col_phone') }}</td>
-        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:notosansbengali;">{{ __('invoice.col_seat_cabin') }}</td>
-        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:notosansbengali;">{{ __('invoice.col_type') }}</td>
-        <td style="background:#f8fafc;font-size:10px;color:#475569;border:1px solid #e2e8f0;padding:6px;font-family:notosansbengali;">{{ __('invoice.col_fare') }}</td>
+        <td style="{{ $th }}">#</td>
+        <td style="{{ $th }}">{{ $colGuest }}</td>
+        <td style="{{ $th }}">{{ __('invoice.col_phone') }}</td>
+        <td style="{{ $th }}">{{ $colSeat }}</td>
+        <td style="{{ $th }}">{{ __('invoice.col_type') }}</td>
+        <td style="{{ $th }}">{{ __('invoice.col_fare') }}</td>
     </tr>
     </thead>
     <tbody>
@@ -229,13 +248,19 @@
             $passenger = is_array($ticket['passenger'] ?? null) ? $ticket['passenger'] : [];
             $pName = (string) ($passenger['name'] ?? $customerName);
             $pMobile = (string) ($passenger['mobile'] ?? $customerMobile);
+            $typeLabel = (string) ($ticket['cabin_type'] ?? '');
+            if (strcasecmp($typeLabel, 'hotel') === 0) {
+                $typeLabel = __('invoice.hotel_fallback');
+            } else {
+                $typeLabel = ucfirst((string) ($ticket['seat_cabin_type'] ?? $ticket['cabin_type'] ?? '—'));
+            }
         @endphp
         <tr>
             <td>{!! $latin((string) ($index + 1)) !!}</td>
             <td>{!! $latin($pName !== '' ? $pName : '—') !!}</td>
             <td>{!! $latin($pMobile !== '' ? $pMobile : '—') !!}</td>
             <td>{!! $latin(! empty($ticket['cabin_no']) ? $ticket['cabin_no'] : '—') !!}</td>
-            <td>{!! $latin(ucfirst((string) ($ticket['seat_cabin_type'] ?? $ticket['cabin_type'] ?? '—'))) !!}</td>
+            <td>{!! $latin($typeLabel !== '' ? $typeLabel : '—') !!}</td>
             <td>{!! $money($ticket['price'] ?? 0) !!}</td>
         </tr>
     @empty
@@ -251,16 +276,16 @@
         <td width="60%"></td>
         <td width="40%">
             <table width="100%">
-                <tr><td style="font-family:notosansbengali;">{{ __('invoice.subtotal') }}</td><td align="right">{!! $money($invoice['total_amount'] ?? 0) !!}</td></tr>
+                <tr><td style="font-family:{{ $bnFont }};">{{ __('invoice.subtotal') }}</td><td align="right">{!! $money($invoice['total_amount'] ?? 0) !!}</td></tr>
                 @if ((float) ($invoice['charge_total'] ?? 0) > 0)
-                    <tr><td style="font-family:notosansbengali;">{{ __('invoice.service_charge') }}</td><td align="right">{!! $money($invoice['charge_total']) !!}</td></tr>
+                    <tr><td style="font-family:{{ $bnFont }};">{{ __('invoice.service_charge') }}</td><td align="right">{!! $money($invoice['charge_total']) !!}</td></tr>
                 @endif
-                <tr><td style="font-family:notosansbengali;">{{ __('invoice.vat_on_charge') }}</td><td align="right">{!! $money($invoice['vat_total'] ?? 0) !!}</td></tr>
+                <tr><td style="font-family:{{ $bnFont }};">{{ __('invoice.vat_on_charge') }}</td><td align="right">{!! $money($invoice['vat_total'] ?? 0) !!}</td></tr>
                 @if ((float) ($invoice['total_discount'] ?? 0) > 0)
-                    <tr><td style="font-family:notosansbengali;">{{ __('invoice.discount') }}</td><td align="right">-{!! $money($invoice['total_discount']) !!}</td></tr>
+                    <tr><td style="font-family:{{ $bnFont }};">{{ __('invoice.discount') }}</td><td align="right">-{!! $money($invoice['total_discount']) !!}</td></tr>
                 @endif
                 <tr>
-                    <td class="grand" style="font-family:notosansbengali;">{{ __('invoice.total') }}</td>
+                    <td class="grand" style="font-family:{{ $bnFont }};">{{ __('invoice.total') }}</td>
                     <td class="grand" align="right">{!! $money($invoice['total_payable'] ?? 0) !!}</td>
                 </tr>
             </table>

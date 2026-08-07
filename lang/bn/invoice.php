@@ -11,6 +11,7 @@ return [
 
     'section_booking' => 'বুকিং',
     'section_trip' => 'ট্রিপ',
+    'section_stay' => 'অবস্থান',
     'section_customer' => 'গ্রাহক',
     'section_agent' => 'এজেন্ট',
     'section_payment_fare' => 'পেমেন্ট ও ভাড়া',
@@ -24,6 +25,7 @@ return [
     'label_departure' => 'ছাড়ার সময়',
     'label_boarding' => 'বোর্ডিং',
     'label_hotel' => 'হোটেল',
+    'label_room' => 'রুম',
     'label_check_in' => 'চেক-ইন',
     'label_check_out' => 'চেক-আউট',
     'label_guests' => 'অতিথি',
@@ -37,8 +39,10 @@ return [
     'label_agent_mobile' => 'এজেন্ট মোবাইল',
 
     'col_passenger' => 'যাত্রী',
+    'col_guest' => 'অতিথি',
     'col_phone' => 'ফোন',
     'col_seat_cabin' => 'সিট / কেবিন',
+    'col_room' => 'রুম',
     'col_type' => 'ধরন',
     'col_ac' => 'এসি',
     'col_fare' => 'ভাড়া',
@@ -70,6 +74,9 @@ return [
     'term_arrive' => 'ছাড়ার অন্তত ৩০ মিনিট আগে বোর্ডিং পয়েন্টে উপস্থিত থাকুন।',
     'term_id' => 'বোর্ডিংয়ের সময় বৈধ পরিচয়পত্র ও এই বুকিং রেফারেন্স আবশ্যক।',
     'term_valid' => 'এই ইনভয়েস শুধুমাত্র উপরের ট্রিপ ও যাত্রীদের জন্য বৈধ।',
+    'term_hotel_checkin' => 'হোটেল চেক-ইনে এই বুকিং রেফারেন্স ও বৈধ পরিচয়পত্র দেখান।',
+    'term_hotel_policy' => 'চেক-ইন/চেক-আউট সময় ও নীতিমালা হোটেলের নিয়ম অনুসারে প্রযোজ্য।',
+    'term_hotel_valid' => 'এই ইনভয়েস শুধুমাত্র উপরের অবস্থান ও অতিথিদের জন্য বৈধ।',
 
     'policy_fallback' => 'বাতিলকরণের ফেরত বুকিংয়ের সময় নির্ধারিত অপারেটর নীতি অনুসরণ করে।',
     'policy_cancel_before' => 'ছাড়ার :window বা তার বেশি আগে বাতিল: :percent% ফেরত।',

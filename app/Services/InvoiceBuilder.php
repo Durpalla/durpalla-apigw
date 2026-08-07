@@ -22,6 +22,7 @@ class InvoiceBuilder
             'bookedBy',
             'payment.gateway',
             'cancellations',
+            'hotelReservation.hotel',
             'hotelReservation.roomType',
             'bookingItems.trip.route',
             'bookingItems.trip.launch.merchant',
@@ -80,12 +81,61 @@ class InvoiceBuilder
 
         if ($booking->hotelReservation) {
             $res = $booking->hotelReservation;
+            $roomTitle = method_exists($res->roomType, 'displayTitle')
+                ? (string) $res->roomType->displayTitle()
+                : (string) ($res->roomType->title ?? $res->roomType->name ?? 'Room');
+            $hotelName = (string) ($res->hotel?->name ?? __('invoice.hotel_fallback'));
+            $checkIn = optional($res->check_in)->toDateString();
+            $checkOut = optional($res->check_out)->toDateString();
+            $adults = (int) ($res->adults ?? 0);
+            $children = (int) ($res->children ?? 0);
+            $nights = 1;
+            if ($res->check_in && $res->check_out) {
+                $nights = max(1, (int) $res->check_in->diffInDays($res->check_out));
+            }
+            $guestLabel = trim(
+                __('invoice.adults', ['count' => $adults])
+                .($children > 0 ? ', '.__('invoice.children', ['count' => $children]) : '')
+            );
+            $stayLabel = trim(($checkIn ?: '—').' → '.($checkOut ?: '—'));
+            $lineTotal = (float) ($res->total_payable ?? $payable);
+
             $invoice['hotel'] = [
-                'title' => (string) ($res->roomType->title ?? $res->roomType->name ?? 'Hotel'),
-                'check_in' => optional($res->check_in)->toDateString(),
-                'check_out' => optional($res->check_out)->toDateString(),
-                'adults' => (int) ($res->adults ?? 0),
-                'children' => (int) ($res->children ?? 0),
+                'name' => $hotelName,
+                'title' => $roomTitle,
+                'check_in' => $checkIn,
+                'check_out' => $checkOut,
+                'adults' => $adults,
+                'children' => $children,
+                'nights' => $nights,
+                'guests_label' => $guestLabel,
+            ];
+
+            // Same line-item shape as transport so PDF/HTML use one template.
+            $invoice['items'][] = [
+                'id' => $res->id,
+                'cabin_no' => $roomTitle,
+                'cabin_type' => 'hotel',
+                'price' => $lineTotal > 0 ? $lineTotal : $payable,
+                'cabin_position' => null,
+                'discount' => 0,
+                'is_ac' => null,
+                'vehicle_name' => $hotelName,
+                'vehicle_type' => 'hotel',
+                'route_name' => $hotelName,
+                'schedule_date' => $stayLabel,
+                'leaving_time' => null,
+                'leaving_time_formated' => $checkIn ? date('d M, Y', strtotime($checkIn)) : '',
+                'boarding_point' => ['name' => $guestLabel],
+                'passenger' => [
+                    'name' => (string) ($booking->customer?->name ?? ''),
+                    'mobile' => (string) ($booking->customer?->mobile ?? ''),
+                ],
+                'from' => $checkIn ?: '',
+                'to' => $checkOut ?: '',
+                'cancellable' => false,
+                'status' => $res->status,
+                'seat_cabin_type' => $roomTitle !== '' ? $roomTitle : __('invoice.hotel_fallback'),
             ];
         }
 

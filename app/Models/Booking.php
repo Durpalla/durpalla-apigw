@@ -178,16 +178,38 @@ class Booking extends Model
     {
         $pnr = $this->publicReference();
 
-        return $this->only(['id', 'status', 'created_at']) +
+        $payload = $this->only(['id', 'status', 'created_at', 'total_payable', 'service_type', 'from_date', 'to_date']) +
             [
                 'pnr' => $pnr,
                 'booking_reference' => $pnr,
-                'customer' => $this->customer->only('id', 'name'),
+                'customer' => $this->customer
+                    ? $this->customer->only('id', 'name', 'mobile')
+                    : null,
                 'items' => $this->bookingItems->map(function ($item) {
                     return $item->format();
-                }),
+                })->values()->all(),
                 'qr' => upload_asset('qrs/'.$this->id.'.png'),
             ];
+
+        $hotelRes = $this->relationLoaded('hotelReservation')
+            ? $this->hotelReservation
+            : $this->hotelReservation()->with(['hotel', 'roomType'])->first();
+
+        if ($hotelRes !== null) {
+            $payload['service_type'] = $payload['service_type'] ?: 'hotel';
+            $payload['hotel'] = [
+                'id' => (int) $hotelRes->hotel_id,
+                'name' => $hotelRes->hotel?->name,
+                'check_in' => $hotelRes->check_in?->toDateString(),
+                'check_out' => $hotelRes->check_out?->toDateString(),
+                'adults' => (int) $hotelRes->adults,
+                'children' => (int) $hotelRes->children,
+                'room_type' => $hotelRes->roomType?->displayTitle(),
+                'total_payable' => (float) $hotelRes->total_payable,
+            ];
+        }
+
+        return $payload;
     }
 
     public static function boot()

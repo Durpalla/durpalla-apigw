@@ -609,11 +609,18 @@
     if (! is_array($cancellationLines) || $cancellationLines === []) {
         $cancellationLines = [__('invoice.policy_fallback')];
     }
-    $terms = [
-        __('invoice.term_arrive'),
-        __('invoice.term_id'),
-        __('invoice.term_valid'),
-    ];
+    $isHotelInvoice = ! empty($invoice['hotel']);
+    $terms = $isHotelInvoice
+        ? [
+            __('invoice.term_hotel_checkin'),
+            __('invoice.term_hotel_policy'),
+            __('invoice.term_hotel_valid'),
+        ]
+        : [
+            __('invoice.term_arrive'),
+            __('invoice.term_id'),
+            __('invoice.term_valid'),
+        ];
     $money = static fn ($amount) => '৳'.number_format((float) $amount, 2);
     $gateway = (string) ($invoice['gateway_name'] ?? '');
     if ($gateway !== '' && strcasecmp($gateway, 'bkash') === 0) {
@@ -699,12 +706,13 @@
             </section>
 
             <section class="bi-card">
-                <h3 class="bi-card-title">{{ __('invoice.section_trip') }}</h3>
+                <h3 class="bi-card-title">{{ !empty($invoice['hotel']) ? __('invoice.section_stay') : __('invoice.section_trip') }}</h3>
                 @if (!empty($invoice['hotel']))
-                    <div class="bi-row"><span>{{ __('invoice.label_hotel') }}</span><strong>{{ $invoice['hotel']['title'] ?? __('invoice.hotel_fallback') }}</strong></div>
+                    <div class="bi-row"><span>{{ __('invoice.label_hotel') }}</span><strong>{{ $invoice['hotel']['name'] ?? $invoice['hotel']['title'] ?? __('invoice.hotel_fallback') }}</strong></div>
+                    <div class="bi-row"><span>{{ __('invoice.label_room') }}</span><strong>{{ $invoice['hotel']['title'] ?? '—' }}</strong></div>
                     <div class="bi-row"><span>{{ __('invoice.label_check_in') }}</span><strong>{{ $invoice['hotel']['check_in'] ?? '—' }}</strong></div>
                     <div class="bi-row"><span>{{ __('invoice.label_check_out') }}</span><strong>{{ $invoice['hotel']['check_out'] ?? '—' }}</strong></div>
-                    <div class="bi-row"><span>{{ __('invoice.label_guests') }}</span><strong>{{ __('invoice.adults', ['count' => (int) ($invoice['hotel']['adults'] ?? 0)]) }}{{ !empty($invoice['hotel']['children']) ? ', '.__('invoice.children', ['count' => (int) $invoice['hotel']['children']]) : '' }}</strong></div>
+                    <div class="bi-row"><span>{{ __('invoice.label_guests') }}</span><strong>{{ $invoice['hotel']['guests_label'] ?? (__('invoice.adults', ['count' => (int) ($invoice['hotel']['adults'] ?? 0)]).(!empty($invoice['hotel']['children']) ? ', '.__('invoice.children', ['count' => (int) $invoice['hotel']['children']]) : '')) }}</strong></div>
                 @else
                     <div class="bi-row"><span>{{ __('invoice.label_route') }}</span><strong>{{ $routeLabel }}</strong></div>
                     <div class="bi-row"><span>{{ __('invoice.label_vehicle') }}</span><strong>{{ $vehicleName }}</strong></div>
@@ -739,11 +747,13 @@
             <thead>
             <tr>
                 <th>#</th>
-                <th>{{ __('invoice.col_passenger') }}</th>
+                <th>{{ $isHotelInvoice ? __('invoice.col_guest') : __('invoice.col_passenger') }}</th>
                 <th>{{ __('invoice.col_phone') }}</th>
-                <th>{{ __('invoice.col_seat_cabin') }}</th>
+                <th>{{ $isHotelInvoice ? __('invoice.col_room') : __('invoice.col_seat_cabin') }}</th>
                 <th>{{ __('invoice.col_type') }}</th>
-                <th>{{ __('invoice.col_ac') }}</th>
+                @unless($isHotelInvoice)
+                    <th>{{ __('invoice.col_ac') }}</th>
+                @endunless
                 <th>{{ __('invoice.col_fare') }}</th>
             </tr>
             </thead>
@@ -756,19 +766,27 @@
                     $ac = array_key_exists('is_ac', $ticket)
                         ? (! empty($ticket['is_ac']) ? __('invoice.ac') : __('invoice.non_ac'))
                         : '—';
+                    $typeLabel = (string) ($ticket['cabin_type'] ?? '');
+                    if (strcasecmp($typeLabel, 'hotel') === 0) {
+                        $typeLabel = __('invoice.hotel_fallback');
+                    } else {
+                        $typeLabel = ucfirst((string) ($ticket['seat_cabin_type'] ?? $ticket['cabin_type'] ?? '—'));
+                    }
                 @endphp
                 <tr>
                     <td>{{ $index + 1 }}</td>
                     <td>{{ $pName !== '' ? $pName : '—' }}</td>
                     <td>{{ $pMobile !== '' ? $pMobile : '—' }}</td>
                     <td>{{ !empty($ticket['cabin_no']) ? $ticket['cabin_no'] : '—' }}</td>
-                    <td>{{ ucfirst((string) ($ticket['seat_cabin_type'] ?? $ticket['cabin_type'] ?? '—')) }}</td>
-                    <td>{{ $ac }}</td>
+                    <td>{{ $typeLabel !== '' ? $typeLabel : '—' }}</td>
+                    @unless($isHotelInvoice)
+                        <td>{{ $ac }}</td>
+                    @endunless
                     <td>{{ $money($ticket['price'] ?? 0) }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7">{{ __('invoice.no_ticket_lines') }}</td>
+                    <td colspan="{{ $isHotelInvoice ? 6 : 7 }}">{{ __('invoice.no_ticket_lines') }}</td>
                 </tr>
             @endforelse
             </tbody>
@@ -776,7 +794,7 @@
 
         <div class="bi-meta-line">
             <span>
-                <strong>{{ __('invoice.label_seats') }}:</strong>
+                <strong>{{ $isHotelInvoice ? __('invoice.label_room') : __('invoice.label_seats') }}:</strong>
                 @if ($seats)
                     @foreach($seats as $seat)
                         <span class="bi-seat">{{ $seat }}</span>
@@ -786,7 +804,7 @@
                 @endif
             </span>
             <span><strong>{{ __('invoice.label_status') }}:</strong> {{ $seal }}</span>
-            <span><strong>{{ __('invoice.label_route') }}:</strong> {{ $routeLabel }}</span>
+            <span><strong>{{ $isHotelInvoice ? __('invoice.label_hotel') : __('invoice.label_route') }}:</strong> {{ $isHotelInvoice ? ($invoice['hotel']['name'] ?? $routeLabel) : $routeLabel }}</span>
         </div>
 
         <div class="bi-policies">

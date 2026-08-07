@@ -11,6 +11,7 @@ return [
 
     'section_booking' => 'Booking',
     'section_trip' => 'Trip',
+    'section_stay' => 'Stay',
     'section_customer' => 'Customer',
     'section_agent' => 'Agent',
     'section_payment_fare' => 'Payment & Fare',
@@ -24,6 +25,7 @@ return [
     'label_departure' => 'Departure',
     'label_boarding' => 'Boarding',
     'label_hotel' => 'Hotel',
+    'label_room' => 'Room',
     'label_check_in' => 'Check-in',
     'label_check_out' => 'Check-out',
     'label_guests' => 'Guests',
@@ -37,8 +39,10 @@ return [
     'label_agent_mobile' => 'Agent mobile',
 
     'col_passenger' => 'Passenger',
+    'col_guest' => 'Guest',
     'col_phone' => 'Phone',
     'col_seat_cabin' => 'Seat / Cabin',
+    'col_room' => 'Room',
     'col_type' => 'Type',
     'col_ac' => 'AC',
     'col_fare' => 'Fare',
@@ -70,6 +74,9 @@ return [
     'term_arrive' => 'Arrive at the boarding point at least 30 minutes before departure.',
     'term_id' => 'Valid ID and this booking reference are required at boarding.',
     'term_valid' => 'This invoice is valid only for the trip and passengers listed above.',
+    'term_hotel_checkin' => 'Present this booking reference and a valid ID at hotel check-in.',
+    'term_hotel_policy' => 'Hotel check-in/out times and policies follow the property rules.',
+    'term_hotel_valid' => 'This invoice is valid only for the stay and guests listed above.',
 
     'policy_fallback' => 'Cancellation refunds follow the operator policy configured at booking time.',
     'policy_cancel_before' => 'Cancel :window or more before departure: :percent% refund.',
