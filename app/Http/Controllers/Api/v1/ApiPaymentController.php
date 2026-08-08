@@ -48,9 +48,14 @@ class ApiPaymentController extends Controller
 
             $payable = (float) ($order->total_payable ?? 0);
             if (($payment->paid_amount === null || (float) $payment->paid_amount <= 0) && $payable > 0) {
+                // Charge amount for the gateway — not proof of collection yet.
                 $payment->paid_amount = $payable;
-                if ($payment->dues === null) {
-                    $payment->dues = 0;
+            }
+            // Keep dues until callback marks payment success.
+            if ($payment->dues === null || (float) $payment->dues <= 0) {
+                $status = strtolower((string) ($payment->status ?? 'pending'));
+                if (! in_array($status, ['success', 'paid', 'complete', 'completed'], true) && $payable > 0) {
+                    $payment->dues = $payable;
                 }
             }
 
