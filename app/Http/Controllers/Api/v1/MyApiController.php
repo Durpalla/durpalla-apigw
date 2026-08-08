@@ -559,8 +559,24 @@ class MyApiController extends Controller
             $hotelRow = $this->hotelStayAsAndroidBookingItem($booking);
             if ($hotelRow !== null) {
                 $responseArr['items'][] = $hotelRow;
-                $responseArr['service_type'] = $responseArr['service_type'] ?: 'hotel';
+                $responseArr['service_type'] = 'hotel';
                 $responseArr['vat_applicable_to'] = $hotelRow['vat_applicable_to'] ?? '';
+                $responseArr['hotel'] = [
+                    'hotel_name' => $hotelRow['hotel_name'] ?? '',
+                    'room_type_title' => $hotelRow['room_type_title'] ?? '',
+                    'check_in' => $hotelRow['check_in'] ?? '',
+                    'check_out' => $hotelRow['check_out'] ?? '',
+                    'adults' => $hotelRow['adults'] ?? 1,
+                    'children' => $hotelRow['children'] ?? 0,
+                    'city' => $hotelRow['city'] ?? '',
+                    'hotel_address' => $hotelRow['hotel_address'] ?? '',
+                    'hotel_phone' => $hotelRow['hotel_phone'] ?? '',
+                    'hotel_email' => $hotelRow['hotel_email'] ?? '',
+                    'hotel_logo' => $hotelRow['hotel_logo'] ?? '',
+                    'guest_name' => $hotelRow['passenger']['name'] ?? '',
+                    'guest_mobile' => $hotelRow['passenger']['mobile'] ?? '',
+                    'guest_email' => $hotelRow['guest_email'] ?? '',
+                ];
             }
 
             $responseArr['items'] = ( $responseArr['items'] ) ? _my_group_by_old($responseArr['items'], 'schedule_date' ) : [];
