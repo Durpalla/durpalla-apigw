@@ -1218,12 +1218,12 @@ final class HotelBookingService
 
         $out = [];
         $relaxInv = (bool) config('hotel.rooms_treat_missing_inventory_as_available', true);
+        $guests = $adults + $children;
         foreach ($types as $rt) {
-            if ($adults + $children > (int) $rt->max_occupancy) {
-                continue;
-            }
+            $maxOccupancy = max(1, (int) $rt->max_occupancy);
+            $roomsNeeded = (int) max(1, (int) ceil($guests / $maxOccupancy));
             try {
-                $this->inventory->assertAvailability($rt, $checkIn, $checkOut, 1);
+                $this->inventory->assertAvailability($rt, $checkIn, $checkOut, $roomsNeeded);
                 $available = true;
             } catch (\Throwable) {
                 $available = $relaxInv;
@@ -1236,12 +1236,13 @@ final class HotelBookingService
                 'code' => $rt->code,
                 'title' => $rt->displayTitle(),
                 'category' => $rt->accommodationCategory(),
-                'max_occupancy' => (int) $rt->max_occupancy,
+                'max_occupancy' => $maxOccupancy,
                 'bed_type' => $rt->bed_type,
                 'amenities' => $amenities,
                 'facilities' => $amenities,
                 'photos' => $this->photosForApiRoomType($rt),
                 'available' => $available,
+                'rooms_needed' => $roomsNeeded,
                 'quote' => $quote,
             ];
         }
@@ -1260,9 +1261,6 @@ final class HotelBookingService
         $this->syncModuleHotelRoomsIntoApiRoomTypes($hotelId);
         $checkIn = $this->parseDate($request->input('check_in', $request->input('trip_date')));
         $checkOut = $this->parseDate($request->input('check_out', $request->input('return_date')));
-        $adults = max(1, (int) $request->input('adults', 2));
-        $children = max(0, (int) $request->input('children', 0));
-        $guests = $adults + $children;
 
         if (! $checkIn || ! $checkOut || $checkOut <= $checkIn) {
             return 'Valid check-in and check-out are required, and check-out must be after check-in.';
@@ -1275,13 +1273,6 @@ final class HotelBookingService
 
         if ($types->isEmpty()) {
             return 'This property has no bookable room types set up yet. Try another hotel, or check back after the property adds room inventory.';
-        }
-
-        $maxOfAny = (int) $types->max('max_occupancy');
-        if ($guests > $maxOfAny) {
-            $g = $guests === 1 ? 'guest' : 'guests';
-
-            return "No room type here fits {$guests} {$g} (largest max occupancy is {$maxOfAny}). Try fewer guests or another property.";
         }
 
         return 'No rooms are available for this stay. Try different dates or contact the property.';
