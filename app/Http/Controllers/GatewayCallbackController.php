@@ -79,11 +79,14 @@ class GatewayCallbackController extends Controller
                 return view('payment.notfound');
             }
 
-            $isAppClient = $this->isAppPaymentClient($request, $payment);
-
-            if (! $isAppClient && ($url = $this->frontendPaymentStatusUrl($payment))) {
+            // When FRONTEND_PAYMENT_STATUS_URL is set, always send browsers there.
+            // Hotel web bookings were historically stored as platform=android, which
+            // used to skip this redirect and strand users on the apigw HTML page.
+            if ($url = $this->frontendPaymentStatusUrl($payment)) {
                 return redirect()->away($url);
             }
+
+            $isAppClient = $this->isAppPaymentClient($request, $payment);
 
             return view('payment.status', compact('payment', 'isAppClient'));
         } catch (\Exception $exception) {
@@ -95,7 +98,7 @@ class GatewayCallbackController extends Controller
     {
         $payment->loadMissing('booking');
 
-        if (! $this->isAppPaymentClient(request(), $payment) && ($url = $this->frontendPaymentStatusUrl($payment, false))) {
+        if ($url = $this->frontendPaymentStatusUrl($payment, false)) {
             return redirect()->away($url);
         }
 
@@ -107,7 +110,7 @@ class GatewayCallbackController extends Controller
     {
         $payment->loadMissing('booking');
 
-        if (! $this->isAppPaymentClient(request(), $payment) && ($url = $this->frontendPaymentStatusUrl($payment, true))) {
+        if ($url = $this->frontendPaymentStatusUrl($payment, true)) {
             return redirect()->away($url);
         }
 

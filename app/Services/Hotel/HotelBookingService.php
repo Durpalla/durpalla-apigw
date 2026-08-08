@@ -1606,7 +1606,7 @@ final class HotelBookingService
     /**
      * @return array{reservation: HotelReservation, booking: Booking, payment: Payment}
      */
-    public function confirmFromHold(Customer $user, int $holdId): array
+    public function confirmFromHold(Customer $user, int $holdId, ?string $platform = 'web'): array
     {
         $hold = HotelHold::query()
             ->where('id', $holdId)
@@ -1622,7 +1622,9 @@ final class HotelBookingService
             return $this->loadBookingPayment($existing);
         }
 
-        return DB::transaction(function () use ($user, $hold) {
+        $bookingPlatform = $this->normalizeHotelBookingPlatform($platform);
+
+        return DB::transaction(function () use ($user, $hold, $bookingPlatform) {
             $roomType = $hold->roomType;
             $hotel = $roomType->hotel;
             $checkIn = Carbon::parse($hold->check_in);
@@ -1652,7 +1654,9 @@ final class HotelBookingService
                 'charge_amount' => (float) ($quote['charge_percent'] ?? 0),
                 'charge_total' => $chargeTotal,
                 'booking_party' => 'durpalla',
-                'platform' => 'android',
+                // Must be "web" for browser checkout so /payment/status redirects to
+                // FRONTEND_PAYMENT_STATUS_URL instead of the apigw status HTML page.
+                'platform' => $bookingPlatform,
                 'status' => AppConst::BOOKING_PENDING,
                 'service_type' => 'hotel',
                 'from_date' => $checkIn->toDateString(),
@@ -1795,6 +1799,19 @@ final class HotelBookingService
         }
 
         return false;
+    }
+
+    /** Normalize customer hotel booking platform (defaults to web for browser checkout). */
+    private function normalizeHotelBookingPlatform(?string $raw): string
+    {
+        $p = strtolower(trim((string) ($raw ?? 'web')));
+
+        return match ($p) {
+            'web' => 'web',
+            'ios', 'iphone' => 'ios',
+            'android', 'mobile', 'flutter', 'app' => 'android',
+            default => 'web',
+        };
     }
 
     private function hotelsTable(): string

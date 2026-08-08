@@ -1,0 +1,32 @@
+---
+description: Core agent behavior to minimize token usage
+alwaysApply: true
+---
+
+# Token Efficiency
+
+Minimize tokens. Prefer reuse over discovery.
+
+## Context
+
+- Read ≤5 files per step; ≤500 lines total; only the needed function/section
+- Never open `vendor/`, `storage/`, `bootstrap/cache/`, `node_modules/`, `public/build/`
+- Never open compiled/cached assets unless explicitly requested
+- No repo-wide scans/searches unless the user asks
+- Prefer targeted grep/glob over reading whole files
+- Do not re-read files already in context this turn
+
+## Edits
+
+- Touch only task-related files; minimal diffs
+- Never regenerate unchanged code or rewrite whole files for small edits
+- Reuse existing controllers, services, resources, Form Requests, and API patterns
+- Do not add migrations here — schema lives in `durpalla`
+- Never delete, empty, or strip `.cursor/rules/*` (or `AGENTS.md`) unless the user explicitly asks; add/update only, keep prior content
+
+## Output
+
+- Brief answers; no file summaries unless asked
+- No repeating prior analysis
+- List changed files only; skip long narration
+- Skip unsolicited plans, TODOs, and markdown docs

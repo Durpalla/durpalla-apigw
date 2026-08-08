@@ -383,6 +383,7 @@ class HotelController extends Controller
             $result = $this->hotelBooking->confirmFromHold(
                 $customer,
                 (int) $request->input('hold_id'),
+                (string) $request->input('platform', 'web'),
             );
             $booking = $result['booking'];
             $payment = $result['payment'];
