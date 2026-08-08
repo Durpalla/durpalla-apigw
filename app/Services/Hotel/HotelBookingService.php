@@ -1351,6 +1351,22 @@ final class HotelBookingService
             $resolved[] = ['room_type' => $rt, 'quantity' => $quantity];
         }
 
+        // Same customer cannot stack overlapping unpaid bookings for this stay
+        // (was creating booking 65, 66, … on each confirm click).
+        $this->assertNoOverlappingPendingPayment(
+            (int) $user->id,
+            (int) $hotelId,
+            $checkIn,
+            $checkOut,
+        );
+        // Drop any leftover open holds for this stay so a refreshed checkout can retry.
+        $this->cancelOverlappingOpenHolds(
+            (int) $user->id,
+            (int) $hotelId,
+            $checkIn,
+            $checkOut,
+        );
+
         usort($resolved, fn (array $a, array $b): int => $a['room_type']->id <=> $b['room_type']->id);
 
         $lineOutputs = [];
@@ -1519,6 +1535,72 @@ final class HotelBookingService
 
             return true;
         });
+    }
+
+    /**
+     * Block a second hold when the customer already has an unpaid reservation
+     * overlapping the same hotel stay.
+     */
+    private function assertNoOverlappingPendingPayment(
+        int $customerId,
+        int $hotelId,
+        Carbon $checkIn,
+        Carbon $checkOut,
+    ): void {
+        $in = $checkIn->toDateString();
+        $out = $checkOut->toDateString();
+
+        $pendingPayment = HotelReservation::query()
+            ->where('user_id', $customerId)
+            ->where('hotel_id', $hotelId)
+            ->where('status', HotelReservation::STATUS_PENDING_PAYMENT)
+            ->whereDate('check_in', '<', $out)
+            ->whereDate('check_out', '>', $in)
+            ->where(function ($q) {
+                $q->whereNull('payment_due_at')
+                    ->orWhere('payment_due_at', '>', now());
+            })
+            ->exists();
+        if ($pendingPayment) {
+            throw new \RuntimeException(
+                'You already have a pending payment for this hotel stay. Complete payment or wait for it to expire before booking again.'
+            );
+        }
+    }
+
+    /**
+     * Release inventory for any other open holds this customer still has on the
+     * overlapping stay so a new hold can be created cleanly.
+     */
+    private function cancelOverlappingOpenHolds(
+        int $customerId,
+        int $hotelId,
+        Carbon $checkIn,
+        Carbon $checkOut,
+    ): void {
+        $in = $checkIn->toDateString();
+        $out = $checkOut->toDateString();
+
+        $openHolds = HotelHold::query()
+            ->where('user_id', $customerId)
+            ->where('status', HotelHold::STATUS_PENDING)
+            ->where('expires_at', '>', now())
+            ->whereDate('check_in', '<', $out)
+            ->whereDate('check_out', '>', $in)
+            ->whereHas('roomType', fn ($q) => $q->where('hotel_id', $hotelId))
+            ->get();
+
+        foreach ($openHolds as $hold) {
+            $holdIn = Carbon::parse($hold->check_in);
+            $holdOut = Carbon::parse($hold->check_out);
+            $this->releaseInventoryForStoredQuote(
+                is_array($hold->quote_json) ? $hold->quote_json : null,
+                $holdIn,
+                $holdOut,
+                $hold->roomType,
+            );
+            $hold->update(['status' => HotelHold::STATUS_CANCELLED]);
+        }
     }
 
     /**
