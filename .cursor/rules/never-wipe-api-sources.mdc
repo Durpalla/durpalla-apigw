@@ -1,0 +1,24 @@
+---
+description: Never empty or delete critical apigw API source files
+alwaysApply: true
+---
+
+# Never wipe API sources
+
+Commit `d7d3fc8` (“Cursor rules”) emptied production API files and broke `/api/v1/my/*`.
+
+## Forbidden unless the user explicitly asks
+
+- Truncating a file to 0 bytes
+- Deleting `app/Http/Controllers/**`, `routes/api/**`, or `config/*.php`
+- “Cleaning” a controller by replacing it with an empty class/file
+- Touching application PHP when the task is only about Cursor rules/docs
+
+## Especially protected
+
+- `app/Http/Controllers/Api/v1/MyApiController.php`
+- `app/Http/Controllers/Api/v1/AppConfigController.php`
+- `routes/api/v1/customer.php`
+- `config/app_mobile.php`
+
+Rules/docs work: edit `.cursor/rules/*` or `AGENTS.md` only.

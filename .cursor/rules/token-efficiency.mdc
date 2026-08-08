@@ -24,6 +24,18 @@ Minimize tokens. Prefer reuse over discovery.
 - Do not add migrations here — schema lives in `durpalla`
 - Never delete, empty, or strip `.cursor/rules/*` (or `AGENTS.md`) unless the user explicitly asks; add/update only, keep prior content
 
+## Critical API files — never wipe
+
+**Never** truncate, empty, delete, or replace-with-stub these paths (or any `app/Http/Controllers/**`, `routes/api/**`, `config/*.php` app config) unless the user explicitly asks to remove that file:
+
+- `app/Http/Controllers/Api/v1/MyApiController.php`
+- `app/Http/Controllers/Api/v1/AppConfigController.php`
+- `routes/api/v1/customer.php`
+- `config/app_mobile.php`
+- `tests/Feature/PublicHomeApiTest.php`
+
+If a rule/docs task is in progress, edit **only** `.cursor/rules/*` / `AGENTS.md`. Do not touch controllers, routes, or config as a side effect. A 0-byte controller breaks production (`/my/profile`, `/my/booking/*`, etc.).
+
 ## Output
 
 - Brief answers; no file summaries unless asked
