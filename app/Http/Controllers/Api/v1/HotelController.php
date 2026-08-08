@@ -363,6 +363,12 @@ class HotelController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'hold_id' => 'required|integer|exists:hotel_holds,id',
+            'customer_name' => 'nullable|string|max:120',
+            'customer_mobile' => 'nullable|string|max:32',
+            'customer_email' => 'nullable|email|max:120',
+            'guest_name' => 'nullable|string|max:120',
+            'guest_mobile' => 'nullable|string|max:32',
+            'guest_email' => 'nullable|email|max:120',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -384,6 +390,11 @@ class HotelController extends Controller
                 $customer,
                 (int) $request->input('hold_id'),
                 (string) $request->input('platform', 'web'),
+                [
+                    'name' => (string) ($request->input('customer_name') ?: $request->input('guest_name') ?: ''),
+                    'mobile' => (string) ($request->input('customer_mobile') ?: $request->input('guest_mobile') ?: ''),
+                    'email' => (string) ($request->input('customer_email') ?: $request->input('guest_email') ?: ''),
+                ],
             );
             $booking = $result['booking'];
             $payment = $result['payment'];

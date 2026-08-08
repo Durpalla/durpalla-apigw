@@ -26,6 +26,7 @@ use App\Constants\AppConst;
 use App\Services\CalculationService;
 use App\Services\CancellationService;
 use App\Services\MerchantCancellationPolicyResolver;
+use App\Services\PendingBookingPaymentWindow;
 use App\Services\SupervisorService;
 use App\Services\TwoFactorService;
 use App\Support\BookingInvoice;
@@ -420,6 +421,7 @@ class MyApiController extends Controller
     {
         $user = Auth::user();
         $booking = Booking::with([
+            'customer',
             'bookingItems.trip.route',
             'bookingItems.trip.launch',
             'bookingItems.trip.merchant',
@@ -428,10 +430,27 @@ class MyApiController extends Controller
             'cancellations',
             'bookingItems.item.cabinType',
             'payment.gateway',
-            'hotelReservation.hotel',
+            'hotelReservation.hotel.photos',
             'hotelReservation.roomType',
         ])
             ->where('customer_id', $user->id)->orderBy('booking_date', 'desc')->findOrFail($id);
+
+        // Expire unpaid PENDING (hotel/transport) as soon as the detail API is hit.
+        PendingBookingPaymentWindow::resolveIfPaymentWindowExpired($booking);
+        $booking->refresh();
+        $booking->load([
+            'customer',
+            'bookingItems.trip.route',
+            'bookingItems.trip.launch',
+            'bookingItems.trip.merchant',
+            'bookingItems.trip.startingPoint.ghat',
+            'bookingItems.trip.endingPoint.ghat',
+            'cancellations',
+            'bookingItems.item.cabinType',
+            'payment.gateway',
+            'hotelReservation.hotel.photos',
+            'hotelReservation.roomType',
+        ]);
 
         $responseArr = [];
         if( $booking ) {
@@ -541,6 +560,7 @@ class MyApiController extends Controller
             if ($hotelRow !== null) {
                 $responseArr['items'][] = $hotelRow;
                 $responseArr['service_type'] = $responseArr['service_type'] ?: 'hotel';
+                $responseArr['vat_applicable_to'] = $hotelRow['vat_applicable_to'] ?? '';
             }
 
             $responseArr['items'] = ( $responseArr['items'] ) ? _my_group_by_old($responseArr['items'], 'schedule_date' ) : [];
@@ -553,6 +573,11 @@ class MyApiController extends Controller
             $responseArr['items'] = $tickets;
             $responseArr['downloadable'] = $this->bookingAllowsInvoiceDownload($booking);
             $this->attachCommonInvoiceFields($responseArr, $booking);
+
+            $paymentWindow = PendingBookingPaymentWindow::paymentWindowPayload($booking);
+            $responseArr['can_pay'] = $paymentWindow['can_pay'];
+            $responseArr['payment_due_at'] = $paymentWindow['payment_due_at'];
+            $responseArr['payment_due_at_ms'] = $paymentWindow['payment_due_at_ms'];
         }
 
         return response()->json(['success' => true, 'booking' => $responseArr ], $this->success );
@@ -1471,6 +1496,42 @@ class MyApiController extends Controller
         $room = $hr->roomType;
         $checkIn = $hr->check_in?->toDateString() ?? '';
         $checkOut = $hr->check_out?->toDateString() ?? '';
+        $quote = is_array($hr->quote_json) ? $hr->quote_json : [];
+        $guest = is_array($quote['guest'] ?? null) ? $quote['guest'] : [];
+        $customer = $booking->relationLoaded('customer')
+            ? $booking->customer
+            : $booking->customer()->first();
+        $passengerName = trim((string) ($guest['name'] ?? ''))
+            ?: trim((string) ($customer?->name ?? ''));
+        $passengerMobile = trim((string) ($guest['mobile'] ?? ''))
+            ?: trim((string) ($customer?->mobile ?? ''));
+        $passengerEmail = trim((string) ($guest['email'] ?? ''))
+            ?: trim((string) ($customer?->email ?? ''));
+        $city = trim((string) ($hotel?->city ?? ''));
+        $address = trim((string) ($hotel?->address ?? ''));
+        $hotelPhone = '';
+        $hotelEmail = '';
+        $hotelLogo = '';
+        if ($hotel !== null && Schema::hasTable('hotel_contacts')) {
+            $contact = DB::table('hotel_contacts')->where('hotel_id', $hotel->id)->first();
+            if ($contact) {
+                $hotelPhone = trim((string) ($contact->phone ?? ''));
+                $hotelEmail = trim((string) ($contact->email ?? ''));
+            }
+        }
+        if ($hotel !== null && method_exists($hotel, 'photos')) {
+            $photo = $hotel->relationLoaded('photos')
+                ? $hotel->photos->first()
+                : $hotel->photos()->orderBy('sort_order')->orderBy('id')->first();
+            if ($photo) {
+                $rawUrl = (string) ($photo->url ?? $photo->path ?? '');
+                if ($rawUrl !== '') {
+                    $hotelLogo = str_starts_with($rawUrl, 'http')
+                        ? $rawUrl
+                        : upload_asset(ltrim($rawUrl, '/'));
+                }
+            }
+        }
 
         return [
             'id' => (int) $hr->id,
@@ -1483,18 +1544,30 @@ class MyApiController extends Controller
             'adults' => (int) $hr->adults,
             'children' => (int) $hr->children,
             'fare' => (float) $hr->total_payable,
+            'vat_applicable_to' => (string) ($quote['vat_applicable_to'] ?? ''),
             'cancellable' => false,
             'status' => 1,
             'cabin_no' => '',
             'cabin_type' => 'hotel',
             'is_ac' => false,
             'vehicle_name' => $hotel?->name ?? '',
-            'route_name' => $hotel?->city ?? '',
+            'route_name' => $city !== '' ? $city : $address,
+            'city' => $city,
+            'hotel_address' => $address,
+            'hotel_phone' => $hotelPhone,
+            'hotel_email' => $hotelEmail,
+            'hotel_logo' => $hotelLogo,
             'schedule_date' => $checkIn,
             'leaving_time' => $checkOut,
             'leaving_time_formated' => '',
             'boarding_point' => null,
-            'passenger' => null,
+            'passenger' => [
+                'name' => $passengerName !== '' ? $passengerName : 'Guest',
+                'mobile' => $passengerMobile,
+                'email' => $passengerEmail,
+                'phone' => $passengerMobile,
+            ],
+            'guest_email' => $passengerEmail,
         ];
     }
 

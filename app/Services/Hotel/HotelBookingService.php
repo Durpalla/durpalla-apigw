@@ -1604,10 +1604,15 @@ final class HotelBookingService
     }
 
     /**
+     * @param  array{name?:string,mobile?:string,email?:string}|null  $guest
      * @return array{reservation: HotelReservation, booking: Booking, payment: Payment}
      */
-    public function confirmFromHold(Customer $user, int $holdId, ?string $platform = 'web'): array
-    {
+    public function confirmFromHold(
+        Customer $user,
+        int $holdId,
+        ?string $platform = 'web',
+        ?array $guest = null,
+    ): array {
         $hold = HotelHold::query()
             ->where('id', $holdId)
             ->where('user_id', $user->id)
@@ -1623,8 +1628,13 @@ final class HotelBookingService
         }
 
         $bookingPlatform = $this->normalizeHotelBookingPlatform($platform);
+        $guestPayload = [
+            'name' => trim((string) ($guest['name'] ?? '')) ?: (string) ($user->name ?? ''),
+            'mobile' => trim((string) ($guest['mobile'] ?? '')) ?: (string) ($user->mobile ?? ''),
+            'email' => trim((string) ($guest['email'] ?? '')) ?: (string) ($user->email ?? ''),
+        ];
 
-        return DB::transaction(function () use ($user, $hold, $bookingPlatform) {
+        return DB::transaction(function () use ($user, $hold, $bookingPlatform, $guestPayload) {
             $roomType = $hold->roomType;
             $hotel = $roomType->hotel;
             $checkIn = Carbon::parse($hold->check_in);
@@ -1636,6 +1646,10 @@ final class HotelBookingService
                 (int) $hold->adults,
                 (int) $hold->children
             );
+            if (! is_array($quote)) {
+                $quote = [];
+            }
+            $quote['guest'] = $guestPayload;
             // Mirror transport booking fields: fare / charge / VAT-on-charge / payable.
             $fare = (float) ($quote['room_subtotal'] ?? $quote['total'] ?? 0);
             $chargeTotal = (float) ($quote['charge_amount'] ?? 0);
@@ -1663,7 +1677,7 @@ final class HotelBookingService
                 'to_date' => $checkOut->toDateString(),
             ]);
 
-            $paymentWindow = max(1, (int) config('hotel.payment_window_minutes', 10));
+            $paymentWindow = max(1, (int) config('hotel.payment_window_minutes', 5));
             $reservation = HotelReservation::create([
                 'user_id' => $user->id,
                 'hotel_hold_id' => $hold->id,
@@ -1768,7 +1782,10 @@ final class HotelBookingService
                     if ($res->booking) {
                         $res->booking->update(['status' => AppConst::BOOKING_FAILED]);
                     }
-                    Payment::query()->where('booking_id', $res->booking_id)->update(['status' => 'failed']);
+                    Payment::query()
+                        ->where('booking_id', $res->booking_id)
+                        ->whereNotIn('status', ['success', 'paid', 'complete', 'completed', 'advance'])
+                        ->update(['status' => 'fail']);
                     $n++;
                 });
             } catch (\Throwable) {

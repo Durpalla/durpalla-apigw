@@ -205,24 +205,58 @@ class ApiPaymentController extends Controller
                 'booking.bookingItems',
                 'booking.hotelReservation.hotel',
                 'booking.hotelReservation.roomType',
+                'gateway',
             ])->where('booking_id', $request->input('booking_id'))->first();
 
             if ($payment) {
-                $gwt = CommonHelper::purseGateway($payment->gateway);
-                $data = ['uuid' => $payment->uuid];
-                $gwt->verify($payment, $request, $data);
+                $booking = $payment->booking;
+                if ($booking) {
+                    PendingBookingPaymentWindow::resolveIfPaymentWindowExpired($booking);
+                    $payment->refresh();
+                    $payment->loadMissing([
+                        'booking.customer',
+                        'booking.bookingItems',
+                        'booking.hotelReservation.hotel',
+                        'booking.hotelReservation.roomType',
+                        'gateway',
+                    ]);
+                }
 
-                $payment->refresh();
+                $status = strtolower((string) ($payment->status ?? ''));
+                $alreadySettled = in_array($status, ['success', 'paid', 'complete', 'completed', 'fail', 'failed', 'cancel', 'cancelled', 'void'], true);
+
+                if (! $alreadySettled && $payment->gateway) {
+                    $gwt = CommonHelper::purseGateway($payment->gateway);
+                    $data = ['uuid' => $payment->uuid];
+                    $gwt->verify($payment, $request, $data);
+                    $payment->refresh();
+                }
+
+                // Still unpaid after verify + past window → void/fail.
+                $payment->loadMissing('booking');
+                if ($payment->booking) {
+                    PendingBookingPaymentWindow::resolveIfPaymentWindowExpired($payment->booking);
+                    $payment->refresh();
+                }
+
                 $payment->loadMissing([
                     'booking.customer',
                     'booking.bookingItems',
                     'booking.hotelReservation.hotel',
                     'booking.hotelReservation.roomType',
+                    'gateway',
                 ]);
-                $data['success'] = true;
-                $data['message'] = __('Your payment has been verified');
+
+                $status = strtolower((string) ($payment->status ?? ''));
+                $paid = in_array($status, ['success', 'paid', 'complete', 'completed'], true);
+                $data['success'] = $paid;
+                $data['message'] = $paid
+                    ? __('Your payment has been verified')
+                    : __('Payment was not completed. This booking is no longer awaiting payment.');
                 $data['data'] = $payment->format();
-                $data['data']['booking'] = $payment->booking->format();
+                if ($payment->booking) {
+                    $data['data']['booking'] = $payment->booking->format();
+                }
             }
         } catch (\Exception $exception) {
             LogHelper::error($exception->getMessage(), [

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Constants\AppConst;
+use App\Helpers\CommonHelper;
 use App\Models\Booking;
 use App\Models\BookingItem;
 use App\Models\HotelReservation;
@@ -11,20 +12,21 @@ use App\Models\ScheduleCabinMapping;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
- * Unpaid customer bookings (PENDING) must be paid within a short window (default 10 minutes).
- * After that, {@see HandlePendingBookings} marks them failed and releases cabin mappings.
+ * Unpaid customer bookings (PENDING) must be paid within a short window (default 5 minutes).
+ * On expiry: verify gateway → payment success or fail first, then booking follows.
  */
 final class PendingBookingPaymentWindow
 {
     /**
      * Minutes from booking creation until payment is no longer accepted.
-     * Configurable via options table key `payment_lock_period` (minutes), default 10.
+     * Configurable via options table key `payment_lock_period` (minutes), default 5.
      */
     public static function deadlineMinutes(): int
     {
-        $m = (int) getOption('payment_lock_period', 10);
+        $m = (int) getOption('payment_lock_period', 5);
 
         return max(1, min(240, $m));
     }
@@ -182,7 +184,7 @@ final class PendingBookingPaymentWindow
         if ($hotelRes?->payment_due_at) {
             if (! app()->environment('local') && now()->gt($hotelRes->payment_due_at)) {
                 return __('Payment time has expired. Please book again (payment window: :minutes minutes).', [
-                    'minutes' => max(1, (int) config('hotel.payment_window_minutes', 10)),
+                    'minutes' => max(1, (int) config('hotel.payment_window_minutes', 5)),
                 ]);
             }
 
@@ -202,7 +204,8 @@ final class PendingBookingPaymentWindow
     }
 
     /**
-     * PENDING bookings whose payment window has passed (created_at + deadline <= now).
+     * PENDING bookings whose payment window has passed
+     * (transport: created_at + deadline; hotel: reservation payment_due_at).
      *
      * @return Builder<Booking>
      */
@@ -211,10 +214,38 @@ final class PendingBookingPaymentWindow
         $cutoff = now()->subMinutes(self::deadlineMinutes());
 
         return Booking::query()
-            ->with(['bookingItems', 'payment'])
+            ->with(['bookingItems', 'payment', 'hotelReservation'])
             ->where('status', AppConst::BOOKING_PENDING)
-            ->where('created_at', '<=', $cutoff)
-            ->whereDoesntHave('hotelReservation');
+            ->where(function (Builder $q) use ($cutoff): void {
+                $q->where(function (Builder $transport) use ($cutoff): void {
+                    $transport->whereDoesntHave('hotelReservation')
+                        ->where('created_at', '<=', $cutoff);
+                })->orWhereHas('hotelReservation', function (Builder $hotel): void {
+                    $hotel->where('status', HotelReservation::STATUS_PENDING_PAYMENT)
+                        ->whereNotNull('payment_due_at')
+                        ->where('payment_due_at', '<=', now());
+                });
+            });
+    }
+
+    /**
+     * If this PENDING booking is past its payment window, fail it now (for API reads / verify).
+     *
+     * @return 'completed'|'failed'|'skipped'
+     */
+    public static function resolveIfPaymentWindowExpired(Booking $booking): string
+    {
+        $booking->refresh();
+        if ($booking->status !== AppConst::BOOKING_PENDING) {
+            return 'skipped';
+        }
+
+        $dueAt = self::resolvePaymentDueAt($booking);
+        if (now()->lte($dueAt)) {
+            return 'skipped';
+        }
+
+        return self::resolveExpiredPendingBooking($booking);
     }
 
     public static function paymentLooksSuccessful(?Payment $payment): bool
@@ -229,7 +260,41 @@ final class PendingBookingPaymentWindow
     }
 
     /**
-     * Expired PENDING booking: complete when payment already succeeded; otherwise fail and release items.
+     * Ask the gateway once whether the pending payment settled.
+     * Leaves status unchanged on errors so the fail path can mark it.
+     */
+    public static function attemptGatewayVerify(?Payment $payment): void
+    {
+        if ($payment === null || self::paymentLooksSuccessful($payment)) {
+            return;
+        }
+
+        $status = strtolower(trim((string) ($payment->status ?? '')));
+        if (in_array($status, ['fail', 'failed', 'cancel', 'cancelled', 'void', 'success', 'paid', 'complete', 'completed'], true)) {
+            return;
+        }
+
+        try {
+            $payment->loadMissing(['gateway', 'booking']);
+            if ($payment->gateway === null) {
+                return;
+            }
+
+            $gwt = CommonHelper::purseGateway($payment->gateway);
+            $data = [];
+            $gwt->verify($payment, request(), $data);
+            $payment->refresh();
+        } catch (\Throwable $e) {
+            Log::warning('Payment window expiry verify failed', [
+                'payment_id' => $payment->id,
+                'booking_id' => $payment->booking_id,
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Expired PENDING booking: verify → payment success/fail first → then booking.
      *
      * @return 'completed'|'failed'|'skipped'
      */
@@ -244,6 +309,12 @@ final class PendingBookingPaymentWindow
             ->where('booking_id', $booking->id)
             ->latest('id')
             ->first();
+
+        // 1) Resolve payment first (success or leave pending for fail step).
+        self::attemptGatewayVerify($payment);
+        if ($payment !== null) {
+            $payment->refresh();
+        }
 
         if (self::paymentLooksSuccessful($payment)) {
             DB::transaction(function () use ($booking, $payment): void {
@@ -260,6 +331,7 @@ final class PendingBookingPaymentWindow
             return 'completed';
         }
 
+        // 2) Payment → fail/void, then booking failed (Payment::failed order).
         self::failBookingForNonPayment($booking);
 
         return 'failed';
@@ -276,12 +348,26 @@ final class PendingBookingPaymentWindow
                 return;
             }
 
+            $payment = Payment::query()
+                ->where('booking_id', $booking->id)
+                ->latest('id')
+                ->first();
+
+            // Hotel (and shared Payment::failed) releases inventory + marks fail/void.
+            if ($payment !== null) {
+                $payment->loadMissing(['booking', 'bookingItems']);
+                $payment->setRelation('booking', $booking);
+                $payment->failed();
+
+                return;
+            }
+
             $booking->update(['status' => AppConst::BOOKING_FAILED]);
 
-            Payment::query()
+            HotelReservation::query()
                 ->where('booking_id', $booking->id)
-                ->whereNotIn('status', ['success', 'paid', 'complete', 'completed', 'advance'])
-                ->update(['status' => 'fail']);
+                ->where('status', HotelReservation::STATUS_PENDING_PAYMENT)
+                ->update(['status' => HotelReservation::STATUS_FAILED]);
 
             $booking->loadMissing('bookingItems');
             $booking->bookingItems->each(function (BookingItem $item): void {
