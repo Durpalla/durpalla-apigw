@@ -34,10 +34,18 @@ for idx in 1 2 3 4; do
     continue
   fi
 
-  code="$(curl -sS -o /tmp/ci-trip.json -w '%{http_code}' --max-time 25 \
-    -H 'Accept: application/json' \
-    "http://127.0.0.1:${port}/api/v1/trip/${TRIP_ID}" || echo 000)"
-  if [[ "$code" != "200" ]] || ! grep -q '"success":true' /tmp/ci-trip.json 2>/dev/null; then
+  trip_ok=0
+  for attempt in 1 2 3; do
+    code="$(curl -sS -o /tmp/ci-trip.json -w '%{http_code}' --max-time 25 \
+      -H 'Accept: application/json' \
+      "http://127.0.0.1:${port}/api/v1/trip/${TRIP_ID}" || echo 000)"
+    if [[ "$code" == "200" ]] && grep -q '"success":true' /tmp/ci-trip.json 2>/dev/null; then
+      trip_ok=1
+      break
+    fi
+    sleep 2
+  done
+  if [[ "$trip_ok" -ne 1 ]]; then
     echo "FAIL: ${name} trip/${TRIP_ID} HTTP ${code}"
     head -c 200 /tmp/ci-trip.json 2>/dev/null || true
     echo

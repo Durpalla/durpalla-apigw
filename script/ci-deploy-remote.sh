@@ -299,6 +299,13 @@ artisan php artisan config:cache
 artisan php artisan route:cache
 artisan php artisan view:cache
 
+# Primary was already running while bootstrap/cache was rewritten. With
+# opcache.validate_timestamps=0, PHP-FPM keeps stale route/config bytecode and
+# returns "route could not be found" on apigw-1 while freshly started replicas
+# (2–4) are fine. Recycle primary so it loads the warm cache like the others.
+echo "Recycling primary to pick up warmed bootstrap cache..."
+replace_apigw_container 1 8001
+
 replace_apigw_container 2 8002
 replace_apigw_container 3 8003
 replace_apigw_container 4 8004

@@ -10,6 +10,7 @@ Production deploys use **rolling servers** (one host at a time) and **rolling co
    - Pulls the new image and pins all containers to that **image digest** (not a mutable `:local` tag).
    - Removes orphan `durpalla-apigw*` containers that are not named `1`–`4`.
    - Replaces `durpalla-apigw-1` on port `8001`, warms Laravel caches on the shared bootstrap volume.
+   - Recycles `durpalla-apigw-1` again so PHP-FPM loads the warm cache (`opcache.validate_timestamps=0` would otherwise leave stale routes on the primary).
    - Replaces `durpalla-apigw-2`, `3`, `4` one at a time (`docker rm -f` then `docker run`) with `/up` health checks.
    - Reconciles any straggler still on an old image, then **fails the deploy** unless all four ports are healthy on the expected digest.
    - Nginx upstream (`apigw_durpalla`) always lists all four ports; `max_fails` skips a backend briefly during single-container swap.

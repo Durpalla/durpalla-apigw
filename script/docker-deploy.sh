@@ -93,6 +93,18 @@ run_artisan php artisan config:cache
 run_artisan php artisan route:cache
 run_artisan php artisan view:cache
 
+# opcache.validate_timestamps=0 — recycle so PHP-FPM loads the new bootstrap cache.
+echo "Recycling containers to pick up warmed bootstrap cache..."
+docker restart durpalla-apigw-1 durpalla-apigw-2 durpalla-apigw-3 durpalla-apigw-4 >/dev/null
+for port in 8001 8002 8003 8004; do
+  for attempt in $(seq 1 30); do
+    if curl -fsS "http://127.0.0.1:${port}/up" >/dev/null 2>&1; then
+      break
+    fi
+    sleep 1
+  done
+done
+
 echo "Verifying Passport can load OAuth keys..."
 if ! run_artisan php -r "
 require 'vendor/autoload.php';
