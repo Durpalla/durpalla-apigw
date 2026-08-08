@@ -141,7 +141,29 @@ class GatewayCallbackController extends Controller
             }
 
             $payment->loadMissing('booking');
-            $platform = strtolower((string) ($payment->booking?->platform ?? 'web'));
+            $booking = $payment->booking;
+            if ($booking !== null) {
+                $payable = (float) ($booking->total_payable ?? 0);
+                if ($payable <= 0) {
+                    $payable = (float) $booking->total_amount
+                        + (float) $booking->vat_total
+                        + (float) $booking->charge_total
+                        - (float) $booking->total_discount;
+                }
+                $amount = max(
+                    $payable,
+                    (float) ($payment->paid_amount ?? 0),
+                    (float) ($payment->dues ?? 0),
+                );
+                if ($amount > 0) {
+                    $query['amount'] = (string) (int) round($amount);
+                }
+                $pnr = $booking->publicReference();
+                if (is_string($pnr) && $pnr !== '') {
+                    $query['pnr'] = $pnr;
+                }
+            }
+            $platform = strtolower((string) ($booking?->platform ?? 'web'));
             if ($platform !== '' && $platform !== 'web') {
                 $query['client'] = 'app';
             }

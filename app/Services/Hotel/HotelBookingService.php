@@ -1688,8 +1688,9 @@ final class HotelBookingService
                 'transaction_id' => strtoupper(uniqid((string) $booking->id, false)),
                 'customer_id' => $user->id,
                 'status' => 'pending',
+                // Gateway charge amount; dues remain until payment succeeds.
                 'paid_amount' => $total,
-                'dues' => 0,
+                'dues' => $total,
                 'store_amount' => 0,
             ]);
 
