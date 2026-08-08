@@ -6,6 +6,7 @@ use App\Models\Agent;
 use App\Models\AgentHotelFavorite;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Hotel;
@@ -130,18 +131,7 @@ class AgentHotelSearchService
         $hotel = Hotel::query()
             ->where('status', 1);
         \App\Support\PublicListingVisibility::applyApprovedHotel($hotel);
-        $hotel = $hotel
-            ->with([
-                'city',
-                'images',
-                'facilities',
-                'descriptions',
-                'policies',
-                'contact',
-                'location',
-                'activeRooms.roomType',
-            ])
-            ->find($hotelId);
+        $hotel = $hotel->with(['photos'])->find($hotelId);
 
         if (! $hotel) {
             throw new \InvalidArgumentException(__('Hotel not found'));
@@ -151,77 +141,26 @@ class AgentHotelSearchService
         $isFavourite = in_array($hotelId, $favouriteIds, true);
         $card = $this->presentHotel($hotel, $isFavourite);
 
-        $photos = [];
-        foreach ($hotel->images ?? [] as $image) {
-            $url = $this->imageUrl($image->image_path ?? null);
-            if ($url) {
-                $photos[] = [
-                    'url' => $url,
-                    'type' => (string) ($image->type ?? 'gallery'),
-                ];
-            }
-        }
+        $photos = $this->hotelGallery((int) $hotel->id);
         if ($photos === [] && ! empty($card['photo'])) {
             $photos[] = ['url' => $card['photo'], 'type' => 'cover'];
         }
 
-        $description = null;
-        foreach ($hotel->descriptions ?? [] as $desc) {
-            $lang = strtolower((string) ($desc->language ?? 'en'));
-            if ($description === null || $lang === 'en' || $lang === 'bn') {
-                $description = [
-                    'language' => $lang,
-                    'short' => (string) ($desc->short_description ?? ''),
-                    'long' => (string) ($desc->long_description ?? ''),
-                ];
-                if ($lang === 'en') {
-                    break;
-                }
-            }
-        }
-
-        $rooms = [];
-        foreach ($hotel->activeRooms ?? [] as $room) {
-            $rooms[] = [
-                'id' => (int) $room->id,
-                'name' => (string) ($room->name ?? $room->roomType?->name ?? 'Room'),
-                'room_type' => (string) ($room->roomType?->name ?? ''),
-                'max_adults' => (int) ($room->max_adults ?? 0),
-                'max_children' => (int) ($room->max_children ?? 0),
-                'max_occupancy' => (int) ($room->max_occupancy ?? 0),
-                'base_price' => (float) ($room->base_price ?? 0),
-                'currency' => 'BDT',
-            ];
-        }
-
-        $policies = [];
-        foreach ($hotel->policies ?? [] as $policy) {
-            $policies[] = [
-                'type' => (string) ($policy->policy_type ?? ''),
-                'text' => (string) ($policy->policy_text ?? ''),
-            ];
-        }
-
-        $amenities = $hotel->facilities
-            ? $hotel->facilities->pluck('name')->filter()->values()->all()
-            : [];
+        $description = $this->hotelDescription($hotel);
+        $rooms = $this->activeRoomsForHotel((int) $hotel->id);
+        $policies = $this->hotelPolicies($hotel);
+        $amenities = $this->facilityNamesForHotel((int) $hotel->id);
+        $contact = $this->hotelContact((int) $hotel->id);
+        $geo = $this->hotelGeo($hotel);
 
         return array_merge($card, [
             'photos' => $photos,
             'amenities' => $amenities,
             'description' => $description,
-            'check_in_time' => $hotel->check_in_time ? (string) $hotel->check_in_time : null,
-            'check_out_time' => $hotel->check_out_time ? (string) $hotel->check_out_time : null,
-            'contact' => [
-                'phone' => $hotel->contact?->phone,
-                'email' => $hotel->contact?->email,
-                'website' => $hotel->contact?->website,
-            ],
-            'geo' => [
-                'latitude' => $hotel->location?->latitude,
-                'longitude' => $hotel->location?->longitude,
-                'landmark' => $hotel->location?->landmark,
-            ],
+            'check_in_time' => $hotel->getAttribute('check_in_time') ? (string) $hotel->getAttribute('check_in_time') : null,
+            'check_out_time' => $hotel->getAttribute('check_out_time') ? (string) $hotel->getAttribute('check_out_time') : null,
+            'contact' => $contact,
+            'geo' => $geo,
             'rooms' => $rooms,
             'policies' => $policies,
         ]);
@@ -255,8 +194,7 @@ class AgentHotelSearchService
 
         $hotelsQuery = Hotel::query()
             ->where('status', 1)
-            ->whereIn('id', $favouriteIds)
-            ->with(['city', 'images', 'facilities', 'activeRooms']);
+            ->whereIn('id', $favouriteIds);
         \App\Support\PublicListingVisibility::applyApprovedHotel($hotelsQuery);
         $hotels = $hotelsQuery
             ->get()
@@ -281,22 +219,38 @@ class AgentHotelSearchService
     private function searchHotels(string $city, array $favouriteIds): array
     {
         $query = Hotel::query()
-            ->where('status', 1)
-            ->with(['city', 'images', 'facilities', 'activeRooms']);
+            ->where('status', 1);
         \App\Support\PublicListingVisibility::applyApprovedHotel($query);
 
         if ($city !== '') {
-            $like = '%'.$city.'%';
-            $query->where(function (Builder $q) use ($like, $city) {
-                $q->where('name', 'like', $like)
-                    ->orWhere('address', 'like', $like);
+            $like = '%'.addcslashes($city, '%_\\').'%';
+            $cityIdMatches = [];
+            if (Schema::hasColumn('hotels', 'city_id') && Schema::hasTable('cities')) {
+                $t = trim($city);
+                $cityIdMatches = DB::table('cities')
+                    ->where(function ($c) use ($like, $t) {
+                        $c->whereRaw('LOWER(cities.name) LIKE LOWER(?)', [$like])
+                            ->orWhereRaw('LOWER(TRIM(cities.name)) = LOWER(?)', [$t]);
+                    })
+                    ->pluck('id')
+                    ->all();
+            }
+
+            $query->where(function (Builder $q) use ($like, $cityIdMatches) {
+                $q->whereRaw('LOWER(name) LIKE LOWER(?)', [$like])
+                    ->orWhereRaw('LOWER(address) LIKE LOWER(?)', [$like]);
                 if (Schema::hasColumn('hotels', 'city')) {
-                    $q->orWhere('city', 'like', $like);
+                    $q->orWhereRaw('LOWER(city) LIKE LOWER(?)', [$like]);
                 }
                 if (Schema::hasColumn('hotels', 'city_id') && Schema::hasTable('cities')) {
-                    $q->orWhereHas('city', function (Builder $c) use ($like, $city) {
-                        $c->where('name', 'like', $like)
-                            ->orWhereRaw('LOWER(TRIM(name)) = LOWER(?)', [trim($city)]);
+                    if ($cityIdMatches !== []) {
+                        $q->orWhereIn('city_id', $cityIdMatches);
+                    }
+                    $q->orWhereExists(function ($sub) use ($like) {
+                        $sub->selectRaw('1')
+                            ->from('cities')
+                            ->whereColumn('cities.id', 'hotels.city_id')
+                            ->whereRaw('LOWER(cities.name) LIKE LOWER(?)', [$like]);
                     });
                 }
             });
@@ -328,23 +282,14 @@ class AgentHotelSearchService
      */
     private function presentHotel(Hotel $hotel, bool $isFavourite): array
     {
-        $city = $hotel->city?->name
-            ?? (Schema::hasColumn('hotels', 'city') ? (string) ($hotel->getAttribute('city') ?? '') : '');
-        $photo = null;
-        $image = $hotel->images?->first();
-        if ($image && ! empty($image->image_path)) {
-            $photo = $this->imageUrl((string) $image->image_path);
-        }
-
-        $prices = $hotel->activeRooms
-            ? $hotel->activeRooms->pluck('base_price')->filter(fn ($p) => $p !== null)->map(fn ($p) => (float) $p)
-            : collect();
-        $min = $prices->isNotEmpty() ? (float) $prices->min() : 0.0;
-        $max = $prices->isNotEmpty() ? (float) $prices->max() : $min;
-
-        $amenities = $hotel->facilities
-            ? $hotel->facilities->pluck('name')->filter()->values()->take(8)->all()
-            : [];
+        $city = $this->resolveCityLabel($hotel);
+        $photo = $this->firstHotelPhotoUrl((int) $hotel->id);
+        $bounds = $this->roomPriceBounds((int) $hotel->id);
+        $amenities = array_slice($this->facilityNamesForHotel((int) $hotel->id), 0, 8);
+        $rating = (float) ($hotel->getAttribute('aggregate_rating')
+            ?? $hotel->getAttribute('rating')
+            ?? $hotel->getAttribute('star_rating')
+            ?? 0);
 
         return [
             'id' => (int) $hotel->id,
@@ -354,13 +299,305 @@ class AgentHotelSearchService
             'city' => $city,
             'address' => (string) ($hotel->address ?? ''),
             'photo' => $photo,
-            'stars' => (float) ($hotel->rating ?? 0),
-            'rating' => (float) ($hotel->rating ?? 0),
-            'price_per_night' => $min,
-            'price_per_night_max' => $max,
+            'stars' => $rating,
+            'rating' => $rating,
+            'price_per_night' => $bounds['min'],
+            'price_per_night_max' => $bounds['max'],
             'currency' => 'BDT',
             'amenities' => $amenities,
             'is_favourite' => $isFavourite,
+        ];
+    }
+
+    private function resolveCityLabel(Hotel $hotel): string
+    {
+        if (Schema::hasColumn('hotels', 'city')) {
+            $city = trim((string) ($hotel->getAttribute('city') ?? ''));
+            if ($city !== '') {
+                return $city;
+            }
+        }
+
+        if (Schema::hasColumn('hotels', 'city_id') && Schema::hasTable('cities')) {
+            $cid = $hotel->getAttribute('city_id');
+            if ($cid !== null && $cid !== '') {
+                $name = DB::table('cities')->where('id', $cid)->value('name');
+                if ($name !== null && trim((string) $name) !== '') {
+                    return trim((string) $name);
+                }
+            }
+        }
+
+        return '';
+    }
+
+    private function firstHotelPhotoUrl(int $hotelId): ?string
+    {
+        if (Schema::hasTable('hotel_images')) {
+            if (Schema::hasColumn('hotel_images', 'type')) {
+                $cover = DB::table('hotel_images')
+                    ->where('hotel_id', $hotelId)
+                    ->whereNotNull('type')
+                    ->whereRaw("LOWER(TRIM(type)) IN ('cover', 'hero', 'header')")
+                    ->orderBy('sort_order')
+                    ->orderBy('id')
+                    ->value('image_path');
+                $url = $this->imageUrl($cover !== null ? (string) $cover : null);
+                if ($url) {
+                    return $url;
+                }
+            }
+            $any = DB::table('hotel_images')
+                ->where('hotel_id', $hotelId)
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->value('image_path');
+            $url = $this->imageUrl($any !== null ? (string) $any : null);
+            if ($url) {
+                return $url;
+            }
+        }
+
+        if (Schema::hasTable('hotel_photos')) {
+            $legacy = DB::table('hotel_photos')
+                ->where('hotel_id', $hotelId)
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->value('url');
+            $url = $this->imageUrl($legacy !== null ? (string) $legacy : null);
+            if ($url) {
+                return $url;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array{min: float, max: float}
+     */
+    private function roomPriceBounds(int $hotelId): array
+    {
+        if (Schema::hasTable('hotel_rooms') && Schema::hasColumn('hotel_rooms', 'base_price')) {
+            $q = DB::table('hotel_rooms')->where('hotel_id', $hotelId);
+            if (Schema::hasColumn('hotel_rooms', 'deleted_at')) {
+                $q->whereNull('deleted_at');
+            }
+            if (Schema::hasColumn('hotel_rooms', 'status')) {
+                $q->where(function ($w) {
+                    $w->whereNull('status')->orWhere('status', 1)->orWhere('status', '1');
+                });
+            }
+            $row = $q->selectRaw('MIN(base_price) as __min, MAX(base_price) as __max')->first();
+            if ($row !== null && $row->__min !== null) {
+                $min = (float) $row->__min;
+                $max = $row->__max !== null ? (float) $row->__max : $min;
+
+                return ['min' => $min, 'max' => $max];
+            }
+        }
+
+        return ['min' => 0.0, 'max' => 0.0];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function facilityNamesForHotel(int $hotelId): array
+    {
+        if (! Schema::hasTable('hotel_facility_hotel') || ! Schema::hasTable('hotel_facilities')) {
+            return [];
+        }
+
+        return DB::table('hotel_facility_hotel as pivot')
+            ->join('hotel_facilities as f', 'f.id', '=', 'pivot.hotel_facility_id')
+            ->where('pivot.hotel_id', $hotelId)
+            ->orderBy('f.name')
+            ->pluck('f.name')
+            ->map(fn ($name) => trim((string) $name))
+            ->filter(fn ($name) => $name !== '')
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return list<array{url: string, type: string}>
+     */
+    private function hotelGallery(int $hotelId): array
+    {
+        $photos = [];
+        if (Schema::hasTable('hotel_images')) {
+            $rows = DB::table('hotel_images')
+                ->where('hotel_id', $hotelId)
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->get(['image_path', 'type']);
+            foreach ($rows as $row) {
+                $url = $this->imageUrl((string) ($row->image_path ?? ''));
+                if ($url) {
+                    $photos[] = [
+                        'url' => $url,
+                        'type' => (string) ($row->type ?? 'gallery'),
+                    ];
+                }
+            }
+        }
+        if ($photos === [] && Schema::hasTable('hotel_photos')) {
+            $rows = DB::table('hotel_photos')
+                ->where('hotel_id', $hotelId)
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->get(['url']);
+            foreach ($rows as $row) {
+                $url = $this->imageUrl((string) ($row->url ?? ''));
+                if ($url) {
+                    $photos[] = ['url' => $url, 'type' => 'gallery'];
+                }
+            }
+        }
+
+        return $photos;
+    }
+
+    /**
+     * @return array{language: string, short: string, long: string}|null
+     */
+    private function hotelDescription(Hotel $hotel): ?array
+    {
+        if (Schema::hasTable('hotel_descriptions')) {
+            $rows = DB::table('hotel_descriptions')->where('hotel_id', $hotel->id)->get();
+            $description = null;
+            foreach ($rows as $desc) {
+                $lang = strtolower((string) ($desc->language ?? 'en'));
+                if ($description === null || $lang === 'en' || $lang === 'bn') {
+                    $description = [
+                        'language' => $lang,
+                        'short' => (string) ($desc->short_description ?? ''),
+                        'long' => (string) ($desc->long_description ?? ''),
+                    ];
+                    if ($lang === 'en') {
+                        break;
+                    }
+                }
+            }
+            if ($description !== null) {
+                return $description;
+            }
+        }
+
+        $text = trim((string) ($hotel->getAttribute('description') ?? ''));
+        if ($text === '') {
+            return null;
+        }
+
+        return [
+            'language' => 'en',
+            'short' => $text,
+            'long' => $text,
+        ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function activeRoomsForHotel(int $hotelId): array
+    {
+        if (! Schema::hasTable('hotel_rooms')) {
+            return [];
+        }
+
+        $q = DB::table('hotel_rooms')->where('hotel_id', $hotelId);
+        if (Schema::hasColumn('hotel_rooms', 'deleted_at')) {
+            $q->whereNull('deleted_at');
+        }
+        if (Schema::hasColumn('hotel_rooms', 'status')) {
+            $q->where(function ($w) {
+                $w->whereNull('status')->orWhere('status', 1)->orWhere('status', '1');
+            });
+        }
+
+        $rooms = [];
+        foreach ($q->orderBy('id')->get() as $room) {
+            $rooms[] = [
+                'id' => (int) $room->id,
+                'name' => (string) ($room->name ?? 'Room'),
+                'room_type' => (string) ($room->room_type_name ?? $room->name ?? ''),
+                'max_adults' => (int) ($room->max_adults ?? 0),
+                'max_children' => (int) ($room->max_children ?? 0),
+                'max_occupancy' => (int) ($room->max_occupancy ?? 0),
+                'base_price' => (float) ($room->base_price ?? 0),
+                'currency' => 'BDT',
+            ];
+        }
+
+        return $rooms;
+    }
+
+    /**
+     * @return list<array{type: string, text: string}>
+     */
+    private function hotelPolicies(Hotel $hotel): array
+    {
+        if (Schema::hasTable('hotel_policies')) {
+            $out = [];
+            foreach (DB::table('hotel_policies')->where('hotel_id', $hotel->id)->get() as $policy) {
+                $out[] = [
+                    'type' => (string) ($policy->policy_type ?? ''),
+                    'text' => (string) ($policy->policy_text ?? ''),
+                ];
+            }
+            if ($out !== []) {
+                return $out;
+            }
+        }
+
+        $text = trim((string) ($hotel->getAttribute('policies') ?? ''));
+        if ($text === '') {
+            return [];
+        }
+
+        return [['type' => 'general', 'text' => $text]];
+    }
+
+    /**
+     * @return array{phone: mixed, email: mixed, website: mixed}
+     */
+    private function hotelContact(int $hotelId): array
+    {
+        if (Schema::hasTable('hotel_contacts')) {
+            $row = DB::table('hotel_contacts')->where('hotel_id', $hotelId)->first();
+            if ($row) {
+                return [
+                    'phone' => $row->phone ?? null,
+                    'email' => $row->email ?? null,
+                    'website' => $row->website ?? null,
+                ];
+            }
+        }
+
+        return ['phone' => null, 'email' => null, 'website' => null];
+    }
+
+    /**
+     * @return array{latitude: mixed, longitude: mixed, landmark: mixed}
+     */
+    private function hotelGeo(Hotel $hotel): array
+    {
+        if (Schema::hasTable('hotel_locations')) {
+            $row = DB::table('hotel_locations')->where('hotel_id', $hotel->id)->first();
+            if ($row) {
+                return [
+                    'latitude' => $row->latitude ?? null,
+                    'longitude' => $row->longitude ?? null,
+                    'landmark' => $row->landmark ?? null,
+                ];
+            }
+        }
+
+        return [
+            'latitude' => $hotel->getAttribute('lat'),
+            'longitude' => $hotel->getAttribute('lng'),
+            'landmark' => null,
         ];
     }
 }
