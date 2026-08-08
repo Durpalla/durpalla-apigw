@@ -428,6 +428,8 @@ class MyApiController extends Controller
             'cancellations',
             'bookingItems.item.cabinType',
             'payment.gateway',
+            'hotelReservation.hotel',
+            'hotelReservation.roomType',
         ])
             ->where('customer_id', $user->id)->orderBy('booking_date', 'desc')->findOrFail($id);
 
@@ -446,6 +448,9 @@ class MyApiController extends Controller
                 ?? $booking->payment['payment_gateway']
                 ?? '';
             $responseArr['status'] = $booking->status;
+            $responseArr['service_type'] = $booking->service_type;
+            $responseArr['from_date'] = $booking->from_date;
+            $responseArr['to_date'] = $booking->to_date;
             $responseArr['total_amount'] = $booking->total_amount;
             $responseArr['total_discount'] = $booking->total_discount;
             $responseArr['vat_amount'] = $booking->vat_amount;
@@ -530,6 +535,12 @@ class MyApiController extends Controller
             }
             if ($merchantModel) {
                 $responseArr['merchant'] = $this->formatBookingMerchant($merchantModel);
+            }
+
+            $hotelRow = $this->hotelStayAsAndroidBookingItem($booking);
+            if ($hotelRow !== null) {
+                $responseArr['items'][] = $hotelRow;
+                $responseArr['service_type'] = $responseArr['service_type'] ?: 'hotel';
             }
 
             $responseArr['items'] = ( $responseArr['items'] ) ? _my_group_by_old($responseArr['items'], 'schedule_date' ) : [];
