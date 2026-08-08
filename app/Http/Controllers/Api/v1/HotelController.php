@@ -388,14 +388,19 @@ class HotelController extends Controller
             $payment = $result['payment'];
             $reservation = $result['reservation'];
             $hotel = $reservation->hotel;
+            $pnr = $booking->publicReference();
 
             return response()->json([
                 'success' => true,
                 'message' => __('Booking created. Complete payment to confirm your stay.'),
                 'order_id' => $booking->id,
                 'booking_id' => $booking->id,
+                'pnr' => $pnr,
+                'booking_reference' => $pnr,
                 'booking' => [
                     'id' => $booking->id,
+                    'pnr' => $pnr,
+                    'booking_reference' => $pnr,
                     'status' => $booking->status,
                     'total_payable' => (float) $booking->total_payable,
                 ],
