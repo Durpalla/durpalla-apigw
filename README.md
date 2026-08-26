@@ -67,7 +67,7 @@ cd ../durpalla-apigw && ./loadtests/run.sh open
 
 ## Production deploy
 
-CI (`.github/workflows/ci-deploy.yml`) **only** builds the Docker image and runs `script/ci-deploy-remote.sh` on each server. It does **not** change host nginx, SSL, or `.env`.
+CI (`.github/workflows/ci-deploy-server-build.yml`) SSHs to each server, `git checkout`s the commit, runs `docker build` locally, then rolls containers via `script/ci-build-deploy-remote.sh`. It does **not** change host nginx, SSL, or `.env`. The legacy GHCR path (`ci-deploy.yml`) is manual `workflow_dispatch` only.
 
 ### One-time server bootstrap (per app server)
 
@@ -128,11 +128,30 @@ You cannot export Cloudflare’s edge certificate — only create **Origin Certi
 
 ### Every deploy (automatic via GitHub Actions)
 
-Push to `master` → image pushed to GHCR → SSH → pull image → recreate 4 containers → Passport key check → Laravel cache → `/up` health check.
+Push to `master` → thin Actions job SSHs to each host → `git checkout $SHA` under `/opt/durpalla-apigw/src` → `docker build` on the server → roll 4 containers → Passport / cache / `/up`.
 
-To redeploy manually on a server:
+**One-time per server** (if `src` is missing):
 
 ```bash
-cd /opt/durpalla-apigw
-IMAGE=ghcr.io/durpalla/durpalla-apigw:dev-latest bash script/docker-deploy.sh
+sudo mkdir -p /opt/durpalla-apigw && sudo chown -R "$USER:$USER" /opt/durpalla-apigw
+# Ensure .env already exists at /opt/durpalla-apigw/.env
+# Git access: install a read-only deploy key for Durpalla/durpalla-apigw on the host,
+# or set Actions secrets DEPLOY_GIT_SSH_KEY / DEPLOY_GIT_TOKEN.
 ```
+
+Optional Actions secrets: `DEPLOY_GIT_SSH_KEY` (preferred), or `DEPLOY_GIT_TOKEN` (HTTPS), or `DEPLOY_GIT_REPO` (override clone URL).
+
+Legacy GHCR build+pull: run workflow **CI — Build & Deploy (GHCR fallback)** manually.
+
+To redeploy manually on a server from an existing checkout:
+
+```bash
+cd /opt/durpalla-apigw/src
+git fetch && git checkout --detach origin/master
+DOCKER_BUILDKIT=1 docker build -t durpalla-apigw-app:local .
+cd /opt/durpalla-apigw
+IMAGE=durpalla-apigw-app:local LOCAL_IMAGE_BUILD=1 \
+  DEPLOY_SCRIPT_DIR=/opt/durpalla-apigw/src/script \
+  bash /opt/durpalla-apigw/src/script/ci-deploy-remote.sh
+```
+

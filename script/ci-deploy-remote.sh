@@ -4,17 +4,22 @@ set -euo pipefail
 
 DEPLOY_PATH="${DEPLOY_PATH:-/opt/durpalla-apigw}"
 IMAGE="${IMAGE:?IMAGE is required}"
-GHCR_USER="${GHCR_USER:?GHCR_USER is required}"
+# When LOCAL_IMAGE_BUILD=1 the image was built on this host — skip GHCR login/pull.
+LOCAL_IMAGE_BUILD="${LOCAL_IMAGE_BUILD:-0}"
 
-if [[ -z "${GHCR_TOKEN_B64:-}" ]]; then
-  echo "ERROR: GHCR token is empty on server."
-  exit 1
-fi
+if [[ "$LOCAL_IMAGE_BUILD" != "1" ]]; then
+  GHCR_USER="${GHCR_USER:?GHCR_USER is required}"
 
-GHCR_TOKEN="$(printf '%s' "$GHCR_TOKEN_B64" | base64 -d 2>/dev/null || printf '%s' "$GHCR_TOKEN_B64" | base64 -D)"
-if [[ -z "$GHCR_TOKEN" ]]; then
-  echo "ERROR: Failed to decode GHCR token."
-  exit 1
+  if [[ -z "${GHCR_TOKEN_B64:-}" ]]; then
+    echo "ERROR: GHCR token is empty on server."
+    exit 1
+  fi
+
+  GHCR_TOKEN="$(printf '%s' "$GHCR_TOKEN_B64" | base64 -d 2>/dev/null || printf '%s' "$GHCR_TOKEN_B64" | base64 -D)"
+  if [[ -z "$GHCR_TOKEN" ]]; then
+    echo "ERROR: Failed to decode GHCR token."
+    exit 1
+  fi
 fi
 
 if [[ ! -d "$DEPLOY_PATH" ]]; then
@@ -81,14 +86,6 @@ docker_login_ghcr() {
   printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
 }
 
-echo "Logging in to ghcr.io as ${GHCR_USER}..."
-if ! retry 5 15 docker_login_ghcr; then
-  echo "ERROR: docker login ghcr.io failed after retries."
-  echo "If the error was 'context deadline exceeded' / timeout, the host cannot reach ghcr.io — check egress/DNS/firewall, then re-run the workflow."
-  echo "If it was 401/403, check GHCR_PULL_TOKEN (PAT with read:packages) and package visibility for ${IMAGE%%:*}."
-  exit 1
-fi
-
 docker volume inspect apigw-storage >/dev/null 2>&1 || docker volume create apigw-storage
 docker volume inspect apigw-bootstrap-cache >/dev/null 2>&1 || docker volume create apigw-bootstrap-cache
 
@@ -116,13 +113,30 @@ else
   echo "WARNING: Shared assets not mounted at ${SHARED_ASSETS_ROOT}/uploads — avatar uploads will 404 on CDN"
 fi
 
-echo "Pulling ${IMAGE}..."
-if ! retry 5 20 docker pull "$IMAGE"; then
-  echo "ERROR: docker pull failed after retries (often ghcr.io timeout from this host)."
-  exit 1
+if [[ "$LOCAL_IMAGE_BUILD" == "1" ]]; then
+  echo "Using locally built image ${IMAGE} (skip GHCR pull)."
+  if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
+    echo "ERROR: local image ${IMAGE} not found. Run ci-build-deploy-remote.sh first."
+    exit 1
+  fi
+  docker tag "$IMAGE" durpalla-apigw-app:local
+else
+  echo "Logging in to ghcr.io as ${GHCR_USER}..."
+  if ! retry 5 15 docker_login_ghcr; then
+    echo "ERROR: docker login ghcr.io failed after retries."
+    echo "If the error was 'context deadline exceeded' / timeout, the host cannot reach ghcr.io — check egress/DNS/firewall, then re-run the workflow."
+    echo "If it was 401/403, check GHCR_PULL_TOKEN (PAT with read:packages) and package visibility for ${IMAGE%%:*}."
+    exit 1
+  fi
+
+  echo "Pulling ${IMAGE}..."
+  if ! retry 5 20 docker pull "$IMAGE"; then
+    echo "ERROR: docker pull failed after retries (often ghcr.io timeout from this host)."
+    exit 1
+  fi
+  echo "Image pulled: $IMAGE"
+  docker tag "$IMAGE" durpalla-apigw-app:local
 fi
-echo "Image pulled: $IMAGE"
-docker tag "$IMAGE" durpalla-apigw-app:local
 
 # Pin every container to this digest so a later retag of :local cannot leave stragglers.
 EXPECTED_IMAGE_ID="$(docker image inspect -f '{{.Id}}' "$IMAGE")"

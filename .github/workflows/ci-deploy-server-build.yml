@@ -1,0 +1,209 @@
+name: CI — Server Build & Deploy
+
+# Thin GitHub trigger: SSH → git checkout SHA → docker build on each app server → roll.
+# Saves Actions minutes (no Buildx / GHCR push). Requires billing only for a short runner.
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-apigw-server-build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build & deploy on ${{ matrix.server.name }}
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        server:
+          - name: server-94
+            host: 103.60.204.94
+          - name: server-238
+            host: 103.60.204.238
+
+    # Never cancel an in-flight host deploy — mixed images caused intermittent 500s.
+    concurrency:
+      group: deploy-apigw-${{ github.ref }}-${{ matrix.server.host }}
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Validate deploy secrets
+        run: |
+          set -euo pipefail
+          missing=0
+          [[ -n "${{ secrets.DEPLOY_USER }}" ]] || { echo "::error::Missing secret DEPLOY_USER"; missing=1; }
+          [[ -n "${{ secrets.DEPLOY_SSH_KEY }}" ]] || { echo "::error::Missing secret DEPLOY_SSH_KEY"; missing=1; }
+          if [[ "$missing" -ne 0 ]]; then
+            echo "Add secrets under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+      - name: Require SSH reachability
+        env:
+          DEPLOY_HOST: ${{ matrix.server.host }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+        run: |
+          set -euo pipefail
+          PORT="${DEPLOY_PORT:-22}"
+
+          for attempt in 1 2 3; do
+            if timeout 15 bash -c "cat < /dev/null > /dev/tcp/${DEPLOY_HOST}/${PORT}" 2>/dev/null; then
+              echo "${DEPLOY_HOST}:${PORT} is reachable (attempt ${attempt})."
+              exit 0
+            fi
+            echo "Attempt ${attempt}/3: no TCP connection to ${DEPLOY_HOST}:${PORT}."
+            if [[ "$attempt" -lt 3 ]]; then
+              sleep 10
+            fi
+          done
+
+          echo "::error::${{ matrix.server.name }} (${DEPLOY_HOST}:${PORT}) unreachable — deploy failed."
+          exit 1
+
+      - name: Build on server & deploy
+        id: deploy
+        env:
+          DEPLOY_HOST: ${{ matrix.server.host }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          # Optional: private-repo git fetch on the server (prefer over embedding token in URL).
+          DEPLOY_GIT_SSH_KEY: ${{ secrets.DEPLOY_GIT_SSH_KEY }}
+          # Optional fallback: HTTPS clone with a contents:read PAT.
+          DEPLOY_GIT_TOKEN: ${{ secrets.DEPLOY_GIT_TOKEN || secrets.GHCR_PUSH_TOKEN }}
+          GIT_SHA: ${{ github.sha }}
+          # Override with secret DEPLOY_GIT_REPO if needed (default: this repository via SSH).
+          GIT_REPO_OVERRIDE: ${{ secrets.DEPLOY_GIT_REPO }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          KEY_FILE=~/.ssh/deploy_key
+          echo "$DEPLOY_SSH_KEY" > "$KEY_FILE"
+          chmod 600 "$KEY_FILE"
+
+          if ! ssh-keygen -y -f "$KEY_FILE" > /dev/null 2>&1; then
+            echo "ERROR: DEPLOY_SSH_KEY is invalid."
+            exit 1
+          fi
+
+          PORT="${DEPLOY_PORT:-22}"
+          PATH_ON_SERVER="${DEPLOY_PATH:-/opt/durpalla-apigw}"
+          GIT_REPO="${GIT_REPO_OVERRIDE:-git@github.com:${GITHUB_REPOSITORY}.git}"
+
+          GIT_SSH_KEY_B64=""
+          if [[ -n "${DEPLOY_GIT_SSH_KEY:-}" ]]; then
+            GIT_SSH_KEY_B64="$(printf '%s' "$DEPLOY_GIT_SSH_KEY" | base64 -w0 2>/dev/null || printf '%s' "$DEPLOY_GIT_SSH_KEY" | base64)"
+          fi
+
+          # Prefer SSH clone; switch to HTTPS+token only when an SSH git key is absent and token is set.
+          GIT_TOKEN=""
+          if [[ -z "${DEPLOY_GIT_SSH_KEY:-}" && -n "${DEPLOY_GIT_TOKEN:-}" ]]; then
+            GIT_REPO="https://github.com/${GITHUB_REPOSITORY}.git"
+            GIT_TOKEN="$DEPLOY_GIT_TOKEN"
+          fi
+
+          SSH_COMMON=(
+            -i "$KEY_FILE"
+            -o StrictHostKeyChecking=accept-new
+            -o UserKnownHostsFile=~/.ssh/known_hosts
+            -o IdentitiesOnly=yes
+            -o ConnectTimeout=20
+            -o TCPKeepAlive=yes
+            -o ServerAliveInterval=15
+            -o ServerAliveCountMax=120
+          )
+
+          echo "Server-build deploy → ${DEPLOY_USER}@${DEPLOY_HOST}:${PORT}"
+          echo "Path: ${PATH_ON_SERVER}"
+          echo "SHA:  ${GIT_SHA}"
+          echo "Repo: ${GIT_REPO%%@*}@…"
+
+          REMOTE_DIR="/tmp/durpalla-apigw-deploy-$$"
+          ssh "${SSH_COMMON[@]}" -p "$PORT" \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "mkdir -p '${REMOTE_DIR}'"
+
+          scp "${SSH_COMMON[@]}" -P "$PORT" \
+            script/ci-build-deploy-remote.sh \
+            script/ci-deploy-remote.sh \
+            script/ci-verify-remote.sh \
+            script/normalize-docker-env.sh \
+            script/docker-host-gateway.sh \
+            script/seed-passport-keys-volume.sh \
+            "${DEPLOY_USER}@${DEPLOY_HOST}:${REMOTE_DIR}/"
+
+          ssh "${SSH_COMMON[@]}" -p "$PORT" \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "chmod +x '${REMOTE_DIR}'/*.sh && \
+             export DEPLOY_PATH='${PATH_ON_SERVER}' \
+                    GIT_SHA='${GIT_SHA}' \
+                    GIT_REPO='${GIT_REPO}' \
+                    GIT_TOKEN='${GIT_TOKEN}' \
+                    GIT_SSH_KEY_B64='${GIT_SSH_KEY_B64}' \
+                    DEPLOY_SCRIPT_DIR='${REMOTE_DIR}'; \
+             bash '${REMOTE_DIR}/ci-build-deploy-remote.sh'; \
+             rm -rf '${REMOTE_DIR}'"
+
+      - name: Deploy summary
+        if: always()
+        run: |
+          echo "### ${{ matrix.server.name }} → ${{ matrix.server.host }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Mode: server-side \`docker build\` (no GHCR)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Commit: \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Result: \`${{ steps.deploy.outcome }}\`" >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-gate:
+    name: All servers must succeed
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: always() && github.ref == 'refs/heads/master'
+    steps:
+      - name: Fail workflow when any host deploy failed
+        run: |
+          set -euo pipefail
+          result="${{ needs.deploy.result }}"
+          echo "## Apigw server-build multi-host deploy" >> "$GITHUB_STEP_SUMMARY"
+          echo "Matrix deploy result: \`${result}\`" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$result" != "success" ]]; then
+            echo "::error::Deploy failed on at least one server (result=${result})."
+            exit 1
+          fi
+          echo "All apigw servers built and deployed successfully."
+
+  smoke-test:
+    name: Public health check
+    needs: [deploy, deploy-gate]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' && needs.deploy-gate.result == 'success'
+    steps:
+      - name: Check https://apigw.durpalla.com/up
+        run: |
+          set -euo pipefail
+          URL="${APIGW_HEALTH_URL:-https://apigw.durpalla.com/up}"
+          echo "Checking ${URL} ..."
+          for attempt in 1 2 3 4 5; do
+            code="$(curl -sS -o /dev/null -w '%{http_code}' --connect-timeout 15 --max-time 30 "$URL" || echo 000)"
+            if [[ "$code" -ge 200 && "$code" -lt 400 ]]; then
+              echo "OK HTTP ${code}"
+              echo "### Public smoke test passed (HTTP ${code})" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            echo "Attempt ${attempt}/5: HTTP ${code}, retrying in 10s..."
+            sleep 10
+          done
+          echo "::warning::Public /up failed (last HTTP ${code}). Reachable hosts may still be OK — check Cloudflare / nginx."
+          echo "### Public smoke test warning (HTTP ${code})" >> "$GITHUB_STEP_SUMMARY"
+          exit 0

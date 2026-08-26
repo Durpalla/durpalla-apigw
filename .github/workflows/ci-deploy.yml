@@ -1,18 +1,17 @@
-name: CI — Build & Deploy
+name: CI — Build & Deploy (GHCR fallback)
+
+# Legacy: build on GitHub Actions + push GHCR. Default deploys use
+# ci-deploy-server-build.yml (docker build on each app server) to save minutes.
+# Run this manually only when you need the GHCR path.
 
 on:
-  push:
-    branches:
-      - master
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
 
-# Do not cancel the whole workflow on a newer push — that aborted mid-roll
-# deploys and left mixed old/new containers behind Cloudflare.
 concurrency:
-  group: deploy-apigw-build-${{ github.ref }}
+  group: deploy-apigw-build-ghcr-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
