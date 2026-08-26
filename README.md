@@ -67,7 +67,7 @@ cd ../durpalla-apigw && ./loadtests/run.sh open
 
 ## Production deploy
 
-CI (`.github/workflows/ci-deploy-server-build.yml`) SSHs to each server, `git checkout`s the commit, runs `docker build` locally, then rolls containers via `script/ci-build-deploy-remote.sh`. It does **not** change host nginx, SSL, or `.env`. The legacy GHCR path (`ci-deploy.yml`) is manual `workflow_dispatch` only.
+CI (`.github/workflows/ci-deploy-server-build.yml`) SSHs, starts an async `nohup` build on each server, then exits (almost no Actions minutes). Build/roll continue on the VPS — see `/opt/durpalla-apigw/ci-runner/deploy.log`. It does **not** change host nginx, SSL, or `.env`. Legacy GHCR path (`ci-deploy.yml`) is manual `workflow_dispatch` only.
 
 ### One-time server bootstrap (per app server)
 
@@ -128,7 +128,15 @@ You cannot export Cloudflare’s edge certificate — only create **Origin Certi
 
 ### Every deploy (automatic via GitHub Actions)
 
-Push to `master` → thin Actions job SSHs to each host → `git checkout $SHA` under `/opt/durpalla-apigw/src` → `docker build` on the server → roll 4 containers → Passport / cache / `/up`.
+Push to `master` → Actions **only SSHs**, copies scripts, starts `nohup` on each host, then **exits** (~seconds of minutes). Docker build + roll continue on the VPS.
+
+```bash
+# Watch progress on a server
+tail -f /opt/durpalla-apigw/ci-runner/deploy.log
+cat /opt/durpalla-apigw/ci-runner/status   # state=queued|running|ok|failed
+```
+
+On finish (ok or failed), the server emails **jewelrana.dev@gmail.com** using `MAIL_*` from `/opt/durpalla-apigw/.env` (needs real SMTP, not `MAIL_MAILER=log`). Override recipient with `DEPLOY_NOTIFY_EMAIL` in the deploy env if needed.
 
 **One-time per server** (if `src` is missing):
 
@@ -139,7 +147,7 @@ sudo mkdir -p /opt/durpalla-apigw && sudo chown -R "$USER:$USER" /opt/durpalla-a
 # Optional: DEPLOY_GIT_SSH_KEY for git@ clone, or DEPLOY_GIT_TOKEN to override the token.
 ```
 
-Optional Actions secrets: `DEPLOY_GIT_SSH_KEY` (preferred), or `DEPLOY_GIT_TOKEN` (HTTPS), or `DEPLOY_GIT_REPO` (override clone URL).
+Optional Actions secrets: `DEPLOY_GIT_SSH_KEY`, `DEPLOY_GIT_TOKEN`, or `DEPLOY_GIT_REPO`.
 
 Legacy GHCR build+pull: run workflow **CI — Build & Deploy (GHCR fallback)** manually.
 
@@ -151,7 +159,7 @@ git fetch && git checkout --detach origin/master
 DOCKER_BUILDKIT=1 docker build -t durpalla-apigw-app:local .
 cd /opt/durpalla-apigw
 IMAGE=durpalla-apigw-app:local LOCAL_IMAGE_BUILD=1 \
-  DEPLOY_SCRIPT_DIR=/opt/durpalla-apigw/src/script \
-  bash /opt/durpalla-apigw/src/script/ci-deploy-remote.sh
+  DEPLOY_SCRIPT_DIR=/opt/durpalla-apigw/ci-runner/scripts \
+  bash /opt/durpalla-apigw/ci-runner/scripts/ci-deploy-remote.sh
 ```
 
