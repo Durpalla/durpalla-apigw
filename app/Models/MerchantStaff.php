@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -11,7 +12,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class MerchantStaff extends Authenticatable
 {
-    use HasApiTokens, SoftDeletes, Notifiable;
+    use HasApiTokens, SoftDeletes, Notifiable, \App\Traits\Auditable;
 
     protected $table = 'merchant_staff';
 
@@ -24,7 +25,8 @@ class MerchantStaff extends Authenticatable
         'email',
         'mobile',
         'password',
-        'role',
+        'type',
+        'permissions',
         'designation_id',
         'counter_id',
         'status',
@@ -51,6 +53,7 @@ class MerchantStaff extends Authenticatable
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
             'two_factor_recovery_codes' => 'array',
+            'permissions' => 'array',
         ];
     }
 
@@ -59,20 +62,33 @@ class MerchantStaff extends Authenticatable
         return $this->belongsTo(Merchant::class, 'merchant_id', 'id');
     }
 
+    /**
+     * Vehicle assignments via vehicle_supervisors.supervisor_id (= merchant_staff.id).
+     */
+    public function vehicles(): HasMany
+    {
+        return $this->hasMany(VehicleSupervisor::class, 'supervisor_id', 'id');
+    }
+
     public function isSupervisor(): bool
     {
-        return $this->role === 'supervisor';
+        return $this->type === 'supervisor';
     }
 
     /**
+     * Spatie-compatible role check for Blade / middleware that call hasRole().
+     * Types may be a pipe-separated string or an array.
+     *
      * @param  string|array  $roles
      */
     public function hasRole($roles): bool
     {
-        return in_array($this->role, $this->normalizeRoles($roles), true);
+        return in_array($this->type, $this->normalizeRoles($roles), true);
     }
 
     /**
+     * Spatie-compatible any-role check.
+     *
      * @param  string|array  ...$roles
      */
     public function hasAnyRole(...$roles): bool
@@ -82,12 +98,36 @@ class MerchantStaff extends Authenticatable
             $flat = array_merge($flat, $this->normalizeRoles($role));
         }
 
-        return in_array($this->role, $flat, true);
+        return in_array($this->type, $flat, true);
     }
 
+    /**
+     * Direct permission checks for merchant desk staff.
+     */
     public function hasPermissionTo($permission, $guardName = null): bool
     {
-        return true;
+        $permissions = $this->permissionNames();
+        if (in_array('*', $permissions, true)) {
+            return true;
+        }
+
+        return in_array((string) $permission, $permissions, true);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function permissionNames(): array
+    {
+        $raw = $this->permissions;
+        if (! is_array($raw)) {
+            return [];
+        }
+
+        return array_values(array_unique(array_filter(array_map(
+            static fn ($value) => strtolower(trim((string) $value)),
+            $raw,
+        ))));
     }
 
     /**
@@ -129,7 +169,7 @@ class MerchantStaff extends Authenticatable
             return asset('default/avatar.png');
         }
         $path = $this->profile_pic;
-        if (str_starts_with($path, 'avatars/') || str_starts_with($path, 'uploads/')) {
+        if (str_starts_with($path, 'avatars/') || str_starts_with($path, 'uploads/') || str_starts_with($path, 'logos/')) {
             return asset($path);
         }
         $disk = config('filesystems.profile_disk', 'public');

@@ -16,7 +16,7 @@ class HotelHold extends Model
     public const STATUS_CANCELLED = 'cancelled';
 
     protected $fillable = [
-        'user_id', 'agent_id', 'hotel_room_type_id', 'check_in', 'check_out', 'adults', 'children',
+        'user_id', 'agent_id', 'merchant_owner_id', 'hotel_room_type_id', 'check_in', 'check_out', 'adults', 'children',
         'idempotency_key', 'expires_at', 'status', 'total_amount', 'quote_json',
     ];
 

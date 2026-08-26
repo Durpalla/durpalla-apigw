@@ -1,0 +1,15 @@
+---
+alwaysApply: true
+---
+Use service classes.
+Use Repository styles
+Use FormRequest validation.
+Avoid fat controllers.
+Prefer eager loading.
+Use transactions for critical flows.
+Queue third-party APIs.
+Follow same coding pattern
+Clean code and Performance booster
+Do not write duplicate codes.
+Follow DRY method
+Use Query builder where need performace booster and large datasets

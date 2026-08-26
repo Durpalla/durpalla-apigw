@@ -41,7 +41,7 @@ final class HotelInventoryService
         }
 
         foreach ($dates as $date) {
-            $this->ensureInventoryRowForDateIfRelaxed($roomType, $date);
+            $this->ensureInventoryRow($roomType, $date);
             $row = HotelInventory::query()
                 ->where('hotel_room_type_id', $roomType->id)
                 ->whereDate('night_date', $date)
@@ -62,7 +62,7 @@ final class HotelInventoryService
     public function applyHold(HotelRoomType $roomType, Carbon $checkIn, Carbon $checkOut, int $units = 1): void
     {
         foreach (self::nightDates($checkIn, $checkOut) as $date) {
-            $this->ensureInventoryRowForDateIfRelaxed($roomType, $date);
+            $this->ensureInventoryRow($roomType, $date);
             $row = HotelInventory::query()
                 ->where('hotel_room_type_id', $roomType->id)
                 ->whereDate('night_date', $date)
@@ -115,6 +115,29 @@ final class HotelInventoryService
         }
     }
 
+    /**
+     * Direct sell (no prior hold) — merchant create without skip_inventory_reserve.
+     */
+    public function sell(HotelRoomType $roomType, Carbon $checkIn, Carbon $checkOut, int $units = 1): void
+    {
+        foreach (self::nightDates($checkIn, $checkOut) as $date) {
+            $this->ensureInventoryRow($roomType, $date);
+            $row = HotelInventory::query()
+                ->where('hotel_room_type_id', $roomType->id)
+                ->whereDate('night_date', $date)
+                ->lockForUpdate()
+                ->first();
+            if (! $row) {
+                throw new \RuntimeException('No inventory for '.$date);
+            }
+            $avail = (int) $row->units_total - (int) $row->units_sold - (int) $row->units_held;
+            if ($avail < $units) {
+                throw new \RuntimeException('Not enough rooms for '.$date);
+            }
+            $row->increment('units_sold', $units);
+        }
+    }
+
     public function revertSold(HotelRoomType $roomType, Carbon $checkIn, Carbon $checkOut, int $units = 1): void
     {
         foreach (self::nightDates($checkIn, $checkOut) as $date) {
@@ -130,15 +153,10 @@ final class HotelInventoryService
     }
 
     /**
-     * When {@see config('hotel.rooms_treat_missing_inventory_as_available')} is true, create a
-     * `hotel_inventory` row for the night so holds/quotes can proceed without a manual seed
-     * (aligns with {@see \App\Services\Hotel\HotelBookingService::roomsForStay}).
+     * Seed a night row from module capacity when missing.
      */
-    private function ensureInventoryRowForDateIfRelaxed(HotelRoomType $roomType, string $date): void
+    public function ensureInventoryRow(HotelRoomType $roomType, string $date): void
     {
-        if (! (bool) config('hotel.rooms_treat_missing_inventory_as_available', true)) {
-            return;
-        }
         if (! Schema::hasTable('hotel_inventory')) {
             return;
         }
@@ -161,11 +179,22 @@ final class HotelInventoryService
         } catch (QueryException $e) {
             $code = (int) ($e->errorInfo[1] ?? 0);
             if ($code === 1062 || $e->getCode() === '23000' || $code === 19) {
-                // Another request inserted the same (hotel_room_type_id, night_date) row
                 return;
             }
             throw $e;
         }
+    }
+
+    /**
+     * When {@see config('hotel.rooms_treat_missing_inventory_as_available')} is true, create a
+     * `hotel_inventory` row for the night so holds/quotes can proceed without a manual seed.
+     */
+    private function ensureInventoryRowForDateIfRelaxed(HotelRoomType $roomType, string $date): void
+    {
+        if (! (bool) config('hotel.rooms_treat_missing_inventory_as_available', false)) {
+            return;
+        }
+        $this->ensureInventoryRow($roomType, $date);
     }
 
     private function defaultUnitsTotalForRoomType(HotelRoomType $roomType): int

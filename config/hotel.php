@@ -46,7 +46,7 @@ return [
      * (and ops without seeded inventory) can still proceed; set to false in production with full inventory.
      */
     'rooms_treat_missing_inventory_as_available' => (bool) filter_var(
-        env('HOTEL_ROOMS_TREAT_MISSING_INVENTORY_AS_AVAILABLE', true),
+        env('HOTEL_ROOMS_TREAT_MISSING_INVENTORY_AS_AVAILABLE', false),
         FILTER_VALIDATE_BOOLEAN
     ),
     /**

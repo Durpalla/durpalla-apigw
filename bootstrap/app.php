@@ -46,6 +46,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'resolve.api.partner' => \App\Http\Middleware\ResolveApiPartner::class,
             'api.agent' => \App\Http\Middleware\EnsureApiAgent::class,
             'agent.active' => \App\Http\Middleware\EnsureAgentActive::class,
+            'merchant.active' => \App\Http\Middleware\EnsureMerchantActive::class,
+            'saas.subscription' => \Modules\Saas\App\Http\Middleware\EnforceMerchantSubscription::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -56,6 +58,8 @@ return Application::configure(basePath: dirname(__DIR__))
                     $message = 'Unauthenticated. Get a token from POST /api/v1/customer/auth/login or /api/v1/customer/auth/register, then send it as: Authorization: Bearer <token>';
                 } elseif (str_contains($request->path(), 'agent')) {
                     $message = 'Unauthenticated. Get a token from POST /api/v1/agent/auth/login, then send it as: Authorization: Bearer <token>';
+                } elseif (str_contains($request->path(), 'merchant')) {
+                    $message = 'Unauthenticated. Get a token from POST /api/v1/auth/merchant/login, then send it as: Authorization: Bearer <token>';
                 }
 
                 return response()->json([

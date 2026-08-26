@@ -22,6 +22,26 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->registerDurpallaMigrationsForTesting();
+        $this->registerMerchantHotelBindings();
+    }
+
+    /**
+     * Merchant desk hotel APIs (shared Modules\Hotel from sibling durpalla).
+     */
+    private function registerMerchantHotelBindings(): void
+    {
+        if (! interface_exists(\Modules\Hotel\Repositories\HotelRepositoryInterface::class)) {
+            return;
+        }
+
+        $this->app->bind(
+            \Modules\Hotel\Repositories\HotelRepositoryInterface::class,
+            \Modules\Hotel\Repositories\HotelRepository::class
+        );
+        $this->app->bind(
+            \Modules\Hotel\Repositories\BookingHotelItemRepositoryInterface::class,
+            \Modules\Hotel\Repositories\BookingHotelItemRepository::class
+        );
     }
 
     /**
