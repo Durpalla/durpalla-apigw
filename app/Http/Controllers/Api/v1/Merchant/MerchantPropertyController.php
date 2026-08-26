@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\v1\Merchant;
 
 use App\Http\Controllers\Controller;
-use App\Imports\SeatCabinImport;
 use App\Models\Cabin;
 use App\Models\Merchant;
 use App\Models\SeatLayout\Seat;
@@ -11,6 +10,7 @@ use App\Models\Service;
 use App\Models\Vehicle;
 use App\Models\VehicleImage;
 use App\Models\VehicleRoute;
+use App\Services\Vehicle\VehicleLayoutCsvImporter;
 use App\Support\ResolvesMerchantOwner;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,6 +21,7 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Merchant Desk Pro — properties (vehicles) scoped by merchant owner id.
+ * Layout import uses CSV only (no Excel package on the API gateway).
  */
 class MerchantPropertyController extends Controller
 {
@@ -438,8 +439,7 @@ class MerchantPropertyController extends Controller
     /**
      * POST /merchant/properties/{id}/layout/import
      *
-     * Bulk import seat/cabin/sofa rows using the same {@see SeatCabinImport} as the admin vehicle cabin batch upload
-     * (CSV / Excel). Column headings must match the dashboard template (WithHeadingRow).
+     * CSV only (same headings as admin / sample files). XLSX stays on Durpalla admin panel.
      */
     public function importLayout(Request $request, int $id): JsonResponse
     {
@@ -448,23 +448,30 @@ class MerchantPropertyController extends Controller
 
         $validated = $request->validate([
             'type' => ['required', 'string', 'in:seat,cabin,sofa'],
-            'attachment' => ['required', 'file', 'max:51200', 'mimes:csv,txt,xlsx,xls,ods'],
+            'attachment' => ['required', 'file', 'max:51200', 'mimes:csv,txt'],
         ]);
 
-        if (! class_exists(\Maatwebsite\Excel\Facades\Excel::class)) {
+        $ext = strtolower((string) $request->file('attachment')?->getClientOriginalExtension());
+        if (in_array($ext, ['xlsx', 'xls', 'ods'], true)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Layout import requires maatwebsite/excel. Install it on the API gateway or import via admin.',
-            ], 501);
+                'message' => 'Excel files are not supported on the merchant API. Upload a CSV (use the sample), or import Excel from the Durpalla admin panel.',
+            ], 422);
         }
 
         try {
-            DB::transaction(function () use ($vehicle, $validated) {
-                \Maatwebsite\Excel\Facades\Excel::import(
-                    new SeatCabinImport($vehicle, $validated['type']),
-                    $validated['attachment']
-                );
-            }, 3);
+            $actorId = (int) ($request->user()?->id ?? 0) ?: null;
+            $applied = app(VehicleLayoutCsvImporter::class)->import(
+                $vehicle,
+                (string) $validated['type'],
+                $request->file('attachment'),
+                $actorId,
+            );
+        } catch (\InvalidArgumentException|\RuntimeException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
         } catch (\Throwable $e) {
             report($e);
 
@@ -478,7 +485,7 @@ class MerchantPropertyController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Layout imported.',
+            'message' => $applied > 0 ? "Layout imported ({$applied} rows)." : 'Layout imported.',
             'data' => $this->buildLayoutSummaryPayload($vehicle),
         ]);
     }
