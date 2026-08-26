@@ -58,7 +58,7 @@ class TestNotification extends Notification
     {
         Log::info('TestNotification: toFcm called');
         return [
-            'token' => 'dVkZhUzoS4m3lFjAI1SMok:APA91bFptlFVOstlgOF5Y1cGSvgzE-n4woRVM1rJl3UU1asDXH5f0Ys5nTtERYBPv2KzGa-S_mV2LrhJyZhu3kq-7DMWmHN3C5M5ZuxEh73zHEvhHb00G5U',
+            'token' => (string) ($this->customer->device_id ?? $notifiable->device_id ?? ''),
             'platform' => 'android',
             'notification' => [
                 'title' => 'Test Notification',

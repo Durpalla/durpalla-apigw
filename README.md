@@ -136,7 +136,7 @@ tail -f /opt/durpalla-apigw/ci-runner/deploy.log
 cat /opt/durpalla-apigw/ci-runner/status   # state=queued|running|ok|failed
 ```
 
-On finish (ok or failed), the server emails **jewelrana.dev@gmail.com** using `MAIL_*` from `/opt/durpalla-apigw/.env` (needs real SMTP, not `MAIL_MAILER=log`). Override recipient with `DEPLOY_NOTIFY_EMAIL` in the deploy env if needed.
+On finish (ok or failed), the server emails **jewelrana.dev@gmail.com** using `MAIL_*` from `/opt/durpalla-apigw/.env` (via Laravel inside a running `durpalla-apigw-*` container, with host-php / `php:cli` fallbacks). Check `email_notify=` in `ci-runner/status` and the end of `deploy.log` if mail is missing. SMTP must be real (`MAIL_MAILER=smtp`), not `log`.
 
 **One-time per server** (if `src` is missing):
 

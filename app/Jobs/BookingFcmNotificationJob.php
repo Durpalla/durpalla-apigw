@@ -39,7 +39,6 @@ class BookingFcmNotificationJob
     {
         if($this->booking->status == AppConst::BOOKING_COMPLETE && $this->booking->customer->device_id !== null && strlen($this->booking->customer->device_id) > 30) {
             $helper = new HelperService();
-//            "eDBk8m2gQVKJl4heXNp6JF:APA91bHOm2V1bFPXvLtu4pmUG2xOf1Q6mcKE6ftfXO_UgwB8YC9Hhg88qpcQgDzbnRkXJhNwOz8hgzdrtsXvCD_0hI50HucL4688Sb50bfK-iNoCbDY7GW5Bde6nojqun4vHroWmUdiy"
 //            $notification = Firebase::to($this->booking->customer->device_id)
 //                ->setTitle('Ticket booking')
 //                ->setBody(str_replace('%0A', ' ', $helper->getMessage($this->booking)))

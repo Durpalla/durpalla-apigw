@@ -47,9 +47,12 @@ notify_email() {
     msg="$(grep '^message=' "$STATUS_FILE" | head -1 | cut -d= -f2-)"
   fi
   if [[ -x "${SCRIPT_DIR}/ci-notify-email.sh" || -f "${SCRIPT_DIR}/ci-notify-email.sh" ]]; then
-    bash "${SCRIPT_DIR}/ci-notify-email.sh" "$state" "$msg" || true
+    echo "==== email notify (${state}) ===="
+    bash "${SCRIPT_DIR}/ci-notify-email.sh" "$state" "$msg" \
+      && echo "==== email notify done ====" \
+      || echo "==== email notify FAILED (see above) ===="
   else
-    echo "WARN: ci-notify-email.sh missing — no email sent."
+    echo "WARN: ci-notify-email.sh missing at ${SCRIPT_DIR} — no email sent."
   fi
 }
 

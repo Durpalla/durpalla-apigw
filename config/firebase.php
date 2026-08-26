@@ -2,7 +2,7 @@
 
 return [
     'project_id' => env('FIREBASE_PROJECT_ID'),
-    'credentials' => storage_path('app/private/durpalla-e169c-firebase-adminsdk-fbsvc-19642056ec.json'),
+    'credentials' => storage_path(env('FIREBASE_CREDENTIALS', 'app/private/firebase-credentials.json')),
     'params' => [
 
     ],
