@@ -135,8 +135,8 @@ Push to `master` → thin Actions job SSHs to each host → `git checkout $SHA` 
 ```bash
 sudo mkdir -p /opt/durpalla-apigw && sudo chown -R "$USER:$USER" /opt/durpalla-apigw
 # Ensure .env already exists at /opt/durpalla-apigw/.env
-# Git access: install a read-only deploy key for Durpalla/durpalla-apigw on the host,
-# or set Actions secrets DEPLOY_GIT_SSH_KEY / DEPLOY_GIT_TOKEN.
+# Git access: default is HTTPS + GITHUB_TOKEN from Actions (no host key / deploy key needed).
+# Optional: DEPLOY_GIT_SSH_KEY for git@ clone, or DEPLOY_GIT_TOKEN to override the token.
 ```
 
 Optional Actions secrets: `DEPLOY_GIT_SSH_KEY` (preferred), or `DEPLOY_GIT_TOKEN` (HTTPS), or `DEPLOY_GIT_REPO` (override clone URL).

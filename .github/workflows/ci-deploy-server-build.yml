@@ -80,12 +80,11 @@ jobs:
           DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          # Optional: private-repo git fetch on the server (prefer over embedding token in URL).
+          # Optional SSH deploy key for git@ clone on the server.
           DEPLOY_GIT_SSH_KEY: ${{ secrets.DEPLOY_GIT_SSH_KEY }}
-          # Optional fallback: HTTPS clone with a contents:read PAT.
-          DEPLOY_GIT_TOKEN: ${{ secrets.DEPLOY_GIT_TOKEN || secrets.GHCR_PUSH_TOKEN }}
+          # Prefer HTTPS+token (default: this workflow's GITHUB_TOKEN).
+          DEPLOY_GIT_TOKEN: ${{ secrets.DEPLOY_GIT_TOKEN || secrets.GHCR_PUSH_TOKEN || github.token }}
           GIT_SHA: ${{ github.sha }}
-          # Override with secret DEPLOY_GIT_REPO if needed (default: this repository via SSH).
           GIT_REPO_OVERRIDE: ${{ secrets.DEPLOY_GIT_REPO }}
         run: |
           set -euo pipefail
@@ -101,18 +100,30 @@ jobs:
 
           PORT="${DEPLOY_PORT:-22}"
           PATH_ON_SERVER="${DEPLOY_PATH:-/opt/durpalla-apigw}"
-          GIT_REPO="${GIT_REPO_OVERRIDE:-git@github.com:${GITHUB_REPOSITORY}.git}"
 
           GIT_SSH_KEY_B64=""
-          if [[ -n "${DEPLOY_GIT_SSH_KEY:-}" ]]; then
-            GIT_SSH_KEY_B64="$(printf '%s' "$DEPLOY_GIT_SSH_KEY" | base64 -w0 2>/dev/null || printf '%s' "$DEPLOY_GIT_SSH_KEY" | base64)"
-          fi
-
-          # Prefer SSH clone; switch to HTTPS+token only when an SSH git key is absent and token is set.
           GIT_TOKEN=""
-          if [[ -z "${DEPLOY_GIT_SSH_KEY:-}" && -n "${DEPLOY_GIT_TOKEN:-}" ]]; then
-            GIT_REPO="https://github.com/${GITHUB_REPOSITORY}.git"
-            GIT_TOKEN="$DEPLOY_GIT_TOKEN"
+          GIT_REPO=""
+
+          if [[ -n "${DEPLOY_GIT_SSH_KEY:-}" ]]; then
+            # Explicit SSH deploy key → git@ clone
+            GIT_REPO="${GIT_REPO_OVERRIDE:-git@github.com:${GITHUB_REPOSITORY}.git}"
+            GIT_SSH_KEY_B64="$(printf '%s' "$DEPLOY_GIT_SSH_KEY" | base64 -w0 2>/dev/null || printf '%s' "$DEPLOY_GIT_SSH_KEY" | base64)"
+            echo "Git mode: SSH deploy key"
+          else
+            # Default: HTTPS + token (avoids Host key verification failed on fresh servers)
+            GIT_REPO="${GIT_REPO_OVERRIDE:-https://github.com/${GITHUB_REPOSITORY}.git}"
+            if [[ "$GIT_REPO" == git@* ]]; then
+              # Override forced SSH URL without a key — rewrite to HTTPS
+              path="${GIT_REPO#git@github.com:}"
+              GIT_REPO="https://github.com/${path}"
+            fi
+            GIT_TOKEN="${DEPLOY_GIT_TOKEN:-}"
+            if [[ -z "$GIT_TOKEN" ]]; then
+              echo "ERROR: No git token. Set DEPLOY_GIT_TOKEN or rely on github.token."
+              exit 1
+            fi
+            echo "Git mode: HTTPS + token"
           fi
 
           SSH_COMMON=(
@@ -129,7 +140,7 @@ jobs:
           echo "Server-build deploy → ${DEPLOY_USER}@${DEPLOY_HOST}:${PORT}"
           echo "Path: ${PATH_ON_SERVER}"
           echo "SHA:  ${GIT_SHA}"
-          echo "Repo: ${GIT_REPO%%@*}@…"
+          echo "Repo: ${GIT_REPO}"
 
           REMOTE_DIR="/tmp/durpalla-apigw-deploy-$$"
           ssh "${SSH_COMMON[@]}" -p "$PORT" \
@@ -145,17 +156,31 @@ jobs:
             script/seed-passport-keys-volume.sh \
             "${DEPLOY_USER}@${DEPLOY_HOST}:${REMOTE_DIR}/"
 
+          # Pass secrets via a remote env file (avoids shell-metachar issues in tokens).
+          {
+            echo "DEPLOY_PATH=${PATH_ON_SERVER}"
+            echo "GIT_SHA=${GIT_SHA}"
+            echo "GIT_REPO=${GIT_REPO}"
+            echo "DEPLOY_SCRIPT_DIR=${REMOTE_DIR}"
+            if [[ -n "$GIT_TOKEN" ]]; then
+              echo "GIT_TOKEN=${GIT_TOKEN}"
+            fi
+            if [[ -n "$GIT_SSH_KEY_B64" ]]; then
+              echo "GIT_SSH_KEY_B64=${GIT_SSH_KEY_B64}"
+            fi
+          } > /tmp/apigw-deploy.env
+          scp "${SSH_COMMON[@]}" -P "$PORT" \
+            /tmp/apigw-deploy.env \
+            "${DEPLOY_USER}@${DEPLOY_HOST}:${REMOTE_DIR}/deploy.env"
+          rm -f /tmp/apigw-deploy.env
+
           ssh "${SSH_COMMON[@]}" -p "$PORT" \
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "chmod +x '${REMOTE_DIR}'/*.sh && \
-             export DEPLOY_PATH='${PATH_ON_SERVER}' \
-                    GIT_SHA='${GIT_SHA}' \
-                    GIT_REPO='${GIT_REPO}' \
-                    GIT_TOKEN='${GIT_TOKEN}' \
-                    GIT_SSH_KEY_B64='${GIT_SSH_KEY_B64}' \
-                    DEPLOY_SCRIPT_DIR='${REMOTE_DIR}'; \
+             set -a && . '${REMOTE_DIR}/deploy.env' && set +a && \
              bash '${REMOTE_DIR}/ci-build-deploy-remote.sh'; \
              rm -rf '${REMOTE_DIR}'"
+
 
       - name: Deploy summary
         if: always()

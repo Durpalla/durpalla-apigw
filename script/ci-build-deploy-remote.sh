@@ -34,27 +34,62 @@ cleanup_git_key() {
 }
 trap cleanup_git_key EXIT
 
+# Ensure github.com is trusted before any SSH git operation (avoids "Host key verification failed").
+ensure_github_known_hosts() {
+  mkdir -p "${HOME}/.ssh"
+  chmod 700 "${HOME}/.ssh"
+  local kh="${HOME}/.ssh/known_hosts"
+  touch "$kh"
+  chmod 600 "$kh"
+  if ! grep -qE '^github\.com |^\[github\.com\]' "$kh" 2>/dev/null; then
+    echo "Adding github.com to ${kh}..."
+    ssh-keyscan -t rsa,ecdsa,ed25519 github.com >>"$kh" 2>/dev/null || true
+  fi
+}
+
 if [[ -n "${GIT_SSH_KEY_B64:-}" ]]; then
+  ensure_github_known_hosts
   GIT_SSH_KEY_FILE="$(mktemp)"
   chmod 600 "$GIT_SSH_KEY_FILE"
   printf '%s' "$GIT_SSH_KEY_B64" | base64 -d >"$GIT_SSH_KEY_FILE" 2>/dev/null \
     || printf '%s' "$GIT_SSH_KEY_B64" | base64 -D >"$GIT_SSH_KEY_FILE"
-  export GIT_SSH_COMMAND="ssh -i ${GIT_SSH_KEY_FILE} -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+  export GIT_SSH_COMMAND="ssh -i ${GIT_SSH_KEY_FILE} -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=${HOME}/.ssh/known_hosts"
+elif [[ "${GIT_REPO}" == git@* || "${GIT_REPO}" == ssh://* ]]; then
+  ensure_github_known_hosts
+  export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=yes -o UserKnownHostsFile=${HOME}/.ssh/known_hosts"
 fi
 
-# HTTPS clone with a PAT (x-access-token) when GIT_TOKEN is set and repo is https://...
-if [[ -n "${GIT_TOKEN:-}" && "$GIT_REPO" == https://* ]]; then
-  # Insert token without echoing it in process lists longer than needed.
-  GIT_REPO_AUTH="https://x-access-token:${GIT_TOKEN}@${GIT_REPO#https://}"
+# HTTPS clone with a PAT / Actions token (x-access-token) when GIT_TOKEN is set.
+if [[ -n "${GIT_TOKEN:-}" ]]; then
+  if [[ "$GIT_REPO" == https://* ]]; then
+    GIT_REPO_AUTH="https://x-access-token:${GIT_TOKEN}@${GIT_REPO#https://}"
+  elif [[ "$GIT_REPO" == git@github.com:* ]]; then
+    # Force HTTPS when a token is provided (avoids host-key / deploy-key issues).
+    path="${GIT_REPO#git@github.com:}"
+    path="${path%.git}.git"
+    GIT_REPO_AUTH="https://x-access-token:${GIT_TOKEN}@github.com/${path}"
+    echo "Using HTTPS+token clone (GIT_TOKEN set)."
+  else
+    GIT_REPO_AUTH="$GIT_REPO"
+  fi
 else
   GIT_REPO_AUTH="$GIT_REPO"
 fi
 
-echo "Syncing ${SRC_DIR} → ${GIT_SHA}"
+# Log clone target without leaking the token.
+SAFE_REPO_LOG="$GIT_REPO"
+[[ -n "${GIT_TOKEN:-}" ]] && SAFE_REPO_LOG="${GIT_REPO%%/*}/… (https+token)"
+echo "Syncing ${SRC_DIR} → ${GIT_SHA} from ${SAFE_REPO_LOG}"
 mkdir -p "$(dirname "$SRC_DIR")"
 
+# Previous failed SSH clone can leave an empty directory without .git.
+if [[ -d "$SRC_DIR" && ! -d "$SRC_DIR/.git" ]]; then
+  echo "Removing incomplete checkout at ${SRC_DIR}..."
+  rm -rf "$SRC_DIR"
+fi
+
 if [[ ! -d "$SRC_DIR/.git" ]]; then
-  echo "Cloning ${GIT_REPO} into ${SRC_DIR}..."
+  echo "Cloning into ${SRC_DIR}..."
   git clone --depth 50 "$GIT_REPO_AUTH" "$SRC_DIR"
 fi
 
