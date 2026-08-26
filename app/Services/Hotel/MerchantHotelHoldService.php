@@ -7,9 +7,9 @@ use App\Models\HotelRoomType;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Modules\Hotel\Entities\Hotel;
-use Modules\Hotel\Entities\HotelRoom;
-use Modules\Hotel\Entities\RoomRatePlan;
+use App\Models\Hotel;
+use App\Models\HotelRoom;
+use App\Models\RoomRatePlan;
 
 /**
  * Merchant desk soft-hold on shared hotel_holds + hotel_inventory (same SoT as apigw).

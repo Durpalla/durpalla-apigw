@@ -3,7 +3,7 @@
 namespace App\Channels;
 
 use Illuminate\Notifications\Notification;
-use Modules\Gateway\Services\SmsService;
+use App\Services\SmsService;
 
 class SmsChannel
 {

@@ -6,7 +6,7 @@ use App\Models\Merchant;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
-use Modules\Auth\Traits\Auth2FaTrait;
+use App\Traits\Auth2FaTrait;
 
 class MerchantPasswordResetService
 {

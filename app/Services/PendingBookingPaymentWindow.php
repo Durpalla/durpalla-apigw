@@ -338,7 +338,7 @@ final class PendingBookingPaymentWindow
     }
 
     /**
-     * Same side-effects as Modules\Booking\Jobs\BookingFailedJob (release seats, mark failed).
+     * Same side-effects as legacy BookingFailedJob (release seats, mark failed).
      */
     public static function failBookingForNonPayment(Booking $booking): void
     {

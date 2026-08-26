@@ -10,7 +10,7 @@ use App\Models\Payment;
 use App\Models\PaymentCollector;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Modules\Saas\App\Models\SaasCommissionLedger;
+use App\Models\SaasCommissionLedger;
 
 /**
  * Phase 0 reconciliation: Durpalla-collected bookings vs settlements vs SaaS ledger.

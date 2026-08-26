@@ -6,7 +6,7 @@ use App\Services\Transport\Contracts\TransportSupplierInterface;
 use App\Services\Transport\DTO\TransportSearchRequestDTO;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Modules\Hotel\Entities\Supplier;
+use App\Models\Supplier;
 
 class TransportSearchService
 {

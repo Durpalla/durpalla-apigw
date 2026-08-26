@@ -26,21 +26,21 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Merchant desk hotel APIs (shared Modules\Hotel from sibling durpalla).
+     * Merchant desk hotel APIs (App\Repositories\Hotel bindings).
      */
     private function registerMerchantHotelBindings(): void
     {
-        if (! interface_exists(\Modules\Hotel\Repositories\HotelRepositoryInterface::class)) {
+        if (! interface_exists(\App\Repositories\Hotel\HotelRepositoryInterface::class)) {
             return;
         }
 
         $this->app->bind(
-            \Modules\Hotel\Repositories\HotelRepositoryInterface::class,
-            \Modules\Hotel\Repositories\HotelRepository::class
+            \App\Repositories\Hotel\HotelRepositoryInterface::class,
+            \App\Repositories\Hotel\HotelRepository::class
         );
         $this->app->bind(
-            \Modules\Hotel\Repositories\BookingHotelItemRepositoryInterface::class,
-            \Modules\Hotel\Repositories\BookingHotelItemRepository::class
+            \App\Repositories\Hotel\BookingHotelItemRepositoryInterface::class,
+            \App\Repositories\Hotel\BookingHotelItemRepository::class
         );
     }
 

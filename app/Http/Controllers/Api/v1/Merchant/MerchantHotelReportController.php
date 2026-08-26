@@ -6,7 +6,7 @@ use App\Models\Booking;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Modules\Hotel\Entities\Hotel;
+use App\Models\Hotel;
 
 class MerchantHotelReportController extends MerchantHotelBaseController
 {

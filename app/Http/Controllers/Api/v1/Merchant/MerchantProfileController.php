@@ -10,7 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
-use Modules\Auth\Services\TwoFactorService;
+use App\Services\MerchantTwoFactorService;
 
 class MerchantProfileController extends Controller
 {

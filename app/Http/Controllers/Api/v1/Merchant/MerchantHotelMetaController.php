@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api\v1\Merchant;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Modules\Hotel\Entities\HotelFacility;
-use Modules\Hotel\Entities\RoomType;
-use Modules\Hotel\Entities\RoomRatePlan;
+use App\Models\HotelFacility;
+use App\Models\RoomType;
+use App\Models\RoomRatePlan;
 
 class MerchantHotelMetaController extends MerchantHotelBaseController
 {

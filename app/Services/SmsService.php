@@ -16,7 +16,7 @@ class SmsService
     {
         try {
             $gateway = Gateway::where('branch_id', $customer->branch_id)
-                ->where('type', GatewayConstant::SMS)
+                ->where('type', GatewayConstant::TYPE_SMS)
                 ->where('status', GatewayConstant::ACTIVE)
                 ->first();
             if(CommonHelper::customerIsEligibleForMessage($customer)) {
@@ -40,7 +40,7 @@ class SmsService
     {
         try {
             $gateway = Gateway::where('branch_id', auth()->user()->branch_id)
-                ->where('type', GatewayConstant::SMS)
+                ->where('type', GatewayConstant::TYPE_SMS)
                 ->where('status', GatewayConstant::ACTIVE)
                 ->first();
 

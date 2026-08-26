@@ -226,6 +226,26 @@ class Merchant extends Authenticatable
         return $this->hasMany(MerchantStaff::class, 'merchant_id', 'id');
     }
 
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(SaasSubscription::class, 'merchant_id', 'id');
+    }
+
+    public function currentSubscription(): ?SaasSubscription
+    {
+        if ($this->current_subscription_id) {
+            $sub = SaasSubscription::query()->find($this->current_subscription_id);
+            if ($sub) {
+                return $sub;
+            }
+        }
+
+        return $this->subscriptions()
+            ->where('status', '!=', SaasSubscription::STATUS_CANCELLED)
+            ->latest('id')
+            ->first();
+    }
+
     public static function boot()
     {
         parent::boot();

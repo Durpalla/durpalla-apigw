@@ -153,10 +153,10 @@ class MerchantTripBookingController extends Controller
         }
 
         // Total shutdown: inactive merchant cannot be booked from any channel.
-        app(\Modules\Saas\App\Services\SaasEntitlementService::class)
+        app(\App\Services\Saas\SaasEntitlementService::class)
             ->assertMerchantActive($this->merchantOwnerId($request));
         // OTA-only mode (overdue subscription): merchant desk / counter channel is cut.
-        app(\Modules\Saas\App\Services\SaasEntitlementService::class)
+        app(\App\Services\Saas\SaasEntitlementService::class)
             ->assertBookingChannelAllowed($this->merchantOwnerId($request), 'merchant');
 
         $validator = Validator::make($request->all(), [

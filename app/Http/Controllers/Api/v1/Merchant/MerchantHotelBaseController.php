@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Merchant;
 use App\Support\ResolvesMerchantOwner;
 use Illuminate\Http\Request;
-use Modules\Saas\App\Services\SaasEntitlementService;
+use App\Services\Saas\SaasEntitlementService;
 
 abstract class MerchantHotelBaseController extends Controller
 {

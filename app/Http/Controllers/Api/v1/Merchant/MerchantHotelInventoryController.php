@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api\v1\Merchant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Modules\Hotel\Entities\Hotel;
-use Modules\Hotel\Entities\HotelRoomInventory;
+use App\Models\Hotel;
+use App\Models\HotelRoomInventory;
 
 class MerchantHotelInventoryController extends MerchantHotelBaseController
 {

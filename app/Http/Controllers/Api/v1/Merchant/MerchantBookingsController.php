@@ -22,8 +22,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Modules\Gateway\Constants\GatewayConstant;
-use Modules\Gateway\Services\GatewayCatalogService;
+use App\Constants\GatewayConstant;
+use App\Services\GatewayCatalogService;
 
 /**
  * Merchant Desk Pro — booking lookup, list/history, detail, and cancel (merchant-scoped by trip ownership).

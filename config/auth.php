@@ -85,7 +85,7 @@ return [
         'users' => [
             'driver' => 'eloquent',
             // API gateway always uses App\Models\User (Passport). Do not override via AUTH_MODEL —
-            // admin copies of .env may set Modules\Auth\Entities\User and break createToken().
+            // admin copies of .env may set a non-Customer user provider model and break createToken().
             'model' => App\Models\User::class,
         ],
 

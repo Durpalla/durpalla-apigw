@@ -25,7 +25,7 @@ use App\Http\Controllers\Api\v1\Merchant\MerchantReportController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantRouteController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantSettlementRequestController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantStaffController;
-use Modules\Support\Http\Controllers\Api\MerchantSupportTicketController;
+use App\Http\Controllers\Api\v1\Merchant\MerchantSupportTicketController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantTripBookingController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantTripController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantTripLayoutController;

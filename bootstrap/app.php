@@ -47,7 +47,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api.agent' => \App\Http\Middleware\EnsureApiAgent::class,
             'agent.active' => \App\Http\Middleware\EnsureAgentActive::class,
             'merchant.active' => \App\Http\Middleware\EnsureMerchantActive::class,
-            'saas.subscription' => \Modules\Saas\App\Http\Middleware\EnforceMerchantSubscription::class,
+            'saas.subscription' => \App\Http\Middleware\EnforceMerchantSubscription::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -9,9 +9,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Schema;
-use Modules\Hotel\Entities\Hotel;
-use Modules\Hotel\Entities\HotelRoom;
-use Modules\Hotel\Entities\RoomType;
+use App\Models\Hotel;
+use App\Models\HotelRoom;
+use App\Models\RoomType;
 
 class MerchantHotelAvailabilityController extends MerchantHotelBaseController
 {

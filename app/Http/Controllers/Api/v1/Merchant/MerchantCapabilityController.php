@@ -7,7 +7,7 @@ use App\Models\Merchant;
 use App\Support\ResolvesMerchantOwner;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Modules\Saas\App\Services\SaasEntitlementService;
+use App\Services\Saas\SaasEntitlementService;
 
 class MerchantCapabilityController extends Controller
 {

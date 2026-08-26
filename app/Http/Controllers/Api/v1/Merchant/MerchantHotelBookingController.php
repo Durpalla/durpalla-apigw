@@ -9,11 +9,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Modules\Hotel\Entities\Hotel;
-use Modules\Hotel\Entities\HotelRoom;
-use Modules\Hotel\Entities\RoomRatePlan;
-use Modules\Hotel\Http\Requests\HotelBookingCreateRequest;
-use Modules\Hotel\Services\HotelBookingService;
+use App\Models\Hotel;
+use App\Models\HotelRoom;
+use App\Models\RoomRatePlan;
+use App\Http\Requests\Hotel\HotelBookingCreateRequest;
+use App\Services\Hotel\MerchantDeskBookingService;
 
 class MerchantHotelBookingController extends MerchantHotelBaseController
 {

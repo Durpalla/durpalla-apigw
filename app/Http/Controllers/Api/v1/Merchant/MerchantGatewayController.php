@@ -8,9 +8,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Modules\Gateway\Constants\GatewayConstant;
-use Modules\Gateway\Entities\Gateway;
-use Modules\Gateway\Services\GatewayCatalogService;
+use App\Constants\GatewayConstant;
+use App\Models\Gateway;
+use App\Services\GatewayCatalogService;
 
 /**
  * Merchant panel / app / front desk — manage own payment + SMS gateway rows

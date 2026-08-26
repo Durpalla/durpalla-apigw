@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Api\v1\Merchant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Modules\Hotel\Entities\Hotel;
-use Modules\Hotel\Entities\HotelRoom;
-use Modules\Hotel\Entities\HotelRoomUnit;
+use App\Models\Hotel;
+use App\Models\HotelRoom;
+use App\Models\HotelRoomUnit;
 
 class MerchantHotelRoomUnitController extends MerchantHotelBaseController
 {

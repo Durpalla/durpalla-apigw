@@ -306,7 +306,7 @@ class MerchantTripLayoutController extends Controller
 
         // OTA-only mode (overdue): cap how many items the merchant may keep blocked.
         if ((bool) $validated['reserved'] && ! (bool) $m->is_reserved) {
-            app(\Modules\Saas\App\Services\SaasEntitlementService::class)
+            app(\App\Services\Saas\SaasEntitlementService::class)
                 ->assertCanReserveBlock($this->merchantOwnerId($request));
         }
 

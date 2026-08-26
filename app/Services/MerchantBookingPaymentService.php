@@ -10,9 +10,9 @@ use App\Models\PaymentCollector;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Modules\Gateway\Constants\GatewayConstant;
-use Modules\Gateway\Entities\Gateway;
-use Modules\Gateway\Services\GatewayCatalogService;
+use App\Constants\GatewayConstant;
+use App\Models\Gateway;
+use App\Services\GatewayCatalogService;
 
 class MerchantBookingPaymentService
 {

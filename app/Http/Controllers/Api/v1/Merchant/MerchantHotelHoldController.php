@@ -10,8 +10,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Modules\Hotel\Entities\Hotel;
-use Modules\Hotel\Services\HotelBookingService;
+use App\Models\Hotel;
+use App\Services\Hotel\MerchantDeskBookingService;
 
 class MerchantHotelHoldController extends MerchantHotelBaseController
 {

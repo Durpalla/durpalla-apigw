@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api\v1\Merchant;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Modules\Hotel\Entities\Hotel;
-use Modules\Hotel\Entities\HotelImage;
+use App\Models\Hotel;
+use App\Models\HotelImage;
 
 class MerchantHotelImageController extends MerchantHotelBaseController
 {

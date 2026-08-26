@@ -15,7 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Modules\Auth\Traits\Auth2FaTrait;
+use App\Traits\Auth2FaTrait;
 use App\Services\TwoFactorService;
 
 class MerchantAuthController extends Controller
