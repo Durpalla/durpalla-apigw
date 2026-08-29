@@ -138,6 +138,16 @@ class Booking extends Model
         return $this->hasOne(HotelReservation::class, 'booking_id', 'id');
     }
 
+    public function hotelItems()
+    {
+        return $this->hasMany(BookingHotelItem::class, 'booking_id', 'id');
+    }
+
+    public function scopeHotel($query)
+    {
+        return $query->where('service_type', 'hotel');
+    }
+
     public function cancellations()
     {
         return $this->hasMany(BookingCancellation::class, 'booking_id', 'id')->whereNotIn('status', [9]);

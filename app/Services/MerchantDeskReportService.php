@@ -9,6 +9,7 @@ use App\Models\MerchantSettlement;
 use App\Models\VehicleSchedule;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 /**
@@ -246,17 +247,20 @@ class MerchantDeskReportService
 
         $avgOccupancy = $this->averageTripOccupancyPercent($merchantUserId, $from, $to);
 
-        $settlementTotal = (float) MerchantSettlement::query()
-            ->where('merchant_id', $merchantUserId)
-            ->where('status', MerchantSettlement::STATUS_PAID)
-            ->where(function ($q) use ($from, $to) {
-                $q->whereBetween('period_from', [$from, $to])
-                    ->orWhereBetween('period_to', [$from, $to])
-                    ->orWhere(function ($q2) use ($from, $to) {
-                        $q2->where('period_from', '<=', $from)->where('period_to', '>=', $to);
-                    });
-            })
-            ->sum('merchant_amount');
+        $settlementTotal = 0.0;
+        if (Schema::hasTable('merchant_settlements')) {
+            $settlementTotal = (float) MerchantSettlement::query()
+                ->where('merchant_id', $merchantUserId)
+                ->where('status', MerchantSettlement::STATUS_PAID)
+                ->where(function ($q) use ($from, $to) {
+                    $q->whereBetween('period_from', [$from, $to])
+                        ->orWhereBetween('period_to', [$from, $to])
+                        ->orWhere(function ($q2) use ($from, $to) {
+                            $q2->where('period_from', '<=', $from)->where('period_to', '>=', $to);
+                        });
+                })
+                ->sum('merchant_amount');
+        }
 
         return [
             'total_revenue' => round($totalRevenue, 2),

@@ -116,6 +116,16 @@ class FinanceReconciliationService
      */
     private function sumSettlements(string $from, string $to, ?int $merchantId, string $status): array
     {
+        if (! Schema::hasTable('merchant_settlements')) {
+            return [
+                'count' => 0,
+                'merchant_amount' => 0.0,
+                'platform_charge' => 0.0,
+                'gross_payable' => 0.0,
+                'commission_receivable' => 0.0,
+            ];
+        }
+
         $q = MerchantSettlement::query()
             ->where('status', $status)
             ->where(function ($q) use ($from, $to) {
