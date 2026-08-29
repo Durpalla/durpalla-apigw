@@ -108,6 +108,27 @@ class VehicleSchedule extends Model
         return $this->belongsTo(Ghat::class, 'ending_point', 'id');
     }
 
+    /**
+     * Departure → arrival for this schedule (uses starting_point / ending_point, which are
+     * already chosen per trip type: straight/up vs reverse/down). Do not swap again here.
+     */
+    public function tripDirectionRouteLine(string $separator = ' -> '): string
+    {
+        $from = trim((string) ($this->startFrom?->name ?? $this->startingPoint?->ghat?->name ?? ''));
+        $to = trim((string) ($this->stopTo?->name ?? $this->endingPoint?->ghat?->name ?? ''));
+        if ($from === '' && $to === '') {
+            return '';
+        }
+        if ($from === '') {
+            return $to;
+        }
+        if ($to === '') {
+            return $from;
+        }
+
+        return $from.$separator.$to;
+    }
+
     public function boardingVias(): HasMany
     {
         return $this->hasMany(RouteProperty::class, 'route_id', 'route_id')->where('type', 'via')->orderBy('serial_num', 'ASC');
