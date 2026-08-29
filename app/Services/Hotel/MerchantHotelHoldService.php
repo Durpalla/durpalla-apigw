@@ -266,6 +266,10 @@ class MerchantHotelHoldService
 
     public function expireStaleForOwner(int $merchantOwnerId): int
     {
+        if (! Schema::hasTable('hotel_holds')) {
+            return 0;
+        }
+
         $stale = HotelHold::query()
             ->where('merchant_owner_id', $merchantOwnerId)
             ->where('status', HotelHold::STATUS_PENDING)

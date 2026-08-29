@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use App\Models\Hotel;
-use App\Services\Hotel\MerchantDeskBookingService;
+use App\Services\Hotel\HotelBookingService;
 
 class MerchantHotelHoldController extends MerchantHotelBaseController
 {
@@ -97,6 +97,9 @@ class MerchantHotelHoldController extends MerchantHotelBaseController
     {
         $ownerId = $this->merchantOwnerId($request);
         $this->assertHotelAllowed($ownerId);
+        if (! \Illuminate\Support\Facades\Schema::hasTable('hotel_holds')) {
+            return response()->json(['success' => true, 'data' => []]);
+        }
         $this->holds->expireStaleForOwner($ownerId);
 
         $holds = HotelHold::query()

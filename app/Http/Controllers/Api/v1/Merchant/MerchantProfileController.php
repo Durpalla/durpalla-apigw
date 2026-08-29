@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use App\Services\MerchantTwoFactorService;
+use App\Services\TwoFactorService;
 
 class MerchantProfileController extends Controller
 {

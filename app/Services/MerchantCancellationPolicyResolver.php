@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\MerchantCancellationTier;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Resolves the refund percentage for a cancellation from the merchant's tiers
@@ -18,6 +19,10 @@ class MerchantCancellationPolicyResolver
      */
     public function tiersFor(?int $merchantId, string $serviceType = 'transport'): array
     {
+        if (! Schema::hasTable('merchant_cancellation_tiers')) {
+            return [];
+        }
+
         $base = MerchantCancellationTier::query()->where('service_type', $serviceType);
 
         $tiers = $merchantId

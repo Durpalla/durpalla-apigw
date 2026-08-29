@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
@@ -233,6 +234,10 @@ class Merchant extends Authenticatable
 
     public function currentSubscription(): ?SaasSubscription
     {
+        if (! Schema::hasTable('saas_subscriptions')) {
+            return null;
+        }
+
         if ($this->current_subscription_id) {
             $sub = SaasSubscription::query()->find($this->current_subscription_id);
             if ($sub) {

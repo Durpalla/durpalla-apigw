@@ -139,20 +139,28 @@ class MerchantHotelController extends MerchantHotelBaseController
         $ownerId = $this->merchantOwnerId($request);
         $this->assertHotelAllowed($ownerId);
 
+        $with = [
+            'city',
+            'rooms.roomType',
+            'rooms.roomUnits',
+            'facilities',
+            'images',
+            'childPolicies.ratePlan',
+        ];
+        foreach ([
+            'descriptions' => 'hotel_descriptions',
+            'policies' => 'hotel_policies',
+            'contact' => 'hotel_contacts',
+            'location' => 'hotel_locations',
+        ] as $relation => $table) {
+            if (\Illuminate\Support\Facades\Schema::hasTable($table)) {
+                $with[] = $relation;
+            }
+        }
+
         $hotel = Hotel::query()
             ->where('merchant_id', $ownerId)
-            ->with([
-                'city',
-                'rooms.roomType',
-                'rooms.roomUnits',
-                'facilities',
-                'images',
-                'descriptions',
-                'policies',
-                'contact',
-                'location',
-                'childPolicies.ratePlan',
-            ])
+            ->with($with)
             ->findOrFail($id);
 
         return response()->json(['success' => true, 'data' => $hotel]);

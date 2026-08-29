@@ -13,7 +13,7 @@ use App\Models\Hotel;
 use App\Models\HotelRoom;
 use App\Models\RoomRatePlan;
 use App\Http\Requests\Hotel\HotelBookingCreateRequest;
-use App\Services\Hotel\MerchantDeskBookingService;
+use App\Services\Hotel\HotelBookingService;
 
 class MerchantHotelBookingController extends MerchantHotelBaseController
 {

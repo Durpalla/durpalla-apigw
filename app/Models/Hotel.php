@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 
@@ -98,6 +99,26 @@ class Hotel extends Model
     public function childPolicies(): HasMany
     {
         return $this->hasMany(HotelChildPolicy::class, 'hotel_id', 'id');
+    }
+
+    public function descriptions(): HasMany
+    {
+        return $this->hasMany(HotelDescription::class, 'hotel_id', 'id');
+    }
+
+    public function policies(): HasMany
+    {
+        return $this->hasMany(HotelPolicy::class, 'hotel_id', 'id');
+    }
+
+    public function contact(): HasOne
+    {
+        return $this->hasOne(HotelContact::class, 'hotel_id', 'id');
+    }
+
+    public function location(): HasOne
+    {
+        return $this->hasOne(HotelLocation::class, 'hotel_id', 'id');
     }
 
     public function bookingItems(): HasMany

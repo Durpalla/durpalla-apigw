@@ -97,6 +97,11 @@ class Vehicle extends Model
         return $this->belongsTo(VehicleRoute::class, 'route_id', 'id');
     }
 
+    public function images(): HasMany
+    {
+        return $this->hasMany(VehicleImage::class, 'vehicle_id', 'id')->orderBy('sort_order');
+    }
+
     public function routeMap(): HasOne
     {
         return $this->hasOne(VehicleRouteMapping::class, 'vehicle_id', 'id');

@@ -133,6 +133,11 @@ class Booking extends Model
         return $this->hasMany(Payment::class, 'booking_id', 'id');
     }
 
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class, 'supplier_id', 'id');
+    }
+
     public function hotelReservation()
     {
         return $this->hasOne(HotelReservation::class, 'booking_id', 'id');

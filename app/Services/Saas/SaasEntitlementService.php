@@ -5,6 +5,7 @@ namespace App\Services\Saas;
 use App\Constants\AppConst;
 use App\Models\Merchant;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use App\Models\SaasPlan;
 use App\Models\SaasSubscription;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -103,23 +104,40 @@ class SaasEntitlementService
 
     public function countHotelProperties(int $merchantId): int
     {
-        return (int) DB::table('hotels')
-            ->where('merchant_id', $merchantId)
-            ->whereNull('deleted_at')
-            ->count();
+        if (! Schema::hasTable('hotels')) {
+            return 0;
+        }
+
+        $q = DB::table('hotels')->where('merchant_id', $merchantId);
+        if (Schema::hasColumn('hotels', 'deleted_at')) {
+            $q->whereNull('deleted_at');
+        }
+
+        return (int) $q->count();
     }
 
     public function countHotelRooms(int $merchantId): int
     {
-        return (int) DB::table('hotel_rooms')
+        if (! Schema::hasTable('hotel_rooms') || ! Schema::hasTable('hotels')) {
+            return 0;
+        }
+
+        $q = DB::table('hotel_rooms')
             ->join('hotels', 'hotels.id', '=', 'hotel_rooms.hotel_id')
-            ->where('hotels.merchant_id', $merchantId)
-            ->whereNull('hotels.deleted_at')
-            ->count();
+            ->where('hotels.merchant_id', $merchantId);
+        if (Schema::hasColumn('hotels', 'deleted_at')) {
+            $q->whereNull('hotels.deleted_at');
+        }
+
+        return (int) $q->count();
     }
 
     public function countActiveTransportBlocks(int $merchantId): int
     {
+        if (! Schema::hasTable('schedule_cabin_mappings') || ! Schema::hasTable('vehicle_schedules')) {
+            return 0;
+        }
+
         return (int) DB::table('schedule_cabin_mappings')
             ->join('vehicle_schedules', 'vehicle_schedules.id', '=', 'schedule_cabin_mappings.schedule_id')
             ->where('vehicle_schedules.merchant_id', $merchantId)

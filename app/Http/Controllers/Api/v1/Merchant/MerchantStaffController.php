@@ -301,6 +301,9 @@ class MerchantStaffController extends Controller
         $u = $this->scopedStaff($ownerId, $id);
 
         $limit = min(max((int) $request->get('limit', 20), 1), 50);
+        if (! \Illuminate\Support\Facades\Schema::hasTable('activity_logs')) {
+            return response()->json(['success' => true, 'data' => []]);
+        }
         $rows = ActivityLog::where('user_id', $u->id)
             ->orderByDesc('id')
             ->limit($limit)

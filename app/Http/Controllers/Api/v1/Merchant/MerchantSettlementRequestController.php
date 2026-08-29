@@ -9,6 +9,7 @@ use App\Services\FinancialLedgerService;
 use App\Support\ResolvesMerchantOwner;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class MerchantSettlementRequestController extends Controller
 {
@@ -23,6 +24,10 @@ class MerchantSettlementRequestController extends Controller
     public function index(Request $request): JsonResponse
     {
         $ownerId = $this->merchantOwnerId($request);
+
+        if (! Schema::hasTable('supervisor_settlement_requests')) {
+            return response()->json(['success' => true, 'data' => []]);
+        }
 
         $request->validate([
             'status' => 'nullable|in:pending,approved,declined,all',
