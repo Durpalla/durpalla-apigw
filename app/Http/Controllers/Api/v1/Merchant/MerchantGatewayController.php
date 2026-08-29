@@ -150,6 +150,26 @@ class MerchantGatewayController extends Controller
         ]);
     }
 
+    public function destroy(Request $request, int $id): JsonResponse
+    {
+        $ownerId = $this->merchantOwnerId($request);
+        $gateway = Gateway::query()->where('merchant_id', $ownerId)->where('id', $id)->first();
+        if (! $gateway) {
+            return response()->json(['success' => false, 'message' => __('Gateway not found')], 404);
+        }
+
+        try {
+            $this->catalog->removeMerchantGateway($ownerId, $gateway);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => __('Gateway removed. You can enable it again from the template list.'),
+        ]);
+    }
+
     public function updateCredentials(Request $request, int $id): JsonResponse
     {
         $ownerId = $this->merchantOwnerId($request);

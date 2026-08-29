@@ -288,6 +288,26 @@ class GatewayCatalogService
     }
 
     /**
+     * Remove a merchant-owned clone (not a platform template).
+     */
+    public function removeMerchantGateway(Merchant|int $merchant, Gateway $gateway): void
+    {
+        $merchantId = $merchant instanceof Merchant ? (int) $merchant->id : (int) $merchant;
+        if ((int) $gateway->merchant_id !== $merchantId) {
+            throw new \InvalidArgumentException(__('Gateway not found for this merchant.'));
+        }
+
+        DB::transaction(function () use ($gateway) {
+            $gateway->credentials()->delete();
+            $gateway->params()->delete();
+            $gateway->endpoints()->delete();
+            $gateway->delete();
+        });
+
+        $this->forgetCache();
+    }
+
+    /**
      * Upsert credential key/values for a merchant-owned gateway.
      *
      * @param  array<string, string>  $pairs

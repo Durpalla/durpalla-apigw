@@ -6,6 +6,7 @@ use App\Constants\AppConst;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Booking;
+use App\Models\Merchant;
 use App\Models\MerchantStaff;
 use App\Models\Vehicle;
 use App\Models\VehicleSchedule;
@@ -66,9 +67,8 @@ class MerchantStaffController extends Controller
     {
         $ownerId = $this->merchantOwnerId($request);
 
-        $query = MerchantStaff::query()
-            ->with(['vehicles.vehicle:id,name'])
-            ->where('merchant_id', $ownerId);
+        $query = $this->staffQueryForOwner($ownerId)
+            ->with(['vehicles.vehicle:id,name']);
 
         $typeFilter = $request->input('type', $request->input('role'));
         if (filled($typeFilter) && $typeFilter !== 'all') {
@@ -213,22 +213,48 @@ class MerchantStaffController extends Controller
         ], 201);
     }
 
-    private function scopedSupervisor(int $ownerId, int $id): MerchantStaff
+    /**
+     * Staff rows may still store legacy merchants.user_id as merchant_id.
+     *
+     * @return list<int>
+     */
+    private function staffOwnerIds(int $ownerId): array
     {
-        return MerchantStaff::query()
-            ->with(['vehicles.vehicle:id,name'])
-            ->where('merchant_id', $ownerId)
-            ->where('type', AppConst::SUPERVISOR_ROLE)
-            ->findOrFail($id);
+        $ids = [$ownerId];
+        $merchant = Merchant::query()->find($ownerId);
+        $legacyUserId = (int) ($merchant?->getAttribute('user_id') ?? 0);
+        if ($legacyUserId > 0) {
+            $ids[] = $legacyUserId;
+        }
+
+        return array_values(array_unique($ids));
     }
 
-    private function scopedStaff(int $ownerId, int $id): MerchantStaff
+    private function staffQueryForOwner(int $ownerId)
     {
-        return MerchantStaff::query()
+        return MerchantStaff::query()->whereIn('merchant_id', $this->staffOwnerIds($ownerId));
+    }
+
+    private function scopedSupervisor(int $ownerId, int $id): ?MerchantStaff
+    {
+        return $this->staffQueryForOwner($ownerId)
             ->with(['vehicles.vehicle:id,name'])
-            ->where('merchant_id', $ownerId)
-            ->whereIn('type', self::MERCHANT_ASSIGNABLE_TYPES)
-            ->findOrFail($id);
+            ->where('type', AppConst::SUPERVISOR_ROLE)
+            ->whereKey($id)
+            ->first();
+    }
+
+    private function scopedStaff(int $ownerId, int $id): ?MerchantStaff
+    {
+        return $this->staffQueryForOwner($ownerId)
+            ->with(['vehicles.vehicle:id,name'])
+            ->whereKey($id)
+            ->first();
+    }
+
+    private function staffNotFound(): JsonResponse
+    {
+        return response()->json(['success' => false, 'message' => 'Staff not found.'], 404);
     }
 
     /**
@@ -238,6 +264,9 @@ class MerchantStaffController extends Controller
     {
         $ownerId = $this->merchantOwnerId($request);
         $u = $this->scopedStaff($ownerId, $id);
+        if (! $u) {
+            return $this->staffNotFound();
+        }
 
         return response()->json([
             'success' => true,
@@ -252,6 +281,9 @@ class MerchantStaffController extends Controller
     {
         $ownerId = $this->merchantOwnerId($request);
         $u = $this->scopedStaff($ownerId, $id);
+        if (! $u) {
+            return $this->staffNotFound();
+        }
 
         $vehicleIds = $u->vehicles ? $u->vehicles->pluck('vehicle_id')->unique()->values()->all() : [];
         $today = now()->toDateString();
@@ -299,6 +331,9 @@ class MerchantStaffController extends Controller
     {
         $ownerId = $this->merchantOwnerId($request);
         $u = $this->scopedStaff($ownerId, $id);
+        if (! $u) {
+            return $this->staffNotFound();
+        }
 
         $limit = min(max((int) $request->get('limit', 20), 1), 50);
         if (! \Illuminate\Support\Facades\Schema::hasTable('activity_logs')) {
@@ -331,12 +366,10 @@ class MerchantStaffController extends Controller
         $this->assertMainMerchant($request);
         $ownerId = $this->merchantOwnerId($request);
 
-        $u = MerchantStaff::query()
-            ->with(['vehicles.vehicle:id,name'])
-            ->where('merchant_id', $ownerId)
-            ->where('id', $id)
-            ->whereIn('type', self::MERCHANT_ASSIGNABLE_TYPES)
-            ->firstOrFail();
+        $u = $this->scopedStaff($ownerId, $id);
+        if (! $u) {
+            return $this->staffNotFound();
+        }
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:191'],
@@ -410,11 +443,10 @@ class MerchantStaffController extends Controller
     {
         $this->assertMainMerchant($request);
         $ownerId = $this->merchantOwnerId($request);
-        $u = MerchantStaff::query()
-            ->where('merchant_id', $ownerId)
-            ->where('id', $id)
-            ->whereIn('type', self::MERCHANT_ASSIGNABLE_TYPES)
-            ->firstOrFail();
+        $u = $this->scopedStaff($ownerId, $id);
+        if (! $u) {
+            return $this->staffNotFound();
+        }
 
         $validated = $request->validate([
             'is_active' => ['required', 'boolean'],
@@ -443,6 +475,9 @@ class MerchantStaffController extends Controller
         $this->assertMainMerchant($request);
         $ownerId = $this->merchantOwnerId($request);
         $u = $this->scopedSupervisor($ownerId, $id);
+        if (! $u) {
+            return $this->staffNotFound();
+        }
 
         $validated = $request->validate([
             'vehicle_ids' => ['required', 'array'],

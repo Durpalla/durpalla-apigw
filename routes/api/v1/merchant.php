@@ -97,6 +97,7 @@ Route::middleware(['auth:merchant_api,merchant_staff_api', 'merchant.active'])->
         Route::get('gateways/templates', [MerchantGatewayController::class, 'templates']);
         Route::post('gateways/enable', [MerchantGatewayController::class, 'enable']);
         Route::put('gateways/{id}', [MerchantGatewayController::class, 'update'])->whereNumber('id');
+        Route::delete('gateways/{id}', [MerchantGatewayController::class, 'destroy'])->whereNumber('id');
         Route::put('gateways/{id}/credentials', [MerchantGatewayController::class, 'updateCredentials'])->whereNumber('id');
         Route::put('gateways/{id}/params', [MerchantGatewayController::class, 'updateParams'])->whereNumber('id');
 
