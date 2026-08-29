@@ -1,9 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Broadcasting\BroadcastController;
 use App\Http\Controllers\Api\CustomerAuthController;
 use App\Http\Controllers\Api\v1\ApiBookingController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantAuthController;
+
+// Pusher private/presence auth (Bearer) — same path as merchant + mobile clients
+Route::post('pusher/auth', [BroadcastController::class, 'authenticate'])
+    ->middleware('auth:merchant_api,merchant_staff_api,customer,agent,api');
 
 // Main app routes (no prefix) – /api/v1/site/init, /api/v1/auth/*, /api/v1/cart/*, /api/v1/booking/*, /api/v1/my/*, etc.
 include(__DIR__ . '/v1/customer.php');
