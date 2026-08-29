@@ -13,13 +13,13 @@ use App\Models\Hotel;
 use App\Models\HotelRoom;
 use App\Models\RoomRatePlan;
 use App\Http\Requests\Hotel\HotelBookingCreateRequest;
-use App\Services\Hotel\HotelBookingService;
+use App\Services\Hotel\MerchantDeskBookingService;
 
 class MerchantHotelBookingController extends MerchantHotelBaseController
 {
-    private HotelBookingService $bookingService;
+    private MerchantDeskBookingService $bookingService;
 
-    public function __construct(HotelBookingService $bookingService)
+    public function __construct(MerchantDeskBookingService $bookingService)
     {
         $this->bookingService = $bookingService;
     }

@@ -301,6 +301,103 @@ class MerchantTripController extends Controller
         ], 201);
     }
 
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $ownerId = $this->merchantOwnerId($request);
+
+        $trip = VehicleSchedule::query()
+            ->where('merchant_id', $ownerId)
+            ->where('id', $id)
+            ->first();
+
+        if (! $trip) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Trip not found.',
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'vehicle_id' => 'required|integer|exists:vehicles,id',
+            'route_id' => 'required|integer|exists:vehicle_routes,id',
+            'departure_at' => 'required|date',
+            'is_reverse' => 'sometimes|boolean',
+            'operation_hour' => 'nullable|numeric|min:0|max:168',
+        ]);
+
+        if ((int) $validated['vehicle_id'] !== (int) $trip->vehicle_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The property cannot be changed on an existing trip. Create a new trip instead.',
+            ], 422);
+        }
+
+        $vehicle = Vehicle::where('merchant_id', $ownerId)->findOrFail($validated['vehicle_id']);
+
+        if ((int) $vehicle->route_id !== (int) $validated['route_id']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Selected route must match the property (vehicle) route.',
+            ], 422);
+        }
+
+        $route = VehicleRoute::with(['startingPoint', 'endingPoint'])->findOrFail($validated['route_id']);
+        $start = $route->startingPoint;
+        $end = $route->endingPoint;
+        if (! $start || ! $end) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Route is missing start or end points.',
+            ], 422);
+        }
+
+        $dt = Carbon::parse($validated['departure_at']);
+        $schedule_date = $this->calculation->createDate($dt->format('d/m/Y'));
+        $schedule_time = $schedule_date.' '.$dt->format('H:i:s');
+        $operationHour = (float) ($validated['operation_hour'] ?? $trip->operation_hour ?? 12);
+        $schedule_type = ! empty($validated['is_reverse']) ? 'reverse' : 'straight';
+        $operation_time = strtotime($schedule_time) + (int) (60 * 60 * $operationHour);
+
+        $duplicate = VehicleSchedule::where([
+            'schedule_date' => $schedule_date,
+            'vehicle_id' => $vehicle->id,
+            'status' => AppConst::SCHEDULE_ACTIVE,
+            'schedule_type' => $schedule_type,
+        ])->where('id', '!=', $trip->id)->first();
+
+        if ($duplicate) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A trip already exists for this property, date, and direction (Up/Down).',
+            ], 422);
+        }
+
+        try {
+            $this->scheduleRepository->update([
+                'route_id' => $route->id,
+                'schedule_date' => $schedule_date,
+                'schedule_time' => $dt->format('H:i'),
+                'operation_hour' => $operationHour,
+                'leaving_at' => $schedule_time,
+                'starting_point' => $schedule_type === 'reverse'
+                    ? $route->endingPoint->ghat_id
+                    : $route->startingPoint->ghat_id,
+                'ending_point' => $schedule_type === 'reverse'
+                    ? $route->startingPoint->ghat_id
+                    : $route->endingPoint->ghat_id,
+                'operation_timeline' => date('Y-m-d H:i:s', $operation_time),
+                'schedule_type' => $schedule_type,
+            ], $trip->id);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+
+        return $this->show($request, $id);
+    }
+
     private function transformTrip(VehicleSchedule $t): array
     {
         $ghats = $this->departureArrivalGhatNames($t);

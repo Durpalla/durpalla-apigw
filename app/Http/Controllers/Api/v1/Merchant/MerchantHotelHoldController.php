@@ -11,13 +11,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use App\Models\Hotel;
-use App\Services\Hotel\HotelBookingService;
+use App\Services\Hotel\MerchantDeskBookingService;
 
 class MerchantHotelHoldController extends MerchantHotelBaseController
 {
     public function __construct(
         private readonly MerchantHotelHoldService $holds,
-        private readonly HotelBookingService $bookingService,
+        private readonly MerchantDeskBookingService $bookingService,
     ) {}
 
     /**

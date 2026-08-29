@@ -123,4 +123,6 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'merchant_pay_base' => env('MERCHANT_PAY_BASE_URL', env('APP_URL')),
+
 ];

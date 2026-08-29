@@ -105,6 +105,7 @@ Route::middleware(['auth:merchant_api,merchant_staff_api', 'merchant.active'])->
         Route::get('trips/{id}/stats', [MerchantTripController::class, 'stats'])->whereNumber('id');
         Route::get('trips/{id}', [MerchantTripController::class, 'show'])->whereNumber('id');
         Route::post('trips', [MerchantTripController::class, 'store']);
+        Route::put('trips/{id}', [MerchantTripController::class, 'update'])->whereNumber('id');
         Route::get('trips/{tripId}/floors', [MerchantTripLayoutController::class, 'floors'])->whereNumber('tripId');
         Route::get('trips/{tripId}/layout/{type}', [MerchantTripLayoutController::class, 'layout'])->whereNumber('tripId');
         Route::post('trips/{tripId}/reserve', [MerchantTripLayoutController::class, 'reserve'])->whereNumber('tripId');

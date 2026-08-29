@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\FinancialEvent;
 use App\Models\PartyBalance;
 use App\Models\Payment;
+use App\Models\SupervisorSettlementRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -262,5 +263,48 @@ class FinancialLedgerService
             'idempotency_key' => 'agent_commission_reversed:'.$accrualId,
             'debit_balance_code' => PartyBalance::CODE_COMMISSION_AVAILABLE,
         ]);
+    }
+
+    public function recordSupervisorCashApproved(SupervisorSettlementRequest $request, float $expectedCash): ?FinancialEvent
+    {
+        $submitted = (float) $request->cash_submitted;
+        $variance = round($submitted - $expectedCash, 2);
+
+        $this->record([
+            'event_type' => FinancialEvent::TYPE_SUPERVISOR_CASH_APPROVED,
+            'amount' => $submitted,
+            'debit_party_type' => FinancialEvent::PARTY_SUPERVISOR,
+            'debit_party_id' => (int) $request->supervisor_id,
+            'credit_party_type' => FinancialEvent::PARTY_MERCHANT,
+            'credit_party_id' => (int) $request->merchant_id,
+            'trip_id' => $request->trip_id ? (int) $request->trip_id : null,
+            'source_table' => 'supervisor_settlement_requests',
+            'source_id' => (int) $request->id,
+            'idempotency_key' => 'supervisor_cash_approved:'.$request->id,
+            'debit_balance_code' => PartyBalance::CODE_CASH_ON_HAND,
+            'credit_balance_code' => PartyBalance::CODE_CASH_ON_HAND,
+            'meta' => [
+                'expected_cash' => $expectedCash,
+                'variance' => $variance,
+                'date' => optional($request->date)->format('Y-m-d'),
+            ],
+        ]);
+
+        if (abs($variance) >= 0.01) {
+            $this->record([
+                'event_type' => FinancialEvent::TYPE_REVERSAL,
+                'amount' => abs($variance),
+                'debit_party_type' => $variance > 0 ? FinancialEvent::PARTY_MERCHANT : FinancialEvent::PARTY_SUPERVISOR,
+                'debit_party_id' => $variance > 0 ? (int) $request->merchant_id : (int) $request->supervisor_id,
+                'credit_party_type' => $variance > 0 ? FinancialEvent::PARTY_SUPERVISOR : FinancialEvent::PARTY_MERCHANT,
+                'credit_party_id' => $variance > 0 ? (int) $request->supervisor_id : (int) $request->merchant_id,
+                'source_table' => 'supervisor_settlement_requests',
+                'source_id' => (int) $request->id,
+                'idempotency_key' => 'supervisor_cash_variance:'.$request->id,
+                'meta' => ['kind' => 'cash_variance', 'variance' => $variance],
+            ]);
+        }
+
+        return null;
     }
 }

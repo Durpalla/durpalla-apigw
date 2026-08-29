@@ -20,6 +20,13 @@ class MerchantBookingPaymentService
     {
     }
 
+    public static function publicPayUrl(string $token): string
+    {
+        $base = rtrim((string) (config('app.merchant_pay_base') ?: config('app.url')), '/');
+
+        return $base.'/m/pay/'.$token;
+    }
+
     /**
      * Ensure booking has a payment_token and return the public merchant pay URL.
      *
@@ -54,7 +61,7 @@ class MerchantBookingPaymentService
             $payment->save();
         }
 
-        $url = route('merchant.pay.show', ['token' => $booking->payment_token]);
+        $url = self::publicPayUrl((string) $booking->payment_token);
 
         if ($dispatchNotify) {
             SendPaymentLinkJob::dispatch($booking->id);
