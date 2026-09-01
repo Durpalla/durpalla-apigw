@@ -1222,6 +1222,7 @@ final class HotelBookingService
         foreach ($types as $rt) {
             $maxOccupancy = max(1, (int) $rt->max_occupancy);
             $roomsNeeded = (int) max(1, (int) ceil($guests / $maxOccupancy));
+            $availableCount = $this->inventory->availableUnits($rt, $checkIn, $checkOut);
             try {
                 $this->inventory->assertAvailability($rt, $checkIn, $checkOut, $roomsNeeded);
                 $available = true;
@@ -1242,6 +1243,8 @@ final class HotelBookingService
                 'facilities' => $amenities,
                 'photos' => $this->photosForApiRoomType($rt),
                 'available' => $available,
+                'available_count' => $availableCount,
+                'available_rooms' => $availableCount,
                 'rooms_needed' => $roomsNeeded,
                 'quote' => $quote,
             ];

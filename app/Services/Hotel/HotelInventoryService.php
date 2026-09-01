@@ -27,6 +27,43 @@ final class HotelInventoryService
     }
 
     /**
+     * Remaining bookable units for the stay (min across nights).
+     * Formula: units_total - units_sold - units_held.
+     */
+    public function availableUnits(
+        HotelRoomType $roomType,
+        Carbon $checkIn,
+        Carbon $checkOut,
+    ): int {
+        $dates = self::nightDates($checkIn, $checkOut);
+        if ($dates === []) {
+            return 0;
+        }
+
+        $min = null;
+        foreach ($dates as $date) {
+            $this->ensureInventoryRow($roomType, $date);
+            $row = HotelInventory::query()
+                ->where('hotel_room_type_id', $roomType->id)
+                ->whereDate('night_date', $date)
+                ->first();
+            if (! $row) {
+                return 0;
+            }
+            $avail = max(
+                0,
+                (int) $row->units_total - (int) $row->units_sold - (int) $row->units_held,
+            );
+            $min = $min === null ? $avail : min($min, $avail);
+            if ($min === 0) {
+                return 0;
+            }
+        }
+
+        return (int) ($min ?? 0);
+    }
+
+    /**
      * @throws \RuntimeException when not enough units for every night
      */
     public function assertAvailability(

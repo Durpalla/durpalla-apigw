@@ -80,6 +80,23 @@ class HotelInventoryServiceTest extends TestCase
             ->value('units_held'));
     }
 
+    public function test_available_units_reflects_holds_and_rejects_overbook(): void
+    {
+        $room = $this->seedRoom(units: 10);
+        $svc = app(HotelInventoryService::class);
+        $in = Carbon::parse('2026-11-01');
+        $out = Carbon::parse('2026-11-02');
+
+        $this->assertSame(10, $svc->availableUnits($room, $in, $out));
+
+        $svc->applyHold($room, $in, $out, 10);
+        $this->assertSame(0, $svc->availableUnits($room, $in, $out));
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Not enough rooms');
+        $svc->applyHold($room, $in, $out, 1);
+    }
+
     private function seedRoom(int $units = 5): HotelRoomType
     {
         $hotelAttrs = [
