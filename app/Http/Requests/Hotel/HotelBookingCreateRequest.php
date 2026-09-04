@@ -10,6 +10,9 @@ class HotelBookingCreateRequest extends FormRequest
     {
         return [
             'customer_id' => 'nullable|exists:users,id',
+            'guest_name' => 'nullable|string|max:191',
+            'guest_mobile' => 'nullable|string|max:64',
+            'guest_email' => 'nullable|email|max:191',
             'check_in_date' => 'required|date|after_or_equal:today',
             'check_out_date' => 'required|date|after:check_in_date',
             'adults' => 'required|integer|min:1',

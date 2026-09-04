@@ -15,6 +15,9 @@ class Booking extends Model
         'pnr',
         'booking_date',
         'customer_id',
+        'guest_name',
+        'guest_mobile',
+        'guest_email',
         'user_id', // maps to booked_by_id via mutator for mass assignment
         'booked_by_type',
         'booked_by_id',

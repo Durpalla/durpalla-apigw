@@ -98,13 +98,37 @@ class MerchantDeskBookingService
 
             DB::beginTransaction();
 
+            $guestName = trim((string) ($data['guest_name'] ?? ''));
+            $guestMobile = trim((string) ($data['guest_mobile'] ?? ''));
+            $guestEmail = trim((string) ($data['guest_email'] ?? ''));
+            $hasWalkInGuest = $guestName !== '' || $guestMobile !== '';
+            // Walk-in desk/admin: store guest contact on booking; do NOT invent a Customer by mobile
+            // (OTP login would otherwise claim those bookings when the guest self-registers).
+            $customerId = array_key_exists('customer_id', $data) && $data['customer_id']
+                ? (int) $data['customer_id']
+                : ($hasWalkInGuest ? null : (auth()->id() ?: null));
+
+            if ($customerId === null && ! $hasWalkInGuest) {
+                DB::rollBack();
+
+                return response()->failed(['message' => 'Select a customer or enter guest name and mobile.']);
+            }
+            if ($hasWalkInGuest && $guestMobile === '') {
+                DB::rollBack();
+
+                return response()->failed(['message' => 'Guest mobile is required for walk-in bookings.']);
+            }
+
             // Create unified booking record
             $booking = Booking::create([
                 'booking_date' => now()->format('Y-m-d'),
                 'service_type' => 'hotel',
                 'from_date' => $checkIn->format('Y-m-d'),
                 'to_date' => $checkOut->format('Y-m-d'),
-                'customer_id' => $data['customer_id'] ?? auth()->id(),
+                'customer_id' => $customerId,
+                'guest_name' => $guestName !== '' ? $guestName : null,
+                'guest_mobile' => $guestMobile !== '' ? $guestMobile : null,
+                'guest_email' => $guestEmail !== '' ? $guestEmail : null,
                 'total_amount' => 0, // Will be calculated
                 'total_discount' => $data['discount_amount'] ?? 0,
                 'total_payable' => 0, // Will be calculated
@@ -304,14 +328,26 @@ class MerchantDeskBookingService
         $nights = $checkIn->diffInDays($checkOut);
 
         return DB::transaction(function () use ($data, $checkIn, $checkOut, $nights) {
-            $customer = $this->resolveCustomer($data);
+            $guestName = trim((string) ($data['guest_name'] ?? $data['customer_name'] ?? ''));
+            $guestMobile = trim((string) ($data['guest_mobile'] ?? $data['customer_mobile'] ?? ''));
+            $guestEmail = trim((string) ($data['guest_email'] ?? $data['customer_email'] ?? ''));
+            $customerId = ! empty($data['customer_id']) ? (int) $data['customer_id'] : null;
+
+            if ($customerId === null) {
+                if ($guestMobile === '') {
+                    throw new \Exception('Select a customer or enter guest name and mobile.');
+                }
+            }
 
             $booking = Booking::create([
                 'booking_date' => now()->format('Y-m-d'),
                 'service_type' => 'hotel',
                 'from_date' => $checkIn->format('Y-m-d'),
                 'to_date' => $checkOut->format('Y-m-d'),
-                'customer_id' => $customer->id,
+                'customer_id' => $customerId,
+                'guest_name' => $guestName !== '' ? $guestName : null,
+                'guest_mobile' => $guestMobile !== '' ? $guestMobile : null,
+                'guest_email' => $guestEmail !== '' ? $guestEmail : null,
                 'total_amount' => 0,
                 'total_discount' => 0,
                 'total_payable' => 0,
@@ -403,7 +439,7 @@ class MerchantDeskBookingService
             Payment::create([
                 'booking_id' => $booking->id,
                 'transaction_id' => strtoupper(uniqid((string) $booking->id, false)),
-                'customer_id' => $customer->id,
+                'customer_id' => $booking->customer_id,
                 'payment_method' => null,
                 'status' => 'pending',
                 'paid_amount' => 0,

@@ -3,12 +3,10 @@
 namespace App\Http\Controllers\Api\v1\Merchant;
 
 use App\Models\Booking;
-use App\Models\Customer;
 use App\Services\ApiIdempotencyService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 use App\Models\Hotel;
 use App\Models\HotelRoom;
 use App\Models\RoomRatePlan;
@@ -29,7 +27,8 @@ class MerchantHotelBookingController extends MerchantHotelBaseController
      *
      * Body: same shape as admin hotel booking create (see HotelBookingCreateRequest) plus:
      * - guest_name (required)
-     * - guest_mobile (required) — resolves/creates customer user
+     * - guest_mobile (required) — stored on booking; does not create a customer account
+     * - guest_email (optional)
      */
     public function store(Request $request): JsonResponse
     {
@@ -55,6 +54,7 @@ class MerchantHotelBookingController extends MerchantHotelBaseController
         $rules = (new HotelBookingCreateRequest)->rules();
         $rules['guest_name'] = ['required', 'string', 'max:191'];
         $rules['guest_mobile'] = ['required', 'string', 'max:64'];
+        $rules['guest_email'] = ['nullable', 'email', 'max:191'];
         // Merchant desk may send hotel_room_id; we expand it before validating.
         $rules['hotel_id'] = ['nullable', 'integer', 'exists:hotels,id'];
         $rules['rooms.*.hotel_room_id'] = ['nullable', 'integer', 'exists:hotel_rooms,id'];
@@ -75,7 +75,8 @@ class MerchantHotelBookingController extends MerchantHotelBaseController
 
         $guestName = trim((string) ($payload['guest_name'] ?? ''));
         $guestMobile = trim((string) ($payload['guest_mobile'] ?? ''));
-        unset($payload['guest_name'], $payload['guest_mobile'], $payload['hotel_id']);
+        $guestEmail = trim((string) ($payload['guest_email'] ?? ''));
+        unset($payload['guest_name'], $payload['guest_mobile'], $payload['guest_email'], $payload['hotel_id']);
 
         foreach ($payload['rooms'] ?? [] as $i => $roomRow) {
             unset($payload['rooms'][$i]['hotel_room_id'], $payload['rooms'][$i]['quantity']);
@@ -89,15 +90,13 @@ class MerchantHotelBookingController extends MerchantHotelBaseController
         }
         $payload['rooms'] = array_values($payload['rooms'] ?? []);
 
-        $customer = Customer::firstOrNew(['mobile' => $guestMobile]);
-        if (! $customer->id) {
-            $customer->name = $guestName;
-            $customer->mobile = $guestMobile;
-            $customer->password = Str::random(8);
-            $customer->save();
+        // Walk-in: keep guest contact on the booking only — do not create/link a Customer by mobile.
+        $payload['customer_id'] = null;
+        $payload['guest_name'] = $guestName;
+        $payload['guest_mobile'] = $guestMobile;
+        if ($guestEmail !== '') {
+            $payload['guest_email'] = $guestEmail;
         }
-
-        $payload['customer_id'] = $customer->id;
         $payload['platform'] = 'merchant_desk';
 
         $serviceResponse = $this->bookingService->createWithValidatedData($payload);
@@ -172,6 +171,8 @@ class MerchantHotelBookingController extends MerchantHotelBaseController
                     $q->where(function ($inner) use ($like, $raw) {
                         $inner->where('bookings.pnr', 'like', strtoupper($raw).'%')
                             ->orWhere('bookings.pnr', 'like', $like)
+                            ->orWhere('bookings.guest_name', 'like', $like)
+                            ->orWhere('bookings.guest_mobile', 'like', $like)
                             ->orWhereHas('customer', function ($cq) use ($like) {
                                 $cq->where('name', 'like', $like)
                                     ->orWhere('mobile', 'like', $like);

@@ -58,6 +58,29 @@ Routes: `dashboard.hotel.rooms.*` under `Modules/Hotel/Routes/web.php`
 
 ---
 
+## 1b. Hotel extra-bed facility (required before Extra bed policies)
+
+Hotels must opt in before child policies can use `bed_type = extra_bed`.
+
+| Field | Form / DB | Default | Meaning |
+|-------|-----------|---------|---------|
+| Accepts extra bed | `accepts_extra_bed` | `false` | Hotel allows extra beds on bookings |
+| Max extra beds | `max_extra_beds` | `1` | Cap of extra beds per room booking line |
+
+When `accepts_extra_bed` is toggled, the hotel’s **Extra Bed** facility (`code=extra_bed`) is synced on/off for amenity display.
+
+### Configure from
+
+| Surface | How |
+|---------|-----|
+| Admin web | Hotel create/edit modal → Accepts extra bed + Max extra beds |
+| Merchant API | `POST/PATCH /api/v1/merchant/hotels` with `accepts_extra_bed`, `max_extra_beds` |
+| Merchant / agent apps | Read fields on hotel show / agent hotel detail (`accepts_extra_bed`, `max_extra_beds`) |
+
+`ChildRuleEngine` rejects bookings that need an extra bed when the hotel does not accept them, or when needed beds exceed `max_extra_beds`.
+
+---
+
 ## 2. Child / extra-bed policies
 
 Policies live in `hotel_child_policies`, scoped to a hotel (optional rate plan override).
@@ -172,4 +195,5 @@ Apply: `Modules/Hotel/Services/HotelBookingService.php`
 
 - Customer / agent online checkout does **not** yet bill `HotelChildPolicy` amounts — only room nightly quote (see agent/customer doc).
 - There is no separate admin field named `extra_guest_fee` for adults over occupancy; adult overflow is handled by adding rooms (or channel UX allowances), not by inventing a surcharge.
-- Admin booking create UI should pass `children_ages` whenever children &gt; 0; without ages, child policies are skipped and pricing falls back to room rate only (or adult rate when ages are missing but children count is set without ages — engine requires the ages array).
+- Admin booking create UI should pass `children_ages` whenever children &gt; 0; without ages, child policies are skipped and pricing falls back to room rate only (or adult rate when ages are missing but children count is set without ages — engine requires the ages array). Admin create form now collects ages and validation requires `rooms.*.children_ages` length to match children.
+- Extra bed policies require `hotels.accepts_extra_bed = true` (admin form / merchant API). `ChildRuleEngine` enforces acceptance + `max_extra_beds`.

@@ -987,6 +987,8 @@ final class HotelBookingService
             'photos' => $galleryPhotos,
             'amenities' => $facilityNames,
             'facilities' => $facilityNames,
+            'accepts_extra_bed' => (bool) ($hotel->getAttribute('accepts_extra_bed') ?? false),
+            'max_extra_beds' => (int) ($hotel->getAttribute('max_extra_beds') ?? 0),
             'reviews' => $hotel->reviews->map(fn ($r) => [
                 'author' => $r->author,
                 'rating' => (float) $r->rating,

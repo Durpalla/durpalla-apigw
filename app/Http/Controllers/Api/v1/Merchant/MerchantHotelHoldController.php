@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers\Api\v1\Merchant;
 
-use App\Models\Customer;
 use App\Models\HotelHold;
 use App\Services\ApiIdempotencyService;
 use App\Services\Hotel\MerchantHotelHoldService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 use App\Models\Hotel;
 use App\Services\Hotel\MerchantDeskBookingService;
 
@@ -183,20 +181,14 @@ class MerchantHotelHoldController extends MerchantHotelBaseController
 
         $guestName = trim((string) $request->input('guest_name'));
         $guestMobile = trim((string) $request->input('guest_mobile'));
-        $customer = Customer::firstOrNew(['mobile' => $guestMobile]);
-        if (! $customer->id) {
-            $customer->name = $guestName;
-            $customer->mobile = $guestMobile;
-            $customer->password = Str::random(8);
-            $customer->save();
-        } elseif ($guestName !== '' && blank($customer->name)) {
-            $customer->name = $guestName;
-            $customer->save();
-        }
+        $guestEmail = trim((string) $request->input('guest_email', ''));
 
         $quote = is_array($hold->quote_json) ? $hold->quote_json : [];
         $payload = [
-            'customer_id' => $customer->id,
+            'customer_id' => null,
+            'guest_name' => $guestName,
+            'guest_mobile' => $guestMobile,
+            'guest_email' => $guestEmail !== '' ? $guestEmail : null,
             'platform' => 'merchant_desk',
             'check_in_date' => $hold->check_in->format('Y-m-d'),
             'check_out_date' => $hold->check_out->format('Y-m-d'),
