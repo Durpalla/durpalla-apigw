@@ -40,6 +40,8 @@ class Hotel extends Model
         'check_out_time',
         'status',
         'is_approved',
+        'accepts_extra_bed',
+        'max_extra_beds',
         'external_id',
         'source',
         'supplier_meta',
@@ -57,6 +59,8 @@ class Hotel extends Model
             'rating' => 'decimal:1',
             'status' => 'integer',
             'is_approved' => 'boolean',
+            'accepts_extra_bed' => 'boolean',
+            'max_extra_beds' => 'integer',
             'supplier_meta' => 'array',
         ];
     }
@@ -99,6 +103,23 @@ class Hotel extends Model
     public function childPolicies(): HasMany
     {
         return $this->hasMany(HotelChildPolicy::class, 'hotel_id', 'id');
+    }
+
+    /**
+     * Keep the Extra Bed facility pivot in sync with accepts_extra_bed.
+     */
+    public function syncExtraBedFacility(): void
+    {
+        $facility = HotelFacility::query()->where('code', 'extra_bed')->first();
+        if (! $facility) {
+            return;
+        }
+
+        if ($this->accepts_extra_bed) {
+            $this->facilities()->syncWithoutDetaching([$facility->id]);
+        } else {
+            $this->facilities()->detach($facility->id);
+        }
     }
 
     public function descriptions(): HasMany

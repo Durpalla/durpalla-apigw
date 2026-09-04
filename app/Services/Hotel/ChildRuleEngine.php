@@ -57,18 +57,26 @@ class ChildRuleEngine
     public function validate(): array
     {
         $errors = [];
+        $extraBedNeeded = 0;
 
         foreach ($this->childrenAges as $index => $age) {
             $policy = $this->resolvePolicy((int) $age);
 
+            // Missing policy is allowed: calculateChildPrice() charges adult rate.
             if (! $policy) {
-                $errors[] = 'Child #'.($index + 1).' (age '.$age.') does not match any policy';
                 continue;
             }
 
-            if ($policy->bed_type === 'extra_bed' && ! $this->isExtraBedAvailable()) {
-                $errors[] = 'Extra bed not available for child #'.($index + 1);
+            if ($policy->bed_type === 'extra_bed') {
+                $extraBedNeeded++;
+                if (! $this->hotelAcceptsExtraBed()) {
+                    $errors[] = 'Extra bed not available for child #'.($index + 1).' — hotel does not accept extra beds';
+                }
             }
+        }
+
+        if ($this->hotelAcceptsExtraBed() && $extraBedNeeded > $this->maxExtraBeds()) {
+            $errors[] = "This booking needs {$extraBedNeeded} extra bed(s) but hotel allows max {$this->maxExtraBeds()}";
         }
 
         return [
@@ -96,8 +104,13 @@ class ChildRuleEngine
         return $query->whereNull('rate_plan_id')->first();
     }
 
-    protected function isExtraBedAvailable(): bool
+    protected function hotelAcceptsExtraBed(): bool
     {
-        return true;
+        return (bool) ($this->hotel->accepts_extra_bed ?? false);
+    }
+
+    protected function maxExtraBeds(): int
+    {
+        return max(0, (int) ($this->hotel->max_extra_beds ?? 0));
     }
 }

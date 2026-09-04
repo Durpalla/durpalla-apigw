@@ -159,6 +159,8 @@ class AgentHotelSearchService
             'description' => $description,
             'check_in_time' => $hotel->getAttribute('check_in_time') ? (string) $hotel->getAttribute('check_in_time') : null,
             'check_out_time' => $hotel->getAttribute('check_out_time') ? (string) $hotel->getAttribute('check_out_time') : null,
+            'accepts_extra_bed' => (bool) ($hotel->getAttribute('accepts_extra_bed') ?? false),
+            'max_extra_beds' => (int) ($hotel->getAttribute('max_extra_beds') ?? 0),
             'contact' => $contact,
             'geo' => $geo,
             'rooms' => $rooms,

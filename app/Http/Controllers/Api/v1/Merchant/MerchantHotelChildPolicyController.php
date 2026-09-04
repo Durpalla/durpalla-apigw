@@ -40,6 +40,13 @@ class MerchantHotelChildPolicyController extends MerchantHotelBaseController
             'price_value' => ['nullable', 'numeric', 'min:0'],
         ]);
 
+        if (($validated['bed_type'] ?? null) === 'extra_bed' && ! $hotel->accepts_extra_bed) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This hotel does not accept extra beds. Enable accepts_extra_bed on the hotel first.',
+            ], 422);
+        }
+
         $policy = HotelChildPolicy::create(array_merge($validated, [
             'hotel_id' => $hotel->id,
         ]));
@@ -64,6 +71,14 @@ class MerchantHotelChildPolicyController extends MerchantHotelBaseController
             'price_type' => ['sometimes', 'required', 'string', 'in:free,fixed,percentage,adult'],
             'price_value' => ['nullable', 'numeric', 'min:0'],
         ]);
+
+        $bedType = $validated['bed_type'] ?? $policy->bed_type;
+        if ($bedType === 'extra_bed' && ! $hotel->accepts_extra_bed) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This hotel does not accept extra beds. Enable accepts_extra_bed on the hotel first.',
+            ], 422);
+        }
 
         $policy->fill($validated);
         $policy->save();

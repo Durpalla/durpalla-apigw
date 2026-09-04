@@ -111,6 +111,18 @@ class MerchantHotelHoldService
             throw new \InvalidArgumentException('No valid room lines');
         }
 
+        $guests = $adults + $children;
+        $bedCapacity = 0;
+        foreach ($merged as $roomIdKey => $qty) {
+            $hotelRoom = HotelRoom::query()->find((int) $lineMeta[$roomIdKey]['room_id']);
+            $bedCapacity += max(1, (int) ($hotelRoom->max_occupancy ?? 2)) * (int) $qty;
+        }
+        if ($guests > $bedCapacity) {
+            throw new \InvalidArgumentException(
+                "Selected rooms sleep {$bedCapacity} guests but the party has {$guests}. Increase quantity or add another room."
+            );
+        }
+
         $nights = max(1, (int) $checkIn->diffInDays($checkOut));
         $ttl = max(5, (int) config('hotel.merchant_hold_ttl_minutes', config('hotel.hold_ttl_minutes', 15)));
 
@@ -141,7 +153,19 @@ class MerchantHotelHoldService
                 $hotelRoom = HotelRoom::query()->findOrFail((int) $meta['room_id']);
                 $apiRt = $this->ensureApiRoomType($hotelRoom);
                 $unit = (float) ($hotelRoom->base_price ?? $apiRt->base_price_per_night ?? 0);
-                $lineTotal = round($unit * $nights * $qty, 2);
+                $childrenAges = is_array($meta['children_ages'] ?? null) ? $meta['children_ages'] : [];
+                $childPrice = 0.0;
+                if ($childrenAges !== []) {
+                    $ratePlan = RoomRatePlan::query()->find((int) $meta['rate_plan_id']);
+                    $engine = new ChildRuleEngine($hotel, $ratePlan, $unit, $childrenAges, $nights);
+                    $validation = $engine->validate();
+                    if (! $validation['valid']) {
+                        throw new \InvalidArgumentException(implode(', ', $validation['errors']));
+                    }
+                    $childPrice = (float) $engine->calculateChildPrice();
+                }
+                // Match confirm expansion: each qty unit gets the same child ages / fees.
+                $lineTotal = round(($unit * $nights + $childPrice) * $qty, 2);
                 $grandTotal += $lineTotal;
 
                 $resolved[] = ['room_type' => $apiRt, 'quantity' => $qty];
@@ -155,10 +179,11 @@ class MerchantHotelHoldService
                     'rate_plan_id' => (int) $meta['rate_plan_id'],
                     'hotel_id' => (int) $hotel->id,
                     'unit_price' => $unit,
+                    'child_price' => round($childPrice, 2),
                     'line_total' => $lineTotal,
                     'adults' => (int) ($meta['adults'] ?? $adults),
                     'children' => (int) ($meta['children'] ?? $children),
-                    'children_ages' => is_array($meta['children_ages'] ?? null) ? $meta['children_ages'] : [],
+                    'children_ages' => $childrenAges,
                 ];
             }
 

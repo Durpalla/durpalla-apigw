@@ -114,6 +114,8 @@ class MerchantHotelController extends MerchantHotelBaseController
             'source' => ['nullable', 'string', 'max:32'],
             'external_id' => ['nullable', 'string', 'max:191'],
             'supplier_meta' => ['nullable', 'array'],
+            'accepts_extra_bed' => ['nullable', 'boolean'],
+            'max_extra_beds' => ['nullable', 'integer', 'min:0', 'max:10'],
         ]);
 
         $payload = array_merge($validated, [
@@ -122,9 +124,12 @@ class MerchantHotelController extends MerchantHotelBaseController
             'updated_by' => (int) auth()->id(),
             'source' => $validated['source'] ?? 'local',
             'status' => $validated['status'] ?? 1,
+            'accepts_extra_bed' => (bool) ($validated['accepts_extra_bed'] ?? false),
+            'max_extra_beds' => (int) ($validated['max_extra_beds'] ?? 1),
         ]);
 
         $hotel = Hotel::create($payload);
+        $hotel->syncExtraBedFacility();
         $hotel->load(['city']);
 
         return response()->json([
@@ -181,11 +186,18 @@ class MerchantHotelController extends MerchantHotelBaseController
             'check_in_time' => ['nullable', 'date_format:H:i'],
             'check_out_time' => ['nullable', 'date_format:H:i'],
             'status' => ['nullable', 'integer', 'in:0,1,2'],
+            'accepts_extra_bed' => ['nullable', 'boolean'],
+            'max_extra_beds' => ['nullable', 'integer', 'min:0', 'max:10'],
         ]);
+
+        if (array_key_exists('accepts_extra_bed', $validated)) {
+            $validated['accepts_extra_bed'] = (bool) $validated['accepts_extra_bed'];
+        }
 
         $hotel->fill($validated);
         $hotel->updated_by = (int) auth()->id();
         $hotel->save();
+        $hotel->syncExtraBedFacility();
 
         $hotel->load(['city']);
 

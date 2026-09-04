@@ -32,6 +32,26 @@ class HotelBookingCreateRequest extends FormRequest
         ];
     }
 
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $rooms = $this->input('rooms', []);
+            if (! is_array($rooms)) {
+                return;
+            }
+            foreach ($rooms as $i => $room) {
+                $children = (int) ($room['children'] ?? $this->input('children', 0));
+                $ages = $room['children_ages'] ?? [];
+                if ($children > 0 && (! is_array($ages) || count($ages) !== $children)) {
+                    $validator->errors()->add(
+                        "rooms.$i.children_ages",
+                        "Provide exactly {$children} child age(s) for room #".($i + 1).'.'
+                    );
+                }
+            }
+        });
+    }
+
     public function authorize(): bool
     {
         return true;
