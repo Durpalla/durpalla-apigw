@@ -46,6 +46,7 @@ class MerchantHotelHoldService
         $adults = max(1, (int) ($input['adults'] ?? 1));
         $children = max(0, (int) ($input['children'] ?? 0));
         $rooms = $input['rooms'] ?? null;
+        $topChildrenAges = $this->normalizeChildrenAges($input['children_ages'] ?? null);
 
         if ($hotelId <= 0 || ! is_array($rooms) || $rooms === []) {
             throw new \InvalidArgumentException('hotel_id and rooms are required');
@@ -94,11 +95,15 @@ class MerchantHotelHoldService
 
             $key = (string) $roomId;
             $merged[$key] = ($merged[$key] ?? 0) + $qty;
+            $rowAges = $this->normalizeChildrenAges($row['children_ages'] ?? null);
             $lineMeta[$key] = [
                 'hotel_id' => (int) $hotel->id,
                 'room_id' => $roomId,
                 'room_type_id' => $roomTypeId,
                 'rate_plan_id' => $ratePlanId,
+                'adults' => max(1, (int) ($row['adults'] ?? $adults)),
+                'children' => max(0, (int) ($row['children'] ?? $children)),
+                'children_ages' => $rowAges !== [] ? $rowAges : $topChildrenAges,
             ];
         }
 
@@ -118,6 +123,7 @@ class MerchantHotelHoldService
             $checkOut,
             $adults,
             $children,
+            $topChildrenAges,
             $idempotencyKey,
             $merged,
             $lineMeta,
@@ -150,6 +156,9 @@ class MerchantHotelHoldService
                     'hotel_id' => (int) $hotel->id,
                     'unit_price' => $unit,
                     'line_total' => $lineTotal,
+                    'adults' => (int) ($meta['adults'] ?? $adults),
+                    'children' => (int) ($meta['children'] ?? $children),
+                    'children_ages' => is_array($meta['children_ages'] ?? null) ? $meta['children_ages'] : [],
                 ];
             }
 
@@ -185,6 +194,7 @@ class MerchantHotelHoldService
                     'nights' => $nights,
                     'adults' => $adults,
                     'children' => $children,
+                    'children_ages' => $topChildrenAges,
                 ],
             ]);
         });
@@ -245,6 +255,9 @@ class MerchantHotelHoldService
                 $moduleRoomId = (int) ($line['module_room_id'] ?? 0);
                 $ratePlanId = (int) ($line['rate_plan_id'] ?? 0);
                 $hotelId = (int) ($line['hotel_id'] ?? $quote['hotel_id'] ?? 0);
+                $lineAdults = max(1, (int) ($line['adults'] ?? $hold->adults));
+                $lineChildren = max(0, (int) ($line['children'] ?? $hold->children));
+                $lineAges = $this->normalizeChildrenAges($line['children_ages'] ?? ($quote['children_ages'] ?? null));
 
                 for ($i = 0; $i < $qty; $i++) {
                     $roomsPayload[] = [
@@ -252,8 +265,9 @@ class MerchantHotelHoldService
                         'room_type_id' => $moduleRoomTypeId,
                         'rate_plan_id' => $ratePlanId,
                         'room_id' => $moduleRoomId > 0 ? $moduleRoomId : null,
-                        'adults' => (int) $hold->adults,
-                        'children' => (int) $hold->children,
+                        'adults' => $lineAdults,
+                        'children' => $lineChildren,
+                        'children_ages' => $lineAges,
                     ];
                 }
             }
@@ -356,5 +370,25 @@ class MerchantHotelHoldService
             ],
             $payload,
         );
+    }
+
+    /**
+     * @return list<int>
+     */
+    protected function normalizeChildrenAges(mixed $raw): array
+    {
+        if (! is_array($raw)) {
+            return [];
+        }
+
+        $ages = [];
+        foreach ($raw as $age) {
+            if (! is_numeric($age)) {
+                continue;
+            }
+            $ages[] = max(0, min(17, (int) $age));
+        }
+
+        return $ages;
     }
 }

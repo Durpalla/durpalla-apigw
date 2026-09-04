@@ -22,6 +22,7 @@ class HotelBookingCreateRequest extends FormRequest
             'rooms.*.adults' => 'nullable|integer|min:1',
             'rooms.*.children' => 'nullable|integer|min:0',
             'rooms.*.children_ages' => 'nullable|array',
+            'rooms.*.children_ages.*' => 'integer|min:0|max:17',
             'rooms.*.book_token' => 'nullable|string',
             'service_charge' => 'nullable|numeric|min:0',
             'vat_amount' => 'nullable|numeric|min:0|max:100',

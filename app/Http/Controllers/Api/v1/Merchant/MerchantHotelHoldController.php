@@ -57,6 +57,12 @@ class MerchantHotelHoldController extends MerchantHotelBaseController
             'rooms.*.room_type_id' => ['nullable', 'integer', 'exists:room_types,id'],
             'rooms.*.rate_plan_id' => ['nullable', 'integer', 'exists:room_rate_plans,id'],
             'rooms.*.quantity' => ['nullable', 'integer', 'min:1', 'max:20'],
+            'rooms.*.adults' => ['nullable', 'integer', 'min:1'],
+            'rooms.*.children' => ['nullable', 'integer', 'min:0'],
+            'rooms.*.children_ages' => ['nullable', 'array'],
+            'rooms.*.children_ages.*' => ['integer', 'min:0', 'max:17'],
+            'children_ages' => ['nullable', 'array'],
+            'children_ages.*' => ['integer', 'min:0', 'max:17'],
         ]);
         if ($validator->fails()) {
             return response()->json([

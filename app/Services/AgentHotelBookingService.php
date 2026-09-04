@@ -54,12 +54,15 @@ class AgentHotelBookingService
 
         $out = [];
         $relaxInv = (bool) config('hotel.rooms_treat_missing_inventory_as_available', true);
+        $guests = $adults + $children;
         foreach ($types as $rt) {
-            if ($adults + $children > (int) $rt->max_occupancy) {
-                continue;
-            }
+            // Keep room visible when party > single-room occupancy; client holds
+            // quantity = rooms_needed (same as customer HotelBookingService).
+            $maxOccupancy = max(1, (int) $rt->max_occupancy);
+            $roomsNeeded = (int) max(1, (int) ceil($guests / $maxOccupancy));
+            $availableCount = $this->inventory->availableUnits($rt, $checkIn, $checkOut);
             try {
-                $this->inventory->assertAvailability($rt, $checkIn, $checkOut, 1);
+                $this->inventory->assertAvailability($rt, $checkIn, $checkOut, $roomsNeeded);
                 $available = true;
             } catch (\Throwable) {
                 $available = $relaxInv;
@@ -78,11 +81,14 @@ class AgentHotelBookingService
                 'room_type_id' => $rt->id,
                 'code' => $rt->code,
                 'title' => $rt->title,
-                'max_occupancy' => (int) $rt->max_occupancy,
+                'max_occupancy' => $maxOccupancy,
                 'bed_type' => $rt->bed_type,
                 'amenities' => $rt->amenities ?? [],
                 'photos' => $roomPhotos,
                 'available' => $available,
+                'available_count' => $availableCount,
+                'available_rooms' => $availableCount,
+                'rooms_needed' => $roomsNeeded,
                 'quote' => $quote,
             ];
         }
@@ -116,8 +122,11 @@ class AgentHotelBookingService
             return 'This property has no bookable room types set up yet.';
         }
 
-        $maxOfAny = (int) $types->max('max_occupancy');
-        if ($guests > $maxOfAny) {
+        $maxOfAny = max(1, (int) $types->max('max_occupancy'));
+        // Soft empty hint when even many units of the largest type cannot cover the party
+        // within a practical hold cap (matches agent app MAX_ROOM_QUANTITY of 4).
+        $maxPracticalRooms = 4;
+        if ($guests > $maxOfAny * $maxPracticalRooms) {
             return "No room type here fits {$guests} guests (largest max occupancy is {$maxOfAny}).";
         }
 
@@ -179,6 +188,17 @@ class AgentHotelBookingService
         }
 
         usort($resolved, fn (array $a, array $b): int => $a['room_type']->id <=> $b['room_type']->id);
+
+        $guests = $adults + $children;
+        $bedCapacity = 0;
+        foreach ($resolved as $entry) {
+            $bedCapacity += max(1, (int) $entry['room_type']->max_occupancy) * (int) $entry['quantity'];
+        }
+        if ($guests > $bedCapacity) {
+            throw new \InvalidArgumentException(
+                "Selected rooms sleep {$bedCapacity} guests but the party has {$guests}. Increase quantity or add another room."
+            );
+        }
 
         $lineOutputs = [];
         $grandTotal = 0.0;
