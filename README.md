@@ -163,3 +163,4 @@ IMAGE=durpalla-apigw-app:local LOCAL_IMAGE_BUILD=1 \
   bash /opt/durpalla-apigw/ci-runner/scripts/ci-deploy-remote.sh
 ```
 
+#Done
