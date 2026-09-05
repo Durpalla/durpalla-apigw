@@ -144,7 +144,7 @@ class MerchantHotelBookingController extends MerchantHotelBaseController
 
         $q = Booking::query()
             ->hotel()
-            ->with(['hotelItems.hotel', 'hotelItems.roomType', 'hotelItems.ratePlan', 'customer', 'supplier'])
+            ->with(['hotelItems.hotel', 'hotelItems.roomType', 'hotelItems.ratePlan', 'customer', 'supplier', 'payment'])
             ->whereHas('hotelItems.hotel', function ($hq) use ($ownerId) {
                 $hq->where('merchant_id', $ownerId);
             })
