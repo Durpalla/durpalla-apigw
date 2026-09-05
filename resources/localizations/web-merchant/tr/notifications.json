@@ -1,14 +1,14 @@
 {
     "page": {
-        "title": "Notifications",
-        "markAllRead": "Mark all read",
-        "markRead": "Mark read",
-        "unread": "Unread"
+        "title": "Bildirimler",
+        "markAllRead": "Tümünü okundu olarak işaretle",
+        "markRead": "Okundu olarak işaretle",
+        "unread": "Okunmamış"
     },
     "empty": {
-        "title": "No notifications"
+        "title": "Bildirim yok"
     },
     "toast": {
-        "allMarkedRead": "All marked as read"
+        "allMarkedRead": "Hepsi okundu olarak işaretlendi"
     }
 }

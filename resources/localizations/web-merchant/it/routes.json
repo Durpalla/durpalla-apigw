@@ -1,70 +1,70 @@
 {
     "list": {
-        "title": "Routes",
-        "description": "Service routes and boarding points",
-        "createRoute": "Create route",
-        "searchPlaceholder": "Search routes",
-        "empty": "No routes",
+        "title": "Percorsi",
+        "description": "Linee di servizio e punti di imbarco",
+        "createRoute": "Crea percorso",
+        "searchPlaceholder": "Cerca percorsi",
+        "empty": "Nessun percorso",
         "details": "Dettagli",
         "columns": {
-            "service": "Service",
-            "type": "Type",
+            "service": "Servizio",
+            "type": "Tipo",
             "routeNo": "NO"
         }
     },
     "form": {
-        "createTitle": "Create route",
-        "nameOptional": "Name (optional)",
-        "namePlaceholder": "Auto-generated if left empty",
-        "routeName": "Route name",
-        "serviceType": "Service type",
-        "routeStops": "Route stops",
-        "routeStopsHint": "Add VIA ghats in the order the vehicle will visit them.",
-        "selectStop": "Select {{label}}",
-        "stopGhat": "Stop {{index}} ghat",
-        "moveUp": "Move {{label}} up",
-        "moveDown": "Move {{label}} down",
-        "removeStop": "Remove {{label}}",
-        "addVia": "Add VIA ghat",
-        "submit": "Create route",
-        "creating": "Creating...",
+        "createTitle": "Crea percorso",
+        "nameOptional": "Nome (facoltativo)",
+        "namePlaceholder": "Generato automaticamente se lasciato vuoto",
+        "routeName": "Nome del percorso",
+        "serviceType": "Tipo di servizio",
+        "routeStops": "Il percorso si ferma",
+        "routeStopsHint": "Aggiungi i ghat VIA nell'ordine in cui il veicolo li visiterà.",
+        "selectStop": "Seleziona {{label}}",
+        "stopGhat": "Fermati {{index}} ghat",
+        "moveUp": "Sposta {{label}} verso l'alto",
+        "moveDown": "Sposta {{label}} verso il basso",
+        "removeStop": "Rimuovi {{label}}",
+        "addVia": "Aggiungi VIA ghat",
+        "submit": "Crea percorso",
+        "creating": "Creazione...",
         "stops": {
-            "start": "Starting ghat",
-            "destination": "Destination",
-            "via": "VIA stop {{index}}"
+            "start": "Inizio del ghat",
+            "destination": "Destinazione",
+            "via": "VIA fermata {{index}}"
         },
         "errors": {
-            "minStops": "Add at least two route stops",
-            "duplicateGhat": "Each stop must use a different ghat"
+            "minStops": "Aggiungi almeno due fermate del percorso",
+            "duplicateGhat": "Ogni fermata deve utilizzare un ghat diverso"
         }
     },
     "detail": {
-        "fallbackName": "Route #{{id}}",
-        "notFound": "Route not found",
-        "description": "Route details and ordered boarding points",
-        "viaPricing": "Via Stop Pricing",
-        "viewTrips": "View Trips",
-        "timeline": "Route Timeline",
-        "information": "Route Information",
-        "stopFallback": "Stop {{index}}",
-        "emptyTitle": "No boarding points returned",
-        "emptyDescription": "The route API did not include ordered stop data.",
+        "fallbackName": "Itinerario #{{id}}",
+        "notFound": "Itinerario non trovato",
+        "description": "Dettagli del percorso e punti di imbarco ordinati",
+        "viaPricing": "Tramite Stop Pricing",
+        "viewTrips": "Visualizza viaggi",
+        "timeline": "Cronologia del percorso",
+        "information": "Informazioni sul percorso",
+        "stopFallback": "Fermati {{index}}",
+        "emptyTitle": "Nessun punto d'imbarco restituito",
+        "emptyDescription": "L'API del percorso non includeva i dati delle fermate ordinate.",
         "stops": {
-            "start": "Starting point",
-            "destination": "Destination",
-            "via": "VIA stop"
+            "start": "Punto di partenza",
+            "destination": "Destinazione",
+            "via": "Fermata VIA"
         },
         "fields": {
-            "routeNumber": "Route number",
-            "service": "Service",
-            "routeType": "Route type",
-            "routeId": "Route ID",
-            "routeName": "Route name",
-            "serviceType": "Service type",
-            "boardingPoints": "Boarding points"
+            "routeNumber": "Numero del percorso",
+            "service": "Servizio",
+            "routeType": "Tipo di percorso",
+            "routeId": "Identificativo del percorso",
+            "routeName": "Nome del percorso",
+            "serviceType": "Tipo di servizio",
+            "boardingPoints": "Punti di imbarco"
         }
     },
     "toast": {
-        "created": "Route created"
+        "created": "Itinerario creato"
     }
 }

@@ -1,22 +1,22 @@
 {
     "page": {
-        "title": "Live bookings",
-        "description": "Realtime created and cancelled booking events"
+        "title": "Canlı rezervasyonlar",
+        "description": "Gerçek zamanlı oluşturulan ve iptal edilen rezervasyon etkinlikleri"
     },
     "empty": {
-        "title": "Waiting for live events",
-        "description": "New bookings will appear here via Pusher."
+        "title": "Canlı etkinlikleri bekliyorum",
+        "description": "Yeni rezervasyonlar burada Pusher aracılığıyla görünecek."
     },
     "table": {
-        "kind": "Kind",
+        "kind": "Tür",
         "passenger": "Yolcu",
-        "property": "Property",
+        "property": "Mülk",
         "trip": "Seyahat",
-        "time": "Time",
-        "open": "Open"
+        "time": "Zaman",
+        "open": "Açık"
     },
     "kind": {
-        "created": "Created",
-        "cancelled": "Cancelled"
+        "created": "Oluşturuldu",
+        "cancelled": "İptal edildi"
     }
 }

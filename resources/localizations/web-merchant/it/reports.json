@@ -1,77 +1,77 @@
 {
     "page": {
-        "exportCsv": "Export CSV",
-        "exportFailed": "Export failed",
-        "rangeInvalid": "Date range is invalid",
-        "revenue": "Revenue",
-        "bookings": "Bookings",
-        "unitsSold": "Units sold",
-        "occupancy": "Occupancy",
-        "settlements": "Settlements",
-        "cancelledBookings": "Cancelled bookings",
-        "revenueTrend": "Revenue trend",
-        "revenueTrendDescription": "Daily revenue for the selected period.",
-        "bookingVolume": "Booking volume",
-        "bookingVolumeDescription": "Daily booking count for the selected period.",
-        "utilizationTrend": "Utilization trend",
-        "utilizationTrendDescription": "Units sold across the selected period.",
-        "topVehicles": "Top vehicles",
-        "topRoutes": "Top routes",
+        "exportCsv": "Esporta CSV",
+        "exportFailed": "Esportazione non riuscita",
+        "rangeInvalid": "L'intervallo di date non è valido",
+        "revenue": "Reddito",
+        "bookings": "Prenotazioni",
+        "unitsSold": "Unità vendute",
+        "occupancy": "Occupazione",
+        "settlements": "Insediamenti",
+        "cancelledBookings": "Prenotazioni annullate",
+        "revenueTrend": "Andamento dei ricavi",
+        "revenueTrendDescription": "Entrate giornaliere per il periodo selezionato.",
+        "bookingVolume": "Volume di prenotazione",
+        "bookingVolumeDescription": "Conteggio giornaliero delle prenotazioni per il periodo selezionato.",
+        "utilizationTrend": "Andamento dell'utilizzo",
+        "utilizationTrendDescription": "Unità vendute nel periodo selezionato.",
+        "topVehicles": "I migliori veicoli",
+        "topRoutes": "Percorsi migliori",
         "date": "Data",
-        "units": "Units",
-        "noSeries": "No series data returned for this report type.",
-        "noChartData": "No chart data returned."
+        "units": "Unità",
+        "noSeries": "Nessun dato della serie restituito per questo tipo di rapporto.",
+        "noChartData": "Nessun dato del grafico restituito."
     },
     "definitions": {
         "dashboard": {
-            "label": "Dashboard",
-            "title": "Business Overview",
-            "purpose": "Executive summary of performance across the selected period."
+            "label": "Pannello di controllo",
+            "title": "Panoramica aziendale",
+            "purpose": "Riepilogo esecutivo della performance nel periodo selezionato."
         },
         "bookings": {
-            "label": "Bookings",
-            "title": "Booking Report",
-            "purpose": "Booking volume by date, source, channel, and status."
+            "label": "Prenotazioni",
+            "title": "Rapporto di prenotazione",
+            "purpose": "Volume di prenotazioni per data, fonte, canale e stato."
         },
         "revenue": {
-            "label": "Revenue",
-            "title": "Revenue Report",
-            "purpose": "Revenue, commission, taxes, refunds, and discounts."
+            "label": "Reddito",
+            "title": "Rapporto sulle entrate",
+            "purpose": "Entrate, commissioni, tasse, rimborsi e sconti."
         },
         "occupancy": {
-            "label": "Occupancy",
-            "title": "Occupancy / Utilization Report",
-            "purpose": "Hotel occupancy and transport seat utilization."
+            "label": "Occupazione",
+            "title": "Rapporto sull'occupazione/utilizzo",
+            "purpose": "Occupazione dell'hotel e utilizzo dei posti di trasporto."
         },
         "customers": {
-            "label": "Customers",
-            "title": "Customer Report",
-            "purpose": "Customer activity and booking trends."
+            "label": "Clienti",
+            "title": "Rapporto cliente",
+            "purpose": "Attività dei clienti e tendenze delle prenotazioni."
         },
         "units": {
-            "label": "Rooms / Vehicles",
-            "title": "Room / Vehicle Performance",
-            "purpose": "Performance of rooms, vehicles, and routes."
+            "label": "Camere/Veicoli",
+            "title": "Prestazioni dello spazio/del veicolo",
+            "purpose": "Prestazioni di stanze, veicoli e percorsi."
         },
         "cancellations": {
-            "label": "Cancellations",
-            "title": "Cancellation & Refund Report",
-            "purpose": "Cancellation and refund trends for the selected period."
+            "label": "Cancellazioni",
+            "title": "Rapporto su cancellazioni e rimborsi",
+            "purpose": "Andamento delle cancellazioni e dei rimborsi per il periodo selezionato."
         },
         "payments": {
-            "label": "Payments",
-            "title": "Payment Report",
-            "purpose": "Payment collection, due amounts, and settlements."
+            "label": "Pagamenti",
+            "title": "Rapporto di pagamento",
+            "purpose": "Incasso dei pagamenti, importi dovuti e liquidazioni."
         },
         "staff-performance": {
-            "label": "Staff Performance",
-            "title": "Staff Performance",
-            "purpose": "Bookings and revenue handled by staff."
+            "label": "Prestazioni del personale",
+            "title": "Prestazioni del personale",
+            "purpose": "Prenotazioni ed entrate gestite dal personale."
         },
         "sales-channels": {
-            "label": "Sales Channels",
-            "title": "Sales & Channel Report",
-            "purpose": "Sales performance across booking channels."
+            "label": "Canali di vendita",
+            "title": "Rapporto sulle vendite e sul canale",
+            "purpose": "Andamento delle vendite attraverso i canali di prenotazione."
         }
     }
 }

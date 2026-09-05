@@ -1,74 +1,74 @@
 {
     "page": {
-        "title": "Dashboard",
-        "description": "Booking, trip and revenue overview",
-        "asOf": "Live overview as of {{time}}",
-        "rangeOption": "Last {{days}} days",
-        "newBooking": "New booking",
-        "newHotelBooking": "New hotel booking",
-        "live": "Live"
+        "title": "Panel",
+        "description": "Resumen de reservas, viajes e ingresos",
+        "asOf": "Resumen en vivo a partir de {{time}}",
+        "rangeOption": "Últimos {{days}} días",
+        "newBooking": "Nueva reserva",
+        "newHotelBooking": "Nueva reserva de hotel",
+        "live": "Vivir"
     },
     "stats": {
-        "bookingsRange": "Bookings ({{days}}d)",
-        "activeTrips": "Active trips today",
-        "revenueToday": "Revenue today",
-        "avgOccupancy": "Avg occupancy",
-        "periodRevenue": "Period revenue",
-        "periodBookings": "Period bookings",
-        "unitsSold": "Units sold",
-        "pendingCancelled": "Pending / cancelled",
+        "bookingsRange": "Reservas ({{days}}d)",
+        "activeTrips": "Viajes activos hoy",
+        "revenueToday": "Ingresos hoy",
+        "avgOccupancy": "Ocupación promedio",
+        "periodRevenue": "Ingresos del período",
+        "periodBookings": "Reservas de periodo",
+        "unitsSold": "Unidades vendidas",
+        "pendingCancelled": "Pendiente / cancelado",
         "hotels": "Hoteles",
-        "hotelBookings": "Hotel bookings",
-        "hotelConfirmed": "Hotel confirmed",
-        "hotelPayable": "Hotel payable"
+        "hotelBookings": "Reservas de hotel",
+        "hotelConfirmed": "Hotel confirmado",
+        "hotelPayable": "Hotel a pagar"
     },
     "charts": {
-        "revenueTrend": "Revenue trend",
-        "revenueTrendDescription": "Daily collected revenue over the selected period.",
-        "bookingsVolume": "Bookings volume",
-        "bookingsVolumeDescription": "Daily booking count for the selected period.",
-        "bookingStatus": "Booking status",
-        "bookingStatusDescription": "Share of bookings by current status.",
-        "revenueSeries": "Revenue",
-        "bookingsSeries": "Bookings",
-        "noData": "No chart data",
-        "noStatusData": "No status data"
+        "revenueTrend": "Tendencia de ingresos",
+        "revenueTrendDescription": "Ingresos diarios recaudados durante el período seleccionado.",
+        "bookingsVolume": "Volumen de reservas",
+        "bookingsVolumeDescription": "Recuento de reservas diarias para el período seleccionado.",
+        "bookingStatus": "Estado de la reserva",
+        "bookingStatusDescription": "Proporción de reservas por estado actual.",
+        "revenueSeries": "Ganancia",
+        "bookingsSeries": "Reservas",
+        "noData": "Sin datos del gráfico",
+        "noStatusData": "Sin datos de estado"
     },
     "widgets": {
-        "trendVsPrevious": "{{value}}% vs previous",
-        "noTrend": "No trend data",
-        "bookingsCount_one": "{{value}} booking",
-        "bookingsCount_other": "{{value}} bookings"
+        "trendVsPrevious": "{{value}}% vs anterior",
+        "noTrend": "Sin datos de tendencias",
+        "bookingsCount_one": "{{value}} reserva",
+        "bookingsCount_other": "{{value}} reservas"
     },
     "top": {
-        "title": "Top performers",
-        "description": "Routes and vehicles with the highest activity.",
-        "routes": "Top routes",
-        "vehicles": "Top vehicles",
-        "empty": "No ranking data returned by the dashboard API yet."
+        "title": "Mejores artistas",
+        "description": "Rutas y vehículos de mayor actividad.",
+        "routes": "Rutas principales",
+        "vehicles": "Top vehículos",
+        "empty": "La API del panel aún no ha devuelto datos de clasificación."
     },
     "hotels": {
         "title": "Hoteles",
-        "description": "Jump into hotel operations.",
-        "manage": "Manage hotels"
+        "description": "Salta a las operaciones hoteleras.",
+        "manage": "Gestionar hoteles"
     },
     "recent": {
-        "title": "Recent bookings",
-        "descriptionTransport": "Latest transport bookings from the dashboard feed.",
-        "description": "Latest bookings from the dashboard feed.",
-        "viewAll": "View all",
-        "empty": "No recent bookings.",
-        "code": "Code",
+        "title": "Reservas recientes",
+        "descriptionTransport": "Últimas reservas de transporte desde el panel de control.",
+        "description": "Últimas reservas desde el feed del panel.",
+        "viewAll": "Ver todo",
+        "empty": "No hay reservas recientes.",
+        "code": "Código",
         "passenger": "Pasajero",
-        "open": "Open"
+        "open": "Abierto"
     },
     "quickActions": {
-        "title": "Quick actions",
-        "description": "Jump into everyday operations.",
-        "trips": "Manage trips",
-        "transportBookings": "Transport bookings",
-        "hotelBookings": "Hotel bookings",
-        "reports": "Open reports",
-        "settlements": "Settlements"
+        "title": "Acciones rápidas",
+        "description": "Salta a las operaciones cotidianas.",
+        "trips": "Gestionar viajes",
+        "transportBookings": "Reservas de transporte",
+        "hotelBookings": "Reservas de hotel",
+        "reports": "Informes abiertos",
+        "settlements": "Asentamientos"
     }
 }

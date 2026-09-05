@@ -2,140 +2,140 @@
     "index": {
         "title": "Impostazioni",
         "profile": "Profilo",
-        "profileDescription": "Account details and password",
-        "twoFactor": "Two-factor authentication",
-        "twoFactorDescription": "Email OTP and authenticator app",
-        "gateways": "Payment & SMS gateways",
-        "gatewaysDescription": "Enable templates and manage credentials",
-        "appearance": "Appearance",
-        "appearanceDescription": "Light / dark theme and language",
-        "printers": "Printing",
-        "printersDescription": "Browser print guidance for tickets"
+        "profileDescription": "Dettagli dell'account e password",
+        "twoFactor": "Autenticazione a due fattori",
+        "twoFactorDescription": "OTP e-mail e app di autenticazione",
+        "gateways": "Gateway di pagamento e SMS",
+        "gatewaysDescription": "Abilita modelli e gestisci le credenziali",
+        "appearance": "Aspetto",
+        "appearanceDescription": "Tema e linguaggio chiaro/scuro",
+        "printers": "Stampa",
+        "printersDescription": "Guida alla stampa del browser per i biglietti"
     },
     "appearance": {
-        "title": "Appearance",
-        "description": "Theme and language preference",
-        "themeTitle": "Theme",
+        "title": "Aspetto",
+        "description": "Preferenza tematica e lingua",
+        "themeTitle": "Tema",
         "themes": {
-            "light": "Light",
-            "dark": "Dark",
-            "system": "System"
+            "light": "Leggero",
+            "dark": "Buio",
+            "system": "Sistema"
         },
-        "languageDescription": "Applies to the whole merchant desk on this browser."
+        "languageDescription": "Si applica all'intero desk del commerciante su questo browser."
     },
     "printers": {
-        "title": "Printing",
-        "description": "Web-only printing uses the browser print dialog",
-        "supportedTitle": "Supported on web",
-        "printApiBefore": "Tickets and payment tokens open a print-ready HTML view and use ",
+        "title": "Stampa",
+        "description": "La stampa solo Web utilizza la finestra di dialogo di stampa del browser",
+        "supportedTitle": "Supportato sul Web",
+        "printApiBefore": "I biglietti e i token di pagamento aprono una visualizzazione HTML pronta per la stampa e l'utilizzo",
         "printApiAfter": ".",
-        "unsupported": "Bluetooth pocket printers, USB/serial ESC-POS devices, and biometric login are not available in this browser app.",
-        "guidance": "Use a system printer or PDF from the browser print dialog for counter operations."
+        "unsupported": "Le stampanti tascabili Bluetooth, i dispositivi ESC-POS USB/seriale e l'accesso biometrico non sono disponibili in questa app browser.",
+        "guidance": "Utilizzare una stampante di sistema o un PDF dalla finestra di dialogo di stampa del browser per le operazioni di conteggio."
     },
     "profile": {
         "title": "Il mio profilo",
-        "description": "Manage your merchant account and personal information.",
-        "fallbackName": "Merchant",
-        "merchantId": "Merchant ID: {{value}}",
-        "securitySettings": "Security settings",
+        "description": "Gestisci il tuo account commerciante e le informazioni personali.",
+        "fallbackName": "Mercante",
+        "merchantId": "ID commerciante: {{value}}",
+        "securitySettings": "Impostazioni di sicurezza",
         "photos": {
-            "title": "Photos",
-            "description": "Upload a profile picture. PNG, JPG, or WebP up to 2 MB.",
-            "descriptionWithLogo": "Upload a profile picture and your business logo. PNG, JPG, or WebP up to 2 MB.",
-            "avatarLabel": "Profile picture",
-            "avatarHint": "Shown on your account menu and profile.",
-            "changePicture": "Change picture",
-            "uploadPicture": "Upload picture",
-            "logoLabel": "Business logo",
-            "logoHint": "Used on invoices and merchant branding.",
-            "changeLogo": "Change logo",
-            "uploadLogo": "Upload logo",
-            "uploading": "Uploading..."
+            "title": "Foto",
+            "description": "Carica un'immagine del profilo. PNG, JPG o WebP fino a 2 MB.",
+            "descriptionWithLogo": "Carica un'immagine del profilo e il logo della tua attività. PNG, JPG o WebP fino a 2 MB.",
+            "avatarLabel": "Immagine del profilo",
+            "avatarHint": "Mostrato nel menu e nel profilo del tuo account.",
+            "changePicture": "Cambia immagine",
+            "uploadPicture": "Carica foto",
+            "logoLabel": "Marchio aziendale",
+            "logoHint": "Utilizzato su fatture e marchi del commerciante.",
+            "changeLogo": "Cambia logo",
+            "uploadLogo": "Carica il logo",
+            "uploading": "Caricamento..."
         },
         "personal": {
-            "title": "Personal information",
-            "description": "Update the contact details associated with your account.",
-            "namePlaceholder": "Enter your name",
-            "emailReadOnly": "Email address cannot be changed.",
-            "mobilePlaceholder": "Enter your mobile number",
-            "save": "Save changes",
-            "saving": "Saving..."
+            "title": "Informazioni personali",
+            "description": "Aggiorna i dettagli di contatto associati al tuo account.",
+            "namePlaceholder": "Inserisci il tuo nome",
+            "emailReadOnly": "L'indirizzo e-mail non può essere modificato.",
+            "mobilePlaceholder": "Inserisci il tuo numero di cellulare",
+            "save": "Salva modifiche",
+            "saving": "Risparmio..."
         },
         "password": {
-            "title": "Change password",
-            "description": "Use at least eight characters for your new password.",
+            "title": "Cambiare la password",
+            "description": "Utilizza almeno otto caratteri per la tua nuova password.",
             "current": "Password attuale",
-            "currentPlaceholder": "Enter current password",
-            "new": "New password",
+            "currentPlaceholder": "Inserisci la password attuale",
+            "new": "Nuova password",
             "newPlaceholder": "Inserisci la nuova password",
             "confirm": "Conferma la nuova password",
             "confirmPlaceholder": "Conferma la nuova password",
             "label": "Password",
-            "confirmLabel": "Password confirmation",
-            "submit": "Update password",
+            "confirmLabel": "Conferma della password",
+            "submit": "Aggiorna password",
             "submitting": "Aggiornamento..."
         },
         "twoFactor": {
-            "title": "Two-factor authentication",
-            "enabled": "{{method}} is enabled",
-            "authenticator": "Authenticator app",
-            "emailOtp": "Email OTP",
-            "default": "Email OTP is the default protection method",
-            "manage": "Manage 2FA",
-            "enable": "Enable 2FA"
+            "title": "Autenticazione a due fattori",
+            "enabled": "{{method}} è abilitato",
+            "authenticator": "Applicazione di autenticazione",
+            "emailOtp": "Invia un'e-mail all'OTP",
+            "default": "L'OTP e-mail è il metodo di protezione predefinito",
+            "manage": "Gestisci la 2FA",
+            "enable": "Abilita 2FA"
         },
         "toast": {
-            "updated": "Profile updated",
+            "updated": "Profilo aggiornato",
             "passwordChanged": "La password è cambiata",
-            "avatarUpdated": "Profile picture updated",
-            "logoUpdated": "Business logo updated",
-            "invalidImageType": "Use a PNG, JPG, or WebP image",
-            "imageTooLarge": "Image must be 2 MB or smaller",
-            "invalidProfile": "Invalid profile details",
-            "invalidPassword": "Invalid password details"
+            "avatarUpdated": "Immagine del profilo aggiornata",
+            "logoUpdated": "Logo aziendale aggiornato",
+            "invalidImageType": "Utilizza un'immagine PNG, JPG o WebP",
+            "imageTooLarge": "L'immagine deve essere di 2 MB o più piccola",
+            "invalidProfile": "Dettagli del profilo non validi",
+            "invalidPassword": "Dettagli della password non validi"
         }
     },
     "twoFactor": {
-        "title": "Two-factor authentication",
-        "description": "Protect your merchant account with an additional verification step.",
-        "protectedTitle": "Your account is protected",
-        "protectedDescription": "Email OTP is the default verification method. You can switch to an authenticator app below.",
-        "badgeDefault": "Default",
-        "badgeEnabled": "Enabled",
+        "title": "Autenticazione a due fattori",
+        "description": "Proteggi il tuo account commerciante con un ulteriore passaggio di verifica.",
+        "protectedTitle": "Il tuo account è protetto",
+        "protectedDescription": "L'OTP e-mail è il metodo di verifica predefinito. Puoi passare a un'app di autenticazione di seguito.",
+        "badgeDefault": "Predefinito",
+        "badgeEnabled": "Abilitato",
         "email": {
-            "title": "Email OTP",
-            "description": "Receive a six-digit verification code at {{email}}.",
-            "fallbackEmail": "your account email",
-            "enabling": "Enabling email OTP...",
-            "enabled": "Email OTP enabled",
-            "enable": "Use email OTP",
+            "title": "Invia un'e-mail all'OTP",
+            "description": "Ricevi un codice di verifica a sei cifre a {{email}}.",
+            "fallbackEmail": "l'e-mail del tuo account",
+            "enabling": "Abilitazione OTP e-mail...",
+            "enabled": "OTP e-mail abilitato",
+            "enable": "Utilizza l'OTP e-mail",
             "missing": "Aggiungi prima un indirizzo email al tuo profilo."
         },
         "authenticator": {
-            "title": "Authenticator app",
-            "description": "Use Google Authenticator, Authy, Microsoft Authenticator, or another compatible app.",
-            "preparing": "Preparing setup...",
-            "setupAgain": "Set up again",
-            "setup": "Set up authenticator"
+            "title": "Applicazione di autenticazione",
+            "description": "Utilizza Google Authenticator, Authy, Microsoft Authenticator o un'altra app compatibile.",
+            "preparing": "Preparazione della configurazione...",
+            "setupAgain": "Configura di nuovo",
+            "setup": "Configura l'autenticatore"
         },
         "connect": {
-            "title": "Connect your authenticator app",
-            "description": "Add the account using the setup link or secret, then enter the six-digit code.",
-            "openApp": "Open in authenticator app",
-            "secretLabel": "Setup secret",
-            "codeLabel": "Verification code",
-            "verifying": "Verifying...",
-            "submit": "Enable authenticator",
-            "secretField": "Authenticator secret",
-            "codeField": "Authenticator code"
+            "title": "Collega la tua app di autenticazione",
+            "description": "Aggiungi l'account utilizzando il collegamento di configurazione o il segreto, quindi inserisci il codice a sei cifre.",
+            "openApp": "Apri nell'app di autenticazione",
+            "secretLabel": "Segreto di installazione",
+            "codeLabel": "Codice di verifica",
+            "verifying": "Verifica...",
+            "submit": "Abilita autenticatore",
+            "secretField": "Segreto dell'autenticatore",
+            "codeField": "Codice dell'autenticatore"
         },
         "recovery": {
-            "title": "Save your recovery codes",
-            "description": "Store these codes securely. Each code can be used once."
+            "title": "Salva i tuoi codici di recupero",
+            "description": "Conserva questi codici in modo sicuro. Ogni codice può essere utilizzato una volta."
         },
         "toast": {
-            "emailEnabled": "Email OTP is enabled",
-            "authenticatorEnabled": "Authenticator app is enabled"
+            "emailEnabled": "L'OTP e-mail è abilitato",
+            "authenticatorEnabled": "L'app di autenticazione è abilitata"
         }
     }
 }

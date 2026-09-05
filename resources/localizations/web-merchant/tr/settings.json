@@ -2,140 +2,140 @@
     "index": {
         "title": "Ayarlar",
         "profile": "Profil",
-        "profileDescription": "Account details and password",
-        "twoFactor": "Two-factor authentication",
-        "twoFactorDescription": "Email OTP and authenticator app",
-        "gateways": "Payment & SMS gateways",
-        "gatewaysDescription": "Enable templates and manage credentials",
-        "appearance": "Appearance",
-        "appearanceDescription": "Light / dark theme and language",
-        "printers": "Printing",
-        "printersDescription": "Browser print guidance for tickets"
+        "profileDescription": "Hesap ayrıntıları ve şifre",
+        "twoFactor": "İki faktörlü kimlik doğrulama",
+        "twoFactorDescription": "E-posta OTP ve kimlik doğrulayıcı uygulaması",
+        "gateways": "Ödeme ve SMS ağ geçitleri",
+        "gatewaysDescription": "Şablonları etkinleştirin ve kimlik bilgilerini yönetin",
+        "appearance": "Dış görünüş",
+        "appearanceDescription": "Açık/koyu tema ve dil",
+        "printers": "Baskı",
+        "printersDescription": "Biletler için tarayıcı yazdırma kılavuzu"
     },
     "appearance": {
-        "title": "Appearance",
-        "description": "Theme and language preference",
-        "themeTitle": "Theme",
+        "title": "Dış görünüş",
+        "description": "Tema ve dil tercihi",
+        "themeTitle": "Tema",
         "themes": {
-            "light": "Light",
-            "dark": "Dark",
-            "system": "System"
+            "light": "Işık",
+            "dark": "Karanlık",
+            "system": "Sistem"
         },
-        "languageDescription": "Applies to the whole merchant desk on this browser."
+        "languageDescription": "Bu tarayıcıdaki satıcı masasının tamamı için geçerlidir."
     },
     "printers": {
-        "title": "Printing",
-        "description": "Web-only printing uses the browser print dialog",
-        "supportedTitle": "Supported on web",
-        "printApiBefore": "Tickets and payment tokens open a print-ready HTML view and use ",
+        "title": "Baskı",
+        "description": "Yalnızca web yazdırma, tarayıcı yazdırma iletişim kutusunu kullanır",
+        "supportedTitle": "Web'de desteklenir",
+        "printApiBefore": "Biletler ve ödeme jetonları, baskıya hazır bir HTML görünümü açar ve kullanır",
         "printApiAfter": ".",
-        "unsupported": "Bluetooth pocket printers, USB/serial ESC-POS devices, and biometric login are not available in this browser app.",
-        "guidance": "Use a system printer or PDF from the browser print dialog for counter operations."
+        "unsupported": "Bluetooth cep yazıcıları, USB/seri ESC-POS cihazları ve biyometrik oturum açma bu tarayıcı uygulamasında mevcut değildir.",
+        "guidance": "Sayaç işlemleri için tarayıcı yazdırma iletişim kutusundan bir sistem yazıcısı veya PDF kullanın."
     },
     "profile": {
         "title": "Profilim",
-        "description": "Manage your merchant account and personal information.",
-        "fallbackName": "Merchant",
-        "merchantId": "Merchant ID: {{value}}",
-        "securitySettings": "Security settings",
+        "description": "Satıcı hesabınızı ve kişisel bilgilerinizi yönetin.",
+        "fallbackName": "Tüccar",
+        "merchantId": "Satıcı Kimliği: {{value}}",
+        "securitySettings": "Güvenlik ayarları",
         "photos": {
-            "title": "Photos",
-            "description": "Upload a profile picture. PNG, JPG, or WebP up to 2 MB.",
-            "descriptionWithLogo": "Upload a profile picture and your business logo. PNG, JPG, or WebP up to 2 MB.",
-            "avatarLabel": "Profile picture",
-            "avatarHint": "Shown on your account menu and profile.",
-            "changePicture": "Change picture",
-            "uploadPicture": "Upload picture",
-            "logoLabel": "Business logo",
-            "logoHint": "Used on invoices and merchant branding.",
-            "changeLogo": "Change logo",
-            "uploadLogo": "Upload logo",
-            "uploading": "Uploading..."
+            "title": "Fotoğraflar",
+            "description": "Bir profil resmi yükleyin. 2 MB'a kadar PNG, JPG veya WebP.",
+            "descriptionWithLogo": "Bir profil resmi ve işletme logonuzu yükleyin. 2 MB'a kadar PNG, JPG veya WebP.",
+            "avatarLabel": "Profil resmi",
+            "avatarHint": "Hesap menünüzde ve profilinizde gösterilir.",
+            "changePicture": "Resmi değiştir",
+            "uploadPicture": "Resim yükle",
+            "logoLabel": "İşletme logosu",
+            "logoHint": "Faturalarda ve ticari markalamada kullanılır.",
+            "changeLogo": "Logoyu değiştir",
+            "uploadLogo": "Logoyu yükle",
+            "uploading": "Yükleniyor..."
         },
         "personal": {
-            "title": "Personal information",
-            "description": "Update the contact details associated with your account.",
-            "namePlaceholder": "Enter your name",
-            "emailReadOnly": "Email address cannot be changed.",
-            "mobilePlaceholder": "Enter your mobile number",
-            "save": "Save changes",
-            "saving": "Saving..."
+            "title": "Kişisel bilgiler",
+            "description": "Hesabınızla ilişkili iletişim ayrıntılarını güncelleyin.",
+            "namePlaceholder": "Adınızı girin",
+            "emailReadOnly": "E-posta adresi değiştirilemez.",
+            "mobilePlaceholder": "Cep telefonu numaranızı girin",
+            "save": "Değişiklikleri kaydet",
+            "saving": "Kaydediliyor..."
         },
         "password": {
-            "title": "Change password",
-            "description": "Use at least eight characters for your new password.",
+            "title": "Şifre değiştir",
+            "description": "Yeni şifreniz için en az sekiz karakter kullanın.",
             "current": "Mevcut Şifre",
-            "currentPlaceholder": "Enter current password",
-            "new": "New password",
+            "currentPlaceholder": "Mevcut şifreyi girin",
+            "new": "Yeni Şifre",
             "newPlaceholder": "Yeni şifreyi girin",
             "confirm": "Yeni şifreyi onayla",
             "confirmPlaceholder": "Yeni şifreyi onayla",
             "label": "Şifre",
-            "confirmLabel": "Password confirmation",
-            "submit": "Update password",
+            "confirmLabel": "Şifre onayı",
+            "submit": "Şifreyi güncelle",
             "submitting": "Güncelleniyor..."
         },
         "twoFactor": {
-            "title": "Two-factor authentication",
-            "enabled": "{{method}} is enabled",
-            "authenticator": "Authenticator app",
-            "emailOtp": "Email OTP",
-            "default": "Email OTP is the default protection method",
-            "manage": "Manage 2FA",
-            "enable": "Enable 2FA"
+            "title": "İki faktörlü kimlik doğrulama",
+            "enabled": "{{method}} etkin",
+            "authenticator": "Kimlik doğrulayıcı uygulaması",
+            "emailOtp": "OTP'ye e-posta gönder",
+            "default": "E-posta OTP varsayılan koruma yöntemidir",
+            "manage": "2FA'yı yönet",
+            "enable": "2FA'yı etkinleştir"
         },
         "toast": {
-            "updated": "Profile updated",
+            "updated": "Profil güncellendi",
             "passwordChanged": "Şifre değiştirildi",
-            "avatarUpdated": "Profile picture updated",
-            "logoUpdated": "Business logo updated",
-            "invalidImageType": "Use a PNG, JPG, or WebP image",
-            "imageTooLarge": "Image must be 2 MB or smaller",
-            "invalidProfile": "Invalid profile details",
-            "invalidPassword": "Invalid password details"
+            "avatarUpdated": "Profil resmi güncellendi",
+            "logoUpdated": "İşletme logosu güncellendi",
+            "invalidImageType": "PNG, JPG veya WebP resmi kullanın",
+            "imageTooLarge": "Resim 2 MB veya daha küçük olmalıdır",
+            "invalidProfile": "Geçersiz profil ayrıntıları",
+            "invalidPassword": "Geçersiz şifre ayrıntıları"
         }
     },
     "twoFactor": {
-        "title": "Two-factor authentication",
-        "description": "Protect your merchant account with an additional verification step.",
-        "protectedTitle": "Your account is protected",
-        "protectedDescription": "Email OTP is the default verification method. You can switch to an authenticator app below.",
-        "badgeDefault": "Default",
-        "badgeEnabled": "Enabled",
+        "title": "İki faktörlü kimlik doğrulama",
+        "description": "Satıcı hesabınızı ek bir doğrulama adımıyla koruyun.",
+        "protectedTitle": "Hesabınız korunuyor",
+        "protectedDescription": "E-posta OTP, varsayılan doğrulama yöntemidir. Aşağıdan bir kimlik doğrulama uygulamasına geçebilirsiniz.",
+        "badgeDefault": "Varsayılan",
+        "badgeEnabled": "Etkinleştirilmiş",
         "email": {
-            "title": "Email OTP",
-            "description": "Receive a six-digit verification code at {{email}}.",
-            "fallbackEmail": "your account email",
-            "enabling": "Enabling email OTP...",
-            "enabled": "Email OTP enabled",
-            "enable": "Use email OTP",
+            "title": "OTP'ye e-posta gönder",
+            "description": "{{email}} adresinden altı haneli doğrulama kodunu alın.",
+            "fallbackEmail": "hesabınızın e-postası",
+            "enabling": "E-posta OTP'si etkinleştiriliyor...",
+            "enabled": "E-posta OTP etkin",
+            "enable": "E-posta OTP'sini kullan",
             "missing": "Önce profilinize bir e-posta adresi ekleyin."
         },
         "authenticator": {
-            "title": "Authenticator app",
-            "description": "Use Google Authenticator, Authy, Microsoft Authenticator, or another compatible app.",
-            "preparing": "Preparing setup...",
+            "title": "Kimlik doğrulayıcı uygulaması",
+            "description": "Google Authenticator, Authy, Microsoft Authenticator veya başka bir uyumlu uygulamayı kullanın.",
+            "preparing": "Kurulum hazırlanıyor...",
             "setupAgain": "Tekrar ayarla",
             "setup": "Kimlik doğrulayıcıyı ayarla"
         },
         "connect": {
-            "title": "Connect your authenticator app",
-            "description": "Add the account using the setup link or secret, then enter the six-digit code.",
-            "openApp": "Open in authenticator app",
-            "secretLabel": "Setup secret",
-            "codeLabel": "Verification code",
-            "verifying": "Verifying...",
-            "submit": "Enable authenticator",
-            "secretField": "Authenticator secret",
-            "codeField": "Authenticator code"
+            "title": "Kimlik doğrulayıcı uygulamanızı bağlayın",
+            "description": "Kurulum bağlantısını veya sırrını kullanarak hesabı ekleyin, ardından altı haneli kodu girin.",
+            "openApp": "Kimlik doğrulayıcı uygulamasında aç",
+            "secretLabel": "Kurulum sırrı",
+            "codeLabel": "Doğrulama kodu",
+            "verifying": "Doğrulanıyor...",
+            "submit": "Kimlik doğrulayıcıyı etkinleştir",
+            "secretField": "Kimlik doğrulayıcı sırrı",
+            "codeField": "Kimlik doğrulayıcı kodu"
         },
         "recovery": {
-            "title": "Save your recovery codes",
-            "description": "Store these codes securely. Each code can be used once."
+            "title": "Kurtarma kodlarınızı kaydedin",
+            "description": "Bu kodları güvenli bir şekilde saklayın. Her kod bir kez kullanılabilir."
         },
         "toast": {
-            "emailEnabled": "Email OTP is enabled",
-            "authenticatorEnabled": "Authenticator app is enabled"
+            "emailEnabled": "E-posta OTP etkin",
+            "authenticatorEnabled": "Kimlik doğrulama uygulaması etkin"
         }
     }
 }

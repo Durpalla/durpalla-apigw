@@ -1,153 +1,153 @@
 {
     "actions": {
-        "add": "Add",
-        "back": "Back",
+        "add": "Aggiungere",
+        "back": "Indietro",
         "cancel": "Cancellare",
         "close": "Vicino",
-        "collect": "Collect",
-        "confirm": "Confirm",
-        "create": "Create",
-        "delete": "Delete",
+        "collect": "Raccogliere",
+        "confirm": "Confermare",
+        "create": "Creare",
+        "delete": "Eliminare",
         "download": "Scaricamento",
-        "edit": "Edit",
-        "export": "Export",
-        "filter": "Filter",
+        "edit": "Modificare",
+        "export": "Esportare",
+        "filter": "Filtro",
         "print": "Stampa",
-        "refresh": "Refresh",
+        "refresh": "Aggiorna",
         "remove": "Rimuovere",
         "reset": "Reset",
         "retry": "Riprova",
-        "save": "Save",
+        "save": "Salva",
         "search": "Ricerca",
         "share": "Condividere",
-        "submit": "Submit",
-        "update": "Update",
-        "view": "View"
+        "submit": "Invia",
+        "update": "Aggiornamento",
+        "view": "Visualizzazione"
     },
     "state": {
-        "empty": "No records found",
-        "error": "Something went wrong",
-        "loading": "Loading...",
-        "noResults": "No results match your filters",
-        "pending": "Please wait...",
-        "saving": "Saving..."
+        "empty": "Nessun record trovato",
+        "error": "Qualcosa è andato storto",
+        "loading": "Caricamento...",
+        "noResults": "Nessun risultato corrisponde ai tuoi filtri",
+        "pending": "Attendere prego...",
+        "saving": "Risparmio..."
     },
     "labels": {
-        "actions": "Actions",
+        "actions": "Azioni",
         "all": "Tutto",
         "amount": "Quantità",
-        "createdAt": "Created at",
+        "createdAt": "Creato a",
         "date": "Data",
-        "dateRange": "Date range",
-        "due": "Due",
+        "dateRange": "Intervallo di date",
+        "due": "Dovuto",
         "email": "E-mail",
         "from": "Da",
         "mobile": "Mobile",
         "name": "Nome",
-        "notes": "Notes",
+        "notes": "Note",
         "paid": "Pagato",
-        "remarks": "Remarks",
+        "remarks": "Osservazioni",
         "status": "Stato",
         "to": "A",
         "total": "Totale",
-        "updatedAt": "Updated at"
+        "updatedAt": "Aggiornato a"
     },
     "status": {
-        "active": "Active",
-        "cancelled": "Cancelled",
-        "completed": "Completed",
-        "confirmed": "Confirmed",
+        "active": "Attivo",
+        "cancelled": "Annullato",
+        "completed": "Completato",
+        "confirmed": "Confermato",
         "failed": "Fallito",
-        "inactive": "Inactive",
+        "inactive": "Inattivo",
         "paid": "Pagato",
-        "pending": "Pending",
-        "unpaid": "Unpaid"
+        "pending": "In attesa di",
+        "unpaid": "Non pagato"
     },
     "routeError": {
-        "title": "Something went wrong",
-        "message": "An unexpected error occurred.",
+        "title": "Qualcosa è andato storto",
+        "message": "Si è verificato un errore imprevisto.",
         "tryAgain": "Riprova",
-        "goToDashboard": "Go to dashboard"
+        "goToDashboard": "Vai alla dashboard"
     },
     "language": {
         "label": "Lingua",
-        "switch": "Change language",
-        "switching": "Changing language…"
+        "switch": "Cambia lingua",
+        "switching": "Cambiare lingua..."
     },
     "theme": {
-        "toggle": "Toggle theme"
+        "toggle": "Cambia tema"
     },
     "vehicleTypes": {
         "bus": "Autobus",
         "launch": "Lancio",
-        "ship": "Ship",
+        "ship": "Nave",
         "train": "Treno",
-        "air": "Air"
+        "air": "Aria"
     },
     "roles": {
-        "accountant": "Accountant",
-        "admin": "Admin",
-        "counter": "Counter",
-        "executive": "Executive",
+        "accountant": "Contabile",
+        "admin": "Ammin",
+        "counter": "Contatore",
+        "executive": "Esecutivo",
         "manager": "Manager",
-        "merchant": "Merchant",
-        "staff": "Staff",
-        "supervisor": "Supervisor",
-        "unknown": "Staff",
-        "viewer": "Viewer"
+        "merchant": "Mercante",
+        "staff": "Personale",
+        "supervisor": "Supervisore",
+        "unknown": "Personale",
+        "viewer": "Spettatore"
     },
     "errors": {
         "forbidden": "Non hai il permesso per farlo.",
         "generic": "Qualcosa è andato storto. Per favore riprova.",
-        "network": "Cannot reach the server. Check your internet connection.",
-        "notFound": "Requested resource was not found.",
-        "requestFailed": "Request failed",
-        "requestFailedWithStatus": "Request failed ({{status}})",
-        "server": "Server error. Please try again later.",
-        "sessionExpired": "Session expired. Please sign in again.",
-        "timeout": "Request timed out",
-        "unreachableHost": "Cannot reach API host ({{detail}})",
-        "validation": "Validation failed. Please check your input."
+        "network": "Impossibile raggiungere il server. Controlla la tua connessione Internet.",
+        "notFound": "La risorsa richiesta non è stata trovata.",
+        "requestFailed": "Richiesta non riuscita",
+        "requestFailedWithStatus": "Richiesta non riuscita ({{status}})",
+        "server": "Errore del server. Per favore riprova più tardi.",
+        "sessionExpired": "Sessione scaduta. Per favore accedi di nuovo.",
+        "timeout": "Richiesta scaduta",
+        "unreachableHost": "Impossibile raggiungere l'host API ({{detail}})",
+        "validation": "Convalida non riuscita. Per favore controlla il tuo input."
     },
     "pagination": {
-        "next": "Next",
-        "pageOf": "Page {{page}} of {{total}}",
-        "previous": "Previous",
-        "rowsPerPage": "Rows per page",
-        "showing": "Showing {{from}}–{{to}} of {{total}}",
-        "totalRecords": "{{total}} records"
+        "next": "Prossimo",
+        "pageOf": "Pagina {{page}} di {{total}}",
+        "previous": "Precedente",
+        "rowsPerPage": "Righe per pagina",
+        "showing": "Mostra {{from}}–{{to}} di {{total}}",
+        "totalRecords": "{{total}} record"
     },
     "table": {
         "noResults": "Nessun risultato",
-        "selectAll": "Select all rows",
-        "selectRow": "Select row"
+        "selectAll": "Seleziona tutte le righe",
+        "selectRow": "Seleziona riga"
     },
     "dialog": {
-        "close": "Close dialog",
-        "confirmDescription": "This action cannot be undone.",
-        "confirmTitle": "Are you sure?"
+        "close": "Chiudi la finestra di dialogo",
+        "confirmDescription": "Questa azione non può essere annullata.",
+        "confirmTitle": "Sei sicuro?"
     },
     "placeholders": {
-        "date": "Select date",
-        "dateTime": "Select date and time",
-        "email": "Enter email address",
-        "number": "Enter number",
-        "password": "Enter password",
-        "phone": "Enter phone number",
+        "date": "Seleziona la data",
+        "dateTime": "Seleziona data e ora",
+        "email": "Inserisci l'indirizzo email",
+        "number": "Inserisci il numero",
+        "password": "Inserisci la password",
+        "phone": "Inserisci il numero di telefono",
         "search": "Ricerca",
-        "time": "Select time",
-        "value": "Enter value"
+        "time": "Seleziona l'ora",
+        "value": "Inserisci il valore"
     },
     "a11y": {
         "hidePassword": "Nascondi la password",
-        "otpDigit": "Digit {{position}}",
+        "otpDigit": "Cifra {{position}}",
         "showPassword": "Mostra password"
     },
     "cities": {
         "barisal": "Barisal",
-        "chattogram": "Chattogram",
-        "coxsBazar": "Cox's Bazar",
-        "dhaka": "Dhaka",
+        "chattogram": "Chattogramma",
+        "coxsBazar": "Il Bazar di Cox",
+        "dhaka": "Dacca",
         "khulna": "Khulna",
         "mymensingh": "Mymensingh",
         "rajshahi": "Rajshahi",
@@ -155,8 +155,8 @@
         "sylhet": "Sylhet"
     },
     "brand": {
-        "copyright": "© {{year}} Durpalla. All rights reserved.",
-        "tagline": "Connect your business",
-        "taglineDescription": "Manage bookings, settlements, and payments from one secure merchant platform."
+        "copyright": "© {{year}} Durpalla. Tutti i diritti riservati.",
+        "tagline": "Connetti la tua attività",
+        "taglineDescription": "Gestisci prenotazioni, liquidazioni e pagamenti da un'unica piattaforma commerciale sicura."
     }
 }

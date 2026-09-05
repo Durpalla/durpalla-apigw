@@ -1,162 +1,162 @@
 {
     "actions": {
-        "add": "Add",
-        "back": "Back",
+        "add": "Agregar",
+        "back": "Atrás",
         "cancel": "Cancelar",
         "close": "Cerca",
-        "collect": "Collect",
-        "confirm": "Confirm",
-        "create": "Create",
-        "delete": "Delete",
+        "collect": "Recolectar",
+        "confirm": "Confirmar",
+        "create": "Crear",
+        "delete": "Borrar",
         "download": "Descargar",
-        "edit": "Edit",
-        "export": "Export",
-        "filter": "Filter",
+        "edit": "Editar",
+        "export": "Exportar",
+        "filter": "Filtrar",
         "print": "Imprimir",
-        "refresh": "Refresh",
+        "refresh": "Refrescar",
         "remove": "Eliminar",
-        "reset": "Reset",
+        "reset": "Reiniciar",
         "retry": "Rever",
-        "save": "Save",
+        "save": "Ahorrar",
         "search": "Buscar",
         "share": "Compartir",
-        "submit": "Submit",
-        "update": "Update",
-        "view": "View"
+        "submit": "Entregar",
+        "update": "Actualizar",
+        "view": "Vista"
     },
     "state": {
-        "empty": "No records found",
-        "error": "Something went wrong",
-        "loading": "Loading...",
-        "noResults": "No results match your filters",
-        "pending": "Please wait...",
-        "saving": "Saving..."
+        "empty": "No se encontraron registros",
+        "error": "algo salió mal",
+        "loading": "Cargando...",
+        "noResults": "Ningún resultado coincide con tus filtros",
+        "pending": "Espere por favor...",
+        "saving": "Ahorro..."
     },
     "labels": {
-        "actions": "Actions",
+        "actions": "Comportamiento",
         "all": "Todo",
         "amount": "Cantidad",
-        "createdAt": "Created at",
+        "createdAt": "Creado en",
         "date": "Fecha",
-        "dateRange": "Date range",
-        "due": "Due",
+        "dateRange": "Rango de fechas",
+        "due": "Pendiente",
         "email": "Correo electrónico",
         "from": "De",
         "mobile": "Móvil",
         "name": "Nombre",
-        "notes": "Notes",
+        "notes": "Notas",
         "paid": "Pagado",
-        "remarks": "Remarks",
+        "remarks": "Observaciones",
         "status": "Estado",
         "to": "A",
         "total": "Total",
-        "updatedAt": "Updated at"
+        "updatedAt": "Actualizado en"
     },
     "status": {
-        "active": "Active",
-        "cancelled": "Cancelled",
-        "completed": "Completed",
-        "confirmed": "Confirmed",
+        "active": "Activo",
+        "cancelled": "Cancelado",
+        "completed": "Terminado",
+        "confirmed": "Confirmado",
         "failed": "Fallido",
-        "inactive": "Inactive",
+        "inactive": "Inactivo",
         "paid": "Pagado",
-        "pending": "Pending",
-        "unpaid": "Unpaid"
+        "pending": "Pendiente",
+        "unpaid": "No pagado"
     },
     "routeError": {
-        "title": "Something went wrong",
-        "message": "An unexpected error occurred.",
+        "title": "algo salió mal",
+        "message": "Se produjo un error inesperado.",
         "tryAgain": "Intentar otra vez",
-        "goToDashboard": "Go to dashboard"
+        "goToDashboard": "Ir al panel"
     },
     "language": {
         "label": "Idioma",
-        "switch": "Change language",
-        "switching": "Changing language…"
+        "switch": "Cambiar idioma",
+        "switching": "Cambiando de idioma…"
     },
     "theme": {
-        "toggle": "Toggle theme"
+        "toggle": "Alternar tema"
     },
     "vehicleTypes": {
         "bus": "Autobús",
         "launch": "Lanzamiento",
-        "ship": "Ship",
+        "ship": "Barco",
         "train": "Tren",
-        "air": "Air"
+        "air": "Aire"
     },
     "roles": {
-        "accountant": "Accountant",
-        "admin": "Admin",
-        "counter": "Counter",
-        "executive": "Executive",
-        "manager": "Manager",
-        "merchant": "Merchant",
-        "staff": "Staff",
+        "accountant": "Contador",
+        "admin": "Administración",
+        "counter": "Encimera",
+        "executive": "Ejecutivo",
+        "manager": "Gerente",
+        "merchant": "Comerciante",
+        "staff": "Personal",
         "supervisor": "Supervisor",
-        "unknown": "Staff",
-        "viewer": "Viewer"
+        "unknown": "Personal",
+        "viewer": "Espectador"
     },
     "errors": {
         "forbidden": "No tienes permiso para hacer eso.",
         "generic": "Algo salió mal. Por favor inténtalo de nuevo.",
-        "network": "Cannot reach the server. Check your internet connection.",
-        "notFound": "Requested resource was not found.",
-        "requestFailed": "Request failed",
-        "requestFailedWithStatus": "Request failed ({{status}})",
-        "server": "Server error. Please try again later.",
-        "sessionExpired": "Session expired. Please sign in again.",
-        "timeout": "Request timed out",
-        "unreachableHost": "Cannot reach API host ({{detail}})",
-        "validation": "Validation failed. Please check your input."
+        "network": "No se puede llegar al servidor. Verifique su conexión a Internet.",
+        "notFound": "No se encontró el recurso solicitado.",
+        "requestFailed": "Solicitud fallida",
+        "requestFailedWithStatus": "Solicitud fallida ({{status}})",
+        "server": "Error del servidor. Inténtelo de nuevo más tarde.",
+        "sessionExpired": "La sesión expiró. Por favor inicia sesión nuevamente.",
+        "timeout": "Solicitud agotada",
+        "unreachableHost": "No se puede acceder al host API ({{detail}})",
+        "validation": "La validación falló. Por favor revise su entrada."
     },
     "pagination": {
-        "next": "Next",
-        "pageOf": "Page {{page}} of {{total}}",
-        "previous": "Previous",
-        "rowsPerPage": "Rows per page",
-        "showing": "Showing {{from}}–{{to}} of {{total}}",
-        "totalRecords": "{{total}} records"
+        "next": "Próximo",
+        "pageOf": "Página {{page}} de {{total}}",
+        "previous": "Anterior",
+        "rowsPerPage": "Filas por página",
+        "showing": "Mostrando {{from}}–{{to}} de {{total}}",
+        "totalRecords": "{{total}} registros"
     },
     "table": {
         "noResults": "Sin resultados",
-        "selectAll": "Select all rows",
-        "selectRow": "Select row"
+        "selectAll": "Seleccionar todas las filas",
+        "selectRow": "Seleccionar fila"
     },
     "dialog": {
-        "close": "Close dialog",
-        "confirmDescription": "This action cannot be undone.",
-        "confirmTitle": "Are you sure?"
+        "close": "Cerrar diálogo",
+        "confirmDescription": "Esta acción no se puede deshacer.",
+        "confirmTitle": "¿Está seguro?"
     },
     "placeholders": {
-        "date": "Select date",
-        "dateTime": "Select date and time",
-        "email": "Enter email address",
-        "number": "Enter number",
-        "password": "Enter password",
-        "phone": "Enter phone number",
+        "date": "Seleccionar fecha",
+        "dateTime": "Selecciona fecha y hora",
+        "email": "Introduzca la dirección de correo electrónico",
+        "number": "Introduzca el número",
+        "password": "Introduce la contraseña",
+        "phone": "Introduce el número de teléfono",
         "search": "Buscar",
-        "time": "Select time",
-        "value": "Enter value"
+        "time": "Seleccionar hora",
+        "value": "Introducir valor"
     },
     "a11y": {
         "hidePassword": "Ocultar contraseña",
-        "otpDigit": "Digit {{position}}",
+        "otpDigit": "Dígito {{position}}",
         "showPassword": "Mostrar contraseña"
     },
     "cities": {
-        "barisal": "Barisal",
-        "chattogram": "Chattogram",
-        "coxsBazar": "Cox's Bazar",
-        "dhaka": "Dhaka",
+        "barisal": "barisal",
+        "chattogram": "Chattograma",
+        "coxsBazar": "Bazar de Cox",
+        "dhaka": "Daca",
         "khulna": "Khulna",
-        "mymensingh": "Mymensingh",
+        "mymensingh": "mymensingh",
         "rajshahi": "Rajshahi",
         "rangpur": "Rangpur",
         "sylhet": "Sylhet"
     },
     "brand": {
-        "copyright": "© {{year}} Durpalla. All rights reserved.",
-        "tagline": "Connect your business",
-        "taglineDescription": "Manage bookings, settlements, and payments from one secure merchant platform."
+        "copyright": "© {{year}} Durpalla. Reservados todos los derechos.",
+        "tagline": "Conecta tu negocio",
+        "taglineDescription": "Administre reservas, liquidaciones y pagos desde una plataforma comercial segura."
     }
 }

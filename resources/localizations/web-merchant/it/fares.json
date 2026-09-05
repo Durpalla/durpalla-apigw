@@ -1,159 +1,159 @@
 {
     "page": {
-        "title": "Via Stop Pricing",
-        "description": "Manage ticket prices between boarding and dropping stoppages for each trip.",
-        "createFare": "Create Fare",
-        "loadFailed": "Unable to load fares"
+        "title": "Tramite Stop Pricing",
+        "description": "Gestisci i prezzi dei biglietti tra le fermate di imbarco e di discesa per ogni viaggio.",
+        "createFare": "Crea tariffa",
+        "loadFailed": "Impossibile caricare le tariffe"
     },
     "breadcrumb": {
-        "transport": "Transport",
-        "routes": "Routes",
-        "current": "Via Stop Pricing"
+        "transport": "Trasporto",
+        "routes": "Percorsi",
+        "current": "Tramite Stop Pricing"
     },
     "info": {
         "route": "Itinerario",
-        "routeNo": "Route No",
-        "serviceType": "Service Type",
-        "vehicleTypePlan": "Vehicle Type Plan",
-        "planHint": "One plan applies to all vehicles of this type on the route."
+        "routeNo": "Itinerario n",
+        "serviceType": "Tipo di servizio",
+        "vehicleTypePlan": "Piano del tipo di veicolo",
+        "planHint": "Per tutti i veicoli di questo tipo presenti sul percorso vale un piano."
     },
     "stats": {
-        "totalStops": "Total Stops",
-        "totalFareRules": "Total Fare Rules",
-        "activeRules": "Active Rules",
-        "lastUpdated": "Last Updated"
+        "totalStops": "Soste totali",
+        "totalFareRules": "Regole tariffarie totali",
+        "activeRules": "Regole attive",
+        "lastUpdated": "Ultimo aggiornamento"
     },
     "filters": {
-        "boardingPlaceholder": "Boarding Stop",
-        "allBoarding": "All boarding",
-        "droppingPlaceholder": "Dropping Stop",
-        "allDropping": "All dropping",
+        "boardingPlaceholder": "Fermata d'imbarco",
+        "allBoarding": "Tutti imbarchi",
+        "droppingPlaceholder": "Arresto di caduta",
+        "allDropping": "Tutto in calo",
         "statusPlaceholder": "Stato",
-        "allStatus": "All status",
-        "searchPlaceholder": "Search fare"
+        "allStatus": "Tutto lo stato",
+        "searchPlaceholder": "Cerca tariffa"
     },
     "bulk": {
-        "action": "Bulk action",
-        "increasePercent": "Increase Price (%)",
-        "decreasePercent": "Decrease Price (%)",
-        "setFixed": "Set Fixed Price",
-        "applyPercent": "Apply Percentage",
-        "value": "Value",
+        "action": "Azione collettiva",
+        "increasePercent": "Aumenta il prezzo (%)",
+        "decreasePercent": "Diminuisci prezzo (%)",
+        "setFixed": "Imposta il prezzo fisso",
+        "applyPercent": "Applica percentuale",
+        "value": "Valore",
         "apply": "Fare domanda a",
-        "invalidValue": "Enter a valid value"
+        "invalidValue": "Inserisci un valore valido"
     },
     "empty": {
-        "title": "No fare rules created yet.",
-        "description": "Create stop-to-stop prices once for this route and vehicle type. They apply automatically to matching vehicles and trips.",
-        "action": "Create First Fare"
+        "title": "Nessuna regola tariffaria creata ancora.",
+        "description": "Crea i prezzi stop-to-stop una volta per questo percorso e tipo di veicolo. Si applicano automaticamente ai veicoli e ai viaggi corrispondenti.",
+        "action": "Crea la prima tariffa"
     },
     "matrix": {
-        "noStops": "Add boarding points to this route before setting fares.",
-        "fromTo": "From / To",
-        "addPrice": "Add Price"
+        "noStops": "Aggiungi punti d'imbarco a questa rotta prima di impostare le tariffe.",
+        "fromTo": "Da/A",
+        "addPrice": "Aggiungi prezzo"
     },
     "mobile": {
-        "seat": "Seat {{value}}",
-        "cabin": "Cabin {{value}}"
+        "seat": "Posto {{value}}",
+        "cabin": "Cabina {{value}}"
     },
     "detail": {
-        "title": "Selected Fare Details",
-        "emptyHint": "Select a fare cell to view details.",
-        "boardingStop": "Boarding Stop",
-        "droppingStop": "Dropping Stop",
-        "distance": "Distance",
+        "title": "Dettagli della tariffa selezionata",
+        "emptyHint": "Seleziona una cella tariffaria per visualizzare i dettagli.",
+        "boardingStop": "Fermata d'imbarco",
+        "droppingStop": "Arresto di caduta",
+        "distance": "Distanza",
         "distanceValue": "{{value}} km",
-        "estimatedTime": "Estimated Travel Time",
-        "seatPrice": "Seat Price",
-        "cabinPrice": "Cabin Price",
-        "childFare": "Child Fare",
-        "vipFare": "VIP Fare",
+        "estimatedTime": "Tempo di viaggio stimato",
+        "seatPrice": "Prezzo del posto",
+        "cabinPrice": "Prezzo della cabina",
+        "childFare": "Tariffa bambini",
+        "vipFare": "Tariffa VIP",
         "discount": "Sconto",
-        "discountValue": "Student {{student}}% · Senior {{senior}}%",
-        "agentCommission": "Agent Commission",
+        "discountValue": "Studente {{student}}% · Senior {{senior}}%",
+        "agentCommission": "Commissione Agente",
         "percentValue": "{{value}}%",
-        "seatTypes": "Available Seat Types",
+        "seatTypes": "Tipi di posti disponibili",
         "defaultSeatType": "Posto a sedere",
-        "lastUpdated": "Last Updated",
-        "edit": "Edit Fare",
-        "duplicate": "Duplicate",
-        "enable": "Enable",
-        "disable": "Disable"
+        "lastUpdated": "Ultimo aggiornamento",
+        "edit": "Modifica tariffa",
+        "duplicate": "Duplicato",
+        "enable": "Abilitare",
+        "disable": "Disabilita"
     },
     "form": {
-        "editTitle": "Edit Fare",
-        "addTitle": "Add Fare",
-        "subtitle": "Route + {{vehicleType}} plan — applied automatically to matching vehicles and trips.",
+        "editTitle": "Modifica tariffa",
+        "addTitle": "Aggiungi tariffa",
+        "subtitle": "Itinerario + piano {{vehicleType}}: applicato automaticamente ai veicoli e ai viaggi corrispondenti.",
         "sections": {
-            "route": "Route & Basic Information",
-            "fare": "Fare Information",
-            "commission": "Commission & Charges",
-            "rules": "Price Rules & Availability",
-            "notes": "Notes (Optional)"
+            "route": "Percorso e informazioni di base",
+            "fare": "Informazioni sulle tariffe",
+            "commission": "Commissioni e spese",
+            "rules": "Regole di prezzo e disponibilità",
+            "notes": "Note (facoltativo)"
         },
-        "boardingStop": "Boarding Stop",
-        "droppingStop": "Dropping Stop",
-        "selectStop": "Select stop",
-        "sameStop": "Boarding and dropping must differ.",
-        "vehicleClass": "Vehicle Class",
+        "boardingStop": "Fermata d'imbarco",
+        "droppingStop": "Arresto di caduta",
+        "selectStop": "Seleziona fermata",
+        "sameStop": "L'imbarco e lo sbarco devono differire.",
+        "vehicleClass": "Classe del veicolo",
         "vehicleClasses": {
-            "acBusiness": "AC Business",
-            "nonAc": "Non-AC",
-            "sleeper": "Sleeper"
+            "acBusiness": "Affari AC",
+            "nonAc": "Non AC",
+            "sleeper": "Dormiente"
         },
-        "serviceType": "Service Type",
-        "distance": "Distance (Approx.)",
-        "estimatedTime": "Estimated Time",
-        "estimatedTimePlaceholder": "2h 40m",
-        "seatPrice": "Seat Price",
-        "cabinPrice": "Cabin Price",
-        "childPrice": "Child Price (5-12 yrs)",
-        "infantPrice": "Infant Price (0-4 yrs)",
-        "vipPrice": "VIP Seat Price",
-        "ladiesPrice": "Ladies Seat Price",
-        "roundTripPrice": "Round Trip Price (Optional)",
-        "seniorDiscount": "Senior Citizen Discount (%)",
-        "studentDiscount": "Student Discount (%)",
-        "priceType": "Price Type",
-        "perSeat": "Per Seat",
-        "perCabin": "Per Cabin",
-        "agentCommission": "Agent Commission (%)",
-        "platformCommission": "Platform Commission (%)",
-        "tax": "Tax (%)",
-        "taxIncluded": "Tax Included in Price",
-        "taxIncludedHint": "Ticket price includes tax",
-        "applyForDays": "Apply for Days",
+        "serviceType": "Tipo di servizio",
+        "distance": "Distanza (circa)",
+        "estimatedTime": "Tempo stimato",
+        "estimatedTimePlaceholder": "2 ore e 40 minuti",
+        "seatPrice": "Prezzo del posto",
+        "cabinPrice": "Prezzo della cabina",
+        "childPrice": "Prezzo Bambino (5-12 anni)",
+        "infantPrice": "Prezzo Infantile (0-4 anni)",
+        "vipPrice": "Prezzo del posto VIP",
+        "ladiesPrice": "Prezzo del posto per donne",
+        "roundTripPrice": "Prezzo di andata e ritorno (facoltativo)",
+        "seniorDiscount": "Sconto per anziani (%)",
+        "studentDiscount": "Sconto studenti (%)",
+        "priceType": "Tipo di prezzo",
+        "perSeat": "Per posto",
+        "perCabin": "Per cabina",
+        "agentCommission": "Commissione agente (%)",
+        "platformCommission": "Commissione piattaforma (%)",
+        "tax": "Imposta (%)",
+        "taxIncluded": "Tasse incluse nel prezzo",
+        "taxIncludedHint": "Il prezzo del biglietto include le tasse",
+        "applyForDays": "Richiedi giorni",
         "days": {
-            "everyDay": "Every Day",
-            "weekdays": "Weekdays",
-            "weekends": "Weekends"
+            "everyDay": "Ogni giorno",
+            "weekdays": "Giorni feriali",
+            "weekends": "Fine settimana"
         },
-        "weekendPrice": "Weekend Price",
-        "holidayPrice": "Holiday Price",
-        "peakHourPrice": "Peak Hour Price",
-        "effectiveFrom": "Effective From",
-        "effectiveTo": "Effective To",
-        "priority": "Priority",
-        "priorityHint": "Lower number has higher priority",
-        "notesPlaceholder": "Add any notes or conditions for this stop price…",
-        "save": "Save Fare"
+        "weekendPrice": "Prezzo del fine settimana",
+        "holidayPrice": "Prezzo delle vacanze",
+        "peakHourPrice": "Prezzo dell'ora di punta",
+        "effectiveFrom": "Efficace da",
+        "effectiveTo": "Efficace a",
+        "priority": "Priorità",
+        "priorityHint": "Il numero più basso ha la priorità più alta",
+        "notesPlaceholder": "Aggiungi eventuali note o condizioni per questo prezzo stop...",
+        "save": "Salva tariffa"
     },
     "delete": {
-        "title": "Delete fare rule?",
-        "description": "This removes the route plan fare and synced vehicle copies for this stop pair."
+        "title": "Eliminare la regola tariffaria?",
+        "description": "Ciò rimuove la tariffa del piano di percorso e le copie sincronizzate del veicolo per questa coppia di fermate."
     },
     "export": {
-        "boarding": "Boarding",
-        "dropping": "Dropping",
-        "fare": "Fare",
+        "boarding": "Imbarco",
+        "dropping": "Caduta",
+        "fare": "Tariffa",
         "status": "Stato",
         "updated": "Aggiornato"
     },
     "toast": {
-        "saved": "Fare saved",
-        "bulkApplied": "Bulk update applied",
-        "deleted": "Fare deleted",
-        "enabled": "Fare enabled",
-        "disabled": "Fare disabled"
+        "saved": "Tariffa salvata",
+        "bulkApplied": "Aggiornamento collettivo applicato",
+        "deleted": "Tariffa eliminata",
+        "enabled": "Tariffa abilitata",
+        "disabled": "Tariffa disabilitata"
     }
 }

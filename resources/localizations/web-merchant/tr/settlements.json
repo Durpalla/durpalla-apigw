@@ -1,25 +1,25 @@
 {
     "page": {
         "title": "Yerleşimler",
-        "description": "Approve or decline settlement requests",
-        "rangeInvalid": "Date range is invalid"
+        "description": "Uzlaşma isteklerini onaylama veya reddetme",
+        "rangeInvalid": "Tarih aralığı geçersiz"
     },
     "empty": {
-        "title": "No settlement requests"
+        "title": "Uzlaşma talebi yok"
     },
     "table": {
-        "id": "ID",
-        "approve": "Approve",
-        "decline": "Decline"
+        "id": "İD",
+        "approve": "Onaylamak",
+        "decline": "Reddetmek"
     },
     "status": {
         "all": "Tüm",
-        "pending": "Pending",
-        "approved": "Approved",
-        "declined": "Declined"
+        "pending": "Askıda olması",
+        "approved": "Onaylı",
+        "declined": "Reddedildi"
     },
     "toast": {
-        "approved": "Approved",
-        "declined": "Declined"
+        "approved": "Onaylı",
+        "declined": "Reddedildi"
     }
 }

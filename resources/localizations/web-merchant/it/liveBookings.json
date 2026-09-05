@@ -1,22 +1,22 @@
 {
     "page": {
-        "title": "Live bookings",
-        "description": "Realtime created and cancelled booking events"
+        "title": "Prenotazioni in tempo reale",
+        "description": "Eventi di prenotazione creati e cancellati in tempo reale"
     },
     "empty": {
-        "title": "Waiting for live events",
-        "description": "New bookings will appear here via Pusher."
+        "title": "In attesa degli eventi dal vivo",
+        "description": "Le nuove prenotazioni appariranno qui tramite Pusher."
     },
     "table": {
-        "kind": "Kind",
+        "kind": "Tipo",
         "passenger": "Passeggeri",
-        "property": "Property",
+        "property": "Proprietà",
         "trip": "Viaggio",
-        "time": "Time",
-        "open": "Open"
+        "time": "Tempo",
+        "open": "Aprire"
     },
     "kind": {
-        "created": "Created",
-        "cancelled": "Cancelled"
+        "created": "Creato",
+        "cancelled": "Annullato"
     }
 }

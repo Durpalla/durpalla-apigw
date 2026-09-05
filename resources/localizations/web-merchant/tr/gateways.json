@@ -1,13 +1,13 @@
 {
     "list": {
-        "title": "Gateways",
-        "paymentTitle": "Payment gateways",
-        "smsTitle": "SMS gateways",
-        "description": "Enable approved payment and SMS providers. Configure credentials and params as instructed by each gateway class. Endpoints are managed by Durpalla Admin.",
-        "footnote": "You can remove an enabled gateway from your account. You cannot change its namespace or type. Endpoints are managed by Durpalla Admin.",
-        "emptyTitle": "No gateways enabled yet",
-        "emptyDescription": "Enable a template above to get started.",
-        "manage": "Manage"
+        "title": "Ağ geçitleri",
+        "paymentTitle": "Ödeme ağ geçitleri",
+        "smsTitle": "SMS ağ geçitleri",
+        "description": "Onaylı ödeme ve SMS sağlayıcılarını etkinleştirin. Kimlik bilgilerini ve parametreleri her ağ geçidi sınıfının talimatlarına göre yapılandırın. Uç noktalar Durpalla Admin tarafından yönetilir.",
+        "footnote": "Etkinleştirilmiş bir ağ geçidini hesabınızdan kaldırabilirsiniz. Ad alanını veya türünü değiştiremezsiniz. Uç noktalar Durpalla Admin tarafından yönetilir.",
+        "emptyTitle": "Henüz hiçbir ağ geçidi etkinleştirilmedi",
+        "emptyDescription": "Başlamak için yukarıdaki şablonu etkinleştirin.",
+        "manage": "Üstesinden gelmek"
     },
     "tabs": {
         "all": "Tüm",
@@ -19,94 +19,94 @@
         "sms": "SMS"
     },
     "enable": {
-        "title": "Enable a gateway",
-        "namespace": "Gateway namespace",
-        "selectPlaceholder": "Select…",
-        "noTemplates": "No templates available",
-        "action": "Enable",
-        "pending": "Enabling…",
-        "summaryTitle": "What you will need to configure",
-        "credentials": "Credentials: {{keys}}",
-        "params": "Params: {{keys}}",
-        "endpoints": "Endpoints (admin): {{keys}}"
+        "title": "Bir ağ geçidini etkinleştirme",
+        "namespace": "Ağ geçidi ad alanı",
+        "selectPlaceholder": "Seçme…",
+        "noTemplates": "Şablon yok",
+        "action": "Olanak vermek",
+        "pending": "Etkinleştiriliyor…",
+        "summaryTitle": "Yapılandırmanız gerekenler",
+        "credentials": "Kimlik Bilgileri: {{keys}}",
+        "params": "Paramlar: {{keys}}",
+        "endpoints": "Uç noktalar (yönetici): {{keys}}"
     },
     "table": {
         "name": "İsim",
-        "type": "Type",
-        "namespace": "Gateway namespace",
-        "code": "Code"
+        "type": "Tip",
+        "namespace": "Ağ geçidi ad alanı",
+        "code": "Kod"
     },
     "remove": {
         "action": "Kaldırmak",
-        "pending": "Removing…",
-        "title": "Remove {{name}}?",
-        "description": "This removes the gateway from your account only. You can enable the same template again later. Namespace and type cannot be changed."
+        "pending": "Kaldırılıyor…",
+        "title": "{{name}} kaldırılsın mı?",
+        "description": "Bu, ağ geçidini yalnızca hesabınızdan kaldırır. Aynı şablonu daha sonra tekrar etkinleştirebilirsiniz. Ad alanı ve tür değiştirilemez."
     },
     "edit": {
         "subtitle": "{{type}} · {{code}}",
         "notFoundTitle": "Ağ geçidi bulunamadı",
-        "notFoundDescription": "This gateway is not enabled for your account.",
-        "backToGateways": "Back to gateways",
+        "notFoundDescription": "Bu ağ geçidi hesabınız için etkin değil.",
+        "backToGateways": "Ağ geçitlerine geri dön",
         "setupTitle": "Kurulum talimatları",
-        "setupHint": "Configure credentials and params in the tabs below. Endpoints are managed by Durpalla Admin.",
+        "setupHint": "Aşağıdaki sekmelerde kimlik bilgilerini ve parametreleri yapılandırın. Uç noktalar Durpalla Admin tarafından yönetilir.",
         "tabs": {
-            "info": "Info",
-            "credential": "Credentials",
-            "endpoint": "Endpoints",
-            "param": "Params"
+            "info": "Bilgi",
+            "credential": "Kimlik bilgileri",
+            "endpoint": "Uç noktalar",
+            "param": "Parametreler"
         }
     },
     "info": {
-        "title": "Gateway info",
+        "title": "Ağ geçidi bilgisi",
         "name": "İsim",
-        "code": "Code",
-        "type": "Type",
-        "channel": "Channel",
-        "namespace": "Gateway namespace",
-        "save": "Save info"
+        "code": "Kod",
+        "type": "Tip",
+        "channel": "Kanal",
+        "namespace": "Ağ geçidi ad alanı",
+        "save": "Bilgileri kaydet"
     },
     "credentials": {
-        "title": "Credentials",
-        "add": "Add credential",
-        "hint": "Leave a value blank to keep the existing secret. Only filled values are updated.",
-        "keyPlaceholder": "key",
+        "title": "Kimlik bilgileri",
+        "add": "Kimlik bilgisi ekle",
+        "hint": "Mevcut sırrı korumak için bir değeri boş bırakın. Yalnızca doldurulmuş değerler güncellenir.",
+        "keyPlaceholder": "anahtar",
         "valuePlaceholder": "********",
-        "removeRow": "Remove credential",
-        "save": "Save credentials",
-        "noneFilled": "Enter at least one credential value to update"
+        "removeRow": "Kimlik bilgisini kaldır",
+        "save": "Kimlik bilgilerini kaydet",
+        "noneFilled": "Güncellenecek en az bir kimlik bilgisi değeri girin"
     },
     "endpoints": {
-        "title": "Endpoints",
-        "hint": "Endpoints are managed by Durpalla Admin. You can only view their setup status here.",
+        "title": "Uç noktalar",
+        "hint": "Uç noktalar Durpalla Admin tarafından yönetilir. Burada yalnızca kurulum durumlarını görebilirsiniz.",
         "name": "İsim",
-        "key": "Key",
-        "configured": "Configured by admin",
-        "pending": "Pending admin setup",
-        "emptyTitle": "No endpoints",
-        "emptyDescription": "This gateway does not declare endpoint keys."
+        "key": "Anahtar",
+        "configured": "Yönetici tarafından yapılandırıldı",
+        "pending": "Yönetici kurulumu bekleniyor",
+        "emptyTitle": "Uç nokta yok",
+        "emptyDescription": "Bu ağ geçidi uç nokta anahtarlarını bildirmez."
     },
     "params": {
-        "title": "Params",
-        "add": "Add param",
-        "hint": "Add any key/value pairs this gateway needs. Suggested keys are prefilled when available.",
-        "keyPlaceholder": "key",
-        "valuePlaceholder": "value",
-        "removeRow": "Remove param",
-        "save": "Save params"
+        "title": "Parametreler",
+        "add": "Parametre ekle",
+        "hint": "Bu ağ geçidinin ihtiyaç duyduğu anahtar/değer çiftlerini ekleyin. Önerilen anahtarlar mevcut olduğunda önceden doldurulur.",
+        "keyPlaceholder": "anahtar",
+        "valuePlaceholder": "değer",
+        "removeRow": "Parametreyi kaldır",
+        "save": "Parametreleri kaydet"
     },
     "field": {
-        "required": "required",
-        "requiredSuffix": " (required)",
-        "requiredMeta": " · required"
+        "required": "gerekli",
+        "requiredSuffix": "(gerekli)",
+        "requiredMeta": "· gerekli"
     },
     "errors": {
         "notFound": "Ağ geçidi bulunamadı",
-        "duplicateKey": "Duplicate key: {{key}}"
+        "duplicateKey": "Yinelenen anahtar: {{key}}"
     },
     "toast": {
         "enabledSms": "Ağ geçidi etkinleştirildi. Mesaj göndermeye başlamak için SMS kimlik bilgilerini güncelleyin.",
         "enabledPayment": "Ağ geçidi etkinleştirildi. Ödemeleri kabul etmeye başlamak için kimlik bilgilerini güncelleyin.",
-        "infoSaved": "Info saved",
+        "infoSaved": "Bilgi kaydedildi",
         "credentialsSaved": "Kimlik bilgileri kaydedildi",
         "paramsSaved": "Paramlar kaydedildi"
     }

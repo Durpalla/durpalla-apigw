@@ -1,88 +1,88 @@
 {
     "list": {
-        "title": "Support Tickets",
-        "description": "Manage and respond to support requests.",
-        "newTicket": "New Ticket",
-        "searchPlaceholder": "Search ticket ID, subject, or contact…",
-        "empty": "No tickets match these filters.",
-        "loading": "Loading tickets…",
-        "viewTicket": "View ticket {{id}}"
+        "title": "Boletos de soporte",
+        "description": "Gestionar y responder a las solicitudes de soporte.",
+        "newTicket": "Nuevo billete",
+        "searchPlaceholder": "Buscar ID del ticket, asunto o contacto...",
+        "empty": "No hay entradas que coincidan con estos filtros.",
+        "loading": "Cargando billetes…",
+        "viewTicket": "Ver billete {{id}}"
     },
     "stats": {
-        "all": "All Tickets",
-        "open": "Open",
-        "progress": "In Progress",
-        "resolved": "Resolved"
+        "all": "Todas las entradas",
+        "open": "Abierto",
+        "progress": "En curso",
+        "resolved": "Resuelto"
     },
     "table": {
-        "ticket": "Ticket",
-        "contact": "Contact",
-        "category": "Category",
-        "priority": "Priority",
+        "ticket": "Boleto",
+        "contact": "Contacto",
+        "category": "Categoría",
+        "priority": "Prioridad",
         "updated": "Actualizado",
-        "action": "Action"
+        "action": "Acción"
     },
     "create": {
-        "title": "Create New Ticket",
-        "subject": "Subject",
-        "subjectPlaceholder": "Briefly describe the issue",
-        "category": "Category",
-        "priority": "Priority",
-        "description": "Description",
-        "descriptionPlaceholder": "Include details that will help the support team investigate.",
-        "attachments": "Attachments",
-        "chooseFiles": "Choose files",
-        "attachmentHint": "Up to {{files}} files, {{size}} MB each",
-        "oversized": "{{name}} is larger than {{size}} MB",
-        "submit": "Create Ticket",
-        "submitting": "Creating…"
+        "title": "Crear nuevo billete",
+        "subject": "Sujeto",
+        "subjectPlaceholder": "Describe brevemente el problema",
+        "category": "Categoría",
+        "priority": "Prioridad",
+        "description": "Descripción",
+        "descriptionPlaceholder": "Incluya detalles que ayudarán al equipo de soporte a investigar.",
+        "attachments": "Adjuntos",
+        "chooseFiles": "Elige archivos",
+        "attachmentHint": "Hasta archivos {{files}}, {{size}} MB cada uno",
+        "oversized": "{{name}} es mayor que {{size}} MB",
+        "submit": "Crear billete",
+        "submitting": "Creando…"
     },
     "detail": {
-        "fallbackId": "Ticket",
+        "fallbackId": "Boleto",
         "fallbackSubject": "Detalles del billete",
-        "contact": "Contact",
+        "contact": "Contacto",
         "phone": "Teléfono",
-        "created": "Created",
+        "created": "Creado",
         "updated": "Actualizado",
-        "description": "Description",
-        "attachments": "Attachments",
-        "conversation": "Conversation",
-        "noReplies": "No replies yet.",
-        "staffSuffix": " (Support)",
-        "closed": "Ticket closed",
-        "replyPlaceholder": "Write a reply…",
-        "sendReply": "Send reply",
+        "description": "Descripción",
+        "attachments": "Adjuntos",
+        "conversation": "Conversación",
+        "noReplies": "Aún no hay respuestas.",
+        "staffSuffix": "(Apoyo)",
+        "closed": "Boleto cerrado",
+        "replyPlaceholder": "Escribe una respuesta…",
+        "sendReply": "Enviar respuesta",
         "sending": "Envío…"
     },
     "status": {
         "all": "Todo",
-        "open": "Open",
-        "inprogress": "In Progress",
-        "onhold": "On Hold",
-        "resolved": "Resolved",
-        "closed": "Closed"
+        "open": "Abierto",
+        "inprogress": "En curso",
+        "onhold": "En espera",
+        "resolved": "Resuelto",
+        "closed": "Cerrado"
     },
     "priority": {
         "all": "Todo",
-        "low": "Low",
-        "medium": "Medium",
-        "high": "High"
+        "low": "Bajo",
+        "medium": "Medio",
+        "high": "Alto"
     },
     "category": {
-        "booking": "Booking",
+        "booking": "Reserva",
         "payment": "Pago",
-        "transport": "Transport",
+        "transport": "Transporte",
         "hotel": "Hotel",
-        "account": "Account",
-        "technical": "Technical",
+        "account": "Cuenta",
+        "technical": "Técnico",
         "general": "General"
     },
     "toast": {
-        "loadFailed": "Failed to load support tickets",
-        "detailFailed": "Failed to load ticket details",
-        "created": "Support ticket created",
-        "createFailed": "Failed to create ticket",
-        "replySent": "Reply sent",
-        "replyFailed": "Failed to send reply"
+        "loadFailed": "No se pudieron cargar los tickets de soporte",
+        "detailFailed": "No se pudieron cargar los detalles del boleto",
+        "created": "Ticket de soporte creado",
+        "createFailed": "No se pudo crear el ticket",
+        "replySent": "Respuesta enviada",
+        "replyFailed": "No se pudo enviar la respuesta"
     }
 }

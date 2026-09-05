@@ -1,13 +1,13 @@
 {
     "list": {
-        "title": "Gateways",
-        "paymentTitle": "Payment gateways",
-        "smsTitle": "SMS gateways",
-        "description": "Enable approved payment and SMS providers. Configure credentials and params as instructed by each gateway class. Endpoints are managed by Durpalla Admin.",
-        "footnote": "You can remove an enabled gateway from your account. You cannot change its namespace or type. Endpoints are managed by Durpalla Admin.",
-        "emptyTitle": "No gateways enabled yet",
-        "emptyDescription": "Enable a template above to get started.",
-        "manage": "Manage"
+        "title": "Puertas de enlace",
+        "paymentTitle": "Pasarelas de pago",
+        "smsTitle": "Pasarelas SMS",
+        "description": "Habilite proveedores de pago y SMS aprobados. Configure las credenciales y los parámetros según las instrucciones de cada clase de puerta de enlace. Los puntos finales son administrados por Durpalla Admin.",
+        "footnote": "Puede eliminar una puerta de enlace habilitada de su cuenta. No puede cambiar su espacio de nombres ni su tipo. Los puntos finales son administrados por Durpalla Admin.",
+        "emptyTitle": "Aún no hay puertas de enlace habilitadas",
+        "emptyDescription": "Habilite una plantilla arriba para comenzar.",
+        "manage": "Administrar"
     },
     "tabs": {
         "all": "Todo",
@@ -19,94 +19,94 @@
         "sms": "SMS"
     },
     "enable": {
-        "title": "Enable a gateway",
-        "namespace": "Gateway namespace",
-        "selectPlaceholder": "Select…",
-        "noTemplates": "No templates available",
-        "action": "Enable",
-        "pending": "Enabling…",
-        "summaryTitle": "What you will need to configure",
-        "credentials": "Credentials: {{keys}}",
-        "params": "Params: {{keys}}",
-        "endpoints": "Endpoints (admin): {{keys}}"
+        "title": "Habilitar una puerta de enlace",
+        "namespace": "Espacio de nombres de puerta de enlace",
+        "selectPlaceholder": "Seleccionar…",
+        "noTemplates": "No hay plantillas disponibles",
+        "action": "Permitir",
+        "pending": "Habilitando…",
+        "summaryTitle": "Lo que necesitarás configurar",
+        "credentials": "Credenciales: {{keys}}",
+        "params": "Parámetros: {{keys}}",
+        "endpoints": "Puntos finales (administrador): {{keys}}"
     },
     "table": {
         "name": "Nombre",
-        "type": "Type",
-        "namespace": "Gateway namespace",
-        "code": "Code"
+        "type": "Tipo",
+        "namespace": "Espacio de nombres de puerta de enlace",
+        "code": "Código"
     },
     "remove": {
         "action": "Eliminar",
-        "pending": "Removing…",
-        "title": "Remove {{name}}?",
-        "description": "This removes the gateway from your account only. You can enable the same template again later. Namespace and type cannot be changed."
+        "pending": "Eliminando…",
+        "title": "¿Quitar {{name}}?",
+        "description": "Esto elimina la puerta de enlace únicamente de su cuenta. Puede habilitar la misma plantilla nuevamente más tarde. El espacio de nombres y el tipo no se pueden cambiar."
     },
     "edit": {
         "subtitle": "{{type}} · {{code}}",
         "notFoundTitle": "Puerta de enlace no encontrada",
-        "notFoundDescription": "This gateway is not enabled for your account.",
-        "backToGateways": "Back to gateways",
-        "setupTitle": "Setup instructions",
-        "setupHint": "Configure credentials and params in the tabs below. Endpoints are managed by Durpalla Admin.",
+        "notFoundDescription": "Esta puerta de enlace no está habilitada para su cuenta.",
+        "backToGateways": "Volver a las puertas de enlace",
+        "setupTitle": "Instrucciones de configuración",
+        "setupHint": "Configure las credenciales y los parámetros en las pestañas siguientes. Los puntos finales son administrados por Durpalla Admin.",
         "tabs": {
-            "info": "Info",
-            "credential": "Credentials",
-            "endpoint": "Endpoints",
-            "param": "Params"
+            "info": "Información",
+            "credential": "Cartas credenciales",
+            "endpoint": "Puntos finales",
+            "param": "parámetros"
         }
     },
     "info": {
-        "title": "Gateway info",
+        "title": "Información de la puerta de enlace",
         "name": "Nombre",
-        "code": "Code",
-        "type": "Type",
-        "channel": "Channel",
-        "namespace": "Gateway namespace",
-        "save": "Save info"
+        "code": "Código",
+        "type": "Tipo",
+        "channel": "Canal",
+        "namespace": "Espacio de nombres de puerta de enlace",
+        "save": "Guardar información"
     },
     "credentials": {
-        "title": "Credentials",
-        "add": "Add credential",
-        "hint": "Leave a value blank to keep the existing secret. Only filled values are updated.",
-        "keyPlaceholder": "key",
+        "title": "Cartas credenciales",
+        "add": "Agregar credencial",
+        "hint": "Deje un valor en blanco para mantener el secreto existente. Sólo se actualizan los valores completados.",
+        "keyPlaceholder": "llave",
         "valuePlaceholder": "********",
-        "removeRow": "Remove credential",
-        "save": "Save credentials",
-        "noneFilled": "Enter at least one credential value to update"
+        "removeRow": "Quitar credencial",
+        "save": "Guardar credenciales",
+        "noneFilled": "Ingrese al menos un valor de credencial para actualizar"
     },
     "endpoints": {
-        "title": "Endpoints",
-        "hint": "Endpoints are managed by Durpalla Admin. You can only view their setup status here.",
+        "title": "Puntos finales",
+        "hint": "Los puntos finales son administrados por Durpalla Admin. Sólo puedes ver su estado de configuración aquí.",
         "name": "Nombre",
-        "key": "Key",
-        "configured": "Configured by admin",
-        "pending": "Pending admin setup",
-        "emptyTitle": "No endpoints",
-        "emptyDescription": "This gateway does not declare endpoint keys."
+        "key": "Llave",
+        "configured": "Configurado por el administrador",
+        "pending": "Configuración de administrador pendiente",
+        "emptyTitle": "Sin puntos finales",
+        "emptyDescription": "Esta puerta de enlace no declara claves de punto final."
     },
     "params": {
-        "title": "Params",
-        "add": "Add param",
-        "hint": "Add any key/value pairs this gateway needs. Suggested keys are prefilled when available.",
-        "keyPlaceholder": "key",
-        "valuePlaceholder": "value",
-        "removeRow": "Remove param",
-        "save": "Save params"
+        "title": "parámetros",
+        "add": "Agregar parámetro",
+        "hint": "Agregue cualquier par clave/valor que necesite esta puerta de enlace. Las claves sugeridas se completan previamente cuando están disponibles.",
+        "keyPlaceholder": "llave",
+        "valuePlaceholder": "valor",
+        "removeRow": "Eliminar parámetro",
+        "save": "Guardar parámetros"
     },
     "field": {
-        "required": "required",
-        "requiredSuffix": " (required)",
-        "requiredMeta": " · required"
+        "required": "requerido",
+        "requiredSuffix": "(requerido)",
+        "requiredMeta": "· requerido"
     },
     "errors": {
         "notFound": "Puerta de enlace no encontrada",
-        "duplicateKey": "Duplicate key: {{key}}"
+        "duplicateKey": "Clave duplicada: {{key}}"
     },
     "toast": {
         "enabledSms": "Puerta de enlace habilitada. Actualice las credenciales de SMS para comenzar a enviar mensajes.",
         "enabledPayment": "Puerta de enlace habilitada. Actualice las credenciales para comenzar a aceptar pagos.",
-        "infoSaved": "Info saved",
+        "infoSaved": "Información guardada",
         "credentialsSaved": "Credenciales guardadas",
         "paramsSaved": "Parámetros guardados"
     }

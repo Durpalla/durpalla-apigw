@@ -1,112 +1,112 @@
 {
     "list": {
-        "title": "Gateways",
-        "paymentTitle": "Payment gateways",
-        "smsTitle": "SMS gateways",
-        "description": "Enable approved payment and SMS providers. Configure credentials and params as instructed by each gateway class. Endpoints are managed by Durpalla Admin.",
-        "footnote": "You can remove an enabled gateway from your account. You cannot change its namespace or type. Endpoints are managed by Durpalla Admin.",
-        "emptyTitle": "No gateways enabled yet",
-        "emptyDescription": "Enable a template above to get started.",
-        "manage": "Manage"
+        "title": "Gateway",
+        "paymentTitle": "Gateway di pagamento",
+        "smsTitle": "Gateway SMS",
+        "description": "Abilita i fornitori di servizi SMS e di pagamento approvati. Configura credenziali e parametri come indicato da ciascuna classe gateway. Gli endpoint sono gestiti da Durpalla Admin.",
+        "footnote": "Puoi rimuovere un gateway abilitato dal tuo account. Non è possibile modificarne lo spazio dei nomi o il tipo. Gli endpoint sono gestiti da Durpalla Admin.",
+        "emptyTitle": "Nessun gateway ancora abilitato",
+        "emptyDescription": "Abilita un modello qui sopra per iniziare.",
+        "manage": "Maneggio"
     },
     "tabs": {
         "all": "Tutto",
         "payment": "Pagamento",
-        "sms": "SMS"
+        "sms": "sms"
     },
     "types": {
         "payment": "Pagamento",
-        "sms": "SMS"
+        "sms": "sms"
     },
     "enable": {
-        "title": "Enable a gateway",
-        "namespace": "Gateway namespace",
-        "selectPlaceholder": "Select…",
-        "noTemplates": "No templates available",
-        "action": "Enable",
-        "pending": "Enabling…",
-        "summaryTitle": "What you will need to configure",
-        "credentials": "Credentials: {{keys}}",
-        "params": "Params: {{keys}}",
-        "endpoints": "Endpoints (admin): {{keys}}"
+        "title": "Abilita un gateway",
+        "namespace": "Spazio dei nomi del gateway",
+        "selectPlaceholder": "Selezionare…",
+        "noTemplates": "Nessun modello disponibile",
+        "action": "Abilitare",
+        "pending": "Abilitazione...",
+        "summaryTitle": "Cosa dovrai configurare",
+        "credentials": "Credenziali: {{keys}}",
+        "params": "Parametri: {{keys}}",
+        "endpoints": "Endpoint (amministratore): {{keys}}"
     },
     "table": {
         "name": "Nome",
-        "type": "Type",
-        "namespace": "Gateway namespace",
-        "code": "Code"
+        "type": "Tipo",
+        "namespace": "Spazio dei nomi del gateway",
+        "code": "Codice"
     },
     "remove": {
         "action": "Rimuovere",
-        "pending": "Removing…",
-        "title": "Remove {{name}}?",
-        "description": "This removes the gateway from your account only. You can enable the same template again later. Namespace and type cannot be changed."
+        "pending": "Rimozione…",
+        "title": "Rimuovere {{name}}?",
+        "description": "Ciò rimuove il gateway solo dal tuo account. Puoi abilitare nuovamente lo stesso modello in un secondo momento. Lo spazio dei nomi e il tipo non possono essere modificati."
     },
     "edit": {
         "subtitle": "{{type}} · {{code}}",
         "notFoundTitle": "Gateway non trovato",
-        "notFoundDescription": "This gateway is not enabled for your account.",
-        "backToGateways": "Back to gateways",
-        "setupTitle": "Setup instructions",
-        "setupHint": "Configure credentials and params in the tabs below. Endpoints are managed by Durpalla Admin.",
+        "notFoundDescription": "Questo gateway non è abilitato per il tuo account.",
+        "backToGateways": "Torniamo ai gateway",
+        "setupTitle": "Istruzioni per l'installazione",
+        "setupHint": "Configura credenziali e parametri nelle schede seguenti. Gli endpoint sono gestiti da Durpalla Admin.",
         "tabs": {
-            "info": "Info",
-            "credential": "Credentials",
-            "endpoint": "Endpoints",
-            "param": "Params"
+            "info": "Informazioni",
+            "credential": "Credenziali",
+            "endpoint": "Endpoint",
+            "param": "Param"
         }
     },
     "info": {
-        "title": "Gateway info",
+        "title": "Informazioni sul gateway",
         "name": "Nome",
-        "code": "Code",
-        "type": "Type",
-        "channel": "Channel",
-        "namespace": "Gateway namespace",
-        "save": "Save info"
+        "code": "Codice",
+        "type": "Tipo",
+        "channel": "Canale",
+        "namespace": "Spazio dei nomi del gateway",
+        "save": "Salva informazioni"
     },
     "credentials": {
-        "title": "Credentials",
-        "add": "Add credential",
-        "hint": "Leave a value blank to keep the existing secret. Only filled values are updated.",
-        "keyPlaceholder": "key",
+        "title": "Credenziali",
+        "add": "Aggiungi credenziale",
+        "hint": "Lascia un valore vuoto per mantenere il segreto esistente. Vengono aggiornati solo i valori compilati.",
+        "keyPlaceholder": "chiave",
         "valuePlaceholder": "********",
-        "removeRow": "Remove credential",
-        "save": "Save credentials",
-        "noneFilled": "Enter at least one credential value to update"
+        "removeRow": "Rimuovi credenziale",
+        "save": "Salva credenziali",
+        "noneFilled": "Inserisci almeno un valore di credenziale da aggiornare"
     },
     "endpoints": {
-        "title": "Endpoints",
-        "hint": "Endpoints are managed by Durpalla Admin. You can only view their setup status here.",
+        "title": "Endpoint",
+        "hint": "Gli endpoint sono gestiti da Durpalla Admin. Puoi visualizzare solo lo stato della configurazione qui.",
         "name": "Nome",
-        "key": "Key",
-        "configured": "Configured by admin",
-        "pending": "Pending admin setup",
-        "emptyTitle": "No endpoints",
-        "emptyDescription": "This gateway does not declare endpoint keys."
+        "key": "Chiave",
+        "configured": "Configurato dall'amministratore",
+        "pending": "Configurazione dell'amministratore in attesa",
+        "emptyTitle": "Nessun endpoint",
+        "emptyDescription": "Questo gateway non dichiara le chiavi dell'endpoint."
     },
     "params": {
-        "title": "Params",
-        "add": "Add param",
-        "hint": "Add any key/value pairs this gateway needs. Suggested keys are prefilled when available.",
-        "keyPlaceholder": "key",
-        "valuePlaceholder": "value",
-        "removeRow": "Remove param",
-        "save": "Save params"
+        "title": "Param",
+        "add": "Aggiungi param",
+        "hint": "Aggiungi eventuali coppie chiave/valore necessarie a questo gateway. Le chiavi suggerite sono precompilate quando disponibili.",
+        "keyPlaceholder": "chiave",
+        "valuePlaceholder": "valore",
+        "removeRow": "Rimuovi param",
+        "save": "Salva parametri"
     },
     "field": {
-        "required": "required",
-        "requiredSuffix": " (required)",
-        "requiredMeta": " · required"
+        "required": "necessario",
+        "requiredSuffix": "(necessario)",
+        "requiredMeta": "· necessario"
     },
     "errors": {
         "notFound": "Gateway non trovato",
-        "duplicateKey": "Duplicate key: {{key}}"
+        "duplicateKey": "Chiave duplicata: {{key}}"
     },
     "toast": {
         "enabledSms": "Gateway abilitato. Aggiorna le credenziali SMS per iniziare a inviare messaggi.",
         "enabledPayment": "Gateway abilitato. Aggiorna le credenziali per iniziare ad accettare pagamenti.",
-        "infoSaved": "Info saved",
+        "infoSaved": "Informazioni salvate",
         "credentialsSaved": "Credenziali salvate",
         "paramsSaved": "Parametri salvati"
     }

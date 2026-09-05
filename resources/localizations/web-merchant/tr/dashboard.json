@@ -1,74 +1,74 @@
 {
     "page": {
-        "title": "Dashboard",
-        "description": "Booking, trip and revenue overview",
-        "asOf": "Live overview as of {{time}}",
-        "rangeOption": "Last {{days}} days",
-        "newBooking": "New booking",
-        "newHotelBooking": "New hotel booking",
-        "live": "Live"
+        "title": "Kontrol Paneli",
+        "description": "Rezervasyon, seyahat ve gelire genel bakış",
+        "asOf": "{{time}} itibarıyla canlı genel bakış",
+        "rangeOption": "Son {{days}} gün",
+        "newBooking": "Yeni rezervasyon",
+        "newHotelBooking": "Yeni otel rezervasyonu",
+        "live": "Canlı"
     },
     "stats": {
-        "bookingsRange": "Bookings ({{days}}d)",
-        "activeTrips": "Active trips today",
-        "revenueToday": "Revenue today",
-        "avgOccupancy": "Avg occupancy",
-        "periodRevenue": "Period revenue",
-        "periodBookings": "Period bookings",
-        "unitsSold": "Units sold",
-        "pendingCancelled": "Pending / cancelled",
+        "bookingsRange": "Rezervasyonlar ({{days}}d)",
+        "activeTrips": "Bugün aktif geziler",
+        "revenueToday": "Bugünkü gelir",
+        "avgOccupancy": "Ortalama doluluk",
+        "periodRevenue": "Dönem geliri",
+        "periodBookings": "Dönem rezervasyonları",
+        "unitsSold": "Satılan birimler",
+        "pendingCancelled": "Beklemede / iptal edildi",
         "hotels": "Oteller",
-        "hotelBookings": "Hotel bookings",
-        "hotelConfirmed": "Hotel confirmed",
-        "hotelPayable": "Hotel payable"
+        "hotelBookings": "Otel rezervasyonları",
+        "hotelConfirmed": "Otel onaylandı",
+        "hotelPayable": "Otele ödenecek"
     },
     "charts": {
-        "revenueTrend": "Revenue trend",
-        "revenueTrendDescription": "Daily collected revenue over the selected period.",
-        "bookingsVolume": "Bookings volume",
-        "bookingsVolumeDescription": "Daily booking count for the selected period.",
-        "bookingStatus": "Booking status",
-        "bookingStatusDescription": "Share of bookings by current status.",
-        "revenueSeries": "Revenue",
-        "bookingsSeries": "Bookings",
-        "noData": "No chart data",
-        "noStatusData": "No status data"
+        "revenueTrend": "Gelir eğilimi",
+        "revenueTrendDescription": "Seçilen dönem boyunca günlük toplanan gelir.",
+        "bookingsVolume": "Rezervasyon hacmi",
+        "bookingsVolumeDescription": "Seçilen dönem için günlük rezervasyon sayısı.",
+        "bookingStatus": "Rezervasyon durumu",
+        "bookingStatusDescription": "Mevcut duruma göre rezervasyonların payı.",
+        "revenueSeries": "Hasılat",
+        "bookingsSeries": "Rezervasyonlar",
+        "noData": "Grafik verisi yok",
+        "noStatusData": "Durum verisi yok"
     },
     "widgets": {
-        "trendVsPrevious": "{{value}}% vs previous",
-        "noTrend": "No trend data",
-        "bookingsCount_one": "{{value}} booking",
-        "bookingsCount_other": "{{value}} bookings"
+        "trendVsPrevious": "{{value}}% ile öncekine kıyasla",
+        "noTrend": "Trend verisi yok",
+        "bookingsCount_one": "{{value}} rezervasyon",
+        "bookingsCount_other": "{{value}} rezervasyonlar"
     },
     "top": {
-        "title": "Top performers",
-        "description": "Routes and vehicles with the highest activity.",
-        "routes": "Top routes",
-        "vehicles": "Top vehicles",
-        "empty": "No ranking data returned by the dashboard API yet."
+        "title": "En iyi performans gösterenler",
+        "description": "En yüksek aktiviteye sahip rotalar ve araçlar.",
+        "routes": "En iyi rotalar",
+        "vehicles": "En iyi araçlar",
+        "empty": "Henüz kontrol paneli API'si tarafından döndürülen sıralama verisi yok."
     },
     "hotels": {
         "title": "Oteller",
-        "description": "Jump into hotel operations.",
-        "manage": "Manage hotels"
+        "description": "Otel operasyonlarına geçin.",
+        "manage": "Otelleri yönet"
     },
     "recent": {
-        "title": "Recent bookings",
-        "descriptionTransport": "Latest transport bookings from the dashboard feed.",
-        "description": "Latest bookings from the dashboard feed.",
-        "viewAll": "View all",
-        "empty": "No recent bookings.",
-        "code": "Code",
+        "title": "Son rezervasyonlar",
+        "descriptionTransport": "Kontrol paneli akışından en son ulaşım rezervasyonları.",
+        "description": "Kontrol paneli feed'indeki en son rezervasyonlar.",
+        "viewAll": "Tümünü görüntüle",
+        "empty": "Yakın zamanda rezervasyon yok.",
+        "code": "Kod",
         "passenger": "Yolcu",
-        "open": "Open"
+        "open": "Açık"
     },
     "quickActions": {
-        "title": "Quick actions",
-        "description": "Jump into everyday operations.",
-        "trips": "Manage trips",
-        "transportBookings": "Transport bookings",
-        "hotelBookings": "Hotel bookings",
-        "reports": "Open reports",
+        "title": "Hızlı eylemler",
+        "description": "Günlük operasyonlara geçin.",
+        "trips": "Gezileri yönet",
+        "transportBookings": "Ulaşım rezervasyonları",
+        "hotelBookings": "Otel rezervasyonları",
+        "reports": "Raporları aç",
         "settlements": "Yerleşimler"
     }
 }

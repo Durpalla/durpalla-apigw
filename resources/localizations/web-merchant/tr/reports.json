@@ -1,77 +1,77 @@
 {
     "page": {
-        "exportCsv": "Export CSV",
-        "exportFailed": "Export failed",
-        "rangeInvalid": "Date range is invalid",
-        "revenue": "Revenue",
-        "bookings": "Bookings",
-        "unitsSold": "Units sold",
-        "occupancy": "Occupancy",
+        "exportCsv": "CSV'yi dışa aktar",
+        "exportFailed": "Dışa aktarma başarısız oldu",
+        "rangeInvalid": "Tarih aralığı geçersiz",
+        "revenue": "Hasılat",
+        "bookings": "Rezervasyonlar",
+        "unitsSold": "Satılan birimler",
+        "occupancy": "Doluluk",
         "settlements": "Yerleşimler",
-        "cancelledBookings": "Cancelled bookings",
-        "revenueTrend": "Revenue trend",
-        "revenueTrendDescription": "Daily revenue for the selected period.",
-        "bookingVolume": "Booking volume",
-        "bookingVolumeDescription": "Daily booking count for the selected period.",
-        "utilizationTrend": "Utilization trend",
-        "utilizationTrendDescription": "Units sold across the selected period.",
-        "topVehicles": "Top vehicles",
-        "topRoutes": "Top routes",
+        "cancelledBookings": "İptal edilen rezervasyonlar",
+        "revenueTrend": "Gelir eğilimi",
+        "revenueTrendDescription": "Seçilen dönem için günlük gelir.",
+        "bookingVolume": "Rezervasyon hacmi",
+        "bookingVolumeDescription": "Seçilen dönem için günlük rezervasyon sayısı.",
+        "utilizationTrend": "Kullanım eğilimi",
+        "utilizationTrendDescription": "Seçilen dönemde satılan birimler.",
+        "topVehicles": "En iyi araçlar",
+        "topRoutes": "En iyi rotalar",
         "date": "Tarih",
-        "units": "Units",
-        "noSeries": "No series data returned for this report type.",
-        "noChartData": "No chart data returned."
+        "units": "Birimler",
+        "noSeries": "Bu rapor türü için seri verisi döndürülmedi.",
+        "noChartData": "Hiçbir grafik verisi döndürülmedi."
     },
     "definitions": {
         "dashboard": {
-            "label": "Dashboard",
-            "title": "Business Overview",
-            "purpose": "Executive summary of performance across the selected period."
+            "label": "Kontrol Paneli",
+            "title": "İşletmeye Genel Bakış",
+            "purpose": "Seçilen dönemdeki performansın yönetici özeti."
         },
         "bookings": {
-            "label": "Bookings",
-            "title": "Booking Report",
-            "purpose": "Booking volume by date, source, channel, and status."
+            "label": "Rezervasyonlar",
+            "title": "Rezervasyon Raporu",
+            "purpose": "Tarihe, kaynağa, kanala ve duruma göre rezervasyon hacmi."
         },
         "revenue": {
-            "label": "Revenue",
-            "title": "Revenue Report",
-            "purpose": "Revenue, commission, taxes, refunds, and discounts."
+            "label": "Hasılat",
+            "title": "Gelir Raporu",
+            "purpose": "Gelir, komisyon, vergiler, geri ödemeler ve indirimler."
         },
         "occupancy": {
-            "label": "Occupancy",
-            "title": "Occupancy / Utilization Report",
-            "purpose": "Hotel occupancy and transport seat utilization."
+            "label": "Doluluk",
+            "title": "Doluluk / Kullanım Raporu",
+            "purpose": "Otel doluluğu ve ulaşım koltuğu kullanımı."
         },
         "customers": {
-            "label": "Customers",
-            "title": "Customer Report",
-            "purpose": "Customer activity and booking trends."
+            "label": "Müşteriler",
+            "title": "Müşteri Raporu",
+            "purpose": "Müşteri etkinliği ve rezervasyon eğilimleri."
         },
         "units": {
-            "label": "Rooms / Vehicles",
-            "title": "Room / Vehicle Performance",
-            "purpose": "Performance of rooms, vehicles, and routes."
+            "label": "Odalar / Araçlar",
+            "title": "Oda / Araç Performansı",
+            "purpose": "Odaların, araçların ve rotaların performansı."
         },
         "cancellations": {
-            "label": "Cancellations",
-            "title": "Cancellation & Refund Report",
-            "purpose": "Cancellation and refund trends for the selected period."
+            "label": "İptaller",
+            "title": "İptal ve İade Raporu",
+            "purpose": "Seçilen döneme ait iptal ve iade eğilimleri."
         },
         "payments": {
-            "label": "Payments",
-            "title": "Payment Report",
-            "purpose": "Payment collection, due amounts, and settlements."
+            "label": "Ödemeler",
+            "title": "Ödeme Raporu",
+            "purpose": "Ödeme tahsilatı, ödenmesi gereken tutarlar ve ödemeler."
         },
         "staff-performance": {
-            "label": "Staff Performance",
-            "title": "Staff Performance",
-            "purpose": "Bookings and revenue handled by staff."
+            "label": "Personel Performansı",
+            "title": "Personel Performansı",
+            "purpose": "Rezervasyonlar ve gelirler personel tarafından gerçekleştirilir."
         },
         "sales-channels": {
-            "label": "Sales Channels",
-            "title": "Sales & Channel Report",
-            "purpose": "Sales performance across booking channels."
+            "label": "Satış Kanalları",
+            "title": "Satış ve Kanal Raporu",
+            "purpose": "Rezervasyon kanalları genelinde satış performansı."
         }
     }
 }

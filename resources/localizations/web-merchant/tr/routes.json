@@ -1,70 +1,70 @@
 {
     "list": {
-        "title": "Routes",
+        "title": "Rotalar",
         "description": "Servis yolları ve biniş noktaları",
-        "createRoute": "Create route",
-        "searchPlaceholder": "Search routes",
-        "empty": "No routes",
+        "createRoute": "Rota oluştur",
+        "searchPlaceholder": "Rotaları ara",
+        "empty": "Rota yok",
         "details": "Detaylar",
         "columns": {
             "service": "Hizmet",
-            "type": "Type",
+            "type": "Tip",
             "routeNo": "HAYIR"
         }
     },
     "form": {
-        "createTitle": "Create route",
-        "nameOptional": "Name (optional)",
-        "namePlaceholder": "Auto-generated if left empty",
-        "routeName": "Route name",
+        "createTitle": "Rota oluştur",
+        "nameOptional": "Ad (isteğe bağlı)",
+        "namePlaceholder": "Boş bırakılırsa otomatik olarak oluşturulur",
+        "routeName": "Rota adı",
         "serviceType": "Hizmet türü",
-        "routeStops": "Route stops",
-        "routeStopsHint": "Add VIA ghats in the order the vehicle will visit them.",
-        "selectStop": "Select {{label}}",
-        "stopGhat": "Stop {{index}} ghat",
-        "moveUp": "Move {{label}} up",
-        "moveDown": "Move {{label}} down",
-        "removeStop": "Remove {{label}}",
-        "addVia": "Add VIA ghat",
-        "submit": "Create route",
-        "creating": "Creating...",
+        "routeStops": "Rota durakları",
+        "routeStopsHint": "Aracın ziyaret edeceği sıraya göre VIA ghat'larını ekleyin.",
+        "selectStop": "{{label}}'ı seçin",
+        "stopGhat": "{{index}} ghat'ı durdurun",
+        "moveUp": "{{label}} yukarı taşı",
+        "moveDown": "{{label}} aşağı taşı",
+        "removeStop": "{{label}}'ı kaldır",
+        "addVia": "VIA ghat'ı ekle",
+        "submit": "Rota oluştur",
+        "creating": "Oluşturuluyor...",
         "stops": {
-            "start": "Starting ghat",
-            "destination": "Destination",
-            "via": "VIA stop {{index}}"
+            "start": "Ghat'a başlıyoruz",
+            "destination": "Varış noktası",
+            "via": "VIA durağı {{index}}"
         },
         "errors": {
-            "minStops": "Add at least two route stops",
-            "duplicateGhat": "Each stop must use a different ghat"
+            "minStops": "En az iki rota durağı ekleyin",
+            "duplicateGhat": "Her durakta farklı bir ghat kullanılmalıdır"
         }
     },
     "detail": {
-        "fallbackName": "Route #{{id}}",
-        "notFound": "Route not found",
-        "description": "Route details and ordered boarding points",
-        "viaPricing": "Via Stop Pricing",
-        "viewTrips": "View Trips",
-        "timeline": "Route Timeline",
-        "information": "Route Information",
-        "stopFallback": "Stop {{index}}",
-        "emptyTitle": "No boarding points returned",
-        "emptyDescription": "The route API did not include ordered stop data.",
+        "fallbackName": "Rota #{{id}}",
+        "notFound": "Rota bulunamadı",
+        "description": "Rota ayrıntıları ve sıralı biniş noktaları",
+        "viaPricing": "Durdurma Fiyatlandırması Yoluyla",
+        "viewTrips": "Gezileri Görüntüle",
+        "timeline": "Rota Zaman Çizelgesi",
+        "information": "Rota Bilgileri",
+        "stopFallback": "Durdur {{index}}",
+        "emptyTitle": "Biniş puanı iade edilmedi",
+        "emptyDescription": "Rota API'si sıralı durma verilerini içermiyordu.",
         "stops": {
-            "start": "Starting point",
-            "destination": "Destination",
-            "via": "VIA stop"
+            "start": "Başlangıç ​​noktası",
+            "destination": "Varış noktası",
+            "via": "VIA durağı"
         },
         "fields": {
-            "routeNumber": "Route number",
+            "routeNumber": "Rota numarası",
             "service": "Hizmet",
-            "routeType": "Route type",
-            "routeId": "Route ID",
-            "routeName": "Route name",
+            "routeType": "Rota türü",
+            "routeId": "Rota Kimliği",
+            "routeName": "Rota adı",
             "serviceType": "Hizmet türü",
-            "boardingPoints": "Boarding points"
+            "boardingPoints": "Biniş noktaları"
         }
     },
     "toast": {
-        "created": "Route created"
+        "created": "Rota oluşturuldu"
     }
 }

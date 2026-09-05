@@ -1,162 +1,162 @@
 {
     "actions": {
-        "add": "Add",
-        "back": "Back",
+        "add": "Eklemek",
+        "back": "Geri",
         "cancel": "İptal etmek",
         "close": "Kapalı",
-        "collect": "Collect",
-        "confirm": "Confirm",
-        "create": "Create",
-        "delete": "Delete",
+        "collect": "TOPLAMAK",
+        "confirm": "Onaylamak",
+        "create": "Yaratmak",
+        "delete": "Silmek",
         "download": "İndirmek",
-        "edit": "Edit",
-        "export": "Export",
-        "filter": "Filter",
+        "edit": "Düzenlemek",
+        "export": "İhracat",
+        "filter": "Filtre",
         "print": "Yazdır",
-        "refresh": "Refresh",
+        "refresh": "Yenile",
         "remove": "Kaldırmak",
-        "reset": "Reset",
+        "reset": "Sıfırla",
         "retry": "Yeniden dene",
-        "save": "Save",
+        "save": "Kaydetmek",
         "search": "Aramak",
         "share": "Paylaşmak",
-        "submit": "Submit",
-        "update": "Update",
-        "view": "View"
+        "submit": "Göndermek",
+        "update": "Güncelleme",
+        "view": "Görüş"
     },
     "state": {
-        "empty": "No records found",
-        "error": "Something went wrong",
-        "loading": "Loading...",
-        "noResults": "No results match your filters",
-        "pending": "Please wait...",
-        "saving": "Saving..."
+        "empty": "Hiçbir kayıt bulunamadı",
+        "error": "Bir şeyler ters gitti",
+        "loading": "Yükleniyor...",
+        "noResults": "Filtrelerinizle eşleşen sonuç yok",
+        "pending": "Lütfen bekleyin...",
+        "saving": "Kaydediliyor..."
     },
     "labels": {
-        "actions": "Actions",
+        "actions": "Eylemler",
         "all": "Tüm",
         "amount": "Miktar",
-        "createdAt": "Created at",
+        "createdAt": "Oluşturulma tarihi:",
         "date": "Tarih",
-        "dateRange": "Date range",
-        "due": "Due",
+        "dateRange": "Tarih aralığı",
+        "due": "Vadesi dolmuş",
         "email": "E-posta",
         "from": "İtibaren",
         "mobile": "Mobil",
         "name": "İsim",
-        "notes": "Notes",
+        "notes": "Notlar",
         "paid": "Paralı",
-        "remarks": "Remarks",
+        "remarks": "Notlar",
         "status": "Durum",
         "to": "İle",
         "total": "Toplam",
-        "updatedAt": "Updated at"
+        "updatedAt": "Güncelleme tarihi:"
     },
     "status": {
-        "active": "Active",
-        "cancelled": "Cancelled",
-        "completed": "Completed",
-        "confirmed": "Confirmed",
+        "active": "Aktif",
+        "cancelled": "İptal edildi",
+        "completed": "Tamamlanmış",
+        "confirmed": "Onaylandı",
         "failed": "Arızalı",
-        "inactive": "Inactive",
+        "inactive": "Etkin değil",
         "paid": "Paralı",
-        "pending": "Pending",
-        "unpaid": "Unpaid"
+        "pending": "Askıda olması",
+        "unpaid": "ödenmemiş"
     },
     "routeError": {
-        "title": "Something went wrong",
-        "message": "An unexpected error occurred.",
+        "title": "Bir şeyler ters gitti",
+        "message": "Beklenmeyen bir hata oluştu.",
         "tryAgain": "Tekrar deneyin",
-        "goToDashboard": "Go to dashboard"
+        "goToDashboard": "Kontrol paneline git"
     },
     "language": {
         "label": "Dil",
-        "switch": "Change language",
-        "switching": "Changing language…"
+        "switch": "Dili değiştir",
+        "switching": "Dil değiştiriliyor…"
     },
     "theme": {
-        "toggle": "Toggle theme"
+        "toggle": "Temayı değiştir"
     },
     "vehicleTypes": {
         "bus": "Otobüs",
         "launch": "Öğle yemeği",
-        "ship": "Ship",
+        "ship": "Gemi",
         "train": "Tren",
-        "air": "Air"
+        "air": "Hava"
     },
     "roles": {
-        "accountant": "Accountant",
-        "admin": "Admin",
-        "counter": "Counter",
-        "executive": "Executive",
-        "manager": "Manager",
-        "merchant": "Merchant",
-        "staff": "Staff",
-        "supervisor": "Supervisor",
-        "unknown": "Staff",
-        "viewer": "Viewer"
+        "accountant": "Muhasebeci",
+        "admin": "Yönetici",
+        "counter": "Tezgah",
+        "executive": "Yönetici",
+        "manager": "Müdür",
+        "merchant": "Tüccar",
+        "staff": "Kadro",
+        "supervisor": "Süpervizör",
+        "unknown": "Kadro",
+        "viewer": "Görüntüleyici"
     },
     "errors": {
         "forbidden": "Bunu yapmak için izniniz yok.",
         "generic": "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
-        "network": "Cannot reach the server. Check your internet connection.",
-        "notFound": "Requested resource was not found.",
-        "requestFailed": "Request failed",
-        "requestFailedWithStatus": "Request failed ({{status}})",
+        "network": "Sunucuya ulaşılamıyor. İnternet bağlantınızı kontrol edin.",
+        "notFound": "İstenilen kaynak bulunamadı.",
+        "requestFailed": "İstek başarısız oldu",
+        "requestFailedWithStatus": "İstek başarısız oldu ({{status}})",
         "server": "Sunucu hatası. Lütfen daha sonra tekrar deneyin.",
         "sessionExpired": "Oturumun süresi doldu. Lütfen tekrar oturum açın.",
-        "timeout": "Request timed out",
-        "unreachableHost": "Cannot reach API host ({{detail}})",
-        "validation": "Validation failed. Please check your input."
+        "timeout": "İstek zaman aşımına uğradı",
+        "unreachableHost": "API ana bilgisayarına ulaşılamıyor ({{detail}})",
+        "validation": "Doğrulama başarısız oldu. Lütfen girişinizi kontrol edin."
     },
     "pagination": {
-        "next": "Next",
-        "pageOf": "Page {{page}} of {{total}}",
-        "previous": "Previous",
-        "rowsPerPage": "Rows per page",
-        "showing": "Showing {{from}}–{{to}} of {{total}}",
-        "totalRecords": "{{total}} records"
+        "next": "Sonraki",
+        "pageOf": "Sayfa {{page}} / {{total}}",
+        "previous": "Öncesi",
+        "rowsPerPage": "Sayfa başına satır",
+        "showing": "{{total}}'den {{from}}–{{to}} gösteriliyor",
+        "totalRecords": "{{total}} kayıtları"
     },
     "table": {
         "noResults": "Sonuç yok",
-        "selectAll": "Select all rows",
-        "selectRow": "Select row"
+        "selectAll": "Tüm satırları seç",
+        "selectRow": "Satır seç"
     },
     "dialog": {
-        "close": "Close dialog",
-        "confirmDescription": "This action cannot be undone.",
-        "confirmTitle": "Are you sure?"
+        "close": "İletişim kutusunu kapat",
+        "confirmDescription": "Bu eylem geri alınamaz.",
+        "confirmTitle": "Emin misin?"
     },
     "placeholders": {
-        "date": "Select date",
-        "dateTime": "Select date and time",
-        "email": "Enter email address",
-        "number": "Enter number",
-        "password": "Enter password",
-        "phone": "Enter phone number",
+        "date": "Tarih seçin",
+        "dateTime": "Tarih ve saati seçin",
+        "email": "E-posta adresini girin",
+        "number": "Numarayı girin",
+        "password": "Şifreyi girin",
+        "phone": "Telefon numarasını girin",
         "search": "Aramak",
-        "time": "Select time",
-        "value": "Enter value"
+        "time": "Zamanı seçin",
+        "value": "Değer girin"
     },
     "a11y": {
         "hidePassword": "Şifreyi gizle",
-        "otpDigit": "Digit {{position}}",
+        "otpDigit": "Hane {{position}}",
         "showPassword": "Şifreyi göster"
     },
     "cities": {
         "barisal": "Barisal",
         "chattogram": "Chattogram",
-        "coxsBazar": "Cox's Bazar",
-        "dhaka": "Dhaka",
+        "coxsBazar": "Cox'un Bazar'ı",
+        "dhaka": "Dakka",
         "khulna": "Khulna",
         "mymensingh": "Mymensingh",
         "rajshahi": "Rajshahi",
         "rangpur": "Rangpur",
-        "sylhet": "Sylhet"
+        "sylhet": "Silhet"
     },
     "brand": {
-        "copyright": "© {{year}} Durpalla. All rights reserved.",
-        "tagline": "Connect your business",
-        "taglineDescription": "Manage bookings, settlements, and payments from one secure merchant platform."
+        "copyright": "© {{year}} Durpalla. Her hakkı saklıdır.",
+        "tagline": "İşletmenizi bağlayın",
+        "taglineDescription": "Rezervasyonları, ödemeleri ve ödemeleri tek bir güvenli satıcı platformundan yönetin."
     }
 }

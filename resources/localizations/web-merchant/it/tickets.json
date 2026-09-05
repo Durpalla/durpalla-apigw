@@ -1,33 +1,33 @@
 {
     "scan": {
-        "title": "Scan ticket",
-        "description": "Camera QR scan or manual code lookup",
-        "camera": "Camera",
-        "startCamera": "Start camera",
-        "scanning": "Scanning...",
-        "stop": "Stop",
-        "manual": "Manual code",
-        "codeLabel": "Booking / ticket code",
-        "codePlaceholder": "Enter booking or ticket code",
+        "title": "Scansiona il biglietto",
+        "description": "Scansione QR della fotocamera o ricerca manuale del codice",
+        "camera": "Telecamera",
+        "startCamera": "Avvia la fotocamera",
+        "scanning": "Scansione...",
+        "stop": "Fermare",
+        "manual": "Codice manuale",
+        "codeLabel": "Codice prenotazione/biglietto",
+        "codePlaceholder": "Inserisci il codice della prenotazione o del biglietto",
         "verify": "Verificare"
     },
     "verify": {
-        "title": "Verify ticket",
-        "noCode": "No code provided",
+        "title": "Verifica biglietto",
+        "noCode": "Nessun codice fornito",
         "passenger": "Passeggeri",
         "amount": "Quantità"
     },
     "print": {
-        "documentTitle": "Ticket",
-        "heading": "Verified Ticket",
-        "code": "Code",
+        "documentTitle": "Biglietto",
+        "heading": "Biglietto verificato",
+        "code": "Codice",
         "passenger": "Passeggeri",
         "status": "Stato"
     },
     "toast": {
-        "scannedInvalid": "Scanned code is invalid",
-        "cameraUnavailable": "Camera unavailable",
-        "manualInvalid": "Enter a valid booking or ticket code",
-        "codeInvalid": "Booking or ticket code is invalid"
+        "scannedInvalid": "Il codice scansionato non è valido",
+        "cameraUnavailable": "Fotocamera non disponibile",
+        "manualInvalid": "Inserisci un codice di prenotazione o biglietto valido",
+        "codeInvalid": "Il codice della prenotazione o del biglietto non è valido"
     }
 }

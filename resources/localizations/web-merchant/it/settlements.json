@@ -1,25 +1,25 @@
 {
     "page": {
-        "title": "Settlements",
-        "description": "Approve or decline settlement requests",
-        "rangeInvalid": "Date range is invalid"
+        "title": "Insediamenti",
+        "description": "Approvare o rifiutare le richieste di liquidazione",
+        "rangeInvalid": "L'intervallo di date non è valido"
     },
     "empty": {
-        "title": "No settlement requests"
+        "title": "Nessuna richiesta di transazione"
     },
     "table": {
         "id": "ID",
-        "approve": "Approve",
-        "decline": "Decline"
+        "approve": "Approvare",
+        "decline": "Declino"
     },
     "status": {
         "all": "Tutto",
-        "pending": "Pending",
-        "approved": "Approved",
-        "declined": "Declined"
+        "pending": "In attesa di",
+        "approved": "Approvato",
+        "declined": "Rifiutato"
     },
     "toast": {
-        "approved": "Approved",
-        "declined": "Declined"
+        "approved": "Approvato",
+        "declined": "Rifiutato"
     }
 }

@@ -1,33 +1,33 @@
 {
     "scan": {
-        "title": "Scan ticket",
-        "description": "Camera QR scan or manual code lookup",
-        "camera": "Camera",
-        "startCamera": "Start camera",
-        "scanning": "Scanning...",
-        "stop": "Stop",
-        "manual": "Manual code",
-        "codeLabel": "Booking / ticket code",
-        "codePlaceholder": "Enter booking or ticket code",
+        "title": "Bileti tara",
+        "description": "Kamera QR taraması veya manuel kod arama",
+        "camera": "Kamera",
+        "startCamera": "Kamerayı başlat",
+        "scanning": "Tarama...",
+        "stop": "Durmak",
+        "manual": "Manuel kod",
+        "codeLabel": "Rezervasyon / bilet kodu",
+        "codePlaceholder": "Rezervasyon veya bilet kodunu girin",
         "verify": "Doğrulamak"
     },
     "verify": {
-        "title": "Verify ticket",
-        "noCode": "No code provided",
+        "title": "Bileti doğrula",
+        "noCode": "Kod sağlanmadı",
         "passenger": "Yolcu",
         "amount": "Miktar"
     },
     "print": {
-        "documentTitle": "Ticket",
-        "heading": "Verified Ticket",
-        "code": "Code",
+        "documentTitle": "Bilet",
+        "heading": "Doğrulanmış Bilet",
+        "code": "Kod",
         "passenger": "Yolcu",
         "status": "Durum"
     },
     "toast": {
-        "scannedInvalid": "Scanned code is invalid",
-        "cameraUnavailable": "Camera unavailable",
-        "manualInvalid": "Enter a valid booking or ticket code",
-        "codeInvalid": "Booking or ticket code is invalid"
+        "scannedInvalid": "Taranan kod geçersiz",
+        "cameraUnavailable": "Kamera kullanılamıyor",
+        "manualInvalid": "Geçerli bir rezervasyon veya bilet kodu girin",
+        "codeInvalid": "Rezervasyon veya bilet kodu geçersiz"
     }
 }
