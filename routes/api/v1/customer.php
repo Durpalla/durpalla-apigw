@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\v1\FaqController;
 use App\Http\Controllers\Api\v1\FrontApiController;
 use App\Http\Controllers\Api\v1\GatewayController;
 use App\Http\Controllers\Api\v1\HotelController;
+use App\Http\Controllers\Api\v1\LocalizationController;
 use App\Http\Controllers\Api\v1\MyApiController;
 use App\Http\Controllers\Api\v1\NidVerificationController;
 use App\Http\Controllers\Api\v1\PageController;
@@ -43,6 +44,11 @@ Route::middleware(['JsonResponse'])->group(function () {
     });
 
     Route::get('faq', [FaqController::class, 'index']);
+
+    Route::prefix('localizations')->group(function () {
+        Route::get('/', [LocalizationController::class, 'index']);
+        Route::get('{locale}', [LocalizationController::class, 'show']);
+    });
 
     Route::prefix('support')->group(function () {
         Route::post('/send', [ApiSupportController::class, 'store']);

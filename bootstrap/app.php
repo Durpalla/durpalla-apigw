@@ -33,6 +33,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/payment/*/ipn',
         ]);
 
+        $middleware->api(prepend: [
+            \App\Http\Middleware\SetApiLocale::class,
+        ]);
+
         $middleware->api(append: [
             \App\Http\Middleware\EnsureGuestId::class,
         ]);
