@@ -41,40 +41,93 @@ class FrontApiController extends Controller
 
     public function init(): JsonResponse
     {
-        $data['options'] = Option::whereIn('tab', ['general', 'booking', 'customer', 'cancellation', 'vatcharge', 'facts'])->pluck('value', 'field');
-        $data['suggestions'] = Ghat::select('name', 'id')
-            ->orderBy('name', 'asc')->distinct()->get()
-            ->map(function ($item, $key) {
-                return [
-                    'label' => $item->name,
-                    'value' => $item->id
-                    ];
-            });
-        $partners = Merchant::select('merchant_name', 'logo', 'id')->orderBy('merchant_name', 'asc')->where('status', 1)->limit(10)->get();
-        $data['partners'] = $partners->map(function ($item) {
-            $item->logo = ($item->logo) ? upload_asset('images/' . $item->logo) : asset('default/avatar.png');
+        try {
+            $data = [];
+            $data['options'] = Schema::hasTable('options')
+                ? Option::whereIn('tab', ['general', 'booking', 'customer', 'cancellation', 'vatcharge', 'facts'])->pluck('value', 'field')
+                : collect();
+            $data['suggestions'] = Schema::hasTable('ghats')
+                ? Ghat::select('name', 'id')->orderBy('name', 'asc')->distinct()->get()
+                    ->map(function ($item) {
+                        return [
+                            'label' => $item->name,
+                            'value' => $item->id,
+                        ];
+                    })
+                : collect();
+            $partners = Schema::hasTable('merchants')
+                ? Merchant::select('merchant_name', 'logo', 'id')->orderBy('merchant_name', 'asc')->where('status', 1)->limit(10)->get()
+                : collect();
+            $data['partners'] = $partners->map(function ($item) {
+                try {
+                    $item->logo = ($item->logo) ? upload_asset('images/'.$item->logo) : asset('default/avatar.png');
+                } catch (\Throwable) {
+                    $item->logo = asset('default/avatar.png');
+                }
 
-            return $item;
-        });
-        $data['offers'] = $this->homeOffersList(6);
-        $sponsors = Sponsor::where('status', 1)->get();
-        $data['sponsors'] = $sponsors->map(function ($item) {
-            $item->attachment = upload_asset($item->attachment);
-            return $item;
-        });
-        $data['cabin_types'] = CabinType::where('type', 'cabin')->pluck('name', 'id');
-        $data['seat_types'] = CabinType::where('type', 'seat')->pluck('name', 'id');
-        $data['services'] = $this->services->getServiceStatuses();
-        return response()->json(['success' => true, 'data' => $data], $this->success);
+                return $item;
+            });
+            $data['offers'] = $this->homeOffersList(6);
+            $sponsors = Schema::hasTable('sponsors')
+                ? Sponsor::where('status', 1)->get()
+                : collect();
+            $data['sponsors'] = $sponsors->map(function ($item) {
+                try {
+                    $item->attachment = upload_asset($item->attachment);
+                } catch (\Throwable) {
+                    $item->attachment = null;
+                }
+
+                return $item;
+            });
+            $data['cabin_types'] = Schema::hasTable('cabin_types')
+                ? CabinType::where('type', 'cabin')->pluck('name', 'id')
+                : collect();
+            $data['seat_types'] = Schema::hasTable('cabin_types')
+                ? CabinType::where('type', 'seat')->pluck('name', 'id')
+                : collect();
+            try {
+                $data['services'] = $this->services->getServiceStatuses();
+            } catch (\Throwable) {
+                $data['services'] = collect();
+            }
+
+            return response()->json(['success' => true, 'data' => $data], $this->success);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('site_init_failed', ['error' => $e->getMessage()]);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'options' => [],
+                    'suggestions' => [],
+                    'partners' => [],
+                    'offers' => [],
+                    'sponsors' => [],
+                    'cabin_types' => [],
+                    'seat_types' => [],
+                    'services' => [],
+                ],
+            ], $this->success);
+        }
     }
 
     public function mobileInit(): JsonResponse
     {
-        $data['options'] = Option::whereIn('tab', ['general', 'booking', 'customer', 'cancellation', 'vatcharge', 'facts'])->pluck('value', 'field');
-        if(empty($data['options']) ) {
-            $data['options'] = null;
+        try {
+            $data['options'] = Schema::hasTable('options')
+                ? Option::whereIn('tab', ['general', 'booking', 'customer', 'cancellation', 'vatcharge', 'facts'])->pluck('value', 'field')
+                : null;
+            if (empty($data['options']) || (is_countable($data['options']) && count($data['options']) === 0)) {
+                $data['options'] = null;
+            }
+
+            return response()->json(['success' => true, 'data' => $data], $this->success);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('mobile_init_failed', ['error' => $e->getMessage()]);
+
+            return response()->json(['success' => true, 'data' => ['options' => null]], $this->success);
         }
-        return response()->json(['success' => true, 'data' => $data], $this->success);
     }
 
     public function downloadLink( Request $request ): JsonResponse

@@ -40,33 +40,42 @@ class CityController extends Controller
             $activeOnly = $activeOnly === null ? true : $activeOnly;
         }
 
-        $q = DB::table('cities')
-            ->select(
-                'id',
-                'country_id',
-                'name',
-                'code',
-                'country',
-                'state',
-                'latitude',
-                'longitude',
-                'is_active',
-                'created_at',
-                'updated_at',
-            )
-            ->orderBy('name');
+        $wanted = [
+            'id',
+            'country_id',
+            'name',
+            'code',
+            'country',
+            'state',
+            'latitude',
+            'longitude',
+            'is_active',
+            'created_at',
+            'updated_at',
+        ];
+        $columns = array_values(array_filter(
+            $wanted,
+            static fn (string $col): bool => Schema::hasColumn('cities', $col)
+        ));
+        if ($columns === [] || ! in_array('id', $columns, true) || ! in_array('name', $columns, true)) {
+            return response()->json(['success' => true, 'data' => []]);
+        }
 
-        if ($activeOnly && Schema::hasColumn('cities', 'is_active')) {
+        $q = DB::table('cities')->select($columns)->orderBy('name');
+
+        if ($activeOnly && in_array('is_active', $columns, true)) {
             $q->where('is_active', 1);
         }
 
         if ($search !== '') {
             $like = '%'.$search.'%';
-            $q->where(function ($qq) use ($like) {
-                $qq->where('name', 'LIKE', $like)
-                    ->orWhere('code', 'LIKE', $like)
-                    ->orWhere('state', 'LIKE', $like)
-                    ->orWhere('country', 'LIKE', $like);
+            $q->where(function ($qq) use ($like, $columns) {
+                $qq->where('name', 'LIKE', $like);
+                foreach (['code', 'state', 'country'] as $col) {
+                    if (in_array($col, $columns, true)) {
+                        $qq->orWhere($col, 'LIKE', $like);
+                    }
+                }
             });
         }
 
@@ -76,4 +85,3 @@ class CityController extends Controller
         ]);
     }
 }
-

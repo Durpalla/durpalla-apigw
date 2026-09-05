@@ -18,9 +18,19 @@ class ServiceRepository extends BaseRepository implements ServiceRepositoryInter
 
     public function all(): Collection
     {
-        return Cache::rememberForever('services', function(){
-            return parent::all();
-        });
+        try {
+            return Cache::remember('services', 300, function () {
+                return parent::all();
+            });
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('services_cache_failed', ['error' => $e->getMessage()]);
+
+            try {
+                return parent::all();
+            } catch (\Throwable) {
+                return collect();
+            }
+        }
     }
 
     public function create(array $data)
