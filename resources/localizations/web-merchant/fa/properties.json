@@ -13,25 +13,25 @@
         "stoppages_one": "{{value}} stoppage",
         "stoppages_other": "{{value}} stoppages",
         "noStoppages": "No stoppages",
-        "details": "Details",
+        "details": "جزئیات",
         "layout": "Layout",
         "activate": "Activate",
         "deactivate": "Deactivate"
     },
     "labels": {
         "ac": "AC",
-        "yes": "Yes",
-        "no": "No",
+        "yes": "بله",
+        "no": "خیر",
         "notSet": "Not set",
         "boarding": "Boarding",
         "destination": "Destination",
         "dropping": "Dropping",
         "via": "Via",
-        "route": "Route"
+        "route": "مسیر"
     },
     "status": {
-        "available": "Available",
-        "unavailable": "Unavailable"
+        "available": "موجود است",
+        "unavailable": "در دسترس نیست"
     },
     "vehicleClass": {
         "acBusiness": "AC Business Class",
@@ -52,13 +52,13 @@
         "fitnessValidTill": "Fitness valid till",
         "engineNumber": "Engine number",
         "engineNo": "Engine no.",
-        "route": "Route",
+        "route": "مسیر",
         "assignedRoute": "Assigned route",
         "capacity": "Capacity",
         "passengerCapacity": "Passenger capacity",
         "floors": "Floors",
         "numberOfFloors": "Number of floors",
-        "floor": "Floor",
+        "floor": "طبقه",
         "seatLayout": "Seat layout",
         "layout": "Layout",
         "layoutType": "Layout type",
@@ -106,7 +106,7 @@
         "quickLinks": "Quick links",
         "quickActions": "Quick actions",
         "backTo": "Back to {{name}}",
-        "trips": "Trips",
+        "trips": "سفرها",
         "openTrips": "Open trips",
         "open": "Open",
         "viewAll": "View all",
@@ -118,12 +118,12 @@
         "tabs": {
             "overview": "Overview",
             "layout": "Seat Layout",
-            "trips": "Trips",
+            "trips": "سفرها",
             "documents": "Documents"
         },
         "sections": {
             "vehicleDetails": "Vehicle details",
-            "amenities": "Amenities",
+            "amenities": "امکانات رفاهی",
             "recentTrips": "Recent trips",
             "statistics": "Vehicle statistics",
             "statusAvailability": "Status & availability",
@@ -146,9 +146,9 @@
         "floorCount_one": "{{value}} floor",
         "floorCount_other": "{{value}} floors",
         "types": {
-            "seat": "Seat",
-            "cabin": "Cabin",
-            "sofa": "Sofa"
+            "seat": "صندلی",
+            "cabin": "کابین",
+            "sofa": "مبل"
         },
         "typeWord": {
             "seat": "seat",

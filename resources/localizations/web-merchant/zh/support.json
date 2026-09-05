@@ -1,88 +1,88 @@
 {
     "list": {
-        "title": "Support Tickets",
-        "description": "Manage and respond to support requests.",
-        "newTicket": "New Ticket",
-        "searchPlaceholder": "Search ticket ID, subject, or contact…",
-        "empty": "No tickets match these filters.",
-        "loading": "Loading tickets…",
-        "viewTicket": "View ticket {{id}}"
+        "title": "支持票",
+        "description": "管理和响应支持请求。",
+        "newTicket": "新票",
+        "searchPlaceholder": "搜索工单 ID、主题或联系人...",
+        "empty": "没有票证符合这些过滤器。",
+        "loading": "正在加载门票...",
+        "viewTicket": "查看门票{{id}}"
     },
     "stats": {
-        "all": "All Tickets",
-        "open": "Open",
-        "progress": "In Progress",
-        "resolved": "Resolved"
+        "all": "所有门票",
+        "open": "打开",
+        "progress": "进行中",
+        "resolved": "已解决"
     },
     "table": {
-        "ticket": "Ticket",
-        "contact": "Contact",
-        "category": "Category",
-        "priority": "Priority",
-        "updated": "Updated",
-        "action": "Action"
+        "ticket": "票",
+        "contact": "接触",
+        "category": "类别",
+        "priority": "优先事项",
+        "updated": "已更新",
+        "action": "行动"
     },
     "create": {
-        "title": "Create New Ticket",
-        "subject": "Subject",
-        "subjectPlaceholder": "Briefly describe the issue",
-        "category": "Category",
-        "priority": "Priority",
-        "description": "Description",
-        "descriptionPlaceholder": "Include details that will help the support team investigate.",
-        "attachments": "Attachments",
-        "chooseFiles": "Choose files",
-        "attachmentHint": "Up to {{files}} files, {{size}} MB each",
-        "oversized": "{{name}} is larger than {{size}} MB",
-        "submit": "Create Ticket",
-        "submitting": "Creating…"
+        "title": "创建新票证",
+        "subject": "主题",
+        "subjectPlaceholder": "简单描述一下问题",
+        "category": "类别",
+        "priority": "优先事项",
+        "description": "描述",
+        "descriptionPlaceholder": "包含有助于支持团队进行调查的详细信息。",
+        "attachments": "附件",
+        "chooseFiles": "选择文件",
+        "attachmentHint": "最多 {{files}} 文件，每个 {{size}} MB",
+        "oversized": "{{name}} 大于 {{size}} MB",
+        "submit": "创建票证",
+        "submitting": "创造……"
     },
     "detail": {
-        "fallbackId": "Ticket",
-        "fallbackSubject": "Ticket details",
-        "contact": "Contact",
-        "phone": "Phone",
-        "created": "Created",
-        "updated": "Updated",
-        "description": "Description",
-        "attachments": "Attachments",
-        "conversation": "Conversation",
-        "noReplies": "No replies yet.",
-        "staffSuffix": " (Support)",
-        "closed": "Ticket closed",
-        "replyPlaceholder": "Write a reply…",
-        "sendReply": "Send reply",
-        "sending": "Sending…"
+        "fallbackId": "票",
+        "fallbackSubject": "门票详情",
+        "contact": "接触",
+        "phone": "电话",
+        "created": "已创建",
+        "updated": "已更新",
+        "description": "描述",
+        "attachments": "附件",
+        "conversation": "对话",
+        "noReplies": "还没有回复。",
+        "staffSuffix": "（支持）",
+        "closed": "门票已关闭",
+        "replyPlaceholder": "写回复...",
+        "sendReply": "发送回复",
+        "sending": "正在发送..."
     },
     "status": {
-        "all": "All",
-        "open": "Open",
-        "inprogress": "In Progress",
-        "onhold": "On Hold",
-        "resolved": "Resolved",
-        "closed": "Closed"
+        "all": "全部",
+        "open": "打开",
+        "inprogress": "进行中",
+        "onhold": "等候接听",
+        "resolved": "已解决",
+        "closed": "关闭"
     },
     "priority": {
-        "all": "All",
-        "low": "Low",
-        "medium": "Medium",
-        "high": "High"
+        "all": "全部",
+        "low": "低的",
+        "medium": "中等的",
+        "high": "高的"
     },
     "category": {
-        "booking": "Booking",
-        "payment": "Payment",
-        "transport": "Transport",
-        "hotel": "Hotel",
-        "account": "Account",
-        "technical": "Technical",
-        "general": "General"
+        "booking": "预订",
+        "payment": "支付",
+        "transport": "运输",
+        "hotel": "酒店",
+        "account": "帐户",
+        "technical": "技术的",
+        "general": "一般的"
     },
     "toast": {
-        "loadFailed": "Failed to load support tickets",
-        "detailFailed": "Failed to load ticket details",
-        "created": "Support ticket created",
-        "createFailed": "Failed to create ticket",
-        "replySent": "Reply sent",
-        "replyFailed": "Failed to send reply"
+        "loadFailed": "无法加载支持票证",
+        "detailFailed": "无法加载票证详细信息",
+        "created": "已创建支持票证",
+        "createFailed": "创建工单失败",
+        "replySent": "回复已发送",
+        "replyFailed": "发送回复失败"
     }
 }

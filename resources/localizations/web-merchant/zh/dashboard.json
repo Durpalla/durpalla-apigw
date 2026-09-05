@@ -1,74 +1,74 @@
 {
     "page": {
-        "title": "Dashboard",
-        "description": "Booking, trip and revenue overview",
-        "asOf": "Live overview as of {{time}}",
-        "rangeOption": "Last {{days}} days",
-        "newBooking": "New booking",
-        "newHotelBooking": "New hotel booking",
-        "live": "Live"
+        "title": "仪表板",
+        "description": "预订、行程和收入概览",
+        "asOf": "截至 {{time}} 的实时概览",
+        "rangeOption": "最后{{days}}天",
+        "newBooking": "新预订",
+        "newHotelBooking": "新酒店预订",
+        "live": "居住"
     },
     "stats": {
-        "bookingsRange": "Bookings ({{days}}d)",
-        "activeTrips": "Active trips today",
-        "revenueToday": "Revenue today",
-        "avgOccupancy": "Avg occupancy",
-        "periodRevenue": "Period revenue",
-        "periodBookings": "Period bookings",
-        "unitsSold": "Units sold",
-        "pendingCancelled": "Pending / cancelled",
-        "hotels": "Hotels",
-        "hotelBookings": "Hotel bookings",
-        "hotelConfirmed": "Hotel confirmed",
-        "hotelPayable": "Hotel payable"
+        "bookingsRange": "预订 ({{days}}d)",
+        "activeTrips": "今日活跃出行",
+        "revenueToday": "今日收入",
+        "avgOccupancy": "平均入住率",
+        "periodRevenue": "期间收入",
+        "periodBookings": "期间预订",
+        "unitsSold": "已售单位",
+        "pendingCancelled": "待定/取消",
+        "hotels": "酒店",
+        "hotelBookings": "酒店预订",
+        "hotelConfirmed": "酒店已确认",
+        "hotelPayable": "酒店应付"
     },
     "charts": {
-        "revenueTrend": "Revenue trend",
-        "revenueTrendDescription": "Daily collected revenue over the selected period.",
-        "bookingsVolume": "Bookings volume",
-        "bookingsVolumeDescription": "Daily booking count for the selected period.",
-        "bookingStatus": "Booking status",
-        "bookingStatusDescription": "Share of bookings by current status.",
-        "revenueSeries": "Revenue",
-        "bookingsSeries": "Bookings",
-        "noData": "No chart data",
-        "noStatusData": "No status data"
+        "revenueTrend": "收入趋势",
+        "revenueTrendDescription": "选定期间每日收取的收入。",
+        "bookingsVolume": "预订量",
+        "bookingsVolumeDescription": "所选期间的每日预订数量。",
+        "bookingStatus": "预订状态",
+        "bookingStatusDescription": "按当前状态划分的预订份额。",
+        "revenueSeries": "收入",
+        "bookingsSeries": "预订",
+        "noData": "无图表数据",
+        "noStatusData": "无状态数据"
     },
     "widgets": {
-        "trendVsPrevious": "{{value}}% vs previous",
-        "noTrend": "No trend data",
-        "bookingsCount_one": "{{value}} booking",
-        "bookingsCount_other": "{{value}} bookings"
+        "trendVsPrevious": "{{value}}% 与之前相比",
+        "noTrend": "无趋势数据",
+        "bookingsCount_one": "{{value}} 预订",
+        "bookingsCount_other": "{{value}} 预订"
     },
     "top": {
-        "title": "Top performers",
-        "description": "Routes and vehicles with the highest activity.",
-        "routes": "Top routes",
-        "vehicles": "Top vehicles",
-        "empty": "No ranking data returned by the dashboard API yet."
+        "title": "表现最佳者",
+        "description": "活动最频繁的路线和车辆。",
+        "routes": "热门航线",
+        "vehicles": "顶级车辆",
+        "empty": "仪表板 API 尚未返回排名数据。"
     },
     "hotels": {
-        "title": "Hotels",
-        "description": "Jump into hotel operations.",
-        "manage": "Manage hotels"
+        "title": "酒店",
+        "description": "涉足酒店运营。",
+        "manage": "管理酒店"
     },
     "recent": {
-        "title": "Recent bookings",
-        "descriptionTransport": "Latest transport bookings from the dashboard feed.",
-        "description": "Latest bookings from the dashboard feed.",
-        "viewAll": "View all",
-        "empty": "No recent bookings.",
-        "code": "Code",
-        "passenger": "Passenger",
-        "open": "Open"
+        "title": "最近的预订",
+        "descriptionTransport": "来自仪表板源的最新交通预订。",
+        "description": "来自仪表板源的最新预订。",
+        "viewAll": "查看全部",
+        "empty": "最近没有预订。",
+        "code": "代码",
+        "passenger": "乘客",
+        "open": "打开"
     },
     "quickActions": {
-        "title": "Quick actions",
-        "description": "Jump into everyday operations.",
-        "trips": "Manage trips",
-        "transportBookings": "Transport bookings",
-        "hotelBookings": "Hotel bookings",
-        "reports": "Open reports",
-        "settlements": "Settlements"
+        "title": "快速行动",
+        "description": "投入日常运营。",
+        "trips": "管理行程",
+        "transportBookings": "交通预订",
+        "hotelBookings": "酒店预订",
+        "reports": "打开报告",
+        "settlements": "定居点"
     }
 }

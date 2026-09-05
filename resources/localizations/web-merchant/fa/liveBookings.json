@@ -9,9 +9,9 @@
     },
     "table": {
         "kind": "Kind",
-        "passenger": "Passenger",
+        "passenger": "مسافر",
         "property": "Property",
-        "trip": "Trip",
+        "trip": "سفر",
         "time": "Time",
         "open": "Open"
     },

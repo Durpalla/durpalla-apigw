@@ -1,15 +1,15 @@
 {
     "list": {
         "title": "Routes",
-        "description": "Service routes and boarding points",
+        "description": "Servis yolları ve biniş noktaları",
         "createRoute": "Create route",
         "searchPlaceholder": "Search routes",
         "empty": "No routes",
-        "details": "Details",
+        "details": "Detaylar",
         "columns": {
-            "service": "Service",
+            "service": "Hizmet",
             "type": "Type",
-            "routeNo": "No"
+            "routeNo": "HAYIR"
         }
     },
     "form": {
@@ -17,7 +17,7 @@
         "nameOptional": "Name (optional)",
         "namePlaceholder": "Auto-generated if left empty",
         "routeName": "Route name",
-        "serviceType": "Service type",
+        "serviceType": "Hizmet türü",
         "routeStops": "Route stops",
         "routeStopsHint": "Add VIA ghats in the order the vehicle will visit them.",
         "selectStop": "Select {{label}}",
@@ -56,11 +56,11 @@
         },
         "fields": {
             "routeNumber": "Route number",
-            "service": "Service",
+            "service": "Hizmet",
             "routeType": "Route type",
             "routeId": "Route ID",
             "routeName": "Route name",
-            "serviceType": "Service type",
+            "serviceType": "Hizmet türü",
             "boardingPoints": "Boarding points"
         }
     },

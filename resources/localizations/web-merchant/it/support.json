@@ -19,7 +19,7 @@
         "contact": "Contact",
         "category": "Category",
         "priority": "Priority",
-        "updated": "Updated",
+        "updated": "Aggiornato",
         "action": "Action"
     },
     "create": {
@@ -39,11 +39,11 @@
     },
     "detail": {
         "fallbackId": "Ticket",
-        "fallbackSubject": "Ticket details",
+        "fallbackSubject": "Dettagli del biglietto",
         "contact": "Contact",
-        "phone": "Phone",
+        "phone": "Telefono",
         "created": "Created",
-        "updated": "Updated",
+        "updated": "Aggiornato",
         "description": "Description",
         "attachments": "Attachments",
         "conversation": "Conversation",
@@ -52,10 +52,10 @@
         "closed": "Ticket closed",
         "replyPlaceholder": "Write a reply…",
         "sendReply": "Send reply",
-        "sending": "Sending…"
+        "sending": "Invio…"
     },
     "status": {
-        "all": "All",
+        "all": "Tutto",
         "open": "Open",
         "inprogress": "In Progress",
         "onhold": "On Hold",
@@ -63,19 +63,19 @@
         "closed": "Closed"
     },
     "priority": {
-        "all": "All",
+        "all": "Tutto",
         "low": "Low",
         "medium": "Medium",
         "high": "High"
     },
     "category": {
         "booking": "Booking",
-        "payment": "Payment",
+        "payment": "Pagamento",
         "transport": "Transport",
-        "hotel": "Hotel",
+        "hotel": "Albergo",
         "account": "Account",
         "technical": "Technical",
-        "general": "General"
+        "general": "Generale"
     },
     "toast": {
         "loadFailed": "Failed to load support tickets",

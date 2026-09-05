@@ -11,9 +11,9 @@
         "current": "Via Stop Pricing"
     },
     "info": {
-        "route": "Route",
+        "route": "Rota",
         "routeNo": "Route No",
-        "serviceType": "Service Type",
+        "serviceType": "Hizmet Türü",
         "vehicleTypePlan": "Vehicle Type Plan",
         "planHint": "One plan applies to all vehicles of this type on the route."
     },
@@ -28,7 +28,7 @@
         "allBoarding": "All boarding",
         "droppingPlaceholder": "Dropping Stop",
         "allDropping": "All dropping",
-        "statusPlaceholder": "Status",
+        "statusPlaceholder": "Durum",
         "allStatus": "All status",
         "searchPlaceholder": "Search fare"
     },
@@ -36,10 +36,10 @@
         "action": "Bulk action",
         "increasePercent": "Increase Price (%)",
         "decreasePercent": "Decrease Price (%)",
-        "setFixed": "Set Fixed Price",
+        "setFixed": "Sabit Fiyat Belirle",
         "applyPercent": "Apply Percentage",
         "value": "Value",
-        "apply": "Apply",
+        "apply": "Uygula",
         "invalidValue": "Enter a valid value"
     },
     "empty": {
@@ -68,12 +68,12 @@
         "cabinPrice": "Cabin Price",
         "childFare": "Child Fare",
         "vipFare": "VIP Fare",
-        "discount": "Discount",
+        "discount": "İndirim",
         "discountValue": "Student {{student}}% · Senior {{senior}}%",
         "agentCommission": "Agent Commission",
         "percentValue": "{{value}}%",
         "seatTypes": "Available Seat Types",
-        "defaultSeatType": "Seat",
+        "defaultSeatType": "Koltuk",
         "lastUpdated": "Last Updated",
         "edit": "Edit Fare",
         "duplicate": "Duplicate",
@@ -101,7 +101,7 @@
             "nonAc": "Non-AC",
             "sleeper": "Sleeper"
         },
-        "serviceType": "Service Type",
+        "serviceType": "Hizmet Türü",
         "distance": "Distance (Approx.)",
         "estimatedTime": "Estimated Time",
         "estimatedTimePlaceholder": "2h 40m",
@@ -112,7 +112,7 @@
         "vipPrice": "VIP Seat Price",
         "ladiesPrice": "Ladies Seat Price",
         "roundTripPrice": "Round Trip Price (Optional)",
-        "seniorDiscount": "Senior Citizen Discount (%)",
+        "seniorDiscount": "Yaşlı Vatandaş İndirimi (%)",
         "studentDiscount": "Student Discount (%)",
         "priceType": "Price Type",
         "perSeat": "Per Seat",
@@ -146,8 +146,8 @@
         "boarding": "Boarding",
         "dropping": "Dropping",
         "fare": "Fare",
-        "status": "Status",
-        "updated": "Updated"
+        "status": "Durum",
+        "updated": "Güncellendi"
     },
     "toast": {
         "saved": "Fare saved",

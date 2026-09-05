@@ -2,24 +2,24 @@
     "actions": {
         "add": "Add",
         "back": "Back",
-        "cancel": "Cancel",
-        "close": "Close",
+        "cancel": "İptal etmek",
+        "close": "Kapalı",
         "collect": "Collect",
         "confirm": "Confirm",
         "create": "Create",
         "delete": "Delete",
-        "download": "Download",
+        "download": "İndirmek",
         "edit": "Edit",
         "export": "Export",
         "filter": "Filter",
-        "print": "Print",
+        "print": "Yazdır",
         "refresh": "Refresh",
-        "remove": "Remove",
+        "remove": "Kaldırmak",
         "reset": "Reset",
-        "retry": "Retry",
+        "retry": "Yeniden dene",
         "save": "Save",
-        "search": "Search",
-        "share": "Share",
+        "search": "Aramak",
+        "share": "Paylaşmak",
         "submit": "Submit",
         "update": "Update",
         "view": "View"
@@ -34,22 +34,22 @@
     },
     "labels": {
         "actions": "Actions",
-        "all": "All",
-        "amount": "Amount",
+        "all": "Tüm",
+        "amount": "Miktar",
         "createdAt": "Created at",
-        "date": "Date",
+        "date": "Tarih",
         "dateRange": "Date range",
         "due": "Due",
-        "email": "Email",
-        "from": "From",
-        "mobile": "Mobile",
-        "name": "Name",
+        "email": "E-posta",
+        "from": "İtibaren",
+        "mobile": "Mobil",
+        "name": "İsim",
         "notes": "Notes",
-        "paid": "Paid",
+        "paid": "Paralı",
         "remarks": "Remarks",
-        "status": "Status",
-        "to": "To",
-        "total": "Total",
+        "status": "Durum",
+        "to": "İle",
+        "total": "Toplam",
         "updatedAt": "Updated at"
     },
     "status": {
@@ -57,30 +57,31 @@
         "cancelled": "Cancelled",
         "completed": "Completed",
         "confirmed": "Confirmed",
-        "failed": "Failed",
+        "failed": "Arızalı",
         "inactive": "Inactive",
-        "paid": "Paid",
+        "paid": "Paralı",
         "pending": "Pending",
         "unpaid": "Unpaid"
     },
     "routeError": {
         "title": "Something went wrong",
         "message": "An unexpected error occurred.",
-        "tryAgain": "Try again",
+        "tryAgain": "Tekrar deneyin",
         "goToDashboard": "Go to dashboard"
     },
     "language": {
-        "label": "Language",
-        "switch": "Change language"
+        "label": "Dil",
+        "switch": "Change language",
+        "switching": "Changing language…"
     },
     "theme": {
         "toggle": "Toggle theme"
     },
     "vehicleTypes": {
-        "bus": "Bus",
-        "launch": "Launch",
+        "bus": "Otobüs",
+        "launch": "Öğle yemeği",
         "ship": "Ship",
-        "train": "Train",
+        "train": "Tren",
         "air": "Air"
     },
     "roles": {
@@ -96,14 +97,14 @@
         "viewer": "Viewer"
     },
     "errors": {
-        "forbidden": "You do not have permission to do that.",
-        "generic": "Something went wrong. Please try again.",
+        "forbidden": "Bunu yapmak için izniniz yok.",
+        "generic": "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
         "network": "Cannot reach the server. Check your internet connection.",
         "notFound": "Requested resource was not found.",
         "requestFailed": "Request failed",
         "requestFailedWithStatus": "Request failed ({{status}})",
-        "server": "Server error. Please try again later.",
-        "sessionExpired": "Session expired. Please sign in again.",
+        "server": "Sunucu hatası. Lütfen daha sonra tekrar deneyin.",
+        "sessionExpired": "Oturumun süresi doldu. Lütfen tekrar oturum açın.",
         "timeout": "Request timed out",
         "unreachableHost": "Cannot reach API host ({{detail}})",
         "validation": "Validation failed. Please check your input."
@@ -117,7 +118,7 @@
         "totalRecords": "{{total}} records"
     },
     "table": {
-        "noResults": "No results",
+        "noResults": "Sonuç yok",
         "selectAll": "Select all rows",
         "selectRow": "Select row"
     },
@@ -133,14 +134,14 @@
         "number": "Enter number",
         "password": "Enter password",
         "phone": "Enter phone number",
-        "search": "Search",
+        "search": "Aramak",
         "time": "Select time",
         "value": "Enter value"
     },
     "a11y": {
-        "hidePassword": "Hide password",
+        "hidePassword": "Şifreyi gizle",
         "otpDigit": "Digit {{position}}",
-        "showPassword": "Show password"
+        "showPassword": "Şifreyi göster"
     },
     "cities": {
         "barisal": "Barisal",

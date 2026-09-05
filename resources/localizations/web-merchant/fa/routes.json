@@ -5,11 +5,11 @@
         "createRoute": "Create route",
         "searchPlaceholder": "Search routes",
         "empty": "No routes",
-        "details": "Details",
+        "details": "جزئیات",
         "columns": {
             "service": "Service",
             "type": "Type",
-            "routeNo": "No"
+            "routeNo": "خیر"
         }
     },
     "form": {

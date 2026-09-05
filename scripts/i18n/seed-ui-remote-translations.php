@@ -126,7 +126,12 @@ function namespaceTranslatedRatio(string $enDir, string $outDir): float
     return $total === 0 ? 1.0 : $translated / $total;
 }
 
+$onlyApp = getenv('I18N_ONLY_APP') ?: null;
+
 foreach (['customer-app', 'merchant-desk'] as $app) {
+    if ($onlyApp !== null && $onlyApp !== $app) {
+        continue;
+    }
     $enFile = "{$base}/{$app}/en/messages.json";
     if (! is_file($enFile)) {
         continue;
@@ -143,7 +148,12 @@ foreach (['customer-app', 'merchant-desk'] as $app) {
     }
 }
 
+$onlyApp = getenv('I18N_ONLY_APP') ?: null;
+
 foreach (['web-merchant'] as $app) {
+    if ($onlyApp !== null && $onlyApp !== $app) {
+        continue;
+    }
     $enDir = "{$base}/{$app}/en";
     foreach ($remote as $locale) {
         $google = $targets[$locale];
@@ -155,19 +165,40 @@ foreach (['web-merchant'] as $app) {
             echo "{$app}/{$locale} skipped (already translated)\n";
             continue;
         }
-        foreach (glob($enDir.'/*.json') ?: [] as $enNs) {
-            if (basename($enNs) === 'manifest.json') {
-                continue;
-            }
+        $files = array_values(array_filter(
+            glob($enDir.'/*.json') ?: [],
+            static fn (string $path): bool => basename($path) !== 'manifest.json'
+        ));
+        $fileTotal = count($files);
+        foreach ($files as $index => $enNs) {
+            $name = basename($enNs);
+            echo "{$app}/{$locale} {$name} (".($index + 1)."/{$fileTotal})\n";
             $raw = json_decode(file_get_contents($enNs), true, 512, JSON_THROW_ON_ERROR);
             $translated = translateTree($raw, $google);
             file_put_contents(
-                $outDir.'/'.basename($enNs),
+                $outDir.'/'.$name,
                 json_encode($translated, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n"
             );
         }
-        echo "{$app}/{$locale} namespaces\n";
+        $manifestPath = "{$outDir}/manifest.json";
+        if (is_file($manifestPath)) {
+            $manifest = json_decode(file_get_contents($manifestPath), true, 512, JSON_THROW_ON_ERROR);
+            $manifest['version'] = ((int) ($manifest['version'] ?? 1)) + 1;
+            $manifest['exported_at'] = gmdate('c');
+            file_put_contents(
+                $manifestPath,
+                json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n"
+            );
+        }
+        echo "{$app}/{$locale} namespaces done (ratio=".round(namespaceTranslatedRatio($enDir, $outDir), 3).")\n";
     }
 }
 
 echo "Remote UI translations complete.\n";
+
+if (($onlyApp === null || $onlyApp === 'web-merchant') && is_file($root.'/artisan')) {
+    passthru('php artisan tinker --execute="app(\\App\\Services\\LocalizationService::class)->flushCache(\'web-merchant\');"', $flushCode);
+    if ($flushCode === 0) {
+        echo "Flushed web-merchant localization cache.\n";
+    }
+}

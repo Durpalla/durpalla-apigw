@@ -1,70 +1,70 @@
 {
     "list": {
-        "title": "Routes",
-        "description": "Service routes and boarding points",
-        "createRoute": "Create route",
-        "searchPlaceholder": "Search routes",
-        "empty": "No routes",
-        "details": "Details",
+        "title": "الطرق",
+        "description": "طرق الخدمة ونقاط الصعود",
+        "createRoute": "إنشاء الطريق",
+        "searchPlaceholder": "طرق البحث",
+        "empty": "لا توجد طرق",
+        "details": "تفاصيل",
         "columns": {
-            "service": "Service",
-            "type": "Type",
-            "routeNo": "No"
+            "service": "خدمة",
+            "type": "يكتب",
+            "routeNo": "لا"
         }
     },
     "form": {
-        "createTitle": "Create route",
-        "nameOptional": "Name (optional)",
-        "namePlaceholder": "Auto-generated if left empty",
-        "routeName": "Route name",
-        "serviceType": "Service type",
-        "routeStops": "Route stops",
-        "routeStopsHint": "Add VIA ghats in the order the vehicle will visit them.",
-        "selectStop": "Select {{label}}",
-        "stopGhat": "Stop {{index}} ghat",
-        "moveUp": "Move {{label}} up",
-        "moveDown": "Move {{label}} down",
-        "removeStop": "Remove {{label}}",
-        "addVia": "Add VIA ghat",
-        "submit": "Create route",
-        "creating": "Creating...",
+        "createTitle": "إنشاء الطريق",
+        "nameOptional": "الاسم (اختياري)",
+        "namePlaceholder": "يتم إنشاؤه تلقائيًا في حالة تركه فارغًا",
+        "routeName": "اسم الطريق",
+        "serviceType": "نوع الخدمة",
+        "routeStops": "توقف الطريق",
+        "routeStopsHint": "أضف VIA ghats بالترتيب الذي ستزورهم به السيارة.",
+        "selectStop": "اختر {{label}}",
+        "stopGhat": "توقف {{index}} غات",
+        "moveUp": "حرك {{label}} لأعلى",
+        "moveDown": "حرك {{label}} للأسفل",
+        "removeStop": "إزالة {{label}}",
+        "addVia": "أضف فيا غات",
+        "submit": "إنشاء الطريق",
+        "creating": "جارٍ الإنشاء...",
         "stops": {
-            "start": "Starting ghat",
-            "destination": "Destination",
-            "via": "VIA stop {{index}}"
+            "start": "بدء الغات",
+            "destination": "وجهة",
+            "via": "عبر التوقف {{index}}"
         },
         "errors": {
-            "minStops": "Add at least two route stops",
-            "duplicateGhat": "Each stop must use a different ghat"
+            "minStops": "أضف محطتي طريق على الأقل",
+            "duplicateGhat": "يجب أن تستخدم كل محطة غاتًا مختلفًا"
         }
     },
     "detail": {
-        "fallbackName": "Route #{{id}}",
-        "notFound": "Route not found",
-        "description": "Route details and ordered boarding points",
-        "viaPricing": "Via Stop Pricing",
-        "viewTrips": "View Trips",
-        "timeline": "Route Timeline",
-        "information": "Route Information",
-        "stopFallback": "Stop {{index}}",
-        "emptyTitle": "No boarding points returned",
-        "emptyDescription": "The route API did not include ordered stop data.",
+        "fallbackName": "الطريق رقم {{id}}",
+        "notFound": "لم يتم العثور على الطريق",
+        "description": "تفاصيل الطريق ونقاط الصعود المطلوبة",
+        "viaPricing": "عبر وقف التسعير",
+        "viewTrips": "عرض الرحلات",
+        "timeline": "الجدول الزمني للطريق",
+        "information": "معلومات الطريق",
+        "stopFallback": "توقف {{index}}",
+        "emptyTitle": "لم يتم إرجاع أي نقاط صعود",
+        "emptyDescription": "لم تتضمن واجهة برمجة تطبيقات المسار بيانات التوقف المطلوبة.",
         "stops": {
-            "start": "Starting point",
-            "destination": "Destination",
-            "via": "VIA stop"
+            "start": "نقطة البداية",
+            "destination": "وجهة",
+            "via": "عبر التوقف"
         },
         "fields": {
-            "routeNumber": "Route number",
-            "service": "Service",
-            "routeType": "Route type",
-            "routeId": "Route ID",
-            "routeName": "Route name",
-            "serviceType": "Service type",
-            "boardingPoints": "Boarding points"
+            "routeNumber": "رقم الطريق",
+            "service": "خدمة",
+            "routeType": "نوع الطريق",
+            "routeId": "معرف الطريق",
+            "routeName": "اسم الطريق",
+            "serviceType": "نوع الخدمة",
+            "boardingPoints": "نقاط الصعود"
         }
     },
     "toast": {
-        "created": "Route created"
+        "created": "تم إنشاء المسار"
     }
 }

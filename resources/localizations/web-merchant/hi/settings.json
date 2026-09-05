@@ -1,141 +1,141 @@
 {
     "index": {
-        "title": "Settings",
-        "profile": "Profile",
-        "profileDescription": "Account details and password",
-        "twoFactor": "Two-factor authentication",
-        "twoFactorDescription": "Email OTP and authenticator app",
-        "gateways": "Payment & SMS gateways",
-        "gatewaysDescription": "Enable templates and manage credentials",
-        "appearance": "Appearance",
-        "appearanceDescription": "Light / dark theme and language",
-        "printers": "Printing",
-        "printersDescription": "Browser print guidance for tickets"
+        "title": "सेटिंग्स",
+        "profile": "प्रोफ़ाइल",
+        "profileDescription": "खाता विवरण और पासवर्ड",
+        "twoFactor": "दो-कारक प्रमाणीकरण",
+        "twoFactorDescription": "ईमेल ओटीपी और प्रमाणक ऐप",
+        "gateways": "भुगतान एवं एसएमएस गेटवे",
+        "gatewaysDescription": "टेम्प्लेट सक्षम करें और क्रेडेंशियल प्रबंधित करें",
+        "appearance": "उपस्थिति",
+        "appearanceDescription": "प्रकाश/गहरा विषय और भाषा",
+        "printers": "मुद्रण",
+        "printersDescription": "टिकटों के लिए ब्राउज़र प्रिंट मार्गदर्शन"
     },
     "appearance": {
-        "title": "Appearance",
-        "description": "Theme and language preference",
-        "themeTitle": "Theme",
+        "title": "उपस्थिति",
+        "description": "विषयवस्तु और भाषा प्राथमिकता",
+        "themeTitle": "विषय",
         "themes": {
-            "light": "Light",
-            "dark": "Dark",
-            "system": "System"
+            "light": "रोशनी",
+            "dark": "अँधेरा",
+            "system": "प्रणाली"
         },
-        "languageDescription": "Applies to the whole merchant desk on this browser."
+        "languageDescription": "इस ब्राउज़र पर संपूर्ण मर्चेंट डेस्क पर लागू होता है।"
     },
     "printers": {
-        "title": "Printing",
-        "description": "Web-only printing uses the browser print dialog",
-        "supportedTitle": "Supported on web",
-        "printApiBefore": "Tickets and payment tokens open a print-ready HTML view and use ",
+        "title": "मुद्रण",
+        "description": "वेब-केवल मुद्रण ब्राउज़र प्रिंट संवाद का उपयोग करता है",
+        "supportedTitle": "वेब पर समर्थित",
+        "printApiBefore": "टिकट और भुगतान टोकन एक प्रिंट-तैयार HTML दृश्य खोलते हैं और उपयोग करते हैं",
         "printApiAfter": ".",
-        "unsupported": "Bluetooth pocket printers, USB/serial ESC-POS devices, and biometric login are not available in this browser app.",
-        "guidance": "Use a system printer or PDF from the browser print dialog for counter operations."
+        "unsupported": "इस ब्राउज़र ऐप में ब्लूटूथ पॉकेट प्रिंटर, यूएसबी/सीरियल ईएससी-पीओएस डिवाइस और बायोमेट्रिक लॉगिन उपलब्ध नहीं हैं।",
+        "guidance": "काउंटर संचालन के लिए ब्राउज़र प्रिंट डायलॉग से सिस्टम प्रिंटर या पीडीएफ का उपयोग करें।"
     },
     "profile": {
-        "title": "My profile",
-        "description": "Manage your merchant account and personal information.",
-        "fallbackName": "Merchant",
-        "merchantId": "Merchant ID: {{value}}",
-        "securitySettings": "Security settings",
+        "title": "मेरी प्रोफाइल",
+        "description": "अपना व्यापारी खाता और व्यक्तिगत जानकारी प्रबंधित करें।",
+        "fallbackName": "व्यापारी",
+        "merchantId": "व्यापारी आईडी: {{value}}",
+        "securitySettings": "सुरक्षा सेटिंग्स",
         "photos": {
-            "title": "Photos",
-            "description": "Upload a profile picture. PNG, JPG, or WebP up to 2 MB.",
-            "descriptionWithLogo": "Upload a profile picture and your business logo. PNG, JPG, or WebP up to 2 MB.",
-            "avatarLabel": "Profile picture",
-            "avatarHint": "Shown on your account menu and profile.",
-            "changePicture": "Change picture",
-            "uploadPicture": "Upload picture",
-            "logoLabel": "Business logo",
-            "logoHint": "Used on invoices and merchant branding.",
-            "changeLogo": "Change logo",
-            "uploadLogo": "Upload logo",
-            "uploading": "Uploading..."
+            "title": "तस्वीरें",
+            "description": "एक प्रोफ़ाइल चित्र अपलोड करें. 2 एमबी तक पीएनजी, जेपीजी, या वेबपी।",
+            "descriptionWithLogo": "एक प्रोफ़ाइल चित्र और अपना व्यवसाय लोगो अपलोड करें। 2 एमबी तक पीएनजी, जेपीजी, या वेबपी।",
+            "avatarLabel": "प्रोफ़ाइल फोटो",
+            "avatarHint": "आपके खाता मेनू और प्रोफ़ाइल पर दिखाया गया है.",
+            "changePicture": "चित्र बदलें",
+            "uploadPicture": "चित्र अपलोड करें",
+            "logoLabel": "व्यवसाय लोगो",
+            "logoHint": "चालान और व्यापारी ब्रांडिंग पर उपयोग किया जाता है।",
+            "changeLogo": "लोगो बदलें",
+            "uploadLogo": "लोगो अपलोड करें",
+            "uploading": "अपलोड हो रहा है..."
         },
         "personal": {
-            "title": "Personal information",
-            "description": "Update the contact details associated with your account.",
-            "namePlaceholder": "Enter your name",
-            "emailReadOnly": "Email address cannot be changed.",
-            "mobilePlaceholder": "Enter your mobile number",
-            "save": "Save changes",
-            "saving": "Saving..."
+            "title": "व्यक्तिगत जानकारी",
+            "description": "अपने खाते से जुड़े संपर्क विवरण अपडेट करें.",
+            "namePlaceholder": "अपना नाम दर्ज करें",
+            "emailReadOnly": "ईमेल पता बदला नहीं जा सकता.",
+            "mobilePlaceholder": "अपना मोबाइल संख्या दर्ज करे",
+            "save": "परिवर्तनों को सुरक्षित करें",
+            "saving": "सहेजा जा रहा है..."
         },
         "password": {
-            "title": "Change password",
-            "description": "Use at least eight characters for your new password.",
-            "current": "Current password",
-            "currentPlaceholder": "Enter current password",
-            "new": "New password",
-            "newPlaceholder": "Enter new password",
-            "confirm": "Confirm new password",
-            "confirmPlaceholder": "Confirm new password",
-            "label": "Password",
-            "confirmLabel": "Password confirmation",
-            "submit": "Update password",
-            "submitting": "Updating..."
+            "title": "पासवर्ड बदलें",
+            "description": "अपने नए पासवर्ड के लिए कम से कम आठ अक्षरों का प्रयोग करें।",
+            "current": "वर्तमान पासवर्ड",
+            "currentPlaceholder": "वर्तमान पासवर्ड दर्ज करें",
+            "new": "नया पासवर्ड",
+            "newPlaceholder": "नया पासवर्ड दर्ज करें",
+            "confirm": "नए पासवर्ड की पुष्टि करें",
+            "confirmPlaceholder": "नए पासवर्ड की पुष्टि करें",
+            "label": "पासवर्ड",
+            "confirmLabel": "पासवर्ड पुष्टि",
+            "submit": "पासवर्ड अपडेट करें",
+            "submitting": "अद्यतन किया जा रहा है..."
         },
         "twoFactor": {
-            "title": "Two-factor authentication",
-            "enabled": "{{method}} is enabled",
-            "authenticator": "Authenticator app",
-            "emailOtp": "Email OTP",
-            "default": "Email OTP is the default protection method",
-            "manage": "Manage 2FA",
-            "enable": "Enable 2FA"
+            "title": "दो-कारक प्रमाणीकरण",
+            "enabled": "{{method}} सक्षम है",
+            "authenticator": "प्रमाणक ऐप",
+            "emailOtp": "ईमेल ओटीपी",
+            "default": "ईमेल ओटीपी डिफ़ॉल्ट सुरक्षा पद्धति है",
+            "manage": "2FA प्रबंधित करें",
+            "enable": "2FA सक्षम करें"
         },
         "toast": {
-            "updated": "Profile updated",
-            "passwordChanged": "Password changed",
-            "avatarUpdated": "Profile picture updated",
-            "logoUpdated": "Business logo updated",
-            "invalidImageType": "Use a PNG, JPG, or WebP image",
-            "imageTooLarge": "Image must be 2 MB or smaller",
-            "invalidProfile": "Invalid profile details",
-            "invalidPassword": "Invalid password details"
+            "updated": "प्रोफाइल अद्यतन किया गया",
+            "passwordChanged": "पासवर्ड बदला गया",
+            "avatarUpdated": "प्रोफ़ाइल चित्र अपडेट किया गया",
+            "logoUpdated": "व्यवसाय लोगो अपडेट किया गया",
+            "invalidImageType": "पीएनजी, जेपीजी, या वेबपी छवि का उपयोग करें",
+            "imageTooLarge": "छवि 2 एमबी या छोटी होनी चाहिए",
+            "invalidProfile": "अमान्य प्रोफ़ाइल विवरण",
+            "invalidPassword": "अमान्य पासवर्ड विवरण"
         }
     },
     "twoFactor": {
-        "title": "Two-factor authentication",
-        "description": "Protect your merchant account with an additional verification step.",
-        "protectedTitle": "Your account is protected",
-        "protectedDescription": "Email OTP is the default verification method. You can switch to an authenticator app below.",
-        "badgeDefault": "Default",
-        "badgeEnabled": "Enabled",
+        "title": "दो-कारक प्रमाणीकरण",
+        "description": "एक अतिरिक्त सत्यापन चरण के साथ अपने व्यापारी खाते को सुरक्षित रखें।",
+        "protectedTitle": "आपका खाता सुरक्षित है",
+        "protectedDescription": "ईमेल ओटीपी डिफ़ॉल्ट सत्यापन विधि है। आप नीचे एक प्रमाणक ऐप पर स्विच कर सकते हैं।",
+        "badgeDefault": "गलती करना",
+        "badgeEnabled": "सक्रिय",
         "email": {
-            "title": "Email OTP",
-            "description": "Receive a six-digit verification code at {{email}}.",
-            "fallbackEmail": "your account email",
-            "enabling": "Enabling email OTP...",
-            "enabled": "Email OTP enabled",
-            "enable": "Use email OTP",
-            "missing": "Add an email address to your profile first."
+            "title": "ईमेल ओटीपी",
+            "description": "{{email}} पर छह अंकों का सत्यापन कोड प्राप्त करें।",
+            "fallbackEmail": "आपका खाता ईमेल",
+            "enabling": "ईमेल ओटीपी सक्षम किया जा रहा है...",
+            "enabled": "ईमेल ओटीपी सक्षम",
+            "enable": "ईमेल ओटीपी का प्रयोग करें",
+            "missing": "सबसे पहले अपनी प्रोफ़ाइल में एक ईमेल पता जोड़ें."
         },
         "authenticator": {
-            "title": "Authenticator app",
-            "description": "Use Google Authenticator, Authy, Microsoft Authenticator, or another compatible app.",
-            "preparing": "Preparing setup...",
-            "setupAgain": "Set up again",
-            "setup": "Set up authenticator"
+            "title": "प्रमाणक ऐप",
+            "description": "Google प्रमाणक, ऑथी, Microsoft प्रमाणक, या किसी अन्य संगत ऐप का उपयोग करें।",
+            "preparing": "सेटअप तैयार किया जा रहा है...",
+            "setupAgain": "पुनः स्थापित करें",
+            "setup": "प्रमाणक सेट करें"
         },
         "connect": {
-            "title": "Connect your authenticator app",
-            "description": "Add the account using the setup link or secret, then enter the six-digit code.",
-            "openApp": "Open in authenticator app",
-            "secretLabel": "Setup secret",
-            "codeLabel": "Verification code",
-            "verifying": "Verifying...",
-            "submit": "Enable authenticator",
-            "secretField": "Authenticator secret",
-            "codeField": "Authenticator code"
+            "title": "अपना प्रमाणक ऐप कनेक्ट करें",
+            "description": "सेटअप लिंक या सीक्रेट का उपयोग करके खाता जोड़ें, फिर छह अंकों का कोड दर्ज करें।",
+            "openApp": "प्रमाणक ऐप में खोलें",
+            "secretLabel": "सेटअप रहस्य",
+            "codeLabel": "सत्यापन कोड",
+            "verifying": "सत्यापन किया जा रहा है...",
+            "submit": "प्रमाणक सक्षम करें",
+            "secretField": "प्रमाणक रहस्य",
+            "codeField": "प्रमाणक कोड"
         },
         "recovery": {
-            "title": "Save your recovery codes",
-            "description": "Store these codes securely. Each code can be used once."
+            "title": "अपने पुनर्प्राप्ति कोड सहेजें",
+            "description": "इन कोड को सुरक्षित रूप से संग्रहित करें. प्रत्येक कोड का उपयोग एक बार किया जा सकता है।"
         },
         "toast": {
-            "emailEnabled": "Email OTP is enabled",
-            "authenticatorEnabled": "Authenticator app is enabled"
+            "emailEnabled": "ईमेल ओटीपी सक्षम है",
+            "authenticatorEnabled": "प्रमाणक ऐप सक्षम है"
         }
     }
 }

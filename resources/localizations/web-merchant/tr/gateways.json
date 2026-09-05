@@ -10,12 +10,12 @@
         "manage": "Manage"
     },
     "tabs": {
-        "all": "All",
-        "payment": "Payment",
+        "all": "Tüm",
+        "payment": "Ödeme",
         "sms": "SMS"
     },
     "types": {
-        "payment": "Payment",
+        "payment": "Ödeme",
         "sms": "SMS"
     },
     "enable": {
@@ -31,23 +31,23 @@
         "endpoints": "Endpoints (admin): {{keys}}"
     },
     "table": {
-        "name": "Name",
+        "name": "İsim",
         "type": "Type",
         "namespace": "Gateway namespace",
         "code": "Code"
     },
     "remove": {
-        "action": "Remove",
+        "action": "Kaldırmak",
         "pending": "Removing…",
         "title": "Remove {{name}}?",
         "description": "This removes the gateway from your account only. You can enable the same template again later. Namespace and type cannot be changed."
     },
     "edit": {
         "subtitle": "{{type}} · {{code}}",
-        "notFoundTitle": "Gateway not found",
+        "notFoundTitle": "Ağ geçidi bulunamadı",
         "notFoundDescription": "This gateway is not enabled for your account.",
         "backToGateways": "Back to gateways",
-        "setupTitle": "Setup instructions",
+        "setupTitle": "Kurulum talimatları",
         "setupHint": "Configure credentials and params in the tabs below. Endpoints are managed by Durpalla Admin.",
         "tabs": {
             "info": "Info",
@@ -58,7 +58,7 @@
     },
     "info": {
         "title": "Gateway info",
-        "name": "Name",
+        "name": "İsim",
         "code": "Code",
         "type": "Type",
         "channel": "Channel",
@@ -78,7 +78,7 @@
     "endpoints": {
         "title": "Endpoints",
         "hint": "Endpoints are managed by Durpalla Admin. You can only view their setup status here.",
-        "name": "Name",
+        "name": "İsim",
         "key": "Key",
         "configured": "Configured by admin",
         "pending": "Pending admin setup",
@@ -100,14 +100,14 @@
         "requiredMeta": " · required"
     },
     "errors": {
-        "notFound": "Gateway not found",
+        "notFound": "Ağ geçidi bulunamadı",
         "duplicateKey": "Duplicate key: {{key}}"
     },
     "toast": {
-        "enabledSms": "Gateway enabled. Update SMS credentials to start sending messages.",
-        "enabledPayment": "Gateway enabled. Update credentials to start accepting payments.",
+        "enabledSms": "Ağ geçidi etkinleştirildi. Mesaj göndermeye başlamak için SMS kimlik bilgilerini güncelleyin.",
+        "enabledPayment": "Ağ geçidi etkinleştirildi. Ödemeleri kabul etmeye başlamak için kimlik bilgilerini güncelleyin.",
         "infoSaved": "Info saved",
-        "credentialsSaved": "Credentials saved",
-        "paramsSaved": "Params saved"
+        "credentialsSaved": "Kimlik bilgileri kaydedildi",
+        "paramsSaved": "Paramlar kaydedildi"
     }
 }

@@ -11,7 +11,7 @@
         "current": "Via Stop Pricing"
     },
     "info": {
-        "route": "Route",
+        "route": "Itinerario",
         "routeNo": "Route No",
         "serviceType": "Service Type",
         "vehicleTypePlan": "Vehicle Type Plan",
@@ -28,7 +28,7 @@
         "allBoarding": "All boarding",
         "droppingPlaceholder": "Dropping Stop",
         "allDropping": "All dropping",
-        "statusPlaceholder": "Status",
+        "statusPlaceholder": "Stato",
         "allStatus": "All status",
         "searchPlaceholder": "Search fare"
     },
@@ -39,7 +39,7 @@
         "setFixed": "Set Fixed Price",
         "applyPercent": "Apply Percentage",
         "value": "Value",
-        "apply": "Apply",
+        "apply": "Fare domanda a",
         "invalidValue": "Enter a valid value"
     },
     "empty": {
@@ -68,12 +68,12 @@
         "cabinPrice": "Cabin Price",
         "childFare": "Child Fare",
         "vipFare": "VIP Fare",
-        "discount": "Discount",
+        "discount": "Sconto",
         "discountValue": "Student {{student}}% · Senior {{senior}}%",
         "agentCommission": "Agent Commission",
         "percentValue": "{{value}}%",
         "seatTypes": "Available Seat Types",
-        "defaultSeatType": "Seat",
+        "defaultSeatType": "Posto a sedere",
         "lastUpdated": "Last Updated",
         "edit": "Edit Fare",
         "duplicate": "Duplicate",
@@ -146,8 +146,8 @@
         "boarding": "Boarding",
         "dropping": "Dropping",
         "fare": "Fare",
-        "status": "Status",
-        "updated": "Updated"
+        "status": "Stato",
+        "updated": "Aggiornato"
     },
     "toast": {
         "saved": "Fare saved",

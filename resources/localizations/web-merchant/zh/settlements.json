@@ -1,25 +1,25 @@
 {
     "page": {
-        "title": "Settlements",
-        "description": "Approve or decline settlement requests",
-        "rangeInvalid": "Date range is invalid"
+        "title": "定居点",
+        "description": "批准或拒绝和解请求",
+        "rangeInvalid": "日期范围无效"
     },
     "empty": {
-        "title": "No settlement requests"
+        "title": "无结算请求"
     },
     "table": {
         "id": "ID",
-        "approve": "Approve",
-        "decline": "Decline"
+        "approve": "批准",
+        "decline": "衰退"
     },
     "status": {
-        "all": "All",
-        "pending": "Pending",
-        "approved": "Approved",
-        "declined": "Declined"
+        "all": "全部",
+        "pending": "待办的",
+        "approved": "得到正式认可的",
+        "declined": "拒绝"
     },
     "toast": {
-        "approved": "Approved",
-        "declined": "Declined"
+        "approved": "得到正式认可的",
+        "declined": "拒绝"
     }
 }

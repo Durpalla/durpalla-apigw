@@ -1,77 +1,77 @@
 {
     "page": {
-        "exportCsv": "Export CSV",
-        "exportFailed": "Export failed",
-        "rangeInvalid": "Date range is invalid",
-        "revenue": "Revenue",
-        "bookings": "Bookings",
-        "unitsSold": "Units sold",
-        "occupancy": "Occupancy",
-        "settlements": "Settlements",
-        "cancelledBookings": "Cancelled bookings",
-        "revenueTrend": "Revenue trend",
-        "revenueTrendDescription": "Daily revenue for the selected period.",
-        "bookingVolume": "Booking volume",
-        "bookingVolumeDescription": "Daily booking count for the selected period.",
-        "utilizationTrend": "Utilization trend",
-        "utilizationTrendDescription": "Units sold across the selected period.",
-        "topVehicles": "Top vehicles",
-        "topRoutes": "Top routes",
-        "date": "Date",
-        "units": "Units",
-        "noSeries": "No series data returned for this report type.",
-        "noChartData": "No chart data returned."
+        "exportCsv": "导出 CSV",
+        "exportFailed": "导出失败",
+        "rangeInvalid": "日期范围无效",
+        "revenue": "收入",
+        "bookings": "预订",
+        "unitsSold": "已售单位",
+        "occupancy": "占用",
+        "settlements": "定居点",
+        "cancelledBookings": "取消预订",
+        "revenueTrend": "收入趋势",
+        "revenueTrendDescription": "所选期间的每日收入。",
+        "bookingVolume": "预订量",
+        "bookingVolumeDescription": "所选期间的每日预订数量。",
+        "utilizationTrend": "使用趋势",
+        "utilizationTrendDescription": "所选期间内销售的单位数。",
+        "topVehicles": "顶级车辆",
+        "topRoutes": "热门航线",
+        "date": "日期",
+        "units": "单位",
+        "noSeries": "没有为此报告类型返回系列数据。",
+        "noChartData": "没有返回图表数据。"
     },
     "definitions": {
         "dashboard": {
-            "label": "Dashboard",
-            "title": "Business Overview",
-            "purpose": "Executive summary of performance across the selected period."
+            "label": "仪表板",
+            "title": "业务概况",
+            "purpose": "选定期间的绩效执行摘要。"
         },
         "bookings": {
-            "label": "Bookings",
-            "title": "Booking Report",
-            "purpose": "Booking volume by date, source, channel, and status."
+            "label": "预订",
+            "title": "预订报告",
+            "purpose": "按日期、来源、渠道和状态划分的预订量。"
         },
         "revenue": {
-            "label": "Revenue",
-            "title": "Revenue Report",
-            "purpose": "Revenue, commission, taxes, refunds, and discounts."
+            "label": "收入",
+            "title": "收入报告",
+            "purpose": "收入、佣金、税金、退款和折扣。"
         },
         "occupancy": {
-            "label": "Occupancy",
-            "title": "Occupancy / Utilization Report",
-            "purpose": "Hotel occupancy and transport seat utilization."
+            "label": "占用",
+            "title": "入住/使用报告",
+            "purpose": "酒店入住率和交通座位利用率。"
         },
         "customers": {
-            "label": "Customers",
-            "title": "Customer Report",
-            "purpose": "Customer activity and booking trends."
+            "label": "顾客",
+            "title": "客户报告",
+            "purpose": "客户活动和预订趋势。"
         },
         "units": {
-            "label": "Rooms / Vehicles",
-            "title": "Room / Vehicle Performance",
-            "purpose": "Performance of rooms, vehicles, and routes."
+            "label": "房间/车辆",
+            "title": "房间/车辆性能",
+            "purpose": "房间、车辆和路线的性能。"
         },
         "cancellations": {
-            "label": "Cancellations",
-            "title": "Cancellation & Refund Report",
-            "purpose": "Cancellation and refund trends for the selected period."
+            "label": "取消",
+            "title": "取消和退款报告",
+            "purpose": "所选期间的取消和退款趋势。"
         },
         "payments": {
-            "label": "Payments",
-            "title": "Payment Report",
-            "purpose": "Payment collection, due amounts, and settlements."
+            "label": "付款方式",
+            "title": "付款报告",
+            "purpose": "收款、到期金额和结算。"
         },
         "staff-performance": {
-            "label": "Staff Performance",
-            "title": "Staff Performance",
-            "purpose": "Bookings and revenue handled by staff."
+            "label": "员工表现",
+            "title": "员工表现",
+            "purpose": "由员工处理的预订和收入。"
         },
         "sales-channels": {
-            "label": "Sales Channels",
-            "title": "Sales & Channel Report",
-            "purpose": "Sales performance across booking channels."
+            "label": "销售渠道",
+            "title": "销售和渠道报告",
+            "purpose": "跨预订渠道的销售业绩。"
         }
     }
 }

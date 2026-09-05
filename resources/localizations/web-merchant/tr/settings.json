@@ -1,7 +1,7 @@
 {
     "index": {
-        "title": "Settings",
-        "profile": "Profile",
+        "title": "Ayarlar",
+        "profile": "Profil",
         "profileDescription": "Account details and password",
         "twoFactor": "Two-factor authentication",
         "twoFactorDescription": "Email OTP and authenticator app",
@@ -33,7 +33,7 @@
         "guidance": "Use a system printer or PDF from the browser print dialog for counter operations."
     },
     "profile": {
-        "title": "My profile",
+        "title": "Profilim",
         "description": "Manage your merchant account and personal information.",
         "fallbackName": "Merchant",
         "merchantId": "Merchant ID: {{value}}",
@@ -64,16 +64,16 @@
         "password": {
             "title": "Change password",
             "description": "Use at least eight characters for your new password.",
-            "current": "Current password",
+            "current": "Mevcut Şifre",
             "currentPlaceholder": "Enter current password",
             "new": "New password",
-            "newPlaceholder": "Enter new password",
-            "confirm": "Confirm new password",
-            "confirmPlaceholder": "Confirm new password",
-            "label": "Password",
+            "newPlaceholder": "Yeni şifreyi girin",
+            "confirm": "Yeni şifreyi onayla",
+            "confirmPlaceholder": "Yeni şifreyi onayla",
+            "label": "Şifre",
             "confirmLabel": "Password confirmation",
             "submit": "Update password",
-            "submitting": "Updating..."
+            "submitting": "Güncelleniyor..."
         },
         "twoFactor": {
             "title": "Two-factor authentication",
@@ -86,7 +86,7 @@
         },
         "toast": {
             "updated": "Profile updated",
-            "passwordChanged": "Password changed",
+            "passwordChanged": "Şifre değiştirildi",
             "avatarUpdated": "Profile picture updated",
             "logoUpdated": "Business logo updated",
             "invalidImageType": "Use a PNG, JPG, or WebP image",
@@ -109,14 +109,14 @@
             "enabling": "Enabling email OTP...",
             "enabled": "Email OTP enabled",
             "enable": "Use email OTP",
-            "missing": "Add an email address to your profile first."
+            "missing": "Önce profilinize bir e-posta adresi ekleyin."
         },
         "authenticator": {
             "title": "Authenticator app",
             "description": "Use Google Authenticator, Authy, Microsoft Authenticator, or another compatible app.",
             "preparing": "Preparing setup...",
-            "setupAgain": "Set up again",
-            "setup": "Set up authenticator"
+            "setupAgain": "Tekrar ayarla",
+            "setup": "Kimlik doğrulayıcıyı ayarla"
         },
         "connect": {
             "title": "Connect your authenticator app",

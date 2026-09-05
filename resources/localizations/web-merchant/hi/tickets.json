@@ -1,33 +1,33 @@
 {
     "scan": {
-        "title": "Scan ticket",
-        "description": "Camera QR scan or manual code lookup",
-        "camera": "Camera",
-        "startCamera": "Start camera",
-        "scanning": "Scanning...",
-        "stop": "Stop",
-        "manual": "Manual code",
-        "codeLabel": "Booking / ticket code",
-        "codePlaceholder": "Enter booking or ticket code",
-        "verify": "Verify"
+        "title": "टिकट स्कैन करें",
+        "description": "कैमरा क्यूआर स्कैन या मैन्युअल कोड लुकअप",
+        "camera": "कैमरा",
+        "startCamera": "कैमरा प्रारंभ करें",
+        "scanning": "स्कैन किया जा रहा है...",
+        "stop": "रुकना",
+        "manual": "मैनुअल कोड",
+        "codeLabel": "बुकिंग/टिकट कोड",
+        "codePlaceholder": "बुकिंग या टिकट कोड दर्ज करें",
+        "verify": "सत्यापित करें"
     },
     "verify": {
-        "title": "Verify ticket",
-        "noCode": "No code provided",
-        "passenger": "Passenger",
-        "amount": "Amount"
+        "title": "टिकट सत्यापित करें",
+        "noCode": "कोई कोड नहीं दिया गया",
+        "passenger": "यात्री",
+        "amount": "मात्रा"
     },
     "print": {
-        "documentTitle": "Ticket",
-        "heading": "Verified Ticket",
-        "code": "Code",
-        "passenger": "Passenger",
-        "status": "Status"
+        "documentTitle": "टिकट",
+        "heading": "सत्यापित टिकट",
+        "code": "कोड",
+        "passenger": "यात्री",
+        "status": "स्थिति"
     },
     "toast": {
-        "scannedInvalid": "Scanned code is invalid",
-        "cameraUnavailable": "Camera unavailable",
-        "manualInvalid": "Enter a valid booking or ticket code",
-        "codeInvalid": "Booking or ticket code is invalid"
+        "scannedInvalid": "स्कैन किया गया कोड अमान्य है",
+        "cameraUnavailable": "कैमरा अनुपलब्ध",
+        "manualInvalid": "वैध बुकिंग या टिकट कोड दर्ज करें",
+        "codeInvalid": "बुकिंग या टिकट कोड अमान्य है"
     }
 }

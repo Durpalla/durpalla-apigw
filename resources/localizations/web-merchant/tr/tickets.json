@@ -9,20 +9,20 @@
         "manual": "Manual code",
         "codeLabel": "Booking / ticket code",
         "codePlaceholder": "Enter booking or ticket code",
-        "verify": "Verify"
+        "verify": "Doğrulamak"
     },
     "verify": {
         "title": "Verify ticket",
         "noCode": "No code provided",
-        "passenger": "Passenger",
-        "amount": "Amount"
+        "passenger": "Yolcu",
+        "amount": "Miktar"
     },
     "print": {
         "documentTitle": "Ticket",
         "heading": "Verified Ticket",
         "code": "Code",
-        "passenger": "Passenger",
-        "status": "Status"
+        "passenger": "Yolcu",
+        "status": "Durum"
     },
     "toast": {
         "scannedInvalid": "Scanned code is invalid",

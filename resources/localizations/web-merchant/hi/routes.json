@@ -1,70 +1,70 @@
 {
     "list": {
-        "title": "Routes",
-        "description": "Service routes and boarding points",
-        "createRoute": "Create route",
-        "searchPlaceholder": "Search routes",
-        "empty": "No routes",
-        "details": "Details",
+        "title": "मार्गों",
+        "description": "सेवा मार्ग और बोर्डिंग पॉइंट",
+        "createRoute": "मार्ग बनाएँ",
+        "searchPlaceholder": "मार्ग खोजें",
+        "empty": "कोई मार्ग नहीं",
+        "details": "विवरण",
         "columns": {
-            "service": "Service",
-            "type": "Type",
-            "routeNo": "No"
+            "service": "सेवा",
+            "type": "प्रकार",
+            "routeNo": "नहीं"
         }
     },
     "form": {
-        "createTitle": "Create route",
-        "nameOptional": "Name (optional)",
-        "namePlaceholder": "Auto-generated if left empty",
-        "routeName": "Route name",
-        "serviceType": "Service type",
-        "routeStops": "Route stops",
-        "routeStopsHint": "Add VIA ghats in the order the vehicle will visit them.",
-        "selectStop": "Select {{label}}",
-        "stopGhat": "Stop {{index}} ghat",
-        "moveUp": "Move {{label}} up",
-        "moveDown": "Move {{label}} down",
-        "removeStop": "Remove {{label}}",
-        "addVia": "Add VIA ghat",
-        "submit": "Create route",
-        "creating": "Creating...",
+        "createTitle": "मार्ग बनाएँ",
+        "nameOptional": "नाम: (वैकल्पिक)",
+        "namePlaceholder": "यदि खाली छोड़ दिया जाए तो स्वतः उत्पन्न हो जाता है",
+        "routeName": "मार्ग का नाम",
+        "serviceType": "सेवा प्रकार",
+        "routeStops": "मार्ग रुक जाता है",
+        "routeStopsHint": "वीआईए घाटों को उस क्रम में जोड़ें जिस क्रम में वाहन वहां जाएगा।",
+        "selectStop": "{{label}} चुनें",
+        "stopGhat": "रुकें {{index}} घाट",
+        "moveUp": "{{label}} को ऊपर ले जाएं",
+        "moveDown": "{{label}} को नीचे ले जाएँ",
+        "removeStop": "{{label}} हटाएं",
+        "addVia": "वीआईए घाट जोड़ें",
+        "submit": "मार्ग बनाएँ",
+        "creating": "बनाया जा रहा है...",
         "stops": {
-            "start": "Starting ghat",
-            "destination": "Destination",
-            "via": "VIA stop {{index}}"
+            "start": "शुरुआती घाट",
+            "destination": "गंतव्य",
+            "via": "VIA स्टॉप {{index}}"
         },
         "errors": {
-            "minStops": "Add at least two route stops",
-            "duplicateGhat": "Each stop must use a different ghat"
+            "minStops": "कम से कम दो रूट स्टॉप जोड़ें",
+            "duplicateGhat": "प्रत्येक स्टॉप को एक अलग घाट का उपयोग करना होगा"
         }
     },
     "detail": {
-        "fallbackName": "Route #{{id}}",
-        "notFound": "Route not found",
-        "description": "Route details and ordered boarding points",
-        "viaPricing": "Via Stop Pricing",
-        "viewTrips": "View Trips",
-        "timeline": "Route Timeline",
-        "information": "Route Information",
-        "stopFallback": "Stop {{index}}",
-        "emptyTitle": "No boarding points returned",
-        "emptyDescription": "The route API did not include ordered stop data.",
+        "fallbackName": "रूट #{{id}}",
+        "notFound": "मार्ग नहीं मिला",
+        "description": "मार्ग विवरण और आदेशित बोर्डिंग बिंदु",
+        "viaPricing": "स्टॉप प्राइसिंग के माध्यम से",
+        "viewTrips": "यात्राएँ देखें",
+        "timeline": "मार्ग समयरेखा",
+        "information": "मार्ग सूचना",
+        "stopFallback": "रोकें {{index}}",
+        "emptyTitle": "कोई बोर्डिंग पॉइंट नहीं लौटाया गया",
+        "emptyDescription": "रूट एपीआई में ऑर्डर किया गया स्टॉप डेटा शामिल नहीं था।",
         "stops": {
-            "start": "Starting point",
-            "destination": "Destination",
-            "via": "VIA stop"
+            "start": "प्रस्थान बिंदू",
+            "destination": "गंतव्य",
+            "via": "वीआईए स्टॉप"
         },
         "fields": {
-            "routeNumber": "Route number",
-            "service": "Service",
-            "routeType": "Route type",
-            "routeId": "Route ID",
-            "routeName": "Route name",
-            "serviceType": "Service type",
-            "boardingPoints": "Boarding points"
+            "routeNumber": "रूट नंबर",
+            "service": "सेवा",
+            "routeType": "मार्ग प्रकार",
+            "routeId": "रूट आईडी",
+            "routeName": "मार्ग का नाम",
+            "serviceType": "सेवा प्रकार",
+            "boardingPoints": "बोर्डिंग पॉइंट"
         }
     },
     "toast": {
-        "created": "Route created"
+        "created": "मार्ग बनाया गया"
     }
 }

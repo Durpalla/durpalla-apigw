@@ -1,25 +1,25 @@
 {
     "page": {
-        "title": "Settlements",
-        "description": "Approve or decline settlement requests",
-        "rangeInvalid": "Date range is invalid"
+        "title": "बस्तियों",
+        "description": "निपटान अनुरोधों को स्वीकृत या अस्वीकार करें",
+        "rangeInvalid": "दिनांक सीमा अमान्य है"
     },
     "empty": {
-        "title": "No settlement requests"
+        "title": "कोई निपटान अनुरोध नहीं"
     },
     "table": {
-        "id": "ID",
-        "approve": "Approve",
-        "decline": "Decline"
+        "id": "पहचान",
+        "approve": "मंज़ूरी देना",
+        "decline": "गिरावट"
     },
     "status": {
-        "all": "All",
-        "pending": "Pending",
-        "approved": "Approved",
-        "declined": "Declined"
+        "all": "सभी",
+        "pending": "लंबित",
+        "approved": "अनुमत",
+        "declined": "अस्वीकृत"
     },
     "toast": {
-        "approved": "Approved",
-        "declined": "Declined"
+        "approved": "अनुमत",
+        "declined": "अस्वीकृत"
     }
 }

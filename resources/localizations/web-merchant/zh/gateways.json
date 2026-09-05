@@ -1,113 +1,113 @@
 {
     "list": {
-        "title": "Gateways",
-        "paymentTitle": "Payment gateways",
-        "smsTitle": "SMS gateways",
-        "description": "Enable approved payment and SMS providers. Configure credentials and params as instructed by each gateway class. Endpoints are managed by Durpalla Admin.",
-        "footnote": "You can remove an enabled gateway from your account. You cannot change its namespace or type. Endpoints are managed by Durpalla Admin.",
-        "emptyTitle": "No gateways enabled yet",
-        "emptyDescription": "Enable a template above to get started.",
-        "manage": "Manage"
+        "title": "网关",
+        "paymentTitle": "支付网关",
+        "smsTitle": "短信网关",
+        "description": "启用经批准的支付和短信提供商。按照每个网关类的指示配置凭据和参数。端点由 Durpalla 管理员管理。",
+        "footnote": "您可以从您的帐户中删除已启用的网关。您无法更改其名称空间或类型。端点由 Durpalla 管理员管理。",
+        "emptyTitle": "尚未启用网关",
+        "emptyDescription": "启用上面的模板即可开始。",
+        "manage": "管理"
     },
     "tabs": {
-        "all": "All",
-        "payment": "Payment",
-        "sms": "SMS"
+        "all": "全部",
+        "payment": "支付",
+        "sms": "短信"
     },
     "types": {
-        "payment": "Payment",
-        "sms": "SMS"
+        "payment": "支付",
+        "sms": "短信"
     },
     "enable": {
-        "title": "Enable a gateway",
-        "namespace": "Gateway namespace",
-        "selectPlaceholder": "Select…",
-        "noTemplates": "No templates available",
-        "action": "Enable",
-        "pending": "Enabling…",
-        "summaryTitle": "What you will need to configure",
-        "credentials": "Credentials: {{keys}}",
-        "params": "Params: {{keys}}",
-        "endpoints": "Endpoints (admin): {{keys}}"
+        "title": "启用网关",
+        "namespace": "网关命名空间",
+        "selectPlaceholder": "选择…",
+        "noTemplates": "没有可用的模板",
+        "action": "使能够",
+        "pending": "启用...",
+        "summaryTitle": "您需要配置什么",
+        "credentials": "凭证：{{keys}}",
+        "params": "参数：{{keys}}",
+        "endpoints": "端点（管理）：{{keys}}"
     },
     "table": {
-        "name": "Name",
-        "type": "Type",
-        "namespace": "Gateway namespace",
-        "code": "Code"
+        "name": "姓名",
+        "type": "类型",
+        "namespace": "网关命名空间",
+        "code": "代码"
     },
     "remove": {
-        "action": "Remove",
-        "pending": "Removing…",
-        "title": "Remove {{name}}?",
-        "description": "This removes the gateway from your account only. You can enable the same template again later. Namespace and type cannot be changed."
+        "action": "消除",
+        "pending": "正在删除...",
+        "title": "删除{{name}}？",
+        "description": "这只会从您的帐户中删除网关。您可以稍后再次启用同一模板。命名空间和类型无法更改。"
     },
     "edit": {
-        "subtitle": "{{type}} · {{code}}",
-        "notFoundTitle": "Gateway not found",
-        "notFoundDescription": "This gateway is not enabled for your account.",
-        "backToGateways": "Back to gateways",
-        "setupTitle": "Setup instructions",
-        "setupHint": "Configure credentials and params in the tabs below. Endpoints are managed by Durpalla Admin.",
+        "subtitle": "{{type}}·{{code}}",
+        "notFoundTitle": "找不到网关",
+        "notFoundDescription": "您的帐户未启用此网关。",
+        "backToGateways": "返回网关",
+        "setupTitle": "设置说明",
+        "setupHint": "在下面的选项卡中配置凭据和参数。端点由 Durpalla 管理员管理。",
         "tabs": {
-            "info": "Info",
-            "credential": "Credentials",
-            "endpoint": "Endpoints",
-            "param": "Params"
+            "info": "信息",
+            "credential": "证书",
+            "endpoint": "端点",
+            "param": "参数"
         }
     },
     "info": {
-        "title": "Gateway info",
-        "name": "Name",
-        "code": "Code",
-        "type": "Type",
-        "channel": "Channel",
-        "namespace": "Gateway namespace",
-        "save": "Save info"
+        "title": "网关信息",
+        "name": "姓名",
+        "code": "代码",
+        "type": "类型",
+        "channel": "渠道",
+        "namespace": "网关命名空间",
+        "save": "保存信息"
     },
     "credentials": {
-        "title": "Credentials",
-        "add": "Add credential",
-        "hint": "Leave a value blank to keep the existing secret. Only filled values are updated.",
-        "keyPlaceholder": "key",
+        "title": "证书",
+        "add": "添加凭证",
+        "hint": "将值留空以保留现有秘密。仅更新填充值。",
+        "keyPlaceholder": "钥匙",
         "valuePlaceholder": "********",
-        "removeRow": "Remove credential",
-        "save": "Save credentials",
-        "noneFilled": "Enter at least one credential value to update"
+        "removeRow": "删除凭据",
+        "save": "保存凭据",
+        "noneFilled": "输入至少一个要更新的凭证值"
     },
     "endpoints": {
-        "title": "Endpoints",
-        "hint": "Endpoints are managed by Durpalla Admin. You can only view their setup status here.",
-        "name": "Name",
-        "key": "Key",
-        "configured": "Configured by admin",
-        "pending": "Pending admin setup",
-        "emptyTitle": "No endpoints",
-        "emptyDescription": "This gateway does not declare endpoint keys."
+        "title": "端点",
+        "hint": "端点由 Durpalla 管理员管理。您只能在此处查看其设置状态。",
+        "name": "姓名",
+        "key": "钥匙",
+        "configured": "由管理员配置",
+        "pending": "等待管理设置",
+        "emptyTitle": "无端点",
+        "emptyDescription": "该网关不声明端点密钥。"
     },
     "params": {
-        "title": "Params",
-        "add": "Add param",
-        "hint": "Add any key/value pairs this gateway needs. Suggested keys are prefilled when available.",
-        "keyPlaceholder": "key",
-        "valuePlaceholder": "value",
-        "removeRow": "Remove param",
-        "save": "Save params"
+        "title": "参数",
+        "add": "添加参数",
+        "hint": "添加此网关所需的任何键/值对。如果可用，建议的密钥已预先填充。",
+        "keyPlaceholder": "钥匙",
+        "valuePlaceholder": "价值",
+        "removeRow": "删除参数",
+        "save": "保存参数"
     },
     "field": {
-        "required": "required",
-        "requiredSuffix": " (required)",
-        "requiredMeta": " · required"
+        "required": "必需的",
+        "requiredSuffix": "（必需的）",
+        "requiredMeta": "· 必需的"
     },
     "errors": {
-        "notFound": "Gateway not found",
-        "duplicateKey": "Duplicate key: {{key}}"
+        "notFound": "找不到网关",
+        "duplicateKey": "重复密钥：{{key}}"
     },
     "toast": {
-        "enabledSms": "Gateway enabled. Update SMS credentials to start sending messages.",
-        "enabledPayment": "Gateway enabled. Update credentials to start accepting payments.",
-        "infoSaved": "Info saved",
-        "credentialsSaved": "Credentials saved",
-        "paramsSaved": "Params saved"
+        "enabledSms": "网关已启用。更新 SMS 凭据以开始发送消息。",
+        "enabledPayment": "网关已启用。更新凭据以开始接受付款。",
+        "infoSaved": "信息已保存",
+        "credentialsSaved": "凭证已保存",
+        "paramsSaved": "参数已保存"
     }
 }

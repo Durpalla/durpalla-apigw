@@ -1,88 +1,88 @@
 {
     "list": {
-        "title": "Support Tickets",
-        "description": "Manage and respond to support requests.",
-        "newTicket": "New Ticket",
-        "searchPlaceholder": "Search ticket ID, subject, or contact…",
-        "empty": "No tickets match these filters.",
-        "loading": "Loading tickets…",
-        "viewTicket": "View ticket {{id}}"
+        "title": "समर्थन टिकट",
+        "description": "समर्थन अनुरोधों को प्रबंधित करें और उनका जवाब दें।",
+        "newTicket": "नया टिकट",
+        "searchPlaceholder": "टिकट आईडी, विषय या संपर्क खोजें...",
+        "empty": "कोई भी टिकट इन फ़िल्टर से मेल नहीं खाता।",
+        "loading": "टिकट लोड हो रहे हैं...",
+        "viewTicket": "टिकट देखें {{id}}"
     },
     "stats": {
-        "all": "All Tickets",
-        "open": "Open",
-        "progress": "In Progress",
-        "resolved": "Resolved"
+        "all": "सभी टिकट",
+        "open": "खुला",
+        "progress": "प्रगति पर है",
+        "resolved": "हल किया"
     },
     "table": {
-        "ticket": "Ticket",
-        "contact": "Contact",
-        "category": "Category",
-        "priority": "Priority",
-        "updated": "Updated",
-        "action": "Action"
+        "ticket": "टिकट",
+        "contact": "संपर्क",
+        "category": "वर्ग",
+        "priority": "प्राथमिकता",
+        "updated": "अद्यतन",
+        "action": "कार्रवाई"
     },
     "create": {
-        "title": "Create New Ticket",
-        "subject": "Subject",
-        "subjectPlaceholder": "Briefly describe the issue",
-        "category": "Category",
-        "priority": "Priority",
-        "description": "Description",
-        "descriptionPlaceholder": "Include details that will help the support team investigate.",
-        "attachments": "Attachments",
-        "chooseFiles": "Choose files",
-        "attachmentHint": "Up to {{files}} files, {{size}} MB each",
-        "oversized": "{{name}} is larger than {{size}} MB",
-        "submit": "Create Ticket",
-        "submitting": "Creating…"
+        "title": "नया टिकट बनाएं",
+        "subject": "विषय",
+        "subjectPlaceholder": "मुद्दे का संक्षेप में वर्णन करें",
+        "category": "वर्ग",
+        "priority": "प्राथमिकता",
+        "description": "विवरण",
+        "descriptionPlaceholder": "ऐसे विवरण शामिल करें जो सहायता टीम को जांच करने में मदद करेंगे।",
+        "attachments": "संलग्नक",
+        "chooseFiles": "फ़ाइलें चुनें",
+        "attachmentHint": "{{files}} फ़ाइलों तक, {{size}} एमबी प्रत्येक",
+        "oversized": "{{name}}, {{size}} MB से बड़ा है",
+        "submit": "टिकट बनाएं",
+        "submitting": "बनाया जा रहा है..."
     },
     "detail": {
-        "fallbackId": "Ticket",
-        "fallbackSubject": "Ticket details",
-        "contact": "Contact",
-        "phone": "Phone",
-        "created": "Created",
-        "updated": "Updated",
-        "description": "Description",
-        "attachments": "Attachments",
-        "conversation": "Conversation",
-        "noReplies": "No replies yet.",
-        "staffSuffix": " (Support)",
-        "closed": "Ticket closed",
-        "replyPlaceholder": "Write a reply…",
-        "sendReply": "Send reply",
-        "sending": "Sending…"
+        "fallbackId": "टिकट",
+        "fallbackSubject": "टिकट विवरण",
+        "contact": "संपर्क",
+        "phone": "फ़ोन",
+        "created": "बनाया था",
+        "updated": "अद्यतन",
+        "description": "विवरण",
+        "attachments": "संलग्नक",
+        "conversation": "बातचीत",
+        "noReplies": "अभी तक कोई उत्तर नहीं.",
+        "staffSuffix": "(सहायता)",
+        "closed": "टिकट बंद",
+        "replyPlaceholder": "उत्तर लिखें...",
+        "sendReply": "उत्तर भेजें",
+        "sending": "भेजा जा रहा है..."
     },
     "status": {
-        "all": "All",
-        "open": "Open",
-        "inprogress": "In Progress",
-        "onhold": "On Hold",
-        "resolved": "Resolved",
-        "closed": "Closed"
+        "all": "सभी",
+        "open": "खुला",
+        "inprogress": "प्रगति पर है",
+        "onhold": "होल्ड पर",
+        "resolved": "हल किया",
+        "closed": "बंद किया हुआ"
     },
     "priority": {
-        "all": "All",
-        "low": "Low",
-        "medium": "Medium",
-        "high": "High"
+        "all": "सभी",
+        "low": "कम",
+        "medium": "मध्यम",
+        "high": "उच्च"
     },
     "category": {
-        "booking": "Booking",
-        "payment": "Payment",
-        "transport": "Transport",
-        "hotel": "Hotel",
-        "account": "Account",
-        "technical": "Technical",
-        "general": "General"
+        "booking": "बुकिंग",
+        "payment": "भुगतान",
+        "transport": "परिवहन",
+        "hotel": "होटल",
+        "account": "खाता",
+        "technical": "तकनीकी",
+        "general": "सामान्य"
     },
     "toast": {
-        "loadFailed": "Failed to load support tickets",
-        "detailFailed": "Failed to load ticket details",
-        "created": "Support ticket created",
-        "createFailed": "Failed to create ticket",
-        "replySent": "Reply sent",
-        "replyFailed": "Failed to send reply"
+        "loadFailed": "समर्थन टिकट लोड करने में विफल",
+        "detailFailed": "टिकट विवरण लोड करने में विफल",
+        "created": "समर्थन टिकट बनाया गया",
+        "createFailed": "टिकट बनाने में विफल",
+        "replySent": "उत्तर भेजा गया",
+        "replyFailed": "उत्तर भेजने में विफल"
     }
 }

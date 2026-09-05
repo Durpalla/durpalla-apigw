@@ -57,62 +57,82 @@ class MerchantAuthController extends Controller
             ], 422);
         }
 
-        $user = $this->findMerchantActor($login);
+        try {
+            $user = $this->findMerchantActor($login);
 
-        if (!$user) {
-            return response()->json(['success' => false, 'message' => 'Account not found.'], 404);
-        }
-        if ((int) $user->status !== 1) {
-            return response()->json(['success' => false, 'message' => 'Account is inactive.'], 403);
-        }
-        if (($user->merchant_id ?? null) && (int) optional($user->merchant)->status !== 1) {
-            return response()->json(['success' => false, 'message' => 'This account is inactive. Please contact support.'], 403);
-        }
-        if (!Hash::check($secret, $user->password)) {
-            return response()->json(['success' => false, 'message' => 'Invalid credentials.'], 401);
-        }
+            if (! $user) {
+                return response()->json(['success' => false, 'message' => 'Account not found.'], 404);
+            }
+            if ((int) $user->status !== 1) {
+                return response()->json(['success' => false, 'message' => 'Account is inactive.'], 403);
+            }
+            if (($user->merchant_id ?? null) && (int) optional($user->merchant)->status !== 1) {
+                return response()->json(['success' => false, 'message' => 'This account is inactive. Please contact support.'], 403);
+            }
 
-        // Honor per-account 2FA from profile (Email OTP / authenticator).
-        // Do not skip when the user has 2FA enabled — settings would otherwise lie.
-        $method = $this->resolveMerchant2FaMethod($user);
-        if ($method) {
-            $actorToken = $this->generateToken($this->encodeActorRef($user));
+            $passwordHash = (string) ($user->getAttributes()['password'] ?? '');
+            if ($passwordHash === '' || ! Hash::check($secret, $passwordHash)) {
+                return response()->json(['success' => false, 'message' => 'Invalid credentials.'], 401);
+            }
 
-            if ($method === 'email') {
-                $email = $this->actorEmail($user);
-                if (!$email) {
+            // Honor per-account 2FA from profile (Email OTP / authenticator).
+            $method = $this->resolveMerchant2FaMethod($user);
+            if ($method) {
+                $actorToken = $this->generateToken($this->encodeActorRef($user));
+
+                if ($method === 'email') {
+                    $email = $this->actorEmail($user);
+                    if (! $email) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'This account has no email configured for OTP.',
+                        ], 422);
+                    }
+
+                    if (! \Illuminate\Support\Facades\Schema::hasTable('otps')) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'OTP service is temporarily unavailable.',
+                        ], 503);
+                    }
+
+                    $this->createLoginOtp($email);
+
                     return response()->json([
                         'success' => false,
-                        'message' => 'This account has no email configured for OTP.',
-                    ], 422);
+                        'two_factor_required' => true,
+                        'method' => 'email',
+                        'token' => $actorToken,
+                        'message' => App::environment('local', 'development')
+                            ? 'OTP sent to email (dev default may be 111111).'
+                            : 'OTP sent to your email.',
+                    ], 200);
                 }
 
-                $this->createLoginOtp($email);
-
-                return response()->json([
-                    'success' => false,
-                    'two_factor_required' => true,
-                    'method' => 'email',
-                    'token' => $actorToken,
-                    'message' => App::environment('local', 'development')
-                        ? 'OTP sent to email (dev default may be 111111).'
-                        : 'OTP sent to your email.',
-                ], 200);
+                if ($method === 'authenticator') {
+                    return response()->json([
+                        'success' => false,
+                        'two_factor_required' => true,
+                        'method' => 'authenticator',
+                        'token' => $actorToken,
+                        'message' => 'Enter the 6-digit code from your authenticator app.',
+                    ], 200);
+                }
             }
 
-            if ($method === 'authenticator') {
-                return response()->json([
-                    'success' => false,
-                    'two_factor_required' => true,
-                    'method' => 'authenticator',
-                    'token' => $actorToken,
-                    'message' => 'Enter the 6-digit code from your authenticator app.',
-                ], 200);
-            }
+            return $this->issueTokenResponse($user);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('merchant_login_failed', [
+                'login' => $login,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile().':'.$e->getLine(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to sign in right now. Please try again.',
+            ], 500);
         }
-
-        // 2FA not configured for this account: issue token directly.
-        return $this->issueTokenResponse($user);
     }
 
     /**
@@ -246,7 +266,20 @@ class MerchantAuthController extends Controller
 
     private function issueTokenResponse(Authenticatable $user): JsonResponse
     {
-        $token = $user->createToken(config('app.name'))->plainTextToken;
+        try {
+            $token = $user->createToken(config('app.name'))->plainTextToken;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('merchant_create_token_failed', [
+                'user_type' => $user::class,
+                'user_id' => $user->getKey(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to create session. Please contact support.',
+            ], 500);
+        }
 
         $appRole = $this->mapToDeskRole($user);
         $merchantOwnerId = $user instanceof Merchant
@@ -264,7 +297,7 @@ class MerchantAuthController extends Controller
 
         $merchant = $user instanceof Merchant
             ? $user
-            : ($user->merchant ?? Merchant::query()->find($merchantOwnerId));
+            : ($user->merchant ?? $this->merchantQuery()->find($merchantOwnerId));
 
         $permissions = $user instanceof Merchant
             ? ['*']
@@ -294,23 +327,66 @@ class MerchantAuthController extends Controller
 
     private function findMerchantActor(string $login): Merchant|MerchantStaff|null
     {
-        if (str_contains($login, '@')) {
-            $merchant = Merchant::query()->where('merchant_email', $login)->first();
+        try {
+            if (str_contains($login, '@')) {
+                $merchant = $this->merchantQuery()->where('merchant_email', $login)->first();
+                if ($merchant) {
+                    return $merchant;
+                }
+
+                return $this->merchantStaffQuery()->where('email', $login)->first();
+            }
+
+            $candidates = $this->normalizeMobileCandidates($login);
+
+            $merchant = $this->merchantQuery()->whereIn('merchant_mobile', $candidates)->first();
             if ($merchant) {
                 return $merchant;
             }
 
-            return MerchantStaff::query()->where('email', $login)->first();
+            return $this->merchantStaffQuery()->whereIn('mobile', $candidates)->first();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('merchant_actor_lookup_failed', [
+                'error' => $e->getMessage(),
+            ]);
+
+            throw $e;
+        }
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Builder<\App\Models\Merchant>
+     */
+    private function merchantQuery()
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('merchants')) {
+            throw new \RuntimeException('merchants table is missing');
         }
 
-        $candidates = $this->normalizeMobileCandidates($login);
-
-        $merchant = Merchant::query()->whereIn('merchant_mobile', $candidates)->first();
-        if ($merchant) {
-            return $merchant;
+        $q = Merchant::query();
+        if (! \Illuminate\Support\Facades\Schema::hasColumn('merchants', 'deleted_at')) {
+            $q->withoutGlobalScope(\Illuminate\Database\Eloquent\SoftDeletingScope::class);
         }
 
-        return MerchantStaff::query()->whereIn('mobile', $candidates)->first();
+        return $q;
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Builder<\App\Models\MerchantStaff>
+     */
+    private function merchantStaffQuery()
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('merchant_staff')) {
+            // Staff table optional — treat as no staff matches.
+            return MerchantStaff::query()->whereRaw('0 = 1');
+        }
+
+        $q = MerchantStaff::query();
+        if (! \Illuminate\Support\Facades\Schema::hasColumn('merchant_staff', 'deleted_at')) {
+            $q->withoutGlobalScope(\Illuminate\Database\Eloquent\SoftDeletingScope::class);
+        }
+
+        return $q;
     }
 
     /**
@@ -345,13 +421,13 @@ class MerchantAuthController extends Controller
         // Prefer "merchant:5" / "staff:3"; also accept legacy "merchant|5" / "staff|5"
         if (preg_match('/^(merchant|staff)[:|](\d+)$/', trim($ref), $m)) {
             return $m[1] === 'merchant'
-                ? Merchant::find((int) $m[2])
-                : MerchantStaff::find((int) $m[2]);
+                ? $this->merchantQuery()->find((int) $m[2])
+                : $this->merchantStaffQuery()->find((int) $m[2]);
         }
 
         // Legacy: plain numeric id treated as merchant
         if (ctype_digit(trim($ref))) {
-            return Merchant::find((int) $ref);
+            return $this->merchantQuery()->find((int) $ref);
         }
 
         return null;

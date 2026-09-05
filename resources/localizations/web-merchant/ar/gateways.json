@@ -1,113 +1,113 @@
 {
     "list": {
-        "title": "Gateways",
-        "paymentTitle": "Payment gateways",
-        "smsTitle": "SMS gateways",
-        "description": "Enable approved payment and SMS providers. Configure credentials and params as instructed by each gateway class. Endpoints are managed by Durpalla Admin.",
-        "footnote": "You can remove an enabled gateway from your account. You cannot change its namespace or type. Endpoints are managed by Durpalla Admin.",
-        "emptyTitle": "No gateways enabled yet",
-        "emptyDescription": "Enable a template above to get started.",
-        "manage": "Manage"
+        "title": "بوابات",
+        "paymentTitle": "بوابات الدفع",
+        "smsTitle": "بوابات الرسائل القصيرة",
+        "description": "تمكين موفري خدمات الدفع والرسائل النصية القصيرة المعتمدين. قم بتكوين بيانات الاعتماد والمعلمات وفقًا لتعليمات كل فئة بوابة. تتم إدارة نقاط النهاية بواسطة Durpalla Admin.",
+        "footnote": "يمكنك إزالة بوابة ممكّنة من حسابك. لا يمكنك تغيير مساحة الاسم أو النوع. تتم إدارة نقاط النهاية بواسطة Durpalla Admin.",
+        "emptyTitle": "لم يتم تمكين أي بوابات حتى الآن",
+        "emptyDescription": "قم بتمكين القالب أعلاه للبدء.",
+        "manage": "يدير"
     },
     "tabs": {
-        "all": "All",
-        "payment": "Payment",
-        "sms": "SMS"
+        "all": "الجميع",
+        "payment": "قسط",
+        "sms": "رسالة قصيرة"
     },
     "types": {
-        "payment": "Payment",
-        "sms": "SMS"
+        "payment": "قسط",
+        "sms": "رسالة قصيرة"
     },
     "enable": {
-        "title": "Enable a gateway",
-        "namespace": "Gateway namespace",
-        "selectPlaceholder": "Select…",
-        "noTemplates": "No templates available",
-        "action": "Enable",
-        "pending": "Enabling…",
-        "summaryTitle": "What you will need to configure",
-        "credentials": "Credentials: {{keys}}",
-        "params": "Params: {{keys}}",
-        "endpoints": "Endpoints (admin): {{keys}}"
+        "title": "تمكين البوابة",
+        "namespace": "مساحة اسم البوابة",
+        "selectPlaceholder": "يختار…",
+        "noTemplates": "لا توجد قوالب متاحة",
+        "action": "يُمكَِن",
+        "pending": "جارٍ التمكين…",
+        "summaryTitle": "ما سوف تحتاج إلى تكوينه",
+        "credentials": "أوراق الاعتماد: {{keys}}",
+        "params": "المعلمات: {{keys}}",
+        "endpoints": "نقاط النهاية (المشرف): {{keys}}"
     },
     "table": {
-        "name": "Name",
-        "type": "Type",
-        "namespace": "Gateway namespace",
-        "code": "Code"
+        "name": "اسم",
+        "type": "يكتب",
+        "namespace": "مساحة اسم البوابة",
+        "code": "شفرة"
     },
     "remove": {
-        "action": "Remove",
-        "pending": "Removing…",
-        "title": "Remove {{name}}?",
-        "description": "This removes the gateway from your account only. You can enable the same template again later. Namespace and type cannot be changed."
+        "action": "يزيل",
+        "pending": "جارٍ الإزالة…",
+        "title": "إزالة {{name}}؟",
+        "description": "يؤدي هذا إلى إزالة البوابة من حسابك فقط. يمكنك تمكين نفس القالب مرة أخرى لاحقًا. لا يمكن تغيير مساحة الاسم والنوع."
     },
     "edit": {
         "subtitle": "{{type}} · {{code}}",
-        "notFoundTitle": "Gateway not found",
-        "notFoundDescription": "This gateway is not enabled for your account.",
-        "backToGateways": "Back to gateways",
-        "setupTitle": "Setup instructions",
-        "setupHint": "Configure credentials and params in the tabs below. Endpoints are managed by Durpalla Admin.",
+        "notFoundTitle": "لم يتم العثور على البوابة",
+        "notFoundDescription": "لم يتم تمكين هذه البوابة لحسابك.",
+        "backToGateways": "العودة إلى البوابات",
+        "setupTitle": "تعليمات الإعداد",
+        "setupHint": "قم بتكوين بيانات الاعتماد والمعلمات في علامات التبويب أدناه. تتم إدارة نقاط النهاية بواسطة Durpalla Admin.",
         "tabs": {
-            "info": "Info",
-            "credential": "Credentials",
-            "endpoint": "Endpoints",
-            "param": "Params"
+            "info": "معلومات",
+            "credential": "أوراق اعتماد",
+            "endpoint": "نقاط النهاية",
+            "param": "بارامس"
         }
     },
     "info": {
-        "title": "Gateway info",
-        "name": "Name",
-        "code": "Code",
-        "type": "Type",
-        "channel": "Channel",
-        "namespace": "Gateway namespace",
-        "save": "Save info"
+        "title": "معلومات البوابة",
+        "name": "اسم",
+        "code": "شفرة",
+        "type": "يكتب",
+        "channel": "قناة",
+        "namespace": "مساحة اسم البوابة",
+        "save": "حفظ المعلومات"
     },
     "credentials": {
-        "title": "Credentials",
-        "add": "Add credential",
-        "hint": "Leave a value blank to keep the existing secret. Only filled values are updated.",
-        "keyPlaceholder": "key",
+        "title": "أوراق اعتماد",
+        "add": "إضافة بيانات الاعتماد",
+        "hint": "اترك قيمة فارغة للاحتفاظ بالسر الموجود. يتم تحديث القيم المعبأة فقط.",
+        "keyPlaceholder": "مفتاح",
         "valuePlaceholder": "********",
-        "removeRow": "Remove credential",
-        "save": "Save credentials",
-        "noneFilled": "Enter at least one credential value to update"
+        "removeRow": "إزالة بيانات الاعتماد",
+        "save": "حفظ بيانات الاعتماد",
+        "noneFilled": "أدخل قيمة اعتماد واحدة على الأقل للتحديث"
     },
     "endpoints": {
-        "title": "Endpoints",
-        "hint": "Endpoints are managed by Durpalla Admin. You can only view their setup status here.",
-        "name": "Name",
-        "key": "Key",
-        "configured": "Configured by admin",
-        "pending": "Pending admin setup",
-        "emptyTitle": "No endpoints",
-        "emptyDescription": "This gateway does not declare endpoint keys."
+        "title": "نقاط النهاية",
+        "hint": "تتم إدارة نقاط النهاية بواسطة Durpalla Admin. يمكنك فقط عرض حالة الإعداد الخاصة بهم هنا.",
+        "name": "اسم",
+        "key": "مفتاح",
+        "configured": "تم تكوينه من قبل المشرف",
+        "pending": "في انتظار إعداد المشرف",
+        "emptyTitle": "لا نقاط النهاية",
+        "emptyDescription": "لا تعلن هذه البوابة عن مفاتيح نقطة النهاية."
     },
     "params": {
-        "title": "Params",
-        "add": "Add param",
-        "hint": "Add any key/value pairs this gateway needs. Suggested keys are prefilled when available.",
-        "keyPlaceholder": "key",
-        "valuePlaceholder": "value",
-        "removeRow": "Remove param",
-        "save": "Save params"
+        "title": "بارامس",
+        "add": "إضافة المعلمة",
+        "hint": "قم بإضافة أي أزواج مفاتيح/قيمة تحتاجها هذه البوابة. تتم تعبئة المفاتيح المقترحة مسبقًا عند توفرها.",
+        "keyPlaceholder": "مفتاح",
+        "valuePlaceholder": "قيمة",
+        "removeRow": "إزالة المعلمة",
+        "save": "حفظ المعلمات"
     },
     "field": {
-        "required": "required",
-        "requiredSuffix": " (required)",
-        "requiredMeta": " · required"
+        "required": "مطلوب",
+        "requiredSuffix": "(مطلوب)",
+        "requiredMeta": "· مطلوب"
     },
     "errors": {
-        "notFound": "Gateway not found",
-        "duplicateKey": "Duplicate key: {{key}}"
+        "notFound": "لم يتم العثور على البوابة",
+        "duplicateKey": "مفتاح مكرر: {{key}}"
     },
     "toast": {
-        "enabledSms": "Gateway enabled. Update SMS credentials to start sending messages.",
-        "enabledPayment": "Gateway enabled. Update credentials to start accepting payments.",
-        "infoSaved": "Info saved",
-        "credentialsSaved": "Credentials saved",
-        "paramsSaved": "Params saved"
+        "enabledSms": "تم تمكين البوابة. قم بتحديث بيانات اعتماد الرسائل القصيرة لبدء إرسال الرسائل.",
+        "enabledPayment": "تم تمكين البوابة. قم بتحديث بيانات الاعتماد لبدء قبول المدفوعات.",
+        "infoSaved": "تم حفظ المعلومات",
+        "credentialsSaved": "تم حفظ بيانات الاعتماد",
+        "paramsSaved": "تم حفظ المعلمات"
     }
 }

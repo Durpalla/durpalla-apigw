@@ -9,20 +9,20 @@
         "manual": "Manual code",
         "codeLabel": "Booking / ticket code",
         "codePlaceholder": "Enter booking or ticket code",
-        "verify": "Verify"
+        "verify": "Verificare"
     },
     "verify": {
         "title": "Verify ticket",
         "noCode": "No code provided",
-        "passenger": "Passenger",
-        "amount": "Amount"
+        "passenger": "Passeggeri",
+        "amount": "Quantità"
     },
     "print": {
         "documentTitle": "Ticket",
         "heading": "Verified Ticket",
         "code": "Code",
-        "passenger": "Passenger",
-        "status": "Status"
+        "passenger": "Passeggeri",
+        "status": "Stato"
     },
     "toast": {
         "scannedInvalid": "Scanned code is invalid",

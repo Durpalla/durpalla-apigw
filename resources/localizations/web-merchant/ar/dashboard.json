@@ -1,74 +1,74 @@
 {
     "page": {
-        "title": "Dashboard",
-        "description": "Booking, trip and revenue overview",
-        "asOf": "Live overview as of {{time}}",
-        "rangeOption": "Last {{days}} days",
-        "newBooking": "New booking",
-        "newHotelBooking": "New hotel booking",
-        "live": "Live"
+        "title": "لوحة القيادة",
+        "description": "نظرة عامة على الحجز والرحلة والإيرادات",
+        "asOf": "نظرة عامة مباشرة اعتبارًا من {{time}}",
+        "rangeOption": "آخر {{days}} أيام",
+        "newBooking": "حجز جديد",
+        "newHotelBooking": "حجز فندق جديد",
+        "live": "يعيش"
     },
     "stats": {
-        "bookingsRange": "Bookings ({{days}}d)",
-        "activeTrips": "Active trips today",
-        "revenueToday": "Revenue today",
-        "avgOccupancy": "Avg occupancy",
-        "periodRevenue": "Period revenue",
-        "periodBookings": "Period bookings",
-        "unitsSold": "Units sold",
-        "pendingCancelled": "Pending / cancelled",
-        "hotels": "Hotels",
-        "hotelBookings": "Hotel bookings",
-        "hotelConfirmed": "Hotel confirmed",
-        "hotelPayable": "Hotel payable"
+        "bookingsRange": "الحجوزات ({{days}}d)",
+        "activeTrips": "رحلات نشطة اليوم",
+        "revenueToday": "الإيرادات اليوم",
+        "avgOccupancy": "متوسط ​​الإشغال",
+        "periodRevenue": "إيرادات الفترة",
+        "periodBookings": "حجوزات الفترة",
+        "unitsSold": "الوحدات المباعة",
+        "pendingCancelled": "في انتظار / ملغاة",
+        "hotels": "الفنادق",
+        "hotelBookings": "حجوزات الفنادق",
+        "hotelConfirmed": "أكد الفندق",
+        "hotelPayable": "فندق مستحق الدفع"
     },
     "charts": {
-        "revenueTrend": "Revenue trend",
-        "revenueTrendDescription": "Daily collected revenue over the selected period.",
-        "bookingsVolume": "Bookings volume",
-        "bookingsVolumeDescription": "Daily booking count for the selected period.",
-        "bookingStatus": "Booking status",
-        "bookingStatusDescription": "Share of bookings by current status.",
-        "revenueSeries": "Revenue",
-        "bookingsSeries": "Bookings",
-        "noData": "No chart data",
-        "noStatusData": "No status data"
+        "revenueTrend": "اتجاه الإيرادات",
+        "revenueTrendDescription": "الإيرادات المجمعة يوميا خلال الفترة المحددة.",
+        "bookingsVolume": "حجم الحجوزات",
+        "bookingsVolumeDescription": "عدد الحجوزات اليومية للفترة المحددة.",
+        "bookingStatus": "حالة الحجز",
+        "bookingStatusDescription": "حصة الحجوزات حسب الوضع الحالي.",
+        "revenueSeries": "ربح",
+        "bookingsSeries": "الحجوزات",
+        "noData": "لا توجد بيانات الرسم البياني",
+        "noStatusData": "لا توجد بيانات الحالة"
     },
     "widgets": {
-        "trendVsPrevious": "{{value}}% vs previous",
-        "noTrend": "No trend data",
-        "bookingsCount_one": "{{value}} booking",
-        "bookingsCount_other": "{{value}} bookings"
+        "trendVsPrevious": "{{value}}% مقارنة بالسابق",
+        "noTrend": "لا توجد بيانات الاتجاه",
+        "bookingsCount_one": "{{value}} الحجز",
+        "bookingsCount_other": "حجوزات {{value}}"
     },
     "top": {
-        "title": "Top performers",
-        "description": "Routes and vehicles with the highest activity.",
-        "routes": "Top routes",
-        "vehicles": "Top vehicles",
-        "empty": "No ranking data returned by the dashboard API yet."
+        "title": "أفضل الفنانين أداءً",
+        "description": "الطرق والمركبات ذات النشاط الأعلى.",
+        "routes": "أهم الطرق",
+        "vehicles": "أعلى المركبات",
+        "empty": "لم يتم إرجاع أي بيانات تصنيف بواسطة واجهة برمجة تطبيقات لوحة المعلومات حتى الآن."
     },
     "hotels": {
-        "title": "Hotels",
-        "description": "Jump into hotel operations.",
-        "manage": "Manage hotels"
+        "title": "الفنادق",
+        "description": "انتقل إلى عمليات الفندق.",
+        "manage": "إدارة الفنادق"
     },
     "recent": {
-        "title": "Recent bookings",
-        "descriptionTransport": "Latest transport bookings from the dashboard feed.",
-        "description": "Latest bookings from the dashboard feed.",
-        "viewAll": "View all",
-        "empty": "No recent bookings.",
-        "code": "Code",
-        "passenger": "Passenger",
-        "open": "Open"
+        "title": "الحجوزات الأخيرة",
+        "descriptionTransport": "أحدث حجوزات النقل من خلاصة لوحة القيادة.",
+        "description": "أحدث الحجوزات من خلاصة لوحة القيادة.",
+        "viewAll": "عرض الكل",
+        "empty": "لا توجد حجوزات حديثة.",
+        "code": "شفرة",
+        "passenger": "راكب",
+        "open": "يفتح"
     },
     "quickActions": {
-        "title": "Quick actions",
-        "description": "Jump into everyday operations.",
-        "trips": "Manage trips",
-        "transportBookings": "Transport bookings",
-        "hotelBookings": "Hotel bookings",
-        "reports": "Open reports",
-        "settlements": "Settlements"
+        "title": "إجراءات سريعة",
+        "description": "انتقل إلى العمليات اليومية.",
+        "trips": "إدارة الرحلات",
+        "transportBookings": "حجوزات النقل",
+        "hotelBookings": "حجوزات الفنادق",
+        "reports": "فتح التقارير",
+        "settlements": "المستوطنات"
     }
 }

@@ -1,77 +1,77 @@
 {
     "page": {
-        "exportCsv": "Export CSV",
-        "exportFailed": "Export failed",
-        "rangeInvalid": "Date range is invalid",
-        "revenue": "Revenue",
-        "bookings": "Bookings",
-        "unitsSold": "Units sold",
-        "occupancy": "Occupancy",
-        "settlements": "Settlements",
-        "cancelledBookings": "Cancelled bookings",
-        "revenueTrend": "Revenue trend",
-        "revenueTrendDescription": "Daily revenue for the selected period.",
-        "bookingVolume": "Booking volume",
-        "bookingVolumeDescription": "Daily booking count for the selected period.",
-        "utilizationTrend": "Utilization trend",
-        "utilizationTrendDescription": "Units sold across the selected period.",
-        "topVehicles": "Top vehicles",
-        "topRoutes": "Top routes",
-        "date": "Date",
-        "units": "Units",
-        "noSeries": "No series data returned for this report type.",
-        "noChartData": "No chart data returned."
+        "exportCsv": "सीएसवी निर्यात करें",
+        "exportFailed": "निर्यात विफल",
+        "rangeInvalid": "दिनांक सीमा अमान्य है",
+        "revenue": "आय",
+        "bookings": "बुकिंग के",
+        "unitsSold": "इकाइयाँ बेची गईं",
+        "occupancy": "अधिभोग",
+        "settlements": "बस्तियों",
+        "cancelledBookings": "बुकिंग रद्द कर दी गई",
+        "revenueTrend": "राजस्व प्रवृत्ति",
+        "revenueTrendDescription": "चयनित अवधि के लिए दैनिक राजस्व.",
+        "bookingVolume": "बुकिंग की मात्रा",
+        "bookingVolumeDescription": "चयनित अवधि के लिए दैनिक बुकिंग गणना.",
+        "utilizationTrend": "उपयोग की प्रवृत्ति",
+        "utilizationTrendDescription": "चयनित अवधि में बेची गई इकाइयाँ।",
+        "topVehicles": "शीर्ष वाहन",
+        "topRoutes": "शीर्ष मार्ग",
+        "date": "तारीख",
+        "units": "इकाइयों",
+        "noSeries": "इस रिपोर्ट प्रकार के लिए कोई श्रृंखला डेटा नहीं लौटाया गया।",
+        "noChartData": "कोई चार्ट डेटा वापस नहीं आया."
     },
     "definitions": {
         "dashboard": {
-            "label": "Dashboard",
-            "title": "Business Overview",
-            "purpose": "Executive summary of performance across the selected period."
+            "label": "डैशबोर्ड",
+            "title": "व्यवसाय अवलोकन",
+            "purpose": "चयनित अवधि में प्रदर्शन का कार्यकारी सारांश।"
         },
         "bookings": {
-            "label": "Bookings",
-            "title": "Booking Report",
-            "purpose": "Booking volume by date, source, channel, and status."
+            "label": "बुकिंग के",
+            "title": "बुकिंग रिपोर्ट",
+            "purpose": "दिनांक, स्रोत, चैनल और स्थिति के अनुसार बुकिंग की मात्रा।"
         },
         "revenue": {
-            "label": "Revenue",
-            "title": "Revenue Report",
-            "purpose": "Revenue, commission, taxes, refunds, and discounts."
+            "label": "आय",
+            "title": "राजस्व रिपोर्ट",
+            "purpose": "राजस्व, कमीशन, कर, रिफंड और छूट।"
         },
         "occupancy": {
-            "label": "Occupancy",
-            "title": "Occupancy / Utilization Report",
-            "purpose": "Hotel occupancy and transport seat utilization."
+            "label": "अधिभोग",
+            "title": "अधिभोग/उपयोग रिपोर्ट",
+            "purpose": "होटल अधिभोग और परिवहन सीट का उपयोग।"
         },
         "customers": {
-            "label": "Customers",
-            "title": "Customer Report",
-            "purpose": "Customer activity and booking trends."
+            "label": "ग्राहकों",
+            "title": "ग्राहक रिपोर्ट",
+            "purpose": "ग्राहक गतिविधि और बुकिंग रुझान।"
         },
         "units": {
-            "label": "Rooms / Vehicles",
-            "title": "Room / Vehicle Performance",
-            "purpose": "Performance of rooms, vehicles, and routes."
+            "label": "कमरे/वाहन",
+            "title": "कक्ष/वाहन प्रदर्शन",
+            "purpose": "कमरों, वाहनों और मार्गों का प्रदर्शन।"
         },
         "cancellations": {
-            "label": "Cancellations",
-            "title": "Cancellation & Refund Report",
-            "purpose": "Cancellation and refund trends for the selected period."
+            "label": "रद्द",
+            "title": "रद्दीकरण एवं धनवापसी रिपोर्ट",
+            "purpose": "चयनित अवधि के लिए रद्दीकरण और धनवापसी के रुझान।"
         },
         "payments": {
-            "label": "Payments",
-            "title": "Payment Report",
-            "purpose": "Payment collection, due amounts, and settlements."
+            "label": "भुगतान",
+            "title": "भुगतान रिपोर्ट",
+            "purpose": "भुगतान संग्रहण, देय राशियाँ और निपटान।"
         },
         "staff-performance": {
-            "label": "Staff Performance",
-            "title": "Staff Performance",
-            "purpose": "Bookings and revenue handled by staff."
+            "label": "स्टाफ प्रदर्शन",
+            "title": "स्टाफ प्रदर्शन",
+            "purpose": "बुकिंग और राजस्व कर्मचारियों द्वारा नियंत्रित किया जाता है।"
         },
         "sales-channels": {
-            "label": "Sales Channels",
-            "title": "Sales & Channel Report",
-            "purpose": "Sales performance across booking channels."
+            "label": "बिक्री चैनल",
+            "title": "बिक्री एवं चैनल रिपोर्ट",
+            "purpose": "बुकिंग चैनलों पर बिक्री प्रदर्शन।"
         }
     }
 }

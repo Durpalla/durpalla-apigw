@@ -13,7 +13,7 @@
         "decline": "Decline"
     },
     "status": {
-        "all": "All",
+        "all": "Todo",
         "pending": "Pending",
         "approved": "Approved",
         "declined": "Declined"

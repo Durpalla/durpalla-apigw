@@ -11,7 +11,7 @@
         "current": "Via Stop Pricing"
     },
     "info": {
-        "route": "Route",
+        "route": "راستہ",
         "routeNo": "Route No",
         "serviceType": "Service Type",
         "vehicleTypePlan": "Vehicle Type Plan",
@@ -28,7 +28,7 @@
         "allBoarding": "All boarding",
         "droppingPlaceholder": "Dropping Stop",
         "allDropping": "All dropping",
-        "statusPlaceholder": "Status",
+        "statusPlaceholder": "حیثیت",
         "allStatus": "All status",
         "searchPlaceholder": "Search fare"
     },
@@ -39,7 +39,7 @@
         "setFixed": "Set Fixed Price",
         "applyPercent": "Apply Percentage",
         "value": "Value",
-        "apply": "Apply",
+        "apply": "لگائیں",
         "invalidValue": "Enter a valid value"
     },
     "empty": {
@@ -68,12 +68,12 @@
         "cabinPrice": "Cabin Price",
         "childFare": "Child Fare",
         "vipFare": "VIP Fare",
-        "discount": "Discount",
+        "discount": "رعایت",
         "discountValue": "Student {{student}}% · Senior {{senior}}%",
         "agentCommission": "Agent Commission",
         "percentValue": "{{value}}%",
         "seatTypes": "Available Seat Types",
-        "defaultSeatType": "Seat",
+        "defaultSeatType": "نشست",
         "lastUpdated": "Last Updated",
         "edit": "Edit Fare",
         "duplicate": "Duplicate",
@@ -146,8 +146,8 @@
         "boarding": "Boarding",
         "dropping": "Dropping",
         "fare": "Fare",
-        "status": "Status",
-        "updated": "Updated"
+        "status": "حیثیت",
+        "updated": "تازہ کاری"
     },
     "toast": {
         "saved": "Fare saved",

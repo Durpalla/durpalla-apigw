@@ -3,13 +3,13 @@
         "title": "Staff",
         "description": "Team members, types, and permissions",
         "add": "Add staff",
-        "searchPlaceholder": "Search",
+        "searchPlaceholder": "Aramak",
         "allTypes": "All types",
         "empty": "No staff found",
         "type": "Type",
         "permissions": "Permissions",
         "none": "None",
-        "details": "Details"
+        "details": "Detaylar"
     },
     "form": {
         "title": "Add New Staff",
@@ -23,7 +23,7 @@
         "photoHint": "JPG/PNG, 2 MB",
         "photoAlt": "Staff profile preview",
         "photoNote": "Profile photo is preview-only until staff media upload is supported.",
-        "name": "Full name",
+        "name": "Ad Soyad",
         "namePlaceholder": "Enter full name",
         "nameField": "Staff name",
         "email": "Email address",
@@ -32,10 +32,10 @@
         "type": "Type",
         "typePlaceholder": "Select type",
         "permissionsHint": "Choose which desk sections this staff member can access.",
-        "password": "Password",
+        "password": "Şifre",
         "passwordPlaceholder": "Enter password",
-        "passwordConfirm": "Confirm password",
-        "passwordConfirmPlaceholder": "Confirm password",
+        "passwordConfirm": "Şifreyi onayla",
+        "passwordConfirmPlaceholder": "Şifreyi onayla",
         "save": "Save Staff"
     },
     "detail": {
@@ -51,7 +51,7 @@
         "summaryTitle": "Performance summary",
         "assignedVehicles": "Assigned vehicles",
         "tripsToday": "Trips today",
-        "upcomingTrips": "Upcoming trips",
+        "upcomingTrips": "Yaklaşan geziler",
         "bookingsToday": "Bookings today",
         "bookingsLast7Days": "Bookings (7 days)",
         "vehiclesTitle": "Vehicles",
@@ -61,7 +61,7 @@
         "noActivities": "No activities"
     },
     "errors": {
-        "passwordMismatch": "Passwords do not match",
+        "passwordMismatch": "Şifreler eşleşmiyor",
         "noPermission": "Select at least one permission",
         "photoTooLarge": "Photo must be smaller than 2 MB"
     },

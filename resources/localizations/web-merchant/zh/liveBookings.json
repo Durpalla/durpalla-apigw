@@ -1,22 +1,22 @@
 {
     "page": {
-        "title": "Live bookings",
-        "description": "Realtime created and cancelled booking events"
+        "title": "实时预订",
+        "description": "实时创建和取消预订事件"
     },
     "empty": {
-        "title": "Waiting for live events",
-        "description": "New bookings will appear here via Pusher."
+        "title": "正在等待直播活动",
+        "description": "新的预订将通过 Pusher 出现在此处。"
     },
     "table": {
-        "kind": "Kind",
-        "passenger": "Passenger",
-        "property": "Property",
-        "trip": "Trip",
-        "time": "Time",
-        "open": "Open"
+        "kind": "种类",
+        "passenger": "乘客",
+        "property": "财产",
+        "trip": "旅行",
+        "time": "时间",
+        "open": "打开"
     },
     "kind": {
-        "created": "Created",
-        "cancelled": "Cancelled"
+        "created": "已创建",
+        "cancelled": "取消"
     }
 }

@@ -19,7 +19,7 @@
         "contact": "Contact",
         "category": "Category",
         "priority": "Priority",
-        "updated": "Updated",
+        "updated": "تازہ کاری",
         "action": "Action"
     },
     "create": {
@@ -39,23 +39,23 @@
     },
     "detail": {
         "fallbackId": "Ticket",
-        "fallbackSubject": "Ticket details",
+        "fallbackSubject": "ٹکٹ کی تفصیلات",
         "contact": "Contact",
-        "phone": "Phone",
+        "phone": "فون",
         "created": "Created",
-        "updated": "Updated",
+        "updated": "تازہ کاری",
         "description": "Description",
         "attachments": "Attachments",
         "conversation": "Conversation",
         "noReplies": "No replies yet.",
-        "staffSuffix": " (Support)",
+        "staffSuffix": "(سپورٹ)",
         "closed": "Ticket closed",
         "replyPlaceholder": "Write a reply…",
         "sendReply": "Send reply",
-        "sending": "Sending…"
+        "sending": "بھیج رہا ہے…"
     },
     "status": {
-        "all": "All",
+        "all": "تمام",
         "open": "Open",
         "inprogress": "In Progress",
         "onhold": "On Hold",
@@ -63,19 +63,19 @@
         "closed": "Closed"
     },
     "priority": {
-        "all": "All",
+        "all": "تمام",
         "low": "Low",
         "medium": "Medium",
         "high": "High"
     },
     "category": {
         "booking": "Booking",
-        "payment": "Payment",
+        "payment": "ادائیگی",
         "transport": "Transport",
-        "hotel": "Hotel",
+        "hotel": "ہوٹل",
         "account": "Account",
         "technical": "Technical",
-        "general": "General"
+        "general": "جنرل"
     },
     "toast": {
         "loadFailed": "Failed to load support tickets",

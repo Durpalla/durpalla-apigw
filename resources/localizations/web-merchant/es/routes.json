@@ -5,7 +5,7 @@
         "createRoute": "Create route",
         "searchPlaceholder": "Search routes",
         "empty": "No routes",
-        "details": "Details",
+        "details": "Detalles",
         "columns": {
             "service": "Service",
             "type": "Type",

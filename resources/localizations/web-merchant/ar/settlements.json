@@ -1,25 +1,25 @@
 {
     "page": {
-        "title": "Settlements",
-        "description": "Approve or decline settlement requests",
-        "rangeInvalid": "Date range is invalid"
+        "title": "المستوطنات",
+        "description": "الموافقة على طلبات التسوية أو رفضها",
+        "rangeInvalid": "النطاق الزمني غير صالح"
     },
     "empty": {
-        "title": "No settlement requests"
+        "title": "لا توجد طلبات التسوية"
     },
     "table": {
-        "id": "ID",
-        "approve": "Approve",
-        "decline": "Decline"
+        "id": "بطاقة تعريف",
+        "approve": "يعتمد",
+        "decline": "انخفاض"
     },
     "status": {
-        "all": "All",
-        "pending": "Pending",
-        "approved": "Approved",
-        "declined": "Declined"
+        "all": "الجميع",
+        "pending": "قيد الانتظار",
+        "approved": "موافقة",
+        "declined": "انخفض"
     },
     "toast": {
-        "approved": "Approved",
-        "declined": "Declined"
+        "approved": "موافقة",
+        "declined": "انخفض"
     }
 }

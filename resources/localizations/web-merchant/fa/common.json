@@ -2,24 +2,24 @@
     "actions": {
         "add": "Add",
         "back": "Back",
-        "cancel": "Cancel",
-        "close": "Close",
+        "cancel": "لغو کنید",
+        "close": "بستن",
         "collect": "Collect",
         "confirm": "Confirm",
         "create": "Create",
         "delete": "Delete",
-        "download": "Download",
+        "download": "دانلود کنید",
         "edit": "Edit",
         "export": "Export",
         "filter": "Filter",
-        "print": "Print",
+        "print": "چاپ کنید",
         "refresh": "Refresh",
-        "remove": "Remove",
+        "remove": "حذف کنید",
         "reset": "Reset",
-        "retry": "Retry",
+        "retry": "دوباره امتحان کنید",
         "save": "Save",
-        "search": "Search",
-        "share": "Share",
+        "search": "جستجو کنید",
+        "share": "به اشتراک بگذارید",
         "submit": "Submit",
         "update": "Update",
         "view": "View"
@@ -34,22 +34,22 @@
     },
     "labels": {
         "actions": "Actions",
-        "all": "All",
-        "amount": "Amount",
+        "all": "همه",
+        "amount": "مقدار",
         "createdAt": "Created at",
-        "date": "Date",
+        "date": "تاریخ",
         "dateRange": "Date range",
         "due": "Due",
-        "email": "Email",
-        "from": "From",
-        "mobile": "Mobile",
-        "name": "Name",
+        "email": "ایمیل",
+        "from": "از",
+        "mobile": "موبایل",
+        "name": "نام",
         "notes": "Notes",
-        "paid": "Paid",
+        "paid": "پرداخت شده است",
         "remarks": "Remarks",
-        "status": "Status",
-        "to": "To",
-        "total": "Total",
+        "status": "وضعیت",
+        "to": "به",
+        "total": "مجموع",
         "updatedAt": "Updated at"
     },
     "status": {
@@ -57,30 +57,31 @@
         "cancelled": "Cancelled",
         "completed": "Completed",
         "confirmed": "Confirmed",
-        "failed": "Failed",
+        "failed": "شکست خورد",
         "inactive": "Inactive",
-        "paid": "Paid",
+        "paid": "پرداخت شده است",
         "pending": "Pending",
         "unpaid": "Unpaid"
     },
     "routeError": {
         "title": "Something went wrong",
         "message": "An unexpected error occurred.",
-        "tryAgain": "Try again",
+        "tryAgain": "دوباره امتحان کنید",
         "goToDashboard": "Go to dashboard"
     },
     "language": {
-        "label": "Language",
-        "switch": "Change language"
+        "label": "زبان",
+        "switch": "Change language",
+        "switching": "Changing language…"
     },
     "theme": {
         "toggle": "Toggle theme"
     },
     "vehicleTypes": {
-        "bus": "Bus",
-        "launch": "Launch",
+        "bus": "اتوبوس",
+        "launch": "راه اندازی کنید",
         "ship": "Ship",
-        "train": "Train",
+        "train": "قطار",
         "air": "Air"
     },
     "roles": {
@@ -96,8 +97,8 @@
         "viewer": "Viewer"
     },
     "errors": {
-        "forbidden": "You do not have permission to do that.",
-        "generic": "Something went wrong. Please try again.",
+        "forbidden": "شما اجازه این کار را ندارید.",
+        "generic": "مشکلی پیش آمد. لطفا دوباره امتحان کنید.",
         "network": "Cannot reach the server. Check your internet connection.",
         "notFound": "Requested resource was not found.",
         "requestFailed": "Request failed",
@@ -117,7 +118,7 @@
         "totalRecords": "{{total}} records"
     },
     "table": {
-        "noResults": "No results",
+        "noResults": "هیچ نتیجه ای وجود ندارد",
         "selectAll": "Select all rows",
         "selectRow": "Select row"
     },
@@ -133,14 +134,14 @@
         "number": "Enter number",
         "password": "Enter password",
         "phone": "Enter phone number",
-        "search": "Search",
+        "search": "جستجو کنید",
         "time": "Select time",
         "value": "Enter value"
     },
     "a11y": {
-        "hidePassword": "Hide password",
+        "hidePassword": "پنهان کردن رمز عبور",
         "otpDigit": "Digit {{position}}",
-        "showPassword": "Show password"
+        "showPassword": "نمایش رمز عبور"
     },
     "cities": {
         "barisal": "Barisal",

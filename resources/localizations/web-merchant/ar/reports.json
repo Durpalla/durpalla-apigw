@@ -1,77 +1,77 @@
 {
     "page": {
-        "exportCsv": "Export CSV",
-        "exportFailed": "Export failed",
-        "rangeInvalid": "Date range is invalid",
-        "revenue": "Revenue",
-        "bookings": "Bookings",
-        "unitsSold": "Units sold",
-        "occupancy": "Occupancy",
-        "settlements": "Settlements",
-        "cancelledBookings": "Cancelled bookings",
-        "revenueTrend": "Revenue trend",
-        "revenueTrendDescription": "Daily revenue for the selected period.",
-        "bookingVolume": "Booking volume",
-        "bookingVolumeDescription": "Daily booking count for the selected period.",
-        "utilizationTrend": "Utilization trend",
-        "utilizationTrendDescription": "Units sold across the selected period.",
-        "topVehicles": "Top vehicles",
-        "topRoutes": "Top routes",
-        "date": "Date",
-        "units": "Units",
-        "noSeries": "No series data returned for this report type.",
-        "noChartData": "No chart data returned."
+        "exportCsv": "تصدير CSV",
+        "exportFailed": "فشل التصدير",
+        "rangeInvalid": "النطاق الزمني غير صالح",
+        "revenue": "ربح",
+        "bookings": "الحجوزات",
+        "unitsSold": "الوحدات المباعة",
+        "occupancy": "الإشغال",
+        "settlements": "المستوطنات",
+        "cancelledBookings": "الحجوزات الملغاة",
+        "revenueTrend": "اتجاه الإيرادات",
+        "revenueTrendDescription": "الإيرادات اليومية للفترة المحددة.",
+        "bookingVolume": "حجم الحجز",
+        "bookingVolumeDescription": "عدد الحجوزات اليومية للفترة المحددة.",
+        "utilizationTrend": "اتجاه الاستخدام",
+        "utilizationTrendDescription": "الوحدات المباعة خلال الفترة المحددة.",
+        "topVehicles": "أعلى المركبات",
+        "topRoutes": "أهم الطرق",
+        "date": "تاريخ",
+        "units": "الوحدات",
+        "noSeries": "لم يتم إرجاع أي بيانات سلسلة لهذا النوع من التقارير.",
+        "noChartData": "لم يتم إرجاع أية بيانات للمخطط."
     },
     "definitions": {
         "dashboard": {
-            "label": "Dashboard",
-            "title": "Business Overview",
-            "purpose": "Executive summary of performance across the selected period."
+            "label": "لوحة القيادة",
+            "title": "نظرة عامة على الأعمال",
+            "purpose": "ملخص تنفيذي للأداء خلال الفترة المختارة."
         },
         "bookings": {
-            "label": "Bookings",
-            "title": "Booking Report",
-            "purpose": "Booking volume by date, source, channel, and status."
+            "label": "الحجوزات",
+            "title": "تقرير الحجز",
+            "purpose": "حجم الحجز حسب التاريخ والمصدر والقناة والحالة."
         },
         "revenue": {
-            "label": "Revenue",
-            "title": "Revenue Report",
-            "purpose": "Revenue, commission, taxes, refunds, and discounts."
+            "label": "ربح",
+            "title": "تقرير الإيرادات",
+            "purpose": "الإيرادات والعمولات والضرائب والمبالغ المستردة والخصومات."
         },
         "occupancy": {
-            "label": "Occupancy",
-            "title": "Occupancy / Utilization Report",
-            "purpose": "Hotel occupancy and transport seat utilization."
+            "label": "الإشغال",
+            "title": "تقرير الإشغال / الاستخدام",
+            "purpose": "إشغال الفندق واستخدام مقاعد النقل."
         },
         "customers": {
-            "label": "Customers",
-            "title": "Customer Report",
-            "purpose": "Customer activity and booking trends."
+            "label": "عملاء",
+            "title": "تقرير العملاء",
+            "purpose": "نشاط العملاء واتجاهات الحجز."
         },
         "units": {
-            "label": "Rooms / Vehicles",
-            "title": "Room / Vehicle Performance",
-            "purpose": "Performance of rooms, vehicles, and routes."
+            "label": "الغرف / المركبات",
+            "title": "أداء الغرفة/المركبة",
+            "purpose": "أداء الغرف والمركبات والطرق."
         },
         "cancellations": {
-            "label": "Cancellations",
-            "title": "Cancellation & Refund Report",
-            "purpose": "Cancellation and refund trends for the selected period."
+            "label": "الإلغاءات",
+            "title": "تقرير الإلغاء واسترداد الأموال",
+            "purpose": "اتجاهات الإلغاء واسترداد الأموال للفترة المحددة."
         },
         "payments": {
-            "label": "Payments",
-            "title": "Payment Report",
-            "purpose": "Payment collection, due amounts, and settlements."
+            "label": "المدفوعات",
+            "title": "تقرير الدفع",
+            "purpose": "تحصيل الدفعات والمبالغ المستحقة والتسويات."
         },
         "staff-performance": {
-            "label": "Staff Performance",
-            "title": "Staff Performance",
-            "purpose": "Bookings and revenue handled by staff."
+            "label": "أداء الموظفين",
+            "title": "أداء الموظفين",
+            "purpose": "يتم التعامل مع الحجوزات والإيرادات من قبل الموظفين."
         },
         "sales-channels": {
-            "label": "Sales Channels",
-            "title": "Sales & Channel Report",
-            "purpose": "Sales performance across booking channels."
+            "label": "قنوات البيع",
+            "title": "تقرير المبيعات والقناة",
+            "purpose": "أداء المبيعات عبر قنوات الحجز."
         }
     }
 }

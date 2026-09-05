@@ -10,12 +10,12 @@
         "manage": "Manage"
     },
     "tabs": {
-        "all": "All",
-        "payment": "Payment",
+        "all": "همه",
+        "payment": "پرداخت",
         "sms": "SMS"
     },
     "types": {
-        "payment": "Payment",
+        "payment": "پرداخت",
         "sms": "SMS"
     },
     "enable": {
@@ -31,20 +31,20 @@
         "endpoints": "Endpoints (admin): {{keys}}"
     },
     "table": {
-        "name": "Name",
+        "name": "نام",
         "type": "Type",
         "namespace": "Gateway namespace",
         "code": "Code"
     },
     "remove": {
-        "action": "Remove",
+        "action": "حذف کنید",
         "pending": "Removing…",
         "title": "Remove {{name}}?",
         "description": "This removes the gateway from your account only. You can enable the same template again later. Namespace and type cannot be changed."
     },
     "edit": {
         "subtitle": "{{type}} · {{code}}",
-        "notFoundTitle": "Gateway not found",
+        "notFoundTitle": "دروازه پیدا نشد",
         "notFoundDescription": "This gateway is not enabled for your account.",
         "backToGateways": "Back to gateways",
         "setupTitle": "Setup instructions",
@@ -58,7 +58,7 @@
     },
     "info": {
         "title": "Gateway info",
-        "name": "Name",
+        "name": "نام",
         "code": "Code",
         "type": "Type",
         "channel": "Channel",
@@ -78,7 +78,7 @@
     "endpoints": {
         "title": "Endpoints",
         "hint": "Endpoints are managed by Durpalla Admin. You can only view their setup status here.",
-        "name": "Name",
+        "name": "نام",
         "key": "Key",
         "configured": "Configured by admin",
         "pending": "Pending admin setup",
@@ -100,14 +100,14 @@
         "requiredMeta": " · required"
     },
     "errors": {
-        "notFound": "Gateway not found",
+        "notFound": "دروازه پیدا نشد",
         "duplicateKey": "Duplicate key: {{key}}"
     },
     "toast": {
-        "enabledSms": "Gateway enabled. Update SMS credentials to start sending messages.",
-        "enabledPayment": "Gateway enabled. Update credentials to start accepting payments.",
+        "enabledSms": "دروازه فعال شد. برای شروع ارسال پیام، اعتبار نامه SMS را به روز کنید.",
+        "enabledPayment": "دروازه فعال شد. برای شروع پذیرش پرداخت ها، اعتبارنامه ها را به روز کنید.",
         "infoSaved": "Info saved",
-        "credentialsSaved": "Credentials saved",
-        "paramsSaved": "Params saved"
+        "credentialsSaved": "اعتبارنامه ها ذخیره شد",
+        "paramsSaved": "پارامترها ذخیره شدند"
     }
 }

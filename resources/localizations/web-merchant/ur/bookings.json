@@ -7,12 +7,12 @@
         "columns": {
             "booking": "Booking",
             "type": "Type",
-            "guest": "Guest",
-            "passenger": "Passenger",
+            "guest": "مہمان",
+            "passenger": "مسافر",
             "reference": "PNR / Invoice"
         },
         "kind": {
-            "hotel": "Hotel",
+            "hotel": "ہوٹل",
             "transport": "Transport"
         },
         "pagination": {
@@ -55,9 +55,9 @@
         "unknown": "Unknown"
     },
     "ticketType": {
-        "seat": "Seat",
-        "cabin": "Cabin",
-        "sofa": "Sofa"
+        "seat": "نشست",
+        "cabin": "کیبن",
+        "sofa": "صوفہ"
     },
     "ticketTypePlural": {
         "seat": "seats",
@@ -78,30 +78,30 @@
         "breadcrumb": {
             "bookings": "Bookings",
             "transport": "Transport",
-            "current": "Booking Details"
+            "current": "بکنگ کی تفصیلات"
         },
         "backAria": "Back to transport bookings",
-        "title": "Booking Details",
+        "title": "بکنگ کی تفصیلات",
         "bookingId": "Booking ID",
         "bookedOn": "Booked on",
-        "guest": "Guest",
+        "guest": "مہمان",
         "printInvoice": "Print invoice",
-        "share": "Share",
-        "more": "More",
+        "share": "شیئر کریں۔",
+        "more": "مزید",
         "cancelBooking": "Cancel booking",
-        "ac": "AC",
+        "ac": "اے سی",
         "nonAc": "Non-AC",
         "tabs": {
-            "info": "Booking Info",
+            "info": "بکنگ کی معلومات",
             "passengers": "Passengers ({{value}})",
             "seats": "Seat Details",
             "payment": "Payment & Invoice"
         },
         "trip": {
-            "heading": "Trip",
+            "heading": "سفر",
             "journey": "Journey",
             "badge": "Transport",
-            "departure": "Departure",
+            "departure": "روانگی",
             "boarding": "Boarding",
             "status": "Trip status",
             "onTime": "On time",
@@ -110,14 +110,14 @@
         },
         "info": {
             "contact": "Contact details",
-            "phone": "Phone",
+            "phone": "فون",
             "address": "Address",
             "route": "Trip route",
             "fareBreakdown": "Fare breakdown",
             "fareRow": "{{label}} ({{value}} × {{unit}})",
             "bookingStatus": "Booking status",
             "steps": {
-                "booked": "Booked",
+                "booked": "بک کروایا",
                 "confirmed": "Confirmed",
                 "boarding": "Boarding",
                 "completed": "Completed"
@@ -139,11 +139,11 @@
             "heading": "Passengers ({{value}})",
             "columns": {
                 "index": "#",
-                "passenger": "Passenger",
-                "phone": "Phone",
-                "seat": "Seat",
+                "passenger": "مسافر",
+                "phone": "فون",
+                "seat": "نشست",
                 "type": "Type",
-                "ac": "AC",
+                "ac": "اے سی",
                 "fare": "Fare"
             }
         },
@@ -155,7 +155,7 @@
             "paymentSummary": "Payment summary",
             "amountPaid": "Amount paid",
             "dueAmount": "Due amount",
-            "viewInvoice": "View invoice",
+            "viewInvoice": "رسید دیکھیں",
             "actions": "Booking actions",
             "reschedule": "Reschedule booking",
             "sendMessage": "Send SMS / Email",
@@ -169,7 +169,7 @@
     },
     "payment": {
         "heading": "Payment & invoice",
-        "totalFare": "Total fare",
+        "totalFare": "کل کرایہ",
         "method": "Payment method",
         "methodLabel": "Method",
         "status": "Payment status",
@@ -179,7 +179,7 @@
         "collect": "Collect payment",
         "invoiceSummary": "Invoice summary",
         "bookingId": "Booking ID",
-        "trip": "Trip",
+        "trip": "سفر",
         "tickets": "Tickets",
         "amountPaid": "Amount paid",
         "balanceDue": "Balance due"
@@ -189,33 +189,33 @@
         "previewDescription": "Review the booking invoice before printing. Merchant details appear at the top; Durpalla logo is shown in the powered-by section.",
         "documentTitle": "BOOKING INVOICE",
         "printWindowTitle": "Booking Invoice",
-        "verify": "Verify",
+        "verify": "تصدیق کریں۔",
         "verifyAlt": "Scan to verify",
         "booking": "Booking",
         "id": "ID",
-        "date": "Date",
+        "date": "تاریخ",
         "officer": "Officer",
-        "payment": "Payment",
-        "trip": "Trip",
-        "route": "Route",
-        "vehicle": "Vehicle",
-        "departure": "Departure",
+        "payment": "ادائیگی",
+        "trip": "سفر",
+        "route": "راستہ",
+        "vehicle": "گاڑی",
+        "departure": "روانگی",
         "boarding": "Boarding",
         "paymentAndFare": "Payment & Fare",
         "method": "Method",
         "fareRow": "{{label}} ({{value}})",
         "columns": {
             "index": "#",
-            "passenger": "Passenger",
-            "phone": "Phone",
+            "passenger": "مسافر",
+            "phone": "فون",
             "seat": "Seat / Cabin",
             "type": "Type",
-            "ac": "AC",
+            "ac": "اے سی",
             "fare": "Fare"
         },
         "seats": "Seats",
-        "status": "Status",
-        "termsTitle": "Terms & Conditions",
+        "status": "حیثیت",
+        "termsTitle": "شرائط و ضوابط",
         "terms": [
             "Arrive at the boarding point at least 30 minutes before departure.",
             "Valid ID and this booking reference are required at boarding.",
@@ -244,13 +244,13 @@
             "searchSchedules": "Search schedules",
             "continueToPassengers": "Continue to passengers",
             "reviewBooking": "Review booking",
-            "confirmBooking": "Confirm booking",
+            "confirmBooking": "بکنگ کی تصدیق کریں۔",
             "confirming": "Confirming..."
         },
         "serviceTypes": {
             "launch": "Launch / Ferry",
-            "bus": "Bus",
-            "train": "Train",
+            "bus": "بس",
+            "train": "ٹرین",
             "air": "Air"
         },
         "serviceDescriptions": {
@@ -269,7 +269,7 @@
             "tripSearchPlaceholder": "e.g. TRP-25052026-001",
             "criteria": "OR SEARCH BY CRITERIA",
             "serviceType": "Service Type",
-            "route": "Route",
+            "route": "راستہ",
             "routePlaceholder": "Select route",
             "journeyDate": "Journey Date",
             "departureTime": "Departure Time",
@@ -285,7 +285,7 @@
             "tripStatus": "Trip Status",
             "activeTrips": "Active Trips",
             "allTrips": "All Trips",
-            "searchTrips": "Search Trips"
+            "searchTrips": "تلاش کے دورے"
         },
         "tripPicker": {
             "heading": "Available Trips ({{value}})",
@@ -302,21 +302,21 @@
         },
         "selectedTrip": {
             "noPhoto": "No photo",
-            "vehicleFallback": "Vehicle",
+            "vehicleFallback": "گاڑی",
             "seatsAvailable": "Seats Available {{available}} / {{total}}",
             "changeTrip": "Change Trip"
         },
         "seatStatus": {
-            "available": "Available",
+            "available": "دستیاب ہے۔",
             "selected": "Selected",
             "blocked": "Blocked",
-            "booked": "Booked",
+            "booked": "بک کروایا",
             "ladies": "Ladies Seat"
         },
         "seatLayout": {
             "heading": "Select Seats",
             "availability": "{{available}} available of {{total}} {{type}}",
-            "floorPlaceholder": "Floor",
+            "floorPlaceholder": "فرش",
             "viewLayout": "Seat Layout",
             "viewList": "List View",
             "noItems": "No layout items for this selection.",
@@ -330,7 +330,7 @@
             "front": "Front",
             "back": "Back",
             "door": "Door",
-            "driver": "Driver"
+            "driver": "ڈرائیور"
         },
         "passengers": {
             "heading": "Passenger details",
@@ -345,23 +345,23 @@
             },
             "fallbackLabel": "Passenger {{index}}",
             "fullName": "Full name *",
-            "namePlaceholder": "Enter passenger name",
+            "namePlaceholder": "مسافر کا نام درج کریں۔",
             "mobile": "Mobile *",
-            "mobilePlaceholder": "Enter mobile number"
+            "mobilePlaceholder": "موبائل نمبر درج کریں۔"
         },
         "review": {
             "heading": "Review booking",
             "service": "Service",
-            "trip": "Trip",
-            "route": "Route",
-            "date": "Date",
-            "guest": "Guest",
+            "trip": "سفر",
+            "route": "راستہ",
+            "date": "تاریخ",
+            "guest": "مہمان",
             "seats": "Seats",
-            "passengers": "Passengers",
+            "passengers": "مسافروں",
             "passengerRow": "{{index}}. {{name}} · {{mobile}}",
             "internalNote": "Internal note:",
             "hideSpecialRequest": "Hide special request",
-            "addSpecialRequest": "+ Add special request (optional)",
+            "addSpecialRequest": "+ خصوصی درخواست شامل کریں (اختیاری)",
             "specialRequestPlaceholder": "Any special request",
             "paymentMode": "Payment mode *",
             "paymentModes": {
@@ -379,19 +379,19 @@
             "title": "Booking Summary",
             "emptyTitle": "No trip selected yet",
             "emptyDescription": "Search and select a trip to continue booking.",
-            "tripDetails": "Trip Details",
+            "tripDetails": "سفر کی تفصیلات",
             "tripId": "Trip ID",
-            "vehicle": "Vehicle",
-            "route": "Route",
-            "date": "Date",
-            "departure": "Departure",
+            "vehicle": "گاڑی",
+            "route": "راستہ",
+            "date": "تاریخ",
+            "departure": "روانگی",
             "boarding": "Boarding",
             "dropping": "Dropping",
             "serviceType": "Service type",
             "notSelected": "Not selected",
             "seatDetails": "Seat Details",
             "noSeats": "No seats selected yet.",
-            "seatType": "Seat type",
+            "seatType": "سیٹ کی قسم",
             "ticketPrice": "Ticket price",
             "totalSeats": "Total seats",
             "totalAmount": "Total amount",
@@ -404,18 +404,18 @@
         "ticket": {
             "title": "Ticket",
             "heading": "Booking {{id}}",
-            "guest": "Guest",
-            "mobile": "Mobile",
-            "trip": "Trip",
+            "guest": "مہمان",
+            "mobile": "موبائل",
+            "trip": "سفر",
             "seats": "Seats"
         }
     },
     "fields": {
-        "guest": "Guest",
-        "ticketType": "Ticket type",
-        "route": "Route",
-        "from": "From",
-        "to": "To",
+        "guest": "مہمان",
+        "ticketType": "ٹکٹ کی قسم",
+        "route": "راستہ",
+        "from": "سے",
+        "to": "کو",
         "journeyDate": "Journey date",
         "passengerName": "Passenger {{index}} name",
         "passengerMobile": "Passenger {{index}} mobile",
@@ -436,7 +436,7 @@
         "dateRangeInvalid": "Date range is invalid",
         "enterCode": "Enter a PNR or invoice number",
         "noReference": "Booking found but has no reference id",
-        "bookingNotFound": "Booking not found",
+        "bookingNotFound": "بکنگ نہیں ملی",
         "amountGreaterThanZero": "Amount must be greater than 0",
         "amountExceedsDue": "Amount must not exceed the due amount ({{amount}})",
         "selectTripSchedule": "Select a trip schedule",

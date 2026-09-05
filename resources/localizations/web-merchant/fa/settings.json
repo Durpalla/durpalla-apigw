@@ -1,7 +1,7 @@
 {
     "index": {
-        "title": "Settings",
-        "profile": "Profile",
+        "title": "تنظیمات",
+        "profile": "نمایه",
         "profileDescription": "Account details and password",
         "twoFactor": "Two-factor authentication",
         "twoFactorDescription": "Email OTP and authenticator app",
@@ -33,7 +33,7 @@
         "guidance": "Use a system printer or PDF from the browser print dialog for counter operations."
     },
     "profile": {
-        "title": "My profile",
+        "title": "پروفایل من",
         "description": "Manage your merchant account and personal information.",
         "fallbackName": "Merchant",
         "merchantId": "Merchant ID: {{value}}",
@@ -64,16 +64,16 @@
         "password": {
             "title": "Change password",
             "description": "Use at least eight characters for your new password.",
-            "current": "Current password",
+            "current": "رمز عبور فعلی",
             "currentPlaceholder": "Enter current password",
             "new": "New password",
-            "newPlaceholder": "Enter new password",
-            "confirm": "Confirm new password",
-            "confirmPlaceholder": "Confirm new password",
-            "label": "Password",
+            "newPlaceholder": "رمز عبور جدید را وارد کنید",
+            "confirm": "رمز عبور جدید را تایید کنید",
+            "confirmPlaceholder": "رمز عبور جدید را تایید کنید",
+            "label": "رمز عبور",
             "confirmLabel": "Password confirmation",
             "submit": "Update password",
-            "submitting": "Updating..."
+            "submitting": "در حال به روز رسانی..."
         },
         "twoFactor": {
             "title": "Two-factor authentication",
@@ -86,7 +86,7 @@
         },
         "toast": {
             "updated": "Profile updated",
-            "passwordChanged": "Password changed",
+            "passwordChanged": "رمز عبور تغییر کرد",
             "avatarUpdated": "Profile picture updated",
             "logoUpdated": "Business logo updated",
             "invalidImageType": "Use a PNG, JPG, or WebP image",
@@ -109,7 +109,7 @@
             "enabling": "Enabling email OTP...",
             "enabled": "Email OTP enabled",
             "enable": "Use email OTP",
-            "missing": "Add an email address to your profile first."
+            "missing": "ابتدا یک آدرس ایمیل به نمایه خود اضافه کنید."
         },
         "authenticator": {
             "title": "Authenticator app",

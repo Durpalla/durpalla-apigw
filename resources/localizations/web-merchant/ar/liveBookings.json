@@ -1,22 +1,22 @@
 {
     "page": {
-        "title": "Live bookings",
-        "description": "Realtime created and cancelled booking events"
+        "title": "الحجوزات المباشرة",
+        "description": "أحداث الحجز التي تم إنشاؤها وإلغاؤها في الوقت الفعلي"
     },
     "empty": {
-        "title": "Waiting for live events",
-        "description": "New bookings will appear here via Pusher."
+        "title": "في انتظار الأحداث الحية",
+        "description": "ستظهر الحجوزات الجديدة هنا عبر Pusher."
     },
     "table": {
-        "kind": "Kind",
-        "passenger": "Passenger",
-        "property": "Property",
-        "trip": "Trip",
-        "time": "Time",
-        "open": "Open"
+        "kind": "عطوف",
+        "passenger": "راكب",
+        "property": "ملكية",
+        "trip": "رحلة",
+        "time": "وقت",
+        "open": "يفتح"
     },
     "kind": {
-        "created": "Created",
-        "cancelled": "Cancelled"
+        "created": "مخلوق",
+        "cancelled": "تم الإلغاء"
     }
 }

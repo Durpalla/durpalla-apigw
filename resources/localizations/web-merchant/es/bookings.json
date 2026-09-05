@@ -7,8 +7,8 @@
         "columns": {
             "booking": "Booking",
             "type": "Type",
-            "guest": "Guest",
-            "passenger": "Passenger",
+            "guest": "Invitado",
+            "passenger": "Pasajero",
             "reference": "PNR / Invoice"
         },
         "kind": {
@@ -55,9 +55,9 @@
         "unknown": "Unknown"
     },
     "ticketType": {
-        "seat": "Seat",
-        "cabin": "Cabin",
-        "sofa": "Sofa"
+        "seat": "Asiento",
+        "cabin": "Cabina",
+        "sofa": "Sofá"
     },
     "ticketTypePlural": {
         "seat": "seats",
@@ -78,30 +78,30 @@
         "breadcrumb": {
             "bookings": "Bookings",
             "transport": "Transport",
-            "current": "Booking Details"
+            "current": "Detalles de la reserva"
         },
         "backAria": "Back to transport bookings",
-        "title": "Booking Details",
+        "title": "Detalles de la reserva",
         "bookingId": "Booking ID",
         "bookedOn": "Booked on",
-        "guest": "Guest",
+        "guest": "Invitado",
         "printInvoice": "Print invoice",
-        "share": "Share",
-        "more": "More",
+        "share": "Compartir",
+        "more": "Más",
         "cancelBooking": "Cancel booking",
-        "ac": "AC",
+        "ac": "C.A.",
         "nonAc": "Non-AC",
         "tabs": {
-            "info": "Booking Info",
+            "info": "Información de reserva",
             "passengers": "Passengers ({{value}})",
             "seats": "Seat Details",
             "payment": "Payment & Invoice"
         },
         "trip": {
-            "heading": "Trip",
+            "heading": "Viaje",
             "journey": "Journey",
             "badge": "Transport",
-            "departure": "Departure",
+            "departure": "Partida",
             "boarding": "Boarding",
             "status": "Trip status",
             "onTime": "On time",
@@ -110,14 +110,14 @@
         },
         "info": {
             "contact": "Contact details",
-            "phone": "Phone",
+            "phone": "Teléfono",
             "address": "Address",
             "route": "Trip route",
             "fareBreakdown": "Fare breakdown",
             "fareRow": "{{label}} ({{value}} × {{unit}})",
             "bookingStatus": "Booking status",
             "steps": {
-                "booked": "Booked",
+                "booked": "Reservado",
                 "confirmed": "Confirmed",
                 "boarding": "Boarding",
                 "completed": "Completed"
@@ -139,11 +139,11 @@
             "heading": "Passengers ({{value}})",
             "columns": {
                 "index": "#",
-                "passenger": "Passenger",
-                "phone": "Phone",
-                "seat": "Seat",
+                "passenger": "Pasajero",
+                "phone": "Teléfono",
+                "seat": "Asiento",
                 "type": "Type",
-                "ac": "AC",
+                "ac": "C.A.",
                 "fare": "Fare"
             }
         },
@@ -155,7 +155,7 @@
             "paymentSummary": "Payment summary",
             "amountPaid": "Amount paid",
             "dueAmount": "Due amount",
-            "viewInvoice": "View invoice",
+            "viewInvoice": "Ver factura",
             "actions": "Booking actions",
             "reschedule": "Reschedule booking",
             "sendMessage": "Send SMS / Email",
@@ -169,7 +169,7 @@
     },
     "payment": {
         "heading": "Payment & invoice",
-        "totalFare": "Total fare",
+        "totalFare": "Tarifa total",
         "method": "Payment method",
         "methodLabel": "Method",
         "status": "Payment status",
@@ -179,7 +179,7 @@
         "collect": "Collect payment",
         "invoiceSummary": "Invoice summary",
         "bookingId": "Booking ID",
-        "trip": "Trip",
+        "trip": "Viaje",
         "tickets": "Tickets",
         "amountPaid": "Amount paid",
         "balanceDue": "Balance due"
@@ -189,33 +189,33 @@
         "previewDescription": "Review the booking invoice before printing. Merchant details appear at the top; Durpalla logo is shown in the powered-by section.",
         "documentTitle": "BOOKING INVOICE",
         "printWindowTitle": "Booking Invoice",
-        "verify": "Verify",
+        "verify": "Verificar",
         "verifyAlt": "Scan to verify",
         "booking": "Booking",
         "id": "ID",
-        "date": "Date",
+        "date": "Fecha",
         "officer": "Officer",
-        "payment": "Payment",
-        "trip": "Trip",
-        "route": "Route",
-        "vehicle": "Vehicle",
-        "departure": "Departure",
+        "payment": "Pago",
+        "trip": "Viaje",
+        "route": "Ruta",
+        "vehicle": "Vehículo",
+        "departure": "Partida",
         "boarding": "Boarding",
         "paymentAndFare": "Payment & Fare",
         "method": "Method",
         "fareRow": "{{label}} ({{value}})",
         "columns": {
             "index": "#",
-            "passenger": "Passenger",
-            "phone": "Phone",
+            "passenger": "Pasajero",
+            "phone": "Teléfono",
             "seat": "Seat / Cabin",
             "type": "Type",
-            "ac": "AC",
+            "ac": "C.A.",
             "fare": "Fare"
         },
         "seats": "Seats",
-        "status": "Status",
-        "termsTitle": "Terms & Conditions",
+        "status": "Estado",
+        "termsTitle": "Términos y condiciones",
         "terms": [
             "Arrive at the boarding point at least 30 minutes before departure.",
             "Valid ID and this booking reference are required at boarding.",
@@ -244,13 +244,13 @@
             "searchSchedules": "Search schedules",
             "continueToPassengers": "Continue to passengers",
             "reviewBooking": "Review booking",
-            "confirmBooking": "Confirm booking",
+            "confirmBooking": "Confirmar reserva",
             "confirming": "Confirming..."
         },
         "serviceTypes": {
             "launch": "Launch / Ferry",
-            "bus": "Bus",
-            "train": "Train",
+            "bus": "Autobús",
+            "train": "Tren",
             "air": "Air"
         },
         "serviceDescriptions": {
@@ -269,7 +269,7 @@
             "tripSearchPlaceholder": "e.g. TRP-25052026-001",
             "criteria": "OR SEARCH BY CRITERIA",
             "serviceType": "Service Type",
-            "route": "Route",
+            "route": "Ruta",
             "routePlaceholder": "Select route",
             "journeyDate": "Journey Date",
             "departureTime": "Departure Time",
@@ -285,7 +285,7 @@
             "tripStatus": "Trip Status",
             "activeTrips": "Active Trips",
             "allTrips": "All Trips",
-            "searchTrips": "Search Trips"
+            "searchTrips": "Buscar viajes"
         },
         "tripPicker": {
             "heading": "Available Trips ({{value}})",
@@ -302,21 +302,21 @@
         },
         "selectedTrip": {
             "noPhoto": "No photo",
-            "vehicleFallback": "Vehicle",
+            "vehicleFallback": "Vehículo",
             "seatsAvailable": "Seats Available {{available}} / {{total}}",
             "changeTrip": "Change Trip"
         },
         "seatStatus": {
-            "available": "Available",
+            "available": "Disponible",
             "selected": "Selected",
             "blocked": "Blocked",
-            "booked": "Booked",
+            "booked": "Reservado",
             "ladies": "Ladies Seat"
         },
         "seatLayout": {
             "heading": "Select Seats",
             "availability": "{{available}} available of {{total}} {{type}}",
-            "floorPlaceholder": "Floor",
+            "floorPlaceholder": "Piso",
             "viewLayout": "Seat Layout",
             "viewList": "List View",
             "noItems": "No layout items for this selection.",
@@ -330,7 +330,7 @@
             "front": "Front",
             "back": "Back",
             "door": "Door",
-            "driver": "Driver"
+            "driver": "Conductor"
         },
         "passengers": {
             "heading": "Passenger details",
@@ -345,19 +345,19 @@
             },
             "fallbackLabel": "Passenger {{index}}",
             "fullName": "Full name *",
-            "namePlaceholder": "Enter passenger name",
+            "namePlaceholder": "Introduzca el nombre del pasajero",
             "mobile": "Mobile *",
-            "mobilePlaceholder": "Enter mobile number"
+            "mobilePlaceholder": "Introduce el número de móvil"
         },
         "review": {
             "heading": "Review booking",
             "service": "Service",
-            "trip": "Trip",
-            "route": "Route",
-            "date": "Date",
-            "guest": "Guest",
+            "trip": "Viaje",
+            "route": "Ruta",
+            "date": "Fecha",
+            "guest": "Invitado",
             "seats": "Seats",
-            "passengers": "Passengers",
+            "passengers": "Pasajeros",
             "passengerRow": "{{index}}. {{name}} · {{mobile}}",
             "internalNote": "Internal note:",
             "hideSpecialRequest": "Hide special request",
@@ -379,19 +379,19 @@
             "title": "Booking Summary",
             "emptyTitle": "No trip selected yet",
             "emptyDescription": "Search and select a trip to continue booking.",
-            "tripDetails": "Trip Details",
+            "tripDetails": "Detalles del viaje",
             "tripId": "Trip ID",
-            "vehicle": "Vehicle",
-            "route": "Route",
-            "date": "Date",
-            "departure": "Departure",
+            "vehicle": "Vehículo",
+            "route": "Ruta",
+            "date": "Fecha",
+            "departure": "Partida",
             "boarding": "Boarding",
             "dropping": "Dropping",
             "serviceType": "Service type",
             "notSelected": "Not selected",
             "seatDetails": "Seat Details",
             "noSeats": "No seats selected yet.",
-            "seatType": "Seat type",
+            "seatType": "Tipo de asiento",
             "ticketPrice": "Ticket price",
             "totalSeats": "Total seats",
             "totalAmount": "Total amount",
@@ -404,18 +404,18 @@
         "ticket": {
             "title": "Ticket",
             "heading": "Booking {{id}}",
-            "guest": "Guest",
-            "mobile": "Mobile",
-            "trip": "Trip",
+            "guest": "Invitado",
+            "mobile": "Móvil",
+            "trip": "Viaje",
             "seats": "Seats"
         }
     },
     "fields": {
-        "guest": "Guest",
-        "ticketType": "Ticket type",
-        "route": "Route",
-        "from": "From",
-        "to": "To",
+        "guest": "Invitado",
+        "ticketType": "Tipo de billete",
+        "route": "Ruta",
+        "from": "De",
+        "to": "A",
         "journeyDate": "Journey date",
         "passengerName": "Passenger {{index}} name",
         "passengerMobile": "Passenger {{index}} mobile",
@@ -436,7 +436,7 @@
         "dateRangeInvalid": "Date range is invalid",
         "enterCode": "Enter a PNR or invoice number",
         "noReference": "Booking found but has no reference id",
-        "bookingNotFound": "Booking not found",
+        "bookingNotFound": "Reserva no encontrada",
         "amountGreaterThanZero": "Amount must be greater than 0",
         "amountExceedsDue": "Amount must not exceed the due amount ({{amount}})",
         "selectTripSchedule": "Select a trip schedule",

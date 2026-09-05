@@ -17,7 +17,7 @@
         "periodBookings": "Period bookings",
         "unitsSold": "Units sold",
         "pendingCancelled": "Pending / cancelled",
-        "hotels": "Hotels",
+        "hotels": "ہوٹل",
         "hotelBookings": "Hotel bookings",
         "hotelConfirmed": "Hotel confirmed",
         "hotelPayable": "Hotel payable"
@@ -48,7 +48,7 @@
         "empty": "No ranking data returned by the dashboard API yet."
     },
     "hotels": {
-        "title": "Hotels",
+        "title": "ہوٹل",
         "description": "Jump into hotel operations.",
         "manage": "Manage hotels"
     },
@@ -59,7 +59,7 @@
         "viewAll": "View all",
         "empty": "No recent bookings.",
         "code": "Code",
-        "passenger": "Passenger",
+        "passenger": "مسافر",
         "open": "Open"
     },
     "quickActions": {

@@ -1,22 +1,22 @@
 {
     "page": {
-        "title": "Live bookings",
-        "description": "Realtime created and cancelled booking events"
+        "title": "लाइव बुकिंग",
+        "description": "रीयलटाइम में बुकिंग इवेंट बनाए और रद्द किए गए"
     },
     "empty": {
-        "title": "Waiting for live events",
-        "description": "New bookings will appear here via Pusher."
+        "title": "लाइव इवेंट का इंतज़ार है",
+        "description": "नई बुकिंग पुशर के माध्यम से यहां दिखाई देंगी।"
     },
     "table": {
-        "kind": "Kind",
-        "passenger": "Passenger",
-        "property": "Property",
-        "trip": "Trip",
-        "time": "Time",
-        "open": "Open"
+        "kind": "दयालु",
+        "passenger": "यात्री",
+        "property": "संपत्ति",
+        "trip": "यात्रा",
+        "time": "समय",
+        "open": "खुला"
     },
     "kind": {
-        "created": "Created",
-        "cancelled": "Cancelled"
+        "created": "बनाया था",
+        "cancelled": "रद्द कर दिया गया"
     }
 }

@@ -1,74 +1,74 @@
 {
     "page": {
-        "title": "Dashboard",
-        "description": "Booking, trip and revenue overview",
-        "asOf": "Live overview as of {{time}}",
-        "rangeOption": "Last {{days}} days",
-        "newBooking": "New booking",
-        "newHotelBooking": "New hotel booking",
-        "live": "Live"
+        "title": "डैशबोर्ड",
+        "description": "बुकिंग, यात्रा और राजस्व अवलोकन",
+        "asOf": "{{time}} तक लाइव अवलोकन",
+        "rangeOption": "पिछले {{days}} दिन",
+        "newBooking": "नई बुकिंग",
+        "newHotelBooking": "नई होटल बुकिंग",
+        "live": "रहना"
     },
     "stats": {
-        "bookingsRange": "Bookings ({{days}}d)",
-        "activeTrips": "Active trips today",
-        "revenueToday": "Revenue today",
-        "avgOccupancy": "Avg occupancy",
-        "periodRevenue": "Period revenue",
-        "periodBookings": "Period bookings",
-        "unitsSold": "Units sold",
-        "pendingCancelled": "Pending / cancelled",
-        "hotels": "Hotels",
-        "hotelBookings": "Hotel bookings",
-        "hotelConfirmed": "Hotel confirmed",
-        "hotelPayable": "Hotel payable"
+        "bookingsRange": "बुकिंग ({{days}}d)",
+        "activeTrips": "आज सक्रिय यात्राएँ",
+        "revenueToday": "आज राजस्व",
+        "avgOccupancy": "औसत अधिभोग",
+        "periodRevenue": "अवधि राजस्व",
+        "periodBookings": "अवधि की बुकिंग",
+        "unitsSold": "इकाइयाँ बेची गईं",
+        "pendingCancelled": "लंबित/रद्द",
+        "hotels": "होटल",
+        "hotelBookings": "होटल बुकिंग",
+        "hotelConfirmed": "होटल ने पुष्टि की",
+        "hotelPayable": "होटल देय"
     },
     "charts": {
-        "revenueTrend": "Revenue trend",
-        "revenueTrendDescription": "Daily collected revenue over the selected period.",
-        "bookingsVolume": "Bookings volume",
-        "bookingsVolumeDescription": "Daily booking count for the selected period.",
-        "bookingStatus": "Booking status",
-        "bookingStatusDescription": "Share of bookings by current status.",
-        "revenueSeries": "Revenue",
-        "bookingsSeries": "Bookings",
-        "noData": "No chart data",
-        "noStatusData": "No status data"
+        "revenueTrend": "राजस्व प्रवृत्ति",
+        "revenueTrendDescription": "चयनित अवधि में दैनिक राजस्व एकत्र किया गया।",
+        "bookingsVolume": "बुकिंग की मात्रा",
+        "bookingsVolumeDescription": "चयनित अवधि के लिए दैनिक बुकिंग गणना.",
+        "bookingStatus": "बुकिंग स्थिति",
+        "bookingStatusDescription": "वर्तमान स्थिति के अनुसार बुकिंग का हिस्सा।",
+        "revenueSeries": "आय",
+        "bookingsSeries": "बुकिंग के",
+        "noData": "कोई चार्ट डेटा नहीं",
+        "noStatusData": "कोई स्थिति डेटा नहीं"
     },
     "widgets": {
-        "trendVsPrevious": "{{value}}% vs previous",
-        "noTrend": "No trend data",
-        "bookingsCount_one": "{{value}} booking",
-        "bookingsCount_other": "{{value}} bookings"
+        "trendVsPrevious": "{{value}}% बनाम पिछला",
+        "noTrend": "कोई रुझान डेटा नहीं",
+        "bookingsCount_one": "{{value}} बुकिंग",
+        "bookingsCount_other": "{{value}} बुकिंग"
     },
     "top": {
-        "title": "Top performers",
-        "description": "Routes and vehicles with the highest activity.",
-        "routes": "Top routes",
-        "vehicles": "Top vehicles",
-        "empty": "No ranking data returned by the dashboard API yet."
+        "title": "शीर्ष प्रदर्शक",
+        "description": "उच्चतम गतिविधि वाले मार्ग और वाहन।",
+        "routes": "शीर्ष मार्ग",
+        "vehicles": "शीर्ष वाहन",
+        "empty": "डैशबोर्ड एपीआई द्वारा अभी तक कोई रैंकिंग डेटा नहीं लौटाया गया है।"
     },
     "hotels": {
-        "title": "Hotels",
-        "description": "Jump into hotel operations.",
-        "manage": "Manage hotels"
+        "title": "होटल",
+        "description": "होटल संचालन में कूदें.",
+        "manage": "होटलों का प्रबंधन करें"
     },
     "recent": {
-        "title": "Recent bookings",
-        "descriptionTransport": "Latest transport bookings from the dashboard feed.",
-        "description": "Latest bookings from the dashboard feed.",
-        "viewAll": "View all",
-        "empty": "No recent bookings.",
-        "code": "Code",
-        "passenger": "Passenger",
-        "open": "Open"
+        "title": "हाल की बुकिंग",
+        "descriptionTransport": "डैशबोर्ड फ़ीड से नवीनतम परिवहन बुकिंग।",
+        "description": "डैशबोर्ड फ़ीड से नवीनतम बुकिंग।",
+        "viewAll": "सभी को देखें",
+        "empty": "कोई हालिया बुकिंग नहीं.",
+        "code": "कोड",
+        "passenger": "यात्री",
+        "open": "खुला"
     },
     "quickActions": {
-        "title": "Quick actions",
-        "description": "Jump into everyday operations.",
-        "trips": "Manage trips",
-        "transportBookings": "Transport bookings",
-        "hotelBookings": "Hotel bookings",
-        "reports": "Open reports",
-        "settlements": "Settlements"
+        "title": "त्वरित कार्रवाई",
+        "description": "रोजमर्रा के कार्यों में कूद पड़ें.",
+        "trips": "यात्राएँ प्रबंधित करें",
+        "transportBookings": "परिवहन बुकिंग",
+        "hotelBookings": "होटल बुकिंग",
+        "reports": "रिपोर्ट खोलें",
+        "settlements": "बस्तियों"
     }
 }

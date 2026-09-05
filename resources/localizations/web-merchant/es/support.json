@@ -19,7 +19,7 @@
         "contact": "Contact",
         "category": "Category",
         "priority": "Priority",
-        "updated": "Updated",
+        "updated": "Actualizado",
         "action": "Action"
     },
     "create": {
@@ -39,11 +39,11 @@
     },
     "detail": {
         "fallbackId": "Ticket",
-        "fallbackSubject": "Ticket details",
+        "fallbackSubject": "Detalles del billete",
         "contact": "Contact",
-        "phone": "Phone",
+        "phone": "Teléfono",
         "created": "Created",
-        "updated": "Updated",
+        "updated": "Actualizado",
         "description": "Description",
         "attachments": "Attachments",
         "conversation": "Conversation",
@@ -52,10 +52,10 @@
         "closed": "Ticket closed",
         "replyPlaceholder": "Write a reply…",
         "sendReply": "Send reply",
-        "sending": "Sending…"
+        "sending": "Envío…"
     },
     "status": {
-        "all": "All",
+        "all": "Todo",
         "open": "Open",
         "inprogress": "In Progress",
         "onhold": "On Hold",
@@ -63,14 +63,14 @@
         "closed": "Closed"
     },
     "priority": {
-        "all": "All",
+        "all": "Todo",
         "low": "Low",
         "medium": "Medium",
         "high": "High"
     },
     "category": {
         "booking": "Booking",
-        "payment": "Payment",
+        "payment": "Pago",
         "transport": "Transport",
         "hotel": "Hotel",
         "account": "Account",

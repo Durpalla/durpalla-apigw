@@ -17,7 +17,7 @@
         "utilizationTrendDescription": "Units sold across the selected period.",
         "topVehicles": "Top vehicles",
         "topRoutes": "Top routes",
-        "date": "Date",
+        "date": "تاریخ",
         "units": "Units",
         "noSeries": "No series data returned for this report type.",
         "noChartData": "No chart data returned."

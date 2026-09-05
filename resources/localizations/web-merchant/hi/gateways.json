@@ -1,113 +1,113 @@
 {
     "list": {
-        "title": "Gateways",
-        "paymentTitle": "Payment gateways",
-        "smsTitle": "SMS gateways",
-        "description": "Enable approved payment and SMS providers. Configure credentials and params as instructed by each gateway class. Endpoints are managed by Durpalla Admin.",
-        "footnote": "You can remove an enabled gateway from your account. You cannot change its namespace or type. Endpoints are managed by Durpalla Admin.",
-        "emptyTitle": "No gateways enabled yet",
-        "emptyDescription": "Enable a template above to get started.",
-        "manage": "Manage"
+        "title": "द्वार",
+        "paymentTitle": "भुगतान द्वार",
+        "smsTitle": "एसएमएस गेटवे",
+        "description": "स्वीकृत भुगतान और एसएमएस प्रदाताओं को सक्षम करें। प्रत्येक गेटवे वर्ग के निर्देशानुसार क्रेडेंशियल और पैरामीटर कॉन्फ़िगर करें। समापन बिंदुओं का प्रबंधन दुरपल्ला एडमिन द्वारा किया जाता है।",
+        "footnote": "आप अपने खाते से सक्षम गेटवे हटा सकते हैं. आप इसका नामस्थान या प्रकार नहीं बदल सकते. समापन बिंदुओं का प्रबंधन दुरपल्ला एडमिन द्वारा किया जाता है।",
+        "emptyTitle": "अभी तक कोई गेटवे सक्षम नहीं है",
+        "emptyDescription": "आरंभ करने के लिए उपरोक्त टेम्पलेट सक्षम करें.",
+        "manage": "प्रबंधित करना"
     },
     "tabs": {
-        "all": "All",
-        "payment": "Payment",
-        "sms": "SMS"
+        "all": "सभी",
+        "payment": "भुगतान",
+        "sms": "एसएमएस"
     },
     "types": {
-        "payment": "Payment",
-        "sms": "SMS"
+        "payment": "भुगतान",
+        "sms": "एसएमएस"
     },
     "enable": {
-        "title": "Enable a gateway",
-        "namespace": "Gateway namespace",
-        "selectPlaceholder": "Select…",
-        "noTemplates": "No templates available",
-        "action": "Enable",
-        "pending": "Enabling…",
-        "summaryTitle": "What you will need to configure",
-        "credentials": "Credentials: {{keys}}",
-        "params": "Params: {{keys}}",
-        "endpoints": "Endpoints (admin): {{keys}}"
+        "title": "गेटवे सक्षम करें",
+        "namespace": "गेटवे नेमस्पेस",
+        "selectPlaceholder": "चुनना…",
+        "noTemplates": "कोई टेम्पलेट उपलब्ध नहीं है",
+        "action": "सक्षम",
+        "pending": "सक्षम किया जा रहा है...",
+        "summaryTitle": "आपको कॉन्फ़िगर करने के लिए क्या आवश्यकता होगी",
+        "credentials": "क्रेडेंशियल: {{keys}}",
+        "params": "पैरामीटर: {{keys}}",
+        "endpoints": "समापन बिंदु (व्यवस्थापक): {{keys}}"
     },
     "table": {
-        "name": "Name",
-        "type": "Type",
-        "namespace": "Gateway namespace",
-        "code": "Code"
+        "name": "नाम",
+        "type": "प्रकार",
+        "namespace": "गेटवे नेमस्पेस",
+        "code": "कोड"
     },
     "remove": {
-        "action": "Remove",
-        "pending": "Removing…",
-        "title": "Remove {{name}}?",
-        "description": "This removes the gateway from your account only. You can enable the same template again later. Namespace and type cannot be changed."
+        "action": "निकालना",
+        "pending": "हटाया जा रहा है...",
+        "title": "{{name}} हटाएं?",
+        "description": "यह केवल आपके खाते से गेटवे हटा देता है। आप बाद में उसी टेम्पलेट को फिर से सक्षम कर सकते हैं। नेमस्पेस और प्रकार को बदला नहीं जा सकता."
     },
     "edit": {
         "subtitle": "{{type}} · {{code}}",
-        "notFoundTitle": "Gateway not found",
-        "notFoundDescription": "This gateway is not enabled for your account.",
-        "backToGateways": "Back to gateways",
-        "setupTitle": "Setup instructions",
-        "setupHint": "Configure credentials and params in the tabs below. Endpoints are managed by Durpalla Admin.",
+        "notFoundTitle": "गेटवे नहीं मिला",
+        "notFoundDescription": "यह गेटवे आपके खाते के लिए सक्षम नहीं है.",
+        "backToGateways": "गेटवे पर वापस जाएँ",
+        "setupTitle": "सेटअप निर्देश",
+        "setupHint": "नीचे दिए गए टैब में क्रेडेंशियल और पैरामीटर कॉन्फ़िगर करें। समापन बिंदुओं का प्रबंधन दुरपल्ला एडमिन द्वारा किया जाता है।",
         "tabs": {
-            "info": "Info",
-            "credential": "Credentials",
-            "endpoint": "Endpoints",
-            "param": "Params"
+            "info": "जानकारी",
+            "credential": "साख",
+            "endpoint": "अंतिमबिंदुओं",
+            "param": "पैरामीटर"
         }
     },
     "info": {
-        "title": "Gateway info",
-        "name": "Name",
-        "code": "Code",
-        "type": "Type",
-        "channel": "Channel",
-        "namespace": "Gateway namespace",
-        "save": "Save info"
+        "title": "गेटवे जानकारी",
+        "name": "नाम",
+        "code": "कोड",
+        "type": "प्रकार",
+        "channel": "चैनल",
+        "namespace": "गेटवे नेमस्पेस",
+        "save": "जानकारी सहेजें"
     },
     "credentials": {
-        "title": "Credentials",
-        "add": "Add credential",
-        "hint": "Leave a value blank to keep the existing secret. Only filled values are updated.",
-        "keyPlaceholder": "key",
+        "title": "साख",
+        "add": "क्रेडेंशियल जोड़ें",
+        "hint": "मौजूदा रहस्य बनाए रखने के लिए एक मान खाली छोड़ दें। केवल भरे हुए मान ही अद्यतन किये जाते हैं।",
+        "keyPlaceholder": "चाबी",
         "valuePlaceholder": "********",
-        "removeRow": "Remove credential",
-        "save": "Save credentials",
-        "noneFilled": "Enter at least one credential value to update"
+        "removeRow": "क्रेडेंशियल हटाएँ",
+        "save": "साख सहेजें",
+        "noneFilled": "अद्यतन करने के लिए कम से कम एक क्रेडेंशियल मान दर्ज करें"
     },
     "endpoints": {
-        "title": "Endpoints",
-        "hint": "Endpoints are managed by Durpalla Admin. You can only view their setup status here.",
-        "name": "Name",
-        "key": "Key",
-        "configured": "Configured by admin",
-        "pending": "Pending admin setup",
-        "emptyTitle": "No endpoints",
-        "emptyDescription": "This gateway does not declare endpoint keys."
+        "title": "अंतिमबिंदुओं",
+        "hint": "समापन बिंदुओं का प्रबंधन दुरपल्ला एडमिन द्वारा किया जाता है। आप यहां केवल उनकी सेटअप स्थिति देख सकते हैं।",
+        "name": "नाम",
+        "key": "चाबी",
+        "configured": "व्यवस्थापक द्वारा कॉन्फ़िगर किया गया",
+        "pending": "लंबित व्यवस्थापक सेटअप",
+        "emptyTitle": "कोई समापन बिंदु नहीं",
+        "emptyDescription": "यह गेटवे एंडपॉइंट कुंजियाँ घोषित नहीं करता है।"
     },
     "params": {
-        "title": "Params",
-        "add": "Add param",
-        "hint": "Add any key/value pairs this gateway needs. Suggested keys are prefilled when available.",
-        "keyPlaceholder": "key",
-        "valuePlaceholder": "value",
-        "removeRow": "Remove param",
-        "save": "Save params"
+        "title": "पैरामीटर",
+        "add": "परम जोड़ें",
+        "hint": "इस गेटवे के लिए आवश्यक कोई भी कुंजी/मूल्य युग्म जोड़ें। सुझाई गई कुंजियाँ उपलब्ध होने पर पहले से भरी हुई होती हैं।",
+        "keyPlaceholder": "चाबी",
+        "valuePlaceholder": "कीमत",
+        "removeRow": "परम हटाएँ",
+        "save": "पैरामीटर सहेजें"
     },
     "field": {
-        "required": "required",
-        "requiredSuffix": " (required)",
-        "requiredMeta": " · required"
+        "required": "आवश्यक",
+        "requiredSuffix": "(आवश्यक)",
+        "requiredMeta": "· आवश्यक"
     },
     "errors": {
-        "notFound": "Gateway not found",
-        "duplicateKey": "Duplicate key: {{key}}"
+        "notFound": "गेटवे नहीं मिला",
+        "duplicateKey": "डुप्लिकेट कुंजी: {{key}}"
     },
     "toast": {
-        "enabledSms": "Gateway enabled. Update SMS credentials to start sending messages.",
-        "enabledPayment": "Gateway enabled. Update credentials to start accepting payments.",
-        "infoSaved": "Info saved",
-        "credentialsSaved": "Credentials saved",
-        "paramsSaved": "Params saved"
+        "enabledSms": "गेटवे सक्षम. संदेश भेजना शुरू करने के लिए एसएमएस क्रेडेंशियल अपडेट करें।",
+        "enabledPayment": "गेटवे सक्षम. भुगतान स्वीकार करना शुरू करने के लिए क्रेडेंशियल अपडेट करें।",
+        "infoSaved": "जानकारी सहेजी गई",
+        "credentialsSaved": "क्रेडेंशियल सहेजे गए",
+        "paramsSaved": "पैराम्स सहेजा गया"
     }
 }

@@ -71,7 +71,8 @@
     },
     "language": {
         "label": "Language",
-        "switch": "Change language"
+        "switch": "Change language",
+        "switching": "Changing language…"
     },
     "theme": {
         "toggle": "Toggle theme"

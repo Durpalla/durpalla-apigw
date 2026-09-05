@@ -19,7 +19,7 @@
         "contact": "Contact",
         "category": "Category",
         "priority": "Priority",
-        "updated": "Updated",
+        "updated": "Güncellendi",
         "action": "Action"
     },
     "create": {
@@ -39,11 +39,11 @@
     },
     "detail": {
         "fallbackId": "Ticket",
-        "fallbackSubject": "Ticket details",
+        "fallbackSubject": "Bilet ayrıntıları",
         "contact": "Contact",
-        "phone": "Phone",
+        "phone": "Telefon",
         "created": "Created",
-        "updated": "Updated",
+        "updated": "Güncellendi",
         "description": "Description",
         "attachments": "Attachments",
         "conversation": "Conversation",
@@ -51,11 +51,11 @@
         "staffSuffix": " (Support)",
         "closed": "Ticket closed",
         "replyPlaceholder": "Write a reply…",
-        "sendReply": "Send reply",
-        "sending": "Sending…"
+        "sendReply": "Yanıt gönder",
+        "sending": "Gönderiliyor…"
     },
     "status": {
-        "all": "All",
+        "all": "Tüm",
         "open": "Open",
         "inprogress": "In Progress",
         "onhold": "On Hold",
@@ -63,19 +63,19 @@
         "closed": "Closed"
     },
     "priority": {
-        "all": "All",
+        "all": "Tüm",
         "low": "Low",
         "medium": "Medium",
         "high": "High"
     },
     "category": {
         "booking": "Booking",
-        "payment": "Payment",
+        "payment": "Ödeme",
         "transport": "Transport",
-        "hotel": "Hotel",
+        "hotel": "Otel",
         "account": "Account",
         "technical": "Technical",
-        "general": "General"
+        "general": "Genel"
     },
     "toast": {
         "loadFailed": "Failed to load support tickets",

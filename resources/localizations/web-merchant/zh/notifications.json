@@ -1,14 +1,14 @@
 {
     "page": {
-        "title": "Notifications",
-        "markAllRead": "Mark all read",
-        "markRead": "Mark read",
-        "unread": "Unread"
+        "title": "通知",
+        "markAllRead": "标记全部已读",
+        "markRead": "标记已读",
+        "unread": "未读"
     },
     "empty": {
-        "title": "No notifications"
+        "title": "无通知"
     },
     "toast": {
-        "allMarkedRead": "All marked as read"
+        "allMarkedRead": "全部标记为已读"
     }
 }

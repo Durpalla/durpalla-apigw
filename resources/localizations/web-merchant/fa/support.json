@@ -19,7 +19,7 @@
         "contact": "Contact",
         "category": "Category",
         "priority": "Priority",
-        "updated": "Updated",
+        "updated": "به روز شد",
         "action": "Action"
     },
     "create": {
@@ -39,11 +39,11 @@
     },
     "detail": {
         "fallbackId": "Ticket",
-        "fallbackSubject": "Ticket details",
+        "fallbackSubject": "جزئیات بلیط",
         "contact": "Contact",
-        "phone": "Phone",
+        "phone": "تلفن",
         "created": "Created",
-        "updated": "Updated",
+        "updated": "به روز شد",
         "description": "Description",
         "attachments": "Attachments",
         "conversation": "Conversation",
@@ -52,10 +52,10 @@
         "closed": "Ticket closed",
         "replyPlaceholder": "Write a reply…",
         "sendReply": "Send reply",
-        "sending": "Sending…"
+        "sending": "در حال ارسال…"
     },
     "status": {
-        "all": "All",
+        "all": "همه",
         "open": "Open",
         "inprogress": "In Progress",
         "onhold": "On Hold",
@@ -63,19 +63,19 @@
         "closed": "Closed"
     },
     "priority": {
-        "all": "All",
+        "all": "همه",
         "low": "Low",
         "medium": "Medium",
         "high": "High"
     },
     "category": {
         "booking": "Booking",
-        "payment": "Payment",
+        "payment": "پرداخت",
         "transport": "Transport",
-        "hotel": "Hotel",
+        "hotel": "هتل",
         "account": "Account",
         "technical": "Technical",
-        "general": "General"
+        "general": "ژنرال"
     },
     "toast": {
         "loadFailed": "Failed to load support tickets",

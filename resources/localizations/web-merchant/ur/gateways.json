@@ -10,12 +10,12 @@
         "manage": "Manage"
     },
     "tabs": {
-        "all": "All",
-        "payment": "Payment",
+        "all": "تمام",
+        "payment": "ادائیگی",
         "sms": "SMS"
     },
     "types": {
-        "payment": "Payment",
+        "payment": "ادائیگی",
         "sms": "SMS"
     },
     "enable": {
@@ -31,20 +31,20 @@
         "endpoints": "Endpoints (admin): {{keys}}"
     },
     "table": {
-        "name": "Name",
+        "name": "نام",
         "type": "Type",
         "namespace": "Gateway namespace",
         "code": "Code"
     },
     "remove": {
-        "action": "Remove",
+        "action": "ہٹا دیں۔",
         "pending": "Removing…",
         "title": "Remove {{name}}?",
         "description": "This removes the gateway from your account only. You can enable the same template again later. Namespace and type cannot be changed."
     },
     "edit": {
         "subtitle": "{{type}} · {{code}}",
-        "notFoundTitle": "Gateway not found",
+        "notFoundTitle": "گیٹ وے نہیں ملا",
         "notFoundDescription": "This gateway is not enabled for your account.",
         "backToGateways": "Back to gateways",
         "setupTitle": "Setup instructions",
@@ -58,7 +58,7 @@
     },
     "info": {
         "title": "Gateway info",
-        "name": "Name",
+        "name": "نام",
         "code": "Code",
         "type": "Type",
         "channel": "Channel",
@@ -78,7 +78,7 @@
     "endpoints": {
         "title": "Endpoints",
         "hint": "Endpoints are managed by Durpalla Admin. You can only view their setup status here.",
-        "name": "Name",
+        "name": "نام",
         "key": "Key",
         "configured": "Configured by admin",
         "pending": "Pending admin setup",
@@ -96,18 +96,18 @@
     },
     "field": {
         "required": "required",
-        "requiredSuffix": " (required)",
-        "requiredMeta": " · required"
+        "requiredSuffix": "(ضروری)",
+        "requiredMeta": "· درکار ہے۔"
     },
     "errors": {
-        "notFound": "Gateway not found",
+        "notFound": "گیٹ وے نہیں ملا",
         "duplicateKey": "Duplicate key: {{key}}"
     },
     "toast": {
-        "enabledSms": "Gateway enabled. Update SMS credentials to start sending messages.",
-        "enabledPayment": "Gateway enabled. Update credentials to start accepting payments.",
+        "enabledSms": "گیٹ وے فعال ہے۔ پیغامات بھیجنا شروع کرنے کے لیے SMS اسناد کو اپ ڈیٹ کریں۔",
+        "enabledPayment": "گیٹ وے فعال ہے۔ ادائیگیاں قبول کرنا شروع کرنے کے لیے اسناد کو اپ ڈیٹ کریں۔",
         "infoSaved": "Info saved",
-        "credentialsSaved": "Credentials saved",
-        "paramsSaved": "Params saved"
+        "credentialsSaved": "اسناد محفوظ ہو گئیں۔",
+        "paramsSaved": "پرم نے بچایا"
     }
 }

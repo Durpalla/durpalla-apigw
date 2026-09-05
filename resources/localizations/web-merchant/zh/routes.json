@@ -1,70 +1,70 @@
 {
     "list": {
-        "title": "Routes",
-        "description": "Service routes and boarding points",
-        "createRoute": "Create route",
-        "searchPlaceholder": "Search routes",
-        "empty": "No routes",
-        "details": "Details",
+        "title": "路线",
+        "description": "服务路线及乘车点",
+        "createRoute": "创建路线",
+        "searchPlaceholder": "搜索路线",
+        "empty": "没有路线",
+        "details": "细节",
         "columns": {
-            "service": "Service",
-            "type": "Type",
-            "routeNo": "No"
+            "service": "服务",
+            "type": "类型",
+            "routeNo": "不"
         }
     },
     "form": {
-        "createTitle": "Create route",
-        "nameOptional": "Name (optional)",
-        "namePlaceholder": "Auto-generated if left empty",
-        "routeName": "Route name",
-        "serviceType": "Service type",
-        "routeStops": "Route stops",
-        "routeStopsHint": "Add VIA ghats in the order the vehicle will visit them.",
-        "selectStop": "Select {{label}}",
-        "stopGhat": "Stop {{index}} ghat",
-        "moveUp": "Move {{label}} up",
-        "moveDown": "Move {{label}} down",
-        "removeStop": "Remove {{label}}",
-        "addVia": "Add VIA ghat",
-        "submit": "Create route",
-        "creating": "Creating...",
+        "createTitle": "创建路线",
+        "nameOptional": "姓名（可选）",
+        "namePlaceholder": "如果留空则自动生成",
+        "routeName": "路线名称",
+        "serviceType": "服务类型",
+        "routeStops": "路线停靠点",
+        "routeStopsHint": "按照车辆访问的顺序添加 VIA ghats。",
+        "selectStop": "选择{{label}}",
+        "stopGhat": "停止{{index}}加特",
+        "moveUp": "向上移动{{label}}",
+        "moveDown": "向下移动 {{label}}",
+        "removeStop": "删除{{label}}",
+        "addVia": "添加 VIA 加特",
+        "submit": "创建路线",
+        "creating": "创造...",
         "stops": {
-            "start": "Starting ghat",
-            "destination": "Destination",
-            "via": "VIA stop {{index}}"
+            "start": "开始加特",
+            "destination": "目的地",
+            "via": "VIA 站 {{index}}"
         },
         "errors": {
-            "minStops": "Add at least two route stops",
-            "duplicateGhat": "Each stop must use a different ghat"
+            "minStops": "添加至少两个路线停靠点",
+            "duplicateGhat": "每个站点必须使用不同的加特"
         }
     },
     "detail": {
-        "fallbackName": "Route #{{id}}",
-        "notFound": "Route not found",
-        "description": "Route details and ordered boarding points",
-        "viaPricing": "Via Stop Pricing",
-        "viewTrips": "View Trips",
-        "timeline": "Route Timeline",
-        "information": "Route Information",
-        "stopFallback": "Stop {{index}}",
-        "emptyTitle": "No boarding points returned",
-        "emptyDescription": "The route API did not include ordered stop data.",
+        "fallbackName": "路线#{{id}}",
+        "notFound": "未找到路线",
+        "description": "路线详情和订购的登机点",
+        "viaPricing": "通过止损定价",
+        "viewTrips": "查看行程",
+        "timeline": "路线时间表",
+        "information": "路线信息",
+        "stopFallback": "停止{{index}}",
+        "emptyTitle": "没有返回登机点",
+        "emptyDescription": "路线 API 不包括有序停靠站数据。",
         "stops": {
-            "start": "Starting point",
-            "destination": "Destination",
-            "via": "VIA stop"
+            "start": "起点",
+            "destination": "目的地",
+            "via": "威盛站"
         },
         "fields": {
-            "routeNumber": "Route number",
-            "service": "Service",
-            "routeType": "Route type",
-            "routeId": "Route ID",
-            "routeName": "Route name",
-            "serviceType": "Service type",
-            "boardingPoints": "Boarding points"
+            "routeNumber": "路线编号",
+            "service": "服务",
+            "routeType": "航线类型",
+            "routeId": "路线编号",
+            "routeName": "路线名称",
+            "serviceType": "服务类型",
+            "boardingPoints": "登机点"
         }
     },
     "toast": {
-        "created": "Route created"
+        "created": "路线已创建"
     }
 }

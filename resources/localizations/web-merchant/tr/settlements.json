@@ -1,6 +1,6 @@
 {
     "page": {
-        "title": "Settlements",
+        "title": "Yerleşimler",
         "description": "Approve or decline settlement requests",
         "rangeInvalid": "Date range is invalid"
     },
@@ -13,7 +13,7 @@
         "decline": "Decline"
     },
     "status": {
-        "all": "All",
+        "all": "Tüm",
         "pending": "Pending",
         "approved": "Approved",
         "declined": "Declined"

@@ -1,141 +1,141 @@
 {
     "index": {
-        "title": "Settings",
-        "profile": "Profile",
-        "profileDescription": "Account details and password",
-        "twoFactor": "Two-factor authentication",
-        "twoFactorDescription": "Email OTP and authenticator app",
-        "gateways": "Payment & SMS gateways",
-        "gatewaysDescription": "Enable templates and manage credentials",
-        "appearance": "Appearance",
-        "appearanceDescription": "Light / dark theme and language",
-        "printers": "Printing",
-        "printersDescription": "Browser print guidance for tickets"
+        "title": "设置",
+        "profile": "轮廓",
+        "profileDescription": "帐户详细信息和密码",
+        "twoFactor": "双因素身份验证",
+        "twoFactorDescription": "电子邮件 OTP 和身份验证器应用程序",
+        "gateways": "支付和短信网关",
+        "gatewaysDescription": "启用模板并管理凭据",
+        "appearance": "外貌",
+        "appearanceDescription": "浅色/深色主题和语言",
+        "printers": "印刷",
+        "printersDescription": "浏览器打印门票指南"
     },
     "appearance": {
-        "title": "Appearance",
-        "description": "Theme and language preference",
-        "themeTitle": "Theme",
+        "title": "外貌",
+        "description": "主题和语言偏好",
+        "themeTitle": "主题",
         "themes": {
-            "light": "Light",
-            "dark": "Dark",
-            "system": "System"
+            "light": "光",
+            "dark": "黑暗的",
+            "system": "系统"
         },
-        "languageDescription": "Applies to the whole merchant desk on this browser."
+        "languageDescription": "适用于该浏览器上的整个商家桌面。"
     },
     "printers": {
-        "title": "Printing",
-        "description": "Web-only printing uses the browser print dialog",
-        "supportedTitle": "Supported on web",
-        "printApiBefore": "Tickets and payment tokens open a print-ready HTML view and use ",
+        "title": "印刷",
+        "description": "仅 Web 打印使用浏览器打印对话框",
+        "supportedTitle": "网络支持",
+        "printApiBefore": "门票和支付令牌可打开可打印的 HTML 视图并使用",
         "printApiAfter": ".",
-        "unsupported": "Bluetooth pocket printers, USB/serial ESC-POS devices, and biometric login are not available in this browser app.",
-        "guidance": "Use a system printer or PDF from the browser print dialog for counter operations."
+        "unsupported": "蓝牙袖珍打印机、USB/串行 ESC-POS 设备和生物识别登录在此浏览器应用程序中不可用。",
+        "guidance": "使用系统打印机或浏览器打印对话框中的 PDF 进行计数器操作。"
     },
     "profile": {
-        "title": "My profile",
-        "description": "Manage your merchant account and personal information.",
-        "fallbackName": "Merchant",
-        "merchantId": "Merchant ID: {{value}}",
-        "securitySettings": "Security settings",
+        "title": "我的个人资料",
+        "description": "管理您的商家帐户和个人信息。",
+        "fallbackName": "商人",
+        "merchantId": "商户ID：{{value}}",
+        "securitySettings": "安全设置",
         "photos": {
-            "title": "Photos",
-            "description": "Upload a profile picture. PNG, JPG, or WebP up to 2 MB.",
-            "descriptionWithLogo": "Upload a profile picture and your business logo. PNG, JPG, or WebP up to 2 MB.",
-            "avatarLabel": "Profile picture",
-            "avatarHint": "Shown on your account menu and profile.",
-            "changePicture": "Change picture",
-            "uploadPicture": "Upload picture",
-            "logoLabel": "Business logo",
-            "logoHint": "Used on invoices and merchant branding.",
-            "changeLogo": "Change logo",
-            "uploadLogo": "Upload logo",
-            "uploading": "Uploading..."
+            "title": "照片",
+            "description": "上传个人资料照片。 PNG、JPG 或 WebP，最大 2 MB。",
+            "descriptionWithLogo": "上传个人资料照片和您的企业徽标。 PNG、JPG 或 WebP，最大 2 MB。",
+            "avatarLabel": "个人资料图片",
+            "avatarHint": "显示在您的帐户菜单和个人资料上。",
+            "changePicture": "更改图片",
+            "uploadPicture": "上传图片",
+            "logoLabel": "企业标志",
+            "logoHint": "用于发票和商家品牌。",
+            "changeLogo": "更改标志",
+            "uploadLogo": "上传徽标",
+            "uploading": "正在上传..."
         },
         "personal": {
-            "title": "Personal information",
-            "description": "Update the contact details associated with your account.",
-            "namePlaceholder": "Enter your name",
-            "emailReadOnly": "Email address cannot be changed.",
-            "mobilePlaceholder": "Enter your mobile number",
-            "save": "Save changes",
-            "saving": "Saving..."
+            "title": "个人信息",
+            "description": "更新与您的帐户关联的联系方式。",
+            "namePlaceholder": "输入你的名字",
+            "emailReadOnly": "电子邮件地址无法更改。",
+            "mobilePlaceholder": "输入您的手机号码",
+            "save": "保存更改",
+            "saving": "保存..."
         },
         "password": {
-            "title": "Change password",
-            "description": "Use at least eight characters for your new password.",
-            "current": "Current password",
-            "currentPlaceholder": "Enter current password",
-            "new": "New password",
-            "newPlaceholder": "Enter new password",
-            "confirm": "Confirm new password",
-            "confirmPlaceholder": "Confirm new password",
-            "label": "Password",
-            "confirmLabel": "Password confirmation",
-            "submit": "Update password",
-            "submitting": "Updating..."
+            "title": "更改密码",
+            "description": "新密码至少使用八个字符。",
+            "current": "当前密码",
+            "currentPlaceholder": "输入当前密码",
+            "new": "新密码",
+            "newPlaceholder": "输入新密码",
+            "confirm": "确认新密码",
+            "confirmPlaceholder": "确认新密码",
+            "label": "密码",
+            "confirmLabel": "密码确认",
+            "submit": "更新密码",
+            "submitting": "更新中..."
         },
         "twoFactor": {
-            "title": "Two-factor authentication",
-            "enabled": "{{method}} is enabled",
-            "authenticator": "Authenticator app",
-            "emailOtp": "Email OTP",
-            "default": "Email OTP is the default protection method",
-            "manage": "Manage 2FA",
-            "enable": "Enable 2FA"
+            "title": "双因素身份验证",
+            "enabled": "{{method}} 已启用",
+            "authenticator": "验证器应用程序",
+            "emailOtp": "电子邮件一次性密码",
+            "default": "电子邮件 OTP 是默认保护方法",
+            "manage": "管理 2FA",
+            "enable": "启用 2FA"
         },
         "toast": {
-            "updated": "Profile updated",
-            "passwordChanged": "Password changed",
-            "avatarUpdated": "Profile picture updated",
-            "logoUpdated": "Business logo updated",
-            "invalidImageType": "Use a PNG, JPG, or WebP image",
-            "imageTooLarge": "Image must be 2 MB or smaller",
-            "invalidProfile": "Invalid profile details",
-            "invalidPassword": "Invalid password details"
+            "updated": "个人资料已更新",
+            "passwordChanged": "密码已更改",
+            "avatarUpdated": "个人资料图片已更新",
+            "logoUpdated": "企业标志已更新",
+            "invalidImageType": "使用 PNG、JPG 或 WebP 图像",
+            "imageTooLarge": "图片必须为 2 MB 或更小",
+            "invalidProfile": "个人资料详细信息无效",
+            "invalidPassword": "密码详细信息无效"
         }
     },
     "twoFactor": {
-        "title": "Two-factor authentication",
-        "description": "Protect your merchant account with an additional verification step.",
-        "protectedTitle": "Your account is protected",
-        "protectedDescription": "Email OTP is the default verification method. You can switch to an authenticator app below.",
-        "badgeDefault": "Default",
-        "badgeEnabled": "Enabled",
+        "title": "双因素身份验证",
+        "description": "通过额外的验证步骤保护您的商家帐户。",
+        "protectedTitle": "您的帐户受到保护",
+        "protectedDescription": "电子邮件 OTP 是默认验证方法。您可以切换到下面的身份验证器应用程序。",
+        "badgeDefault": "默认",
+        "badgeEnabled": "启用",
         "email": {
-            "title": "Email OTP",
-            "description": "Receive a six-digit verification code at {{email}}.",
-            "fallbackEmail": "your account email",
-            "enabling": "Enabling email OTP...",
-            "enabled": "Email OTP enabled",
-            "enable": "Use email OTP",
-            "missing": "Add an email address to your profile first."
+            "title": "电子邮件一次性密码",
+            "description": "在{{email}}接收六位验证码。",
+            "fallbackEmail": "您的帐户电子邮件",
+            "enabling": "启用电子邮件 OTP...",
+            "enabled": "已启用电子邮件 OTP",
+            "enable": "使用电子邮件 OTP",
+            "missing": "首先将电子邮件地址添加到您的个人资料中。"
         },
         "authenticator": {
-            "title": "Authenticator app",
-            "description": "Use Google Authenticator, Authy, Microsoft Authenticator, or another compatible app.",
-            "preparing": "Preparing setup...",
-            "setupAgain": "Set up again",
-            "setup": "Set up authenticator"
+            "title": "验证器应用程序",
+            "description": "使用 Google Authenticator、Authy、Microsoft Authenticator 或其他兼容应用程序。",
+            "preparing": "正在准备设置...",
+            "setupAgain": "再次设置",
+            "setup": "设置验证器"
         },
         "connect": {
-            "title": "Connect your authenticator app",
-            "description": "Add the account using the setup link or secret, then enter the six-digit code.",
-            "openApp": "Open in authenticator app",
-            "secretLabel": "Setup secret",
-            "codeLabel": "Verification code",
-            "verifying": "Verifying...",
-            "submit": "Enable authenticator",
-            "secretField": "Authenticator secret",
-            "codeField": "Authenticator code"
+            "title": "连接您的身份验证器应用程序",
+            "description": "使用设置链接或密码添加帐户，然后输入六位数代码。",
+            "openApp": "在验证器应用程序中打开",
+            "secretLabel": "设置秘密",
+            "codeLabel": "验证码",
+            "verifying": "正在验证...",
+            "submit": "启用验证器",
+            "secretField": "验证器秘密",
+            "codeField": "验证码"
         },
         "recovery": {
-            "title": "Save your recovery codes",
-            "description": "Store these codes securely. Each code can be used once."
+            "title": "保存您的恢复代码",
+            "description": "安全地存储这些代码。每个代码只能使用一次。"
         },
         "toast": {
-            "emailEnabled": "Email OTP is enabled",
-            "authenticatorEnabled": "Authenticator app is enabled"
+            "emailEnabled": "电子邮件 OTP 已启用",
+            "authenticatorEnabled": "身份验证器应用程序已启用"
         }
     }
 }

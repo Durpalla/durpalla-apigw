@@ -7,7 +7,7 @@
         "bookings": "Bookings",
         "unitsSold": "Units sold",
         "occupancy": "Occupancy",
-        "settlements": "Settlements",
+        "settlements": "Yerleşimler",
         "cancelledBookings": "Cancelled bookings",
         "revenueTrend": "Revenue trend",
         "revenueTrendDescription": "Daily revenue for the selected period.",
@@ -17,7 +17,7 @@
         "utilizationTrendDescription": "Units sold across the selected period.",
         "topVehicles": "Top vehicles",
         "topRoutes": "Top routes",
-        "date": "Date",
+        "date": "Tarih",
         "units": "Units",
         "noSeries": "No series data returned for this report type.",
         "noChartData": "No chart data returned."

@@ -1,33 +1,33 @@
 {
     "scan": {
-        "title": "Scan ticket",
-        "description": "Camera QR scan or manual code lookup",
-        "camera": "Camera",
-        "startCamera": "Start camera",
-        "scanning": "Scanning...",
-        "stop": "Stop",
-        "manual": "Manual code",
-        "codeLabel": "Booking / ticket code",
-        "codePlaceholder": "Enter booking or ticket code",
-        "verify": "Verify"
+        "title": "مسح التذكرة",
+        "description": "مسح QR للكاميرا أو البحث اليدوي عن الرمز",
+        "camera": "آلة تصوير",
+        "startCamera": "تشغيل الكاميرا",
+        "scanning": "مسح...",
+        "stop": "قف",
+        "manual": "الكود اليدوي",
+        "codeLabel": "رمز الحجز/التذكرة",
+        "codePlaceholder": "أدخل رمز الحجز أو التذكرة",
+        "verify": "يؤكد"
     },
     "verify": {
-        "title": "Verify ticket",
-        "noCode": "No code provided",
-        "passenger": "Passenger",
-        "amount": "Amount"
+        "title": "التحقق من التذكرة",
+        "noCode": "لم يتم توفير رمز",
+        "passenger": "راكب",
+        "amount": "كمية"
     },
     "print": {
-        "documentTitle": "Ticket",
-        "heading": "Verified Ticket",
-        "code": "Code",
-        "passenger": "Passenger",
-        "status": "Status"
+        "documentTitle": "تذكرة",
+        "heading": "تذكرة مؤكدة",
+        "code": "شفرة",
+        "passenger": "راكب",
+        "status": "حالة"
     },
     "toast": {
-        "scannedInvalid": "Scanned code is invalid",
-        "cameraUnavailable": "Camera unavailable",
-        "manualInvalid": "Enter a valid booking or ticket code",
-        "codeInvalid": "Booking or ticket code is invalid"
+        "scannedInvalid": "الرمز الممسوح ضوئيًا غير صالح",
+        "cameraUnavailable": "الكاميرا غير متوفرة",
+        "manualInvalid": "أدخل رمز حجز أو تذكرة صالحًا",
+        "codeInvalid": "رمز الحجز أو التذكرة غير صالح"
     }
 }

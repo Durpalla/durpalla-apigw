@@ -19,6 +19,22 @@ class MerchantStaff extends Authenticatable
     /** @var string Auth guard for web sessions */
     protected $guard = 'merchant_staff';
 
+    /**
+     * Skip soft-delete scope when the column is absent (legacy / partial schemas).
+     */
+    public static function bootSoftDeletes(): void
+    {
+        try {
+            if (! \Illuminate\Support\Facades\Schema::hasColumn((new static)->getTable(), 'deleted_at')) {
+                return;
+            }
+        } catch (\Throwable) {
+            return;
+        }
+
+        static::addGlobalScope(new \Illuminate\Database\Eloquent\SoftDeletingScope);
+    }
+
     protected $fillable = [
         'merchant_id',
         'name',

@@ -2,24 +2,24 @@
     "actions": {
         "add": "Add",
         "back": "Back",
-        "cancel": "Cancel",
-        "close": "Close",
+        "cancel": "Cancelar",
+        "close": "Cerca",
         "collect": "Collect",
         "confirm": "Confirm",
         "create": "Create",
         "delete": "Delete",
-        "download": "Download",
+        "download": "Descargar",
         "edit": "Edit",
         "export": "Export",
         "filter": "Filter",
-        "print": "Print",
+        "print": "Imprimir",
         "refresh": "Refresh",
-        "remove": "Remove",
+        "remove": "Eliminar",
         "reset": "Reset",
-        "retry": "Retry",
+        "retry": "Rever",
         "save": "Save",
-        "search": "Search",
-        "share": "Share",
+        "search": "Buscar",
+        "share": "Compartir",
         "submit": "Submit",
         "update": "Update",
         "view": "View"
@@ -34,21 +34,21 @@
     },
     "labels": {
         "actions": "Actions",
-        "all": "All",
-        "amount": "Amount",
+        "all": "Todo",
+        "amount": "Cantidad",
         "createdAt": "Created at",
-        "date": "Date",
+        "date": "Fecha",
         "dateRange": "Date range",
         "due": "Due",
-        "email": "Email",
-        "from": "From",
-        "mobile": "Mobile",
-        "name": "Name",
+        "email": "Correo electrónico",
+        "from": "De",
+        "mobile": "Móvil",
+        "name": "Nombre",
         "notes": "Notes",
-        "paid": "Paid",
+        "paid": "Pagado",
         "remarks": "Remarks",
-        "status": "Status",
-        "to": "To",
+        "status": "Estado",
+        "to": "A",
         "total": "Total",
         "updatedAt": "Updated at"
     },
@@ -57,30 +57,31 @@
         "cancelled": "Cancelled",
         "completed": "Completed",
         "confirmed": "Confirmed",
-        "failed": "Failed",
+        "failed": "Fallido",
         "inactive": "Inactive",
-        "paid": "Paid",
+        "paid": "Pagado",
         "pending": "Pending",
         "unpaid": "Unpaid"
     },
     "routeError": {
         "title": "Something went wrong",
         "message": "An unexpected error occurred.",
-        "tryAgain": "Try again",
+        "tryAgain": "Intentar otra vez",
         "goToDashboard": "Go to dashboard"
     },
     "language": {
-        "label": "Language",
-        "switch": "Change language"
+        "label": "Idioma",
+        "switch": "Change language",
+        "switching": "Changing language…"
     },
     "theme": {
         "toggle": "Toggle theme"
     },
     "vehicleTypes": {
-        "bus": "Bus",
-        "launch": "Launch",
+        "bus": "Autobús",
+        "launch": "Lanzamiento",
         "ship": "Ship",
-        "train": "Train",
+        "train": "Tren",
         "air": "Air"
     },
     "roles": {
@@ -96,8 +97,8 @@
         "viewer": "Viewer"
     },
     "errors": {
-        "forbidden": "You do not have permission to do that.",
-        "generic": "Something went wrong. Please try again.",
+        "forbidden": "No tienes permiso para hacer eso.",
+        "generic": "Algo salió mal. Por favor inténtalo de nuevo.",
         "network": "Cannot reach the server. Check your internet connection.",
         "notFound": "Requested resource was not found.",
         "requestFailed": "Request failed",
@@ -117,7 +118,7 @@
         "totalRecords": "{{total}} records"
     },
     "table": {
-        "noResults": "No results",
+        "noResults": "Sin resultados",
         "selectAll": "Select all rows",
         "selectRow": "Select row"
     },
@@ -133,14 +134,14 @@
         "number": "Enter number",
         "password": "Enter password",
         "phone": "Enter phone number",
-        "search": "Search",
+        "search": "Buscar",
         "time": "Select time",
         "value": "Enter value"
     },
     "a11y": {
-        "hidePassword": "Hide password",
+        "hidePassword": "Ocultar contraseña",
         "otpDigit": "Digit {{position}}",
-        "showPassword": "Show password"
+        "showPassword": "Mostrar contraseña"
     },
     "cities": {
         "barisal": "Barisal",

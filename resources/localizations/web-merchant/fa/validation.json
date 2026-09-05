@@ -17,9 +17,9 @@
     "sixDigits": "{{label}} must contain exactly 6 digits",
     "bookingCodeInvalid": "Booking or ticket code contains invalid characters",
     "labels": {
-        "email": "Email",
-        "mobile": "Mobile",
-        "password": "Password",
+        "email": "ایمیل",
+        "mobile": "موبایل",
+        "password": "رمز عبور",
         "dateTime": "Date and time",
         "fromDate": "From date",
         "toDate": "To date",

@@ -1,88 +1,88 @@
 {
     "list": {
-        "title": "Support Tickets",
-        "description": "Manage and respond to support requests.",
-        "newTicket": "New Ticket",
-        "searchPlaceholder": "Search ticket ID, subject, or contact…",
-        "empty": "No tickets match these filters.",
-        "loading": "Loading tickets…",
-        "viewTicket": "View ticket {{id}}"
+        "title": "تذاكر الدعم",
+        "description": "إدارة طلبات الدعم والرد عليها.",
+        "newTicket": "تذكرة جديدة",
+        "searchPlaceholder": "ابحث عن معرف التذكرة أو الموضوع أو جهة الاتصال...",
+        "empty": "لا توجد تذاكر تتطابق مع هذه المرشحات.",
+        "loading": "جارٍ تحميل التذاكر…",
+        "viewTicket": "عرض التذكرة {{id}}"
     },
     "stats": {
-        "all": "All Tickets",
-        "open": "Open",
-        "progress": "In Progress",
-        "resolved": "Resolved"
+        "all": "جميع التذاكر",
+        "open": "يفتح",
+        "progress": "في تَقَدم",
+        "resolved": "تم الحل"
     },
     "table": {
-        "ticket": "Ticket",
-        "contact": "Contact",
-        "category": "Category",
-        "priority": "Priority",
-        "updated": "Updated",
-        "action": "Action"
+        "ticket": "تذكرة",
+        "contact": "اتصال",
+        "category": "فئة",
+        "priority": "أولوية",
+        "updated": "تم التحديث",
+        "action": "فعل"
     },
     "create": {
-        "title": "Create New Ticket",
-        "subject": "Subject",
-        "subjectPlaceholder": "Briefly describe the issue",
-        "category": "Category",
-        "priority": "Priority",
-        "description": "Description",
-        "descriptionPlaceholder": "Include details that will help the support team investigate.",
-        "attachments": "Attachments",
-        "chooseFiles": "Choose files",
-        "attachmentHint": "Up to {{files}} files, {{size}} MB each",
-        "oversized": "{{name}} is larger than {{size}} MB",
-        "submit": "Create Ticket",
-        "submitting": "Creating…"
+        "title": "إنشاء تذكرة جديدة",
+        "subject": "موضوع",
+        "subjectPlaceholder": "صف المشكلة بإيجاز",
+        "category": "فئة",
+        "priority": "أولوية",
+        "description": "وصف",
+        "descriptionPlaceholder": "قم بتضمين التفاصيل التي ستساعد فريق الدعم في التحقيق.",
+        "attachments": "المرفقات",
+        "chooseFiles": "اختر الملفات",
+        "attachmentHint": "ما يصل إلى {{files}} ملفات، {{size}} ميغابايت لكل منها",
+        "oversized": "{{name}} أكبر من {{size}} ميغابايت",
+        "submit": "إنشاء تذكرة",
+        "submitting": "جارٍ الإنشاء…"
     },
     "detail": {
-        "fallbackId": "Ticket",
-        "fallbackSubject": "Ticket details",
-        "contact": "Contact",
-        "phone": "Phone",
-        "created": "Created",
-        "updated": "Updated",
-        "description": "Description",
-        "attachments": "Attachments",
-        "conversation": "Conversation",
-        "noReplies": "No replies yet.",
-        "staffSuffix": " (Support)",
-        "closed": "Ticket closed",
-        "replyPlaceholder": "Write a reply…",
-        "sendReply": "Send reply",
-        "sending": "Sending…"
+        "fallbackId": "تذكرة",
+        "fallbackSubject": "تفاصيل التذكرة",
+        "contact": "اتصال",
+        "phone": "هاتف",
+        "created": "مخلوق",
+        "updated": "تم التحديث",
+        "description": "وصف",
+        "attachments": "المرفقات",
+        "conversation": "محادثة",
+        "noReplies": "لا توجد ردود حتى الآن.",
+        "staffSuffix": "(يدعم)",
+        "closed": "التذكرة مغلقة",
+        "replyPlaceholder": "أكتب الرد...",
+        "sendReply": "إرسال الرد",
+        "sending": "إرسال…"
     },
     "status": {
-        "all": "All",
-        "open": "Open",
-        "inprogress": "In Progress",
-        "onhold": "On Hold",
-        "resolved": "Resolved",
-        "closed": "Closed"
+        "all": "الجميع",
+        "open": "يفتح",
+        "inprogress": "في تَقَدم",
+        "onhold": "في الانتظار",
+        "resolved": "تم الحل",
+        "closed": "مغلق"
     },
     "priority": {
-        "all": "All",
-        "low": "Low",
-        "medium": "Medium",
-        "high": "High"
+        "all": "الجميع",
+        "low": "قليل",
+        "medium": "واسطة",
+        "high": "عالي"
     },
     "category": {
-        "booking": "Booking",
-        "payment": "Payment",
-        "transport": "Transport",
-        "hotel": "Hotel",
-        "account": "Account",
-        "technical": "Technical",
-        "general": "General"
+        "booking": "الحجز",
+        "payment": "قسط",
+        "transport": "ينقل",
+        "hotel": "الفندق",
+        "account": "حساب",
+        "technical": "اِصطِلاحِيّ",
+        "general": "عام"
     },
     "toast": {
-        "loadFailed": "Failed to load support tickets",
-        "detailFailed": "Failed to load ticket details",
-        "created": "Support ticket created",
-        "createFailed": "Failed to create ticket",
-        "replySent": "Reply sent",
-        "replyFailed": "Failed to send reply"
+        "loadFailed": "فشل تحميل تذاكر الدعم",
+        "detailFailed": "فشل في تحميل تفاصيل التذكرة",
+        "created": "تم إنشاء تذكرة الدعم",
+        "createFailed": "فشل إنشاء التذكرة",
+        "replySent": "تم إرسال الرد",
+        "replyFailed": "فشل في إرسال الرد"
     }
 }
