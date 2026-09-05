@@ -64,6 +64,68 @@ function translateFlatFile(string $enPath, string $outPath, string $target): voi
     );
 }
 
+function flatTranslatedRatio(string $enPath, string $outPath): float
+{
+    if (! is_file($outPath)) {
+        return 0.0;
+    }
+    $en = json_decode(file_get_contents($enPath), true, 512, JSON_THROW_ON_ERROR);
+    $out = json_decode(file_get_contents($outPath), true, 512, JSON_THROW_ON_ERROR);
+    if (! is_array($en) || $en === []) {
+        return 1.0;
+    }
+    $translated = 0;
+    foreach ($en as $key => $value) {
+        if (! is_string($value)) {
+            continue;
+        }
+        if (($out[$key] ?? null) !== $value) {
+            ++$translated;
+        }
+    }
+
+    return $translated / count($en);
+}
+
+function namespaceTranslatedRatio(string $enDir, string $outDir): float
+{
+    $total = 0;
+    $translated = 0;
+    foreach (glob($enDir.'/*.json') ?: [] as $enNs) {
+        if (basename($enNs) === 'manifest.json') {
+            continue;
+        }
+        $enRaw = json_decode(file_get_contents($enNs), true, 512, JSON_THROW_ON_ERROR);
+        $outPath = $outDir.'/'.basename($enNs);
+        if (! is_file($outPath)) {
+            return 0.0;
+        }
+        $outRaw = json_decode(file_get_contents($outPath), true, 512, JSON_THROW_ON_ERROR);
+        $walk = static function (mixed $enNode, mixed $outNode) use (&$walk, &$total, &$translated): void {
+            if (! is_array($enNode)) {
+                return;
+            }
+            foreach ($enNode as $key => $value) {
+                if (is_array($value)) {
+                    $walk($value, is_array($outNode) ? ($outNode[$key] ?? []) : []);
+                    continue;
+                }
+                if (! is_string($value)) {
+                    continue;
+                }
+                ++$total;
+                $outValue = is_array($outNode) ? ($outNode[$key] ?? null) : null;
+                if ($outValue !== $value) {
+                    ++$translated;
+                }
+            }
+        };
+        $walk($enRaw, $outRaw);
+    }
+
+    return $total === 0 ? 1.0 : $translated / $total;
+}
+
 foreach (['customer-app', 'merchant-desk'] as $app) {
     $enFile = "{$base}/{$app}/en/messages.json";
     if (! is_file($enFile)) {
@@ -72,6 +134,10 @@ foreach (['customer-app', 'merchant-desk'] as $app) {
     foreach ($remote as $locale) {
         $google = $targets[$locale];
         $outFile = "{$base}/{$app}/{$locale}/messages.json";
+        if (flatTranslatedRatio($enFile, $outFile) >= 0.9) {
+            echo "{$app}/{$locale} skipped (already translated)\n";
+            continue;
+        }
         echo "{$app}/{$locale}\n";
         translateFlatFile($enFile, $outFile, $google);
     }
@@ -84,6 +150,10 @@ foreach (['web-merchant'] as $app) {
         $outDir = "{$base}/{$app}/{$locale}";
         if (! is_dir($outDir)) {
             mkdir($outDir, 0775, true);
+        }
+        if (namespaceTranslatedRatio($enDir, $outDir) >= 0.9) {
+            echo "{$app}/{$locale} skipped (already translated)\n";
+            continue;
         }
         foreach (glob($enDir.'/*.json') ?: [] as $enNs) {
             if (basename($enNs) === 'manifest.json') {
