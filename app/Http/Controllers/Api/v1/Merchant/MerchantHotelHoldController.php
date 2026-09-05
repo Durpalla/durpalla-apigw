@@ -164,6 +164,9 @@ class MerchantHotelHoldController extends MerchantHotelBaseController
             'payment.mode' => ['nullable', 'string', 'in:full,partial,none'],
             'payment.method' => ['nullable', 'string', 'max:32'],
             'payment.amountPaid' => ['nullable', 'numeric', 'min:0', 'required_if:payment.mode,partial'],
+            'payment.transaction_id' => ['nullable', 'string', 'max:128'],
+            'payment.account_no' => ['nullable', 'string', 'max:64'],
+            'payment.remarks' => ['nullable', 'string', 'max:500'],
             'payment.amount_paid' => ['nullable', 'numeric', 'min:0'],
         ]);
         if ($validator->fails()) {

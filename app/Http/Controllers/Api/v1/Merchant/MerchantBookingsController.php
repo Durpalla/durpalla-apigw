@@ -21,6 +21,7 @@ use App\Support\ResolvesMerchantOwner;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use App\Constants\GatewayConstant;
 use App\Services\GatewayCatalogService;
@@ -226,6 +227,9 @@ class MerchantBookingsController extends Controller
         $validator = Validator::make($request->all(), [
             'amount' => ['required', 'numeric', 'min:1'],
             'method' => ['nullable', 'string', 'max:32'],
+            'transaction_id' => ['nullable', 'string', 'max:128'],
+            'account_no' => ['nullable', 'string', 'max:64'],
+            'remarks' => ['nullable', 'string', 'max:500'],
         ]);
         if ($validator->fails()) {
             return response()->json(['message' => $validator->errors()->first()], 422);
@@ -262,13 +266,30 @@ class MerchantBookingsController extends Controller
         }
 
         $method = $this->normalizeCollectMethod($request->input('method'), (string) ($payment->payment_method ?? 'cash'));
+        $evidence = [
+            'transaction_id' => trim((string) $request->input('transaction_id', '')),
+            'account_no' => trim((string) $request->input('account_no', '')),
+            'remarks' => trim((string) $request->input('remarks', '')),
+        ];
+        if (in_array($method, ['card', 'bkash', 'nagad', 'bank_check', 'bank_transfer'], true)) {
+            if ($evidence['transaction_id'] === '') {
+                return response()->json(['message' => 'Transaction ID is required for '.$method.' payments.'], 422);
+            }
+            if ($evidence['account_no'] === '') {
+                return response()->json(['message' => 'Wallet / card / account number is required for '.$method.' payments.'], 422);
+            }
+            if ($evidence['remarks'] === '') {
+                return response()->json(['message' => 'Remarks are required for '.$method.' payments.'], 422);
+            }
+        }
+
         $uid = (int) $request->user()->id;
         $offlineCodes = $this->gatewayCatalog->listMerchantOfflineDesk()->pluck('code')->all();
         $channel = in_array($method, $offlineCodes, true)
             ? GatewayConstant::CHANNEL_OFFLINE
             : GatewayConstant::CHANNEL_MERCHANT;
 
-        DB::transaction(function () use ($booking, $payment, $total, $amount, $method, $uid, $channel) {
+        DB::transaction(function () use ($booking, $payment, $total, $amount, $method, $uid, $channel, $evidence) {
             $newPaid = (float) $payment->paid_amount + $amount;
             $newDues = max(0.0, $total - $newPaid);
             $payment->paid_amount = $newPaid;
@@ -277,15 +298,33 @@ class MerchantBookingsController extends Controller
             $payment->payment_gateway = $method;
             $payment->channel = $channel;
             $payment->status = $newDues < 0.01 ? 'success' : 'pending';
+            if ($evidence['transaction_id'] !== '') {
+                $payment->bank_tran_id = $evidence['transaction_id'];
+                $payment->external_reference = $evidence['transaction_id'];
+                if (empty($payment->transaction_id)) {
+                    $payment->transaction_id = $evidence['transaction_id'];
+                }
+            }
+            if ($evidence['account_no'] !== '') {
+                $payment->account_no = $evidence['account_no'];
+            }
             $payment->save();
 
-            PaymentCollector::create([
+            $collector = [
                 'booking_id' => $booking->id,
                 'payment_id' => $payment->id,
                 'supervisor_id' => $uid,
                 'amount' => $amount,
                 'payment_type' => $method,
-            ]);
+                'remarks' => $evidence['remarks'] !== '' ? $evidence['remarks'] : null,
+            ];
+            if (Schema::hasColumn('payment_collectors', 'transaction_id')) {
+                $collector['transaction_id'] = $evidence['transaction_id'] !== '' ? $evidence['transaction_id'] : null;
+            }
+            if (Schema::hasColumn('payment_collectors', 'account_no')) {
+                $collector['account_no'] = $evidence['account_no'] !== '' ? $evidence['account_no'] : null;
+            }
+            PaymentCollector::create($collector);
 
             $booking->payment_status = $newDues < 0.01 ? 1 : 0;
             $booking->status = $newDues < 0.01 ? AppConst::BOOKING_COMPLETE : AppConst::BOOKING_RESERVED;

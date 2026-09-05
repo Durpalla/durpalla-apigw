@@ -64,6 +64,9 @@ class MerchantHotelBookingController extends MerchantHotelBaseController
         $rules['payment.method'] = ['nullable', 'string', 'max:32'];
         $rules['payment.amountPaid'] = ['nullable', 'numeric', 'min:0', 'required_if:payment.mode,partial'];
         $rules['payment.amount_paid'] = ['nullable', 'numeric', 'min:0'];
+        $rules['payment.transaction_id'] = ['nullable', 'string', 'max:128'];
+        $rules['payment.account_no'] = ['nullable', 'string', 'max:64'];
+        $rules['payment.remarks'] = ['nullable', 'string', 'max:500'];
 
         $input = $this->expandMerchantRoomRows($request->all(), $ownerId);
 
@@ -238,6 +241,9 @@ class MerchantHotelBookingController extends MerchantHotelBaseController
                 'id' => (int) $row->id,
                 'amount' => (float) $row->amount,
                 'payment_type' => (string) $row->payment_type,
+                'transaction_id' => (string) ($row->transaction_id ?? ''),
+                'account_no' => (string) ($row->account_no ?? ''),
+                'remarks' => (string) ($row->remarks ?? ''),
                 'created_at' => optional($row->created_at)?->toIso8601String(),
                 'collected_by' => $row->supervisor?->name,
             ];
@@ -257,6 +263,9 @@ class MerchantHotelBookingController extends MerchantHotelBaseController
         $validator = Validator::make($request->all(), [
             'amount' => ['required', 'numeric', 'min:0.01'],
             'method' => ['nullable', 'string', 'max:32'],
+            'transaction_id' => ['nullable', 'string', 'max:128'],
+            'account_no' => ['nullable', 'string', 'max:64'],
+            'remarks' => ['nullable', 'string', 'max:500'],
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -278,6 +287,11 @@ class MerchantHotelBookingController extends MerchantHotelBaseController
             (float) $request->input('amount'),
             $request->input('method'),
             (int) ($request->user()->id ?? 0),
+            [
+                'transaction_id' => $request->input('transaction_id'),
+                'account_no' => $request->input('account_no'),
+                'remarks' => $request->input('remarks'),
+            ],
         );
 
         if (! ($result['success'] ?? false)) {

@@ -8,7 +8,16 @@ use App\Models\User;
 
 class PaymentCollector extends Model
 {
-    public $fillable = ['booking_id', 'payment_id', 'supervisor_id', 'amount', 'remarks', 'payment_type'];
+    public $fillable = [
+        'booking_id',
+        'payment_id',
+        'supervisor_id',
+        'amount',
+        'remarks',
+        'payment_type',
+        'transaction_id',
+        'account_no',
+    ];
 
     public function supervisor(): BelongsTo
     {

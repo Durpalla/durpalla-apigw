@@ -1392,15 +1392,20 @@ class MerchantDeskBookingService
 
         if ($paid > 0.009) {
             $actorId = (int) (auth()->id() ?? 0);
+            $evidence = $this->normalizePaymentEvidence($method, $paymentInput);
+            $this->assertPaymentEvidence($method, $evidence);
             if ($actorId > 0) {
-                PaymentCollector::create([
-                    'booking_id' => $booking->id,
-                    'payment_id' => $payment->id,
-                    'supervisor_id' => $actorId,
-                    'amount' => $paid,
-                    'payment_type' => $method,
-                ]);
+                PaymentCollector::create($this->paymentCollectorAttributes(
+                    $booking->id,
+                    $payment->id,
+                    $actorId,
+                    $paid,
+                    $method,
+                    $evidence,
+                ));
             }
+            $this->applyPaymentEvidenceToPayment($payment, $evidence);
+            $payment->save();
         }
 
         $booking->payment_status = $dues < 0.01 ? 1 : 0;
@@ -1411,9 +1416,10 @@ class MerchantDeskBookingService
     /**
      * Record an additional collection against an existing hotel booking.
      *
-     * @return array{success: bool, message: string, booking?: Booking}
+     * @param  array{transaction_id?: string, account_no?: string, remarks?: string}  $evidence
+     * @return array{success: bool, message: string, booking?: Booking, collected_amount?: float}
      */
-    public function collectPayment(Booking $booking, float $amount, ?string $method, int $actorId): array
+    public function collectPayment(Booking $booking, float $amount, ?string $method, int $actorId, array $evidence = []): array
     {
         if (strtoupper((string) $booking->status) === AppConst::BOOKING_CANCELLED) {
             return ['success' => false, 'message' => 'Cannot collect on a cancelled booking'];
@@ -1446,9 +1452,15 @@ class MerchantDeskBookingService
         }
 
         $method = $this->normalizeDeskPaymentMethod($method, (string) ($payment->payment_method ?: 'cash'));
+        $evidence = $this->normalizePaymentEvidence($method, $evidence);
+        try {
+            $this->assertPaymentEvidence($method, $evidence);
+        } catch (\InvalidArgumentException $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
         $collected = $amount;
 
-        DB::transaction(function () use ($booking, $payment, $total, $collected, $method, $actorId) {
+        DB::transaction(function () use ($booking, $payment, $total, $collected, $method, $actorId, $evidence) {
             $newPaid = (float) $payment->paid_amount + $collected;
             $newDues = max(0.0, $total - $newPaid);
             $payment->paid_amount = $newPaid;
@@ -1457,16 +1469,18 @@ class MerchantDeskBookingService
             $payment->payment_method = $method;
             $payment->payment_gateway = $method;
             $payment->status = $newDues < 0.01 ? AppConst::PAYMENT_SUCCESS : 'pending';
+            $this->applyPaymentEvidenceToPayment($payment, $evidence);
             $payment->save();
 
             if ($actorId > 0) {
-                PaymentCollector::create([
-                    'booking_id' => $booking->id,
-                    'payment_id' => $payment->id,
-                    'supervisor_id' => $actorId,
-                    'amount' => $collected,
-                    'payment_type' => $method,
-                ]);
+                PaymentCollector::create($this->paymentCollectorAttributes(
+                    $booking->id,
+                    $payment->id,
+                    $actorId,
+                    $collected,
+                    $method,
+                    $evidence,
+                ));
             }
 
             $booking->payment_status = $newDues < 0.01 ? 1 : 0;
@@ -1507,5 +1521,96 @@ class MerchantDeskBookingService
         $allowed = ['cash', 'card', 'bkash', 'nagad', 'bank_check', 'bank_transfer', 'pay_later'];
 
         return in_array($m, $allowed, true) ? $m : (in_array($default, $allowed, true) ? $default : 'cash');
+    }
+
+    /**
+     * Card / mobile wallet / bank desk collections require settlement evidence.
+     *
+     * @return list<string>
+     */
+    public function methodsRequiringPaymentEvidence(): array
+    {
+        return ['card', 'bkash', 'nagad', 'bank_check', 'bank_transfer'];
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     * @return array{transaction_id: string, account_no: string, remarks: string}
+     */
+    protected function normalizePaymentEvidence(string $method, array $input): array
+    {
+        return [
+            'transaction_id' => trim((string) ($input['transaction_id'] ?? $input['trx_id'] ?? $input['bank_tran_id'] ?? '')),
+            'account_no' => trim((string) ($input['account_no'] ?? $input['account_number'] ?? $input['wallet_no'] ?? $input['card_no'] ?? '')),
+            'remarks' => trim((string) ($input['remarks'] ?? $input['note'] ?? '')),
+        ];
+    }
+
+    /**
+     * @param  array{transaction_id: string, account_no: string, remarks: string}  $evidence
+     */
+    protected function assertPaymentEvidence(string $method, array $evidence): void
+    {
+        if (! in_array($method, $this->methodsRequiringPaymentEvidence(), true)) {
+            return;
+        }
+        if ($evidence['transaction_id'] === '') {
+            throw new \InvalidArgumentException('Transaction ID is required for '.$method.' payments.');
+        }
+        if ($evidence['account_no'] === '') {
+            throw new \InvalidArgumentException('Wallet / card / account number is required for '.$method.' payments.');
+        }
+        if ($evidence['remarks'] === '') {
+            throw new \InvalidArgumentException('Remarks are required for '.$method.' payments.');
+        }
+    }
+
+    /**
+     * @param  array{transaction_id: string, account_no: string, remarks: string}  $evidence
+     * @return array<string, mixed>
+     */
+    protected function paymentCollectorAttributes(
+        int $bookingId,
+        int $paymentId,
+        int $supervisorId,
+        float $amount,
+        string $method,
+        array $evidence,
+    ): array {
+        $row = [
+            'booking_id' => $bookingId,
+            'payment_id' => $paymentId,
+            'supervisor_id' => $supervisorId,
+            'amount' => $amount,
+            'payment_type' => $method,
+            'remarks' => $evidence['remarks'] !== '' ? $evidence['remarks'] : null,
+        ];
+        if (Schema::hasColumn('payment_collectors', 'transaction_id')) {
+            $row['transaction_id'] = $evidence['transaction_id'] !== '' ? $evidence['transaction_id'] : null;
+        }
+        if (Schema::hasColumn('payment_collectors', 'account_no')) {
+            $row['account_no'] = $evidence['account_no'] !== '' ? $evidence['account_no'] : null;
+        }
+
+        return $row;
+    }
+
+    /**
+     * Mirror latest collection evidence onto the payment row for reporting.
+     *
+     * @param  array{transaction_id: string, account_no: string, remarks: string}  $evidence
+     */
+    protected function applyPaymentEvidenceToPayment(Payment $payment, array $evidence): void
+    {
+        if ($evidence['transaction_id'] !== '') {
+            $payment->bank_tran_id = $evidence['transaction_id'];
+            $payment->external_reference = $evidence['transaction_id'];
+            if (empty($payment->transaction_id)) {
+                $payment->transaction_id = $evidence['transaction_id'];
+            }
+        }
+        if ($evidence['account_no'] !== '') {
+            $payment->account_no = $evidence['account_no'];
+        }
     }
 }
