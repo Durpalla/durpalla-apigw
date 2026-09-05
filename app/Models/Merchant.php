@@ -238,17 +238,26 @@ class Merchant extends Authenticatable
             return null;
         }
 
-        if ($this->current_subscription_id) {
-            $sub = SaasSubscription::query()->find($this->current_subscription_id);
-            if ($sub) {
-                return $sub;
+        try {
+            if ($this->current_subscription_id) {
+                $sub = SaasSubscription::query()->find($this->current_subscription_id);
+                if ($sub) {
+                    return $sub;
+                }
             }
-        }
 
-        return $this->subscriptions()
-            ->where('status', '!=', SaasSubscription::STATUS_CANCELLED)
-            ->latest('id')
-            ->first();
+            return $this->subscriptions()
+                ->where('status', '!=', SaasSubscription::STATUS_CANCELLED)
+                ->latest('id')
+                ->first();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('saas_current_subscription_failed', [
+                'merchant_id' => $this->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 
     public static function boot()

@@ -30,33 +30,65 @@ class MerchantNotificationController extends Controller
         ]);
 
         $perPage = (int) ($request->get('per_page', 30));
-        $q = $u->notifications()->orderByDesc('created_at');
-        if ($request->boolean('unread_only')) {
-            $q->whereNull('read_at');
+
+        try {
+            if (! \Illuminate\Support\Facades\Schema::hasTable('notifications')) {
+                return response()->json([
+                    'success' => true,
+                    'data' => [],
+                    'meta' => ['current_page' => 1, 'last_page' => 1, 'total' => 0],
+                ]);
+            }
+
+            $q = $u->notifications()->orderByDesc('created_at');
+            if ($request->boolean('unread_only')) {
+                $q->whereNull('read_at');
+            }
+
+            $rows = $q->paginate($perPage);
+            $data = collect($rows->items())->map(fn (DatabaseNotification $n) => $this->map($n))->values();
+
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+                'meta' => [
+                    'current_page' => $rows->currentPage(),
+                    'last_page' => $rows->lastPage(),
+                    'total' => $rows->total(),
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('merchant_notifications_index_failed', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => [],
+                'meta' => ['current_page' => 1, 'last_page' => 1, 'total' => 0],
+            ]);
         }
-
-        $rows = $q->paginate($perPage);
-        $data = collect($rows->items())->map(fn (DatabaseNotification $n) => $this->map($n))->values();
-
-        return response()->json([
-            'success' => true,
-            'data' => $data,
-            'meta' => [
-                'current_page' => $rows->currentPage(),
-                'last_page' => $rows->lastPage(),
-                'total' => $rows->total(),
-            ],
-        ]);
     }
 
     public function unreadCount(Request $request): JsonResponse
     {
         $u = $this->authActor($request);
 
+        $unread = 0;
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('notifications')) {
+                $unread = (int) $u->unreadNotifications()->count();
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('merchant_unread_notifications_failed', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'data' => [
-                'unread' => (int) $u->unreadNotifications()->count(),
+                'unread' => $unread,
             ],
         ]);
     }

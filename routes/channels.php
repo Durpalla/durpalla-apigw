@@ -28,6 +28,20 @@ Broadcast::channel('notification.{userId}', function ($user, $userId) {
 });
 
 /**
+ * Merchant live booking feed (public channel name is merchant.{id}; private form also allowed).
+ */
+Broadcast::channel('merchant.{merchantId}', function ($user, $merchantId) {
+    $ownerId = null;
+    if ($user instanceof Merchant) {
+        $ownerId = (int) $user->id;
+    } elseif ($user instanceof MerchantStaff && $user->merchant_id) {
+        $ownerId = (int) $user->merchant_id;
+    }
+
+    return $ownerId !== null && $ownerId === (int) $merchantId;
+});
+
+/**
  * Merchant Desk + supervisor layout updates.
  * Wire name: presence-trip.{tripId} (Laravel strips the presence- prefix here).
  */

@@ -25,9 +25,14 @@ class MerchantCapabilityController extends Controller
         $ownerId = $this->merchantOwnerId($request);
 
         $merchant = Merchant::query()->find($ownerId);
-        $allowed = $merchant ? $merchant->allowed_service_types : null;
-        if (! is_array($allowed)) {
-            $allowed = [];
+        $allowed = [];
+        if ($merchant !== null) {
+            try {
+                $raw = $merchant->allowed_service_types;
+                $allowed = is_array($raw) ? $raw : [];
+            } catch (\Throwable) {
+                $allowed = [];
+            }
         }
         $allowed = array_values(array_unique(array_filter(array_map('strval', $allowed))));
 

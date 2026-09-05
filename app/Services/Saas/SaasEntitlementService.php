@@ -104,7 +104,7 @@ class SaasEntitlementService
 
     public function countHotelProperties(int $merchantId): int
     {
-        if (! Schema::hasTable('hotels')) {
+        if (! Schema::hasTable('hotels') || ! Schema::hasColumn('hotels', 'merchant_id')) {
             return 0;
         }
 
@@ -118,23 +118,42 @@ class SaasEntitlementService
 
     public function countHotelRooms(int $merchantId): int
     {
-        if (! Schema::hasTable('hotel_rooms') || ! Schema::hasTable('hotels')) {
+        if (! Schema::hasTable('hotels') || ! Schema::hasColumn('hotels', 'merchant_id')) {
             return 0;
         }
 
-        $q = DB::table('hotel_rooms')
-            ->join('hotels', 'hotels.id', '=', 'hotel_rooms.hotel_id')
-            ->where('hotels.merchant_id', $merchantId);
-        if (Schema::hasColumn('hotels', 'deleted_at')) {
-            $q->whereNull('hotels.deleted_at');
+        // Prefer hotel_rooms; fall back to hotel_room_types when the module table is absent.
+        if (Schema::hasTable('hotel_rooms') && Schema::hasColumn('hotel_rooms', 'hotel_id')) {
+            $q = DB::table('hotel_rooms')
+                ->join('hotels', 'hotels.id', '=', 'hotel_rooms.hotel_id')
+                ->where('hotels.merchant_id', $merchantId);
+            if (Schema::hasColumn('hotels', 'deleted_at')) {
+                $q->whereNull('hotels.deleted_at');
+            }
+
+            return (int) $q->count();
         }
 
-        return (int) $q->count();
+        if (Schema::hasTable('hotel_room_types') && Schema::hasColumn('hotel_room_types', 'hotel_id')) {
+            $q = DB::table('hotel_room_types')
+                ->join('hotels', 'hotels.id', '=', 'hotel_room_types.hotel_id')
+                ->where('hotels.merchant_id', $merchantId);
+            if (Schema::hasColumn('hotels', 'deleted_at')) {
+                $q->whereNull('hotels.deleted_at');
+            }
+
+            return (int) $q->count();
+        }
+
+        return 0;
     }
 
     public function countActiveTransportBlocks(int $merchantId): int
     {
-        if (! Schema::hasTable('schedule_cabin_mappings') || ! Schema::hasTable('vehicle_schedules')) {
+        if (! Schema::hasTable('schedule_cabin_mappings')
+            || ! Schema::hasTable('vehicle_schedules')
+            || ! Schema::hasColumn('vehicle_schedules', 'merchant_id')
+            || ! Schema::hasColumn('schedule_cabin_mappings', 'is_reserved')) {
             return 0;
         }
 
@@ -219,25 +238,49 @@ class SaasEntitlementService
      */
     public function capabilities(int $merchantId): array
     {
-        $subscription = $this->subscriptionFor($merchantId);
-        $plan = $subscription?->plan;
+        try {
+            $subscription = $this->subscriptionFor($merchantId);
+            $plan = ($subscription !== null && Schema::hasTable('saas_plans'))
+                ? $subscription->plan
+                : null;
 
-        $otaOnly = $subscription !== null && $subscription->isOtaOnly();
+            $otaOnly = $subscription !== null && $subscription->isOtaOnly();
 
-        return [
-            'has_subscription' => $subscription !== null,
-            'subscription_status' => $subscription?->status,
-            'plan_code' => $plan?->code,
-            'plan_name' => $plan?->name,
-            'commission_rate' => $subscription ? (float) $subscription->commission_rate : null,
-            'max_hotel_properties' => $plan?->max_hotel_properties,
-            'max_hotel_rooms' => $plan?->max_hotel_rooms,
-            'properties_used' => $this->countHotelProperties($merchantId),
-            'rooms_used' => $this->countHotelRooms($merchantId),
-            'ota_only_mode' => $otaOnly,
-            'block_limit' => $plan?->overdue_block_limit,
-            'blocks_used' => $this->countActiveTransportBlocks($merchantId),
-        ];
+            return [
+                'has_subscription' => $subscription !== null,
+                'subscription_status' => $subscription?->status,
+                'plan_code' => $plan?->code,
+                'plan_name' => $plan?->name,
+                'commission_rate' => $subscription ? (float) $subscription->commission_rate : null,
+                'max_hotel_properties' => $plan?->max_hotel_properties,
+                'max_hotel_rooms' => $plan?->max_hotel_rooms,
+                'properties_used' => $this->countHotelProperties($merchantId),
+                'rooms_used' => $this->countHotelRooms($merchantId),
+                'ota_only_mode' => $otaOnly,
+                'block_limit' => $plan?->overdue_block_limit,
+                'blocks_used' => $this->countActiveTransportBlocks($merchantId),
+            ];
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('saas_capabilities_failed', [
+                'merchant_id' => $merchantId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'has_subscription' => false,
+                'subscription_status' => null,
+                'plan_code' => null,
+                'plan_name' => null,
+                'commission_rate' => null,
+                'max_hotel_properties' => null,
+                'max_hotel_rooms' => null,
+                'properties_used' => 0,
+                'rooms_used' => 0,
+                'ota_only_mode' => false,
+                'block_limit' => null,
+                'blocks_used' => 0,
+            ];
+        }
     }
 
     private function deny(string $message): void

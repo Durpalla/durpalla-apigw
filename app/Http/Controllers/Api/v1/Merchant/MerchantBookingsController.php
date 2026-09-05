@@ -47,122 +47,144 @@ class MerchantBookingsController extends Controller
         $ownerId = $this->merchantOwnerId($request);
         $perPage = min(50, max(5, (int) $request->query('per_page', 15)));
 
-        $query = Booking::query()
-            ->with([
-                'payment',
-                'customer',
-                'bookingItems' => fn ($q) => $q->orderBy('id'),
-                'bookingItems.trip.startFrom',
-                'bookingItems.trip.stopTo',
-            ])
-            ->whereHas('bookingItems', function ($q) use ($ownerId) {
-                $q->whereHas('trip', function ($tq) use ($ownerId) {
-                    $tq->where('merchant_id', $ownerId);
+        try {
+            $query = Booking::query()
+                ->with([
+                    'customer',
+                    'bookingItems' => fn ($q) => $q->orderBy('id'),
+                    'bookingItems.trip.startFrom',
+                    'bookingItems.trip.stopTo',
+                ])
+                ->whereHas('bookingItems', function ($q) use ($ownerId) {
+                    $q->where(function ($inner) use ($ownerId) {
+                        $inner->whereHas('trip', function ($tq) use ($ownerId) {
+                            $tq->where('merchant_id', $ownerId);
+                        })->orWhereHas('vehicle', function ($vq) use ($ownerId) {
+                            $vq->where('merchant_id', $ownerId);
+                        });
+                    });
                 });
-            });
 
-        if ($request->filled('from')) {
-            $query->whereDate('booking_date', '>=', date('Y-m-d', strtotime((string) $request->query('from'))));
-        }
-        if ($request->filled('to')) {
-            $query->whereDate('booking_date', '<=', date('Y-m-d', strtotime((string) $request->query('to'))));
-        }
-
-        if ($request->filled('status')) {
-            $st = strtoupper(trim((string) $request->query('status')));
-            $allowed = [
-                AppConst::BOOKING_COMPLETE,
-                AppConst::BOOKING_RESERVED,
-                AppConst::BOOKING_CANCELLED,
-                AppConst::BOOKING_PENDING,
-                AppConst::BOOKING_ADVANCE,
-                AppConst::BOOKING_REJECTED,
-                AppConst::BOOKING_FAILED,
-            ];
-            if (in_array($st, $allowed, true)) {
-                $query->where('bookings.status', $st);
+            if ($request->filled('from')) {
+                $query->whereDate('booking_date', '>=', date('Y-m-d', strtotime((string) $request->query('from'))));
             }
-        }
+            if ($request->filled('to')) {
+                $query->whereDate('booking_date', '<=', date('Y-m-d', strtotime((string) $request->query('to'))));
+            }
 
-        if ($request->filled('q')) {
-            $raw = trim((string) $request->query('q'));
-            if ($raw !== '') {
-                if (str_contains($raw, '@')) {
-                    $raw = explode('@', $raw, 2)[0];
-                }
-                $pnrService = app(BookingPnrService::class);
-                $pnr = $pnrService->normalize($raw);
-                if ($pnr !== null) {
-                    // Exact PNR / invoice number match.
-                    $query->where('bookings.pnr', $pnr);
-                } elseif (preg_match('/^BK-(\d+)$/i', $raw, $m)) {
-                    $query->where('bookings.id', (int) $m[1]);
-                } elseif (preg_match('/^D\d{6}-/i', $raw)) {
-                    // Partial invoice/PNR entry (e.g. D260808-Z29…).
-                    $query->where('bookings.pnr', 'like', strtoupper($raw).'%');
-                } elseif (ctype_digit($raw)) {
-                    $query->where(function ($q) use ($raw) {
-                        $q->where('bookings.id', (int) $raw)
-                            ->orWhere('bookings.pnr', 'like', '%'.$raw.'%');
-                    });
-                } else {
-                    $like = '%'.$raw.'%';
-                    $query->where(function ($q) use ($like, $raw) {
-                        $q->where('bookings.pnr', 'like', strtoupper($raw).'%')
-                            ->orWhere('bookings.pnr', 'like', $like)
-                            ->orWhereHas('customer', function ($cq) use ($like) {
-                                $cq->where('name', 'like', $like)
-                                    ->orWhere('mobile', 'like', $like);
-                            })
-                            ->orWhereHas('bookingItems', function ($iq) use ($like) {
-                                $iq->where('passenger', 'like', $like);
-                            });
-                    });
+            if ($request->filled('status')) {
+                $st = strtoupper(trim((string) $request->query('status')));
+                $allowed = [
+                    AppConst::BOOKING_COMPLETE,
+                    AppConst::BOOKING_RESERVED,
+                    AppConst::BOOKING_CANCELLED,
+                    AppConst::BOOKING_PENDING,
+                    AppConst::BOOKING_ADVANCE,
+                    AppConst::BOOKING_REJECTED,
+                    AppConst::BOOKING_FAILED,
+                ];
+                if (in_array($st, $allowed, true)) {
+                    $query->where('bookings.status', $st);
                 }
             }
-        }
 
-        $paginator = $query->orderByDesc('id')->paginate($perPage);
-        $rows = collect($paginator->items())->map(function (Booking $b) {
-            $first = $b->bookingItems->first();
-            $passengerName = $b->customer?->name ?? 'Guest';
-            if ($first && $first->passenger) {
-                $p = json_decode((string) $first->passenger, true);
-                if (is_array($p) && ! empty($p['name'])) {
-                    $passengerName = (string) $p['name'];
+            if ($request->filled('q')) {
+                $raw = trim((string) $request->query('q'));
+                if ($raw !== '') {
+                    if (str_contains($raw, '@')) {
+                        $raw = explode('@', $raw, 2)[0];
+                    }
+                    $pnrService = app(BookingPnrService::class);
+                    $pnr = $pnrService->normalize($raw);
+                    if ($pnr !== null) {
+                        // Exact PNR / invoice number match.
+                        $query->where('bookings.pnr', $pnr);
+                    } elseif (preg_match('/^BK-(\d+)$/i', $raw, $m)) {
+                        $query->where('bookings.id', (int) $m[1]);
+                    } elseif (preg_match('/^D\d{6}-/i', $raw)) {
+                        // Partial invoice/PNR entry (e.g. D260808-Z29…).
+                        $query->where('bookings.pnr', 'like', strtoupper($raw).'%');
+                    } elseif (ctype_digit($raw)) {
+                        $query->where(function ($q) use ($raw) {
+                            $q->where('bookings.id', (int) $raw)
+                                ->orWhere('bookings.pnr', 'like', '%'.$raw.'%');
+                        });
+                    } else {
+                        $like = '%'.$raw.'%';
+                        $query->where(function ($q) use ($like, $raw) {
+                            $q->where('bookings.pnr', 'like', strtoupper($raw).'%')
+                                ->orWhere('bookings.pnr', 'like', $like)
+                                ->orWhereHas('customer', function ($cq) use ($like) {
+                                    $cq->where('name', 'like', $like)
+                                        ->orWhere('mobile', 'like', $like);
+                                })
+                                ->orWhereHas('bookingItems', function ($iq) use ($like) {
+                                    $iq->where('passenger', 'like', $like);
+                                });
+                        });
+                    }
                 }
             }
-            $trip = $first?->trip;
-            $tripSummary = '';
-            if ($trip) {
-                $tripSummary = ($trip->startFrom?->name ?? '').' → '.($trip->stopTo?->name ?? '');
-            }
 
-            $pay = $this->deskPaymentSnapshot($b);
+            $paginator = $query->orderByDesc('id')->paginate($perPage);
+            $rows = collect($paginator->items())->map(function (Booking $b) {
+                $first = $b->bookingItems->first();
+                $passengerName = $b->customer?->name ?? 'Guest';
+                if ($first && $first->passenger) {
+                    $p = json_decode((string) $first->passenger, true);
+                    if (is_array($p) && ! empty($p['name'])) {
+                        $passengerName = (string) $p['name'];
+                    }
+                }
+                $trip = $first?->trip;
+                $tripSummary = '';
+                if ($trip) {
+                    $tripSummary = ($trip->startFrom?->name ?? '').' → '.($trip->stopTo?->name ?? '');
+                }
 
-            return [
-                'bookingId' => $b->publicReference(),
-                'status' => strtolower((string) $b->status),
-                'totalFare' => (int) round((float) ($b->total_payable ?? $b->total_amount)),
-                'amountPaid' => $pay['amountPaid'],
-                'dueAmount' => $pay['dueAmount'],
-                'bookingDate' => $b->booking_date ? date('Y-m-d', strtotime((string) $b->booking_date)) : null,
-                'passengerName' => $passengerName,
-                'ticketCount' => $b->bookingItems->count(),
-                'tripSummary' => $tripSummary,
-            ];
-        })->values()->all();
+                $pay = $this->deskPaymentSnapshot($b);
 
-        return response()->json([
-            'success' => true,
-            'data' => $rows,
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'last_page' => $paginator->lastPage(),
-                'per_page' => $paginator->perPage(),
-                'total' => $paginator->total(),
-            ],
-        ]);
+                return [
+                    'bookingId' => $b->publicReference(),
+                    'status' => strtolower((string) $b->status),
+                    'totalFare' => (int) round((float) ($b->total_payable ?? $b->total_amount)),
+                    'amountPaid' => $pay['amountPaid'],
+                    'dueAmount' => $pay['dueAmount'],
+                    'bookingDate' => $b->booking_date ? date('Y-m-d', strtotime((string) $b->booking_date)) : null,
+                    'passengerName' => $passengerName,
+                    'ticketCount' => $b->bookingItems->count(),
+                    'tripSummary' => $tripSummary,
+                ];
+            })->values()->all();
+
+            return response()->json([
+                'success' => true,
+                'data' => $rows,
+                'meta' => [
+                    'current_page' => $paginator->currentPage(),
+                    'last_page' => $paginator->lastPage(),
+                    'per_page' => $paginator->perPage(),
+                    'total' => $paginator->total(),
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('merchant_bookings_index_failed', [
+                'merchant_id' => $ownerId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => [],
+                'meta' => [
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'per_page' => $perPage,
+                    'total' => 0,
+                ],
+                'message' => 'Unable to load bookings right now.',
+            ]);
+        }
     }
 
     /**
@@ -604,19 +626,32 @@ class MerchantBookingsController extends Controller
      */
     private function deskPaymentSnapshot(Booking $booking): array
     {
-        $booking->loadMissing('payment');
-        $total = (float) ($booking->total_payable ?? $booking->total_amount);
-        $paid = (float) ($booking->payment?->paid_amount ?? 0);
-        $due = max(0, (int) round($total - $paid));
+        try {
+            $booking->loadMissing('payment');
+            $total = (float) ($booking->total_payable ?? $booking->total_amount);
+            $paid = (float) ($booking->payment?->paid_amount ?? 0);
+            $due = max(0, (int) round($total - $paid));
 
-        return [
-            'method' => (string) ($booking->payment?->payment_method ?? 'pay_later'),
-            'amountPaid' => (int) round($paid),
-            'dueAmount' => $due,
-            'dues' => $due,
-            'paymentStatus' => (string) ($booking->payment?->status ?? 'pending'),
-            'isFullyPaid' => $due === 0,
-        ];
+            return [
+                'method' => (string) ($booking->payment?->payment_method ?? 'pay_later'),
+                'amountPaid' => (int) round($paid),
+                'dueAmount' => $due,
+                'dues' => $due,
+                'paymentStatus' => (string) ($booking->payment?->status ?? 'pending'),
+                'isFullyPaid' => $due === 0,
+            ];
+        } catch (\Throwable) {
+            $total = (float) ($booking->total_payable ?? $booking->total_amount);
+
+            return [
+                'method' => 'pay_later',
+                'amountPaid' => 0,
+                'dueAmount' => (int) round($total),
+                'dues' => (int) round($total),
+                'paymentStatus' => 'pending',
+                'isFullyPaid' => false,
+            ];
+        }
     }
 
     /**

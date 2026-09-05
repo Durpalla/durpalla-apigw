@@ -6,9 +6,9 @@ use App\Http\Controllers\Api\CustomerAuthController;
 use App\Http\Controllers\Api\v1\ApiBookingController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantAuthController;
 
-// Pusher private/presence auth (Bearer) — same path as merchant + mobile clients
+// Pusher private/presence auth (Bearer) — Sanctum guards only (Passport `api` can 500 on Sanctum tokens)
 Route::post('pusher/auth', [BroadcastController::class, 'authenticate'])
-    ->middleware('auth:merchant_api,merchant_staff_api,customer,agent,api');
+    ->middleware('auth:merchant_api,merchant_staff_api,customer,agent');
 
 // Main app routes (no prefix) – /api/v1/site/init, /api/v1/auth/*, /api/v1/cart/*, /api/v1/booking/*, /api/v1/my/*, etc.
 include(__DIR__ . '/v1/customer.php');
