@@ -1,9 +1,9 @@
 {
     "app": "web-merchant",
     "locale": "ur",
-    "version": 2,
+    "version": 3,
     "fallback_locale": "en",
     "format": "i18next-namespaces",
     "key_count": 2319,
-    "exported_at": "2026-09-05T18:53:38+00:00"
+    "exported_at": "2026-09-05T19:20:44+00:00"
 }

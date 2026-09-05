@@ -1,74 +1,74 @@
 {
     "page": {
-        "title": "Dashboard",
-        "description": "Booking, trip and revenue overview",
-        "asOf": "Live overview as of {{time}}",
-        "rangeOption": "Last {{days}} days",
-        "newBooking": "New booking",
-        "newHotelBooking": "New hotel booking",
-        "live": "Live"
+        "title": "داشبورد",
+        "description": "نمای کلی رزرو، سفر و درآمد",
+        "asOf": "نمای کلی زنده از {{time}}",
+        "rangeOption": "آخرین {{days}} روز",
+        "newBooking": "رزرو جدید",
+        "newHotelBooking": "رزرو هتل جدید",
+        "live": "زندگی کنید"
     },
     "stats": {
-        "bookingsRange": "Bookings ({{days}}d)",
-        "activeTrips": "Active trips today",
-        "revenueToday": "Revenue today",
-        "avgOccupancy": "Avg occupancy",
-        "periodRevenue": "Period revenue",
-        "periodBookings": "Period bookings",
-        "unitsSold": "Units sold",
-        "pendingCancelled": "Pending / cancelled",
+        "bookingsRange": "رزرو ({{days}}d)",
+        "activeTrips": "سفرهای فعال امروز",
+        "revenueToday": "درآمد امروز",
+        "avgOccupancy": "میانگین اشغال",
+        "periodRevenue": "درآمد دوره",
+        "periodBookings": "رزرو دوره",
+        "unitsSold": "واحد فروخته شده",
+        "pendingCancelled": "در انتظار / لغو شد",
         "hotels": "هتل ها",
-        "hotelBookings": "Hotel bookings",
-        "hotelConfirmed": "Hotel confirmed",
-        "hotelPayable": "Hotel payable"
+        "hotelBookings": "رزرو هتل",
+        "hotelConfirmed": "هتل تایید شد",
+        "hotelPayable": "هتل قابل پرداخت"
     },
     "charts": {
-        "revenueTrend": "Revenue trend",
-        "revenueTrendDescription": "Daily collected revenue over the selected period.",
-        "bookingsVolume": "Bookings volume",
-        "bookingsVolumeDescription": "Daily booking count for the selected period.",
-        "bookingStatus": "Booking status",
-        "bookingStatusDescription": "Share of bookings by current status.",
-        "revenueSeries": "Revenue",
-        "bookingsSeries": "Bookings",
-        "noData": "No chart data",
-        "noStatusData": "No status data"
+        "revenueTrend": "روند درآمد",
+        "revenueTrendDescription": "درآمد جمع آوری شده روزانه در دوره انتخابی.",
+        "bookingsVolume": "حجم رزرو",
+        "bookingsVolumeDescription": "تعداد رزرو روزانه برای دوره انتخاب شده.",
+        "bookingStatus": "وضعیت رزرو",
+        "bookingStatusDescription": "سهم رزرو بر اساس وضعیت فعلی",
+        "revenueSeries": "درآمد",
+        "bookingsSeries": "رزروها",
+        "noData": "داده نمودار وجود ندارد",
+        "noStatusData": "داده وضعیت وجود ندارد"
     },
     "widgets": {
-        "trendVsPrevious": "{{value}}% vs previous",
-        "noTrend": "No trend data",
-        "bookingsCount_one": "{{value}} booking",
-        "bookingsCount_other": "{{value}} bookings"
+        "trendVsPrevious": "{{value}}% در مقابل قبلی",
+        "noTrend": "داده روند وجود ندارد",
+        "bookingsCount_one": "{{value}} رزرو",
+        "bookingsCount_other": "{{value}} رزرو"
     },
     "top": {
-        "title": "Top performers",
-        "description": "Routes and vehicles with the highest activity.",
-        "routes": "Top routes",
-        "vehicles": "Top vehicles",
-        "empty": "No ranking data returned by the dashboard API yet."
+        "title": "مجریان برتر",
+        "description": "مسیرها و وسایل نقلیه با بیشترین فعالیت.",
+        "routes": "مسیرهای برتر",
+        "vehicles": "وسایل نقلیه برتر",
+        "empty": "هنوز هیچ داده رتبه‌بندی توسط API داشبورد برگردانده نشده است."
     },
     "hotels": {
         "title": "هتل ها",
-        "description": "Jump into hotel operations.",
-        "manage": "Manage hotels"
+        "description": "پرش به عملیات هتل.",
+        "manage": "هتل ها را مدیریت کنید"
     },
     "recent": {
-        "title": "Recent bookings",
-        "descriptionTransport": "Latest transport bookings from the dashboard feed.",
-        "description": "Latest bookings from the dashboard feed.",
-        "viewAll": "View all",
-        "empty": "No recent bookings.",
-        "code": "Code",
+        "title": "رزروهای اخیر",
+        "descriptionTransport": "آخرین رزروهای حمل و نقل از خوراک داشبورد.",
+        "description": "آخرین رزروها از خوراک داشبورد.",
+        "viewAll": "مشاهده همه",
+        "empty": "هیچ رزرو اخیری وجود ندارد.",
+        "code": "کد",
         "passenger": "مسافر",
-        "open": "Open"
+        "open": "باز کنید"
     },
     "quickActions": {
-        "title": "Quick actions",
-        "description": "Jump into everyday operations.",
-        "trips": "Manage trips",
-        "transportBookings": "Transport bookings",
-        "hotelBookings": "Hotel bookings",
-        "reports": "Open reports",
-        "settlements": "Settlements"
+        "title": "اقدامات سریع",
+        "description": "پرش به عملیات روزمره.",
+        "trips": "سفرها را مدیریت کنید",
+        "transportBookings": "رزرو حمل و نقل",
+        "hotelBookings": "رزرو هتل",
+        "reports": "باز کردن گزارش ها",
+        "settlements": "شهرک سازی ها"
     }
 }

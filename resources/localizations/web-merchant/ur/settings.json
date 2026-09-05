@@ -2,140 +2,140 @@
     "index": {
         "title": "ترتیبات",
         "profile": "پروفائل",
-        "profileDescription": "Account details and password",
-        "twoFactor": "Two-factor authentication",
-        "twoFactorDescription": "Email OTP and authenticator app",
-        "gateways": "Payment & SMS gateways",
-        "gatewaysDescription": "Enable templates and manage credentials",
-        "appearance": "Appearance",
-        "appearanceDescription": "Light / dark theme and language",
-        "printers": "Printing",
-        "printersDescription": "Browser print guidance for tickets"
+        "profileDescription": "اکاؤنٹ کی تفصیلات اور پاس ورڈ",
+        "twoFactor": "دو عنصر کی توثیق",
+        "twoFactorDescription": "ای میل OTP اور تصدیق کنندہ ایپ",
+        "gateways": "ادائیگی اور SMS گیٹ ویز",
+        "gatewaysDescription": "ٹیمپلیٹس کو فعال کریں اور اسناد کا نظم کریں۔",
+        "appearance": "ظاہری شکل",
+        "appearanceDescription": "ہلکی / سیاہ تھیم اور زبان",
+        "printers": "پرنٹنگ",
+        "printersDescription": "ٹکٹوں کے لیے براؤزر پرنٹ گائیڈنس"
     },
     "appearance": {
-        "title": "Appearance",
-        "description": "Theme and language preference",
-        "themeTitle": "Theme",
+        "title": "ظاہری شکل",
+        "description": "تھیم اور زبان کی ترجیح",
+        "themeTitle": "تھیم",
         "themes": {
-            "light": "Light",
-            "dark": "Dark",
-            "system": "System"
+            "light": "روشنی",
+            "dark": "اندھیرا",
+            "system": "سسٹم"
         },
-        "languageDescription": "Applies to the whole merchant desk on this browser."
+        "languageDescription": "اس براؤزر پر پورے مرچنٹ ڈیسک پر لاگو ہوتا ہے۔"
     },
     "printers": {
-        "title": "Printing",
-        "description": "Web-only printing uses the browser print dialog",
-        "supportedTitle": "Supported on web",
-        "printApiBefore": "Tickets and payment tokens open a print-ready HTML view and use ",
+        "title": "پرنٹنگ",
+        "description": "صرف ویب پرنٹنگ براؤزر پرنٹ ڈائیلاگ کا استعمال کرتی ہے۔",
+        "supportedTitle": "ویب پر تعاون یافتہ",
+        "printApiBefore": "ٹکٹ اور ادائیگی کے ٹوکن پرنٹ کے لیے تیار HTML منظر کھولتے ہیں اور استعمال کرتے ہیں۔",
         "printApiAfter": ".",
-        "unsupported": "Bluetooth pocket printers, USB/serial ESC-POS devices, and biometric login are not available in this browser app.",
-        "guidance": "Use a system printer or PDF from the browser print dialog for counter operations."
+        "unsupported": "اس براؤزر ایپ میں بلوٹوتھ پاکٹ پرنٹرز، USB/سیریل ESC-POS ڈیوائسز، اور بائیو میٹرک لاگ ان دستیاب نہیں ہیں۔",
+        "guidance": "کاؤنٹر آپریشنز کے لیے براؤزر پرنٹ ڈائیلاگ سے سسٹم پرنٹر یا پی ڈی ایف استعمال کریں۔"
     },
     "profile": {
         "title": "میرا پروفائل",
-        "description": "Manage your merchant account and personal information.",
-        "fallbackName": "Merchant",
-        "merchantId": "Merchant ID: {{value}}",
-        "securitySettings": "Security settings",
+        "description": "اپنے مرچنٹ اکاؤنٹ اور ذاتی معلومات کا نظم کریں۔",
+        "fallbackName": "مرچنٹ",
+        "merchantId": "مرچنٹ ID: {{value}}",
+        "securitySettings": "سیکیورٹی کی ترتیبات",
         "photos": {
-            "title": "Photos",
-            "description": "Upload a profile picture. PNG, JPG, or WebP up to 2 MB.",
-            "descriptionWithLogo": "Upload a profile picture and your business logo. PNG, JPG, or WebP up to 2 MB.",
-            "avatarLabel": "Profile picture",
-            "avatarHint": "Shown on your account menu and profile.",
-            "changePicture": "Change picture",
-            "uploadPicture": "Upload picture",
-            "logoLabel": "Business logo",
-            "logoHint": "Used on invoices and merchant branding.",
-            "changeLogo": "Change logo",
-            "uploadLogo": "Upload logo",
-            "uploading": "Uploading..."
+            "title": "تصاویر",
+            "description": "پروفائل تصویر اپ لوڈ کریں۔ PNG، JPG، یا WebP 2 MB تک۔",
+            "descriptionWithLogo": "پروفائل تصویر اور اپنے کاروبار کا لوگو اپ لوڈ کریں۔ PNG، JPG، یا WebP 2 MB تک۔",
+            "avatarLabel": "پروفائل تصویر",
+            "avatarHint": "آپ کے اکاؤنٹ کے مینو اور پروفائل پر دکھایا گیا ہے۔",
+            "changePicture": "تصویر تبدیل کریں۔",
+            "uploadPicture": "تصویر اپ لوڈ کریں۔",
+            "logoLabel": "کاروباری لوگو",
+            "logoHint": "انوائسز اور مرچنٹ برانڈنگ پر استعمال کیا جاتا ہے۔",
+            "changeLogo": "لوگو تبدیل کریں۔",
+            "uploadLogo": "لوگو اپ لوڈ کریں۔",
+            "uploading": "اپ لوڈ ہو رہا ہے..."
         },
         "personal": {
-            "title": "Personal information",
-            "description": "Update the contact details associated with your account.",
-            "namePlaceholder": "Enter your name",
-            "emailReadOnly": "Email address cannot be changed.",
-            "mobilePlaceholder": "Enter your mobile number",
-            "save": "Save changes",
-            "saving": "Saving..."
+            "title": "ذاتی معلومات",
+            "description": "اپنے اکاؤنٹ سے وابستہ رابطے کی تفصیلات کو اپ ڈیٹ کریں۔",
+            "namePlaceholder": "اپنا نام درج کریں۔",
+            "emailReadOnly": "ای میل ایڈریس تبدیل نہیں کیا جا سکتا۔",
+            "mobilePlaceholder": "اپنا موبائل نمبر درج کریں۔",
+            "save": "تبدیلیاں محفوظ کریں۔",
+            "saving": "محفوظ کر رہا ہے..."
         },
         "password": {
-            "title": "Change password",
-            "description": "Use at least eight characters for your new password.",
+            "title": "پاس ورڈ تبدیل کریں۔",
+            "description": "اپنے نئے پاس ورڈ کے لیے کم از کم آٹھ حروف استعمال کریں۔",
             "current": "موجودہ پاس ورڈ",
-            "currentPlaceholder": "Enter current password",
-            "new": "New password",
+            "currentPlaceholder": "موجودہ پاس ورڈ درج کریں۔",
+            "new": "نیا پاس ورڈ",
             "newPlaceholder": "نیا پاس ورڈ درج کریں۔",
             "confirm": "نئے پاس ورڈ کی تصدیق کریں۔",
             "confirmPlaceholder": "نئے پاس ورڈ کی تصدیق کریں۔",
             "label": "پاس ورڈ",
-            "confirmLabel": "Password confirmation",
-            "submit": "Update password",
+            "confirmLabel": "پاس ورڈ کی تصدیق",
+            "submit": "پاس ورڈ اپ ڈیٹ کریں۔",
             "submitting": "اپ ڈیٹ ہو رہا ہے..."
         },
         "twoFactor": {
-            "title": "Two-factor authentication",
-            "enabled": "{{method}} is enabled",
-            "authenticator": "Authenticator app",
-            "emailOtp": "Email OTP",
-            "default": "Email OTP is the default protection method",
-            "manage": "Manage 2FA",
-            "enable": "Enable 2FA"
+            "title": "دو عنصر کی توثیق",
+            "enabled": "{{method}} فعال ہے۔",
+            "authenticator": "تصدیق کنندہ ایپ",
+            "emailOtp": "ای میل OTP",
+            "default": "ای میل OTP پہلے سے طے شدہ تحفظ کا طریقہ ہے۔",
+            "manage": "2FA کا نظم کریں۔",
+            "enable": "2FA کو فعال کریں۔"
         },
         "toast": {
-            "updated": "Profile updated",
+            "updated": "پروفائل اپ ڈیٹ ہو گیا۔",
             "passwordChanged": "پاس ورڈ بدل گیا۔",
-            "avatarUpdated": "Profile picture updated",
-            "logoUpdated": "Business logo updated",
-            "invalidImageType": "Use a PNG, JPG, or WebP image",
-            "imageTooLarge": "Image must be 2 MB or smaller",
-            "invalidProfile": "Invalid profile details",
-            "invalidPassword": "Invalid password details"
+            "avatarUpdated": "پروفائل تصویر اپ ڈیٹ ہو گئی۔",
+            "logoUpdated": "کاروباری لوگو کو اپ ڈیٹ کر دیا گیا۔",
+            "invalidImageType": "PNG، JPG، یا WebP تصویر استعمال کریں۔",
+            "imageTooLarge": "تصویر 2 MB یا اس سے چھوٹی ہونی چاہیے۔",
+            "invalidProfile": "پروفائل کی غلط تفصیلات",
+            "invalidPassword": "غلط پاس ورڈ کی تفصیلات"
         }
     },
     "twoFactor": {
-        "title": "Two-factor authentication",
-        "description": "Protect your merchant account with an additional verification step.",
-        "protectedTitle": "Your account is protected",
-        "protectedDescription": "Email OTP is the default verification method. You can switch to an authenticator app below.",
-        "badgeDefault": "Default",
-        "badgeEnabled": "Enabled",
+        "title": "دو عنصر کی توثیق",
+        "description": "ایک اضافی توثیقی مرحلے کے ساتھ اپنے مرچنٹ اکاؤنٹ کی حفاظت کریں۔",
+        "protectedTitle": "آپ کا اکاؤنٹ محفوظ ہے۔",
+        "protectedDescription": "ای میل OTP پہلے سے طے شدہ تصدیق کا طریقہ ہے۔ آپ نیچے دی گئی تصدیق کنندہ ایپ پر سوئچ کر سکتے ہیں۔",
+        "badgeDefault": "طے شدہ",
+        "badgeEnabled": "فعال",
         "email": {
-            "title": "Email OTP",
-            "description": "Receive a six-digit verification code at {{email}}.",
-            "fallbackEmail": "your account email",
-            "enabling": "Enabling email OTP...",
-            "enabled": "Email OTP enabled",
-            "enable": "Use email OTP",
+            "title": "ای میل OTP",
+            "description": "{{email}} پر چھ ہندسوں کا تصدیقی کوڈ حاصل کریں۔",
+            "fallbackEmail": "آپ کے اکاؤنٹ کا ای میل",
+            "enabling": "ای میل OTP کو فعال کیا جا رہا ہے...",
+            "enabled": "ای میل OTP فعال ہے۔",
+            "enable": "ای میل OTP استعمال کریں۔",
             "missing": "پہلے اپنے پروفائل میں ایک ای میل ایڈریس شامل کریں۔"
         },
         "authenticator": {
-            "title": "Authenticator app",
-            "description": "Use Google Authenticator, Authy, Microsoft Authenticator, or another compatible app.",
-            "preparing": "Preparing setup...",
-            "setupAgain": "Set up again",
-            "setup": "Set up authenticator"
+            "title": "تصدیق کنندہ ایپ",
+            "description": "Google Authenticator، Authy، Microsoft Authenticator، یا کوئی اور مطابقت پذیر ایپ استعمال کریں۔",
+            "preparing": "سیٹ اپ کی تیاری ہو رہی ہے...",
+            "setupAgain": "دوبارہ ترتیب دیں۔",
+            "setup": "تصدیق کنندہ ترتیب دیں۔"
         },
         "connect": {
-            "title": "Connect your authenticator app",
-            "description": "Add the account using the setup link or secret, then enter the six-digit code.",
-            "openApp": "Open in authenticator app",
-            "secretLabel": "Setup secret",
-            "codeLabel": "Verification code",
-            "verifying": "Verifying...",
-            "submit": "Enable authenticator",
-            "secretField": "Authenticator secret",
-            "codeField": "Authenticator code"
+            "title": "اپنی تصدیق کنندہ ایپ کو مربوط کریں۔",
+            "description": "سیٹ اپ لنک یا خفیہ کا استعمال کرتے ہوئے اکاؤنٹ شامل کریں، پھر چھ ہندسوں کا کوڈ درج کریں۔",
+            "openApp": "تصدیق کنندہ ایپ میں کھولیں۔",
+            "secretLabel": "سیٹ اپ راز",
+            "codeLabel": "تصدیقی کوڈ",
+            "verifying": "تصدیق ہو رہی ہے...",
+            "submit": "تصدیق کنندہ کو فعال کریں۔",
+            "secretField": "تصدیق کنندہ راز",
+            "codeField": "تصدیق کنندہ کوڈ"
         },
         "recovery": {
-            "title": "Save your recovery codes",
-            "description": "Store these codes securely. Each code can be used once."
+            "title": "اپنے ریکوری کوڈز کو محفوظ کریں۔",
+            "description": "ان کوڈز کو محفوظ طریقے سے اسٹور کریں۔ ہر کوڈ کو ایک بار استعمال کیا جا سکتا ہے۔"
         },
         "toast": {
-            "emailEnabled": "Email OTP is enabled",
-            "authenticatorEnabled": "Authenticator app is enabled"
+            "emailEnabled": "ای میل OTP فعال ہے۔",
+            "authenticatorEnabled": "Authenticator ایپ فعال ہے۔"
         }
     }
 }

@@ -1,25 +1,25 @@
 {
     "page": {
-        "title": "Settlements",
-        "description": "Approve or decline settlement requests",
-        "rangeInvalid": "Date range is invalid"
+        "title": "شهرک سازی ها",
+        "description": "درخواست های تسویه حساب را تأیید یا رد کنید",
+        "rangeInvalid": "محدوده تاریخ نامعتبر است"
     },
     "empty": {
-        "title": "No settlement requests"
+        "title": "بدون درخواست تسویه حساب"
     },
     "table": {
-        "id": "ID",
-        "approve": "Approve",
-        "decline": "Decline"
+        "id": "شناسه",
+        "approve": "تایید کنید",
+        "decline": "رد کردن"
     },
     "status": {
         "all": "همه",
-        "pending": "Pending",
-        "approved": "Approved",
-        "declined": "Declined"
+        "pending": "در انتظار",
+        "approved": "تصویب شد",
+        "declined": "رد کرد"
     },
     "toast": {
-        "approved": "Approved",
-        "declined": "Declined"
+        "approved": "تصویب شد",
+        "declined": "رد کرد"
     }
 }

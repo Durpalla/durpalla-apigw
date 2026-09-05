@@ -1,162 +1,162 @@
 {
     "actions": {
-        "add": "Add",
-        "back": "Back",
+        "add": "شامل کریں۔",
+        "back": "پیچھے",
         "cancel": "منسوخ کریں۔",
         "close": "بند",
-        "collect": "Collect",
-        "confirm": "Confirm",
-        "create": "Create",
-        "delete": "Delete",
+        "collect": "جمع کرنا",
+        "confirm": "تصدیق کریں۔",
+        "create": "بنائیں",
+        "delete": "حذف کریں۔",
         "download": "ڈاؤن لوڈ کریں۔",
-        "edit": "Edit",
-        "export": "Export",
-        "filter": "Filter",
+        "edit": "ترمیم کریں۔",
+        "export": "برآمد کریں۔",
+        "filter": "فلٹر",
         "print": "پرنٹ",
-        "refresh": "Refresh",
+        "refresh": "ریفریش کریں۔",
         "remove": "ہٹا دیں۔",
-        "reset": "Reset",
+        "reset": "دوبارہ ترتیب دیں۔",
         "retry": "دوبارہ کوشش کریں۔",
-        "save": "Save",
+        "save": "محفوظ کریں۔",
         "search": "تلاش کریں۔",
         "share": "شیئر کریں۔",
-        "submit": "Submit",
-        "update": "Update",
-        "view": "View"
+        "submit": "جمع کروائیں۔",
+        "update": "اپڈیٹ کریں۔",
+        "view": "دیکھیں"
     },
     "state": {
-        "empty": "No records found",
-        "error": "Something went wrong",
-        "loading": "Loading...",
-        "noResults": "No results match your filters",
-        "pending": "Please wait...",
-        "saving": "Saving..."
+        "empty": "کوئی ریکارڈ نہیں ملا",
+        "error": "کچھ غلط ہو گیا۔",
+        "loading": "لوڈ ہو رہا ہے...",
+        "noResults": "کوئی نتیجہ آپ کے فلٹرز سے مماثل نہیں ہے۔",
+        "pending": "برائے مہربانی انتظار کریں...",
+        "saving": "محفوظ کر رہا ہے..."
     },
     "labels": {
-        "actions": "Actions",
+        "actions": "اعمال",
         "all": "تمام",
         "amount": "رقم",
-        "createdAt": "Created at",
+        "createdAt": "پر تخلیق کیا گیا۔",
         "date": "تاریخ",
-        "dateRange": "Date range",
-        "due": "Due",
+        "dateRange": "تاریخ کی حد",
+        "due": "واجب الادا",
         "email": "ای میل",
         "from": "سے",
         "mobile": "موبائل",
         "name": "نام",
-        "notes": "Notes",
+        "notes": "نوٹس",
         "paid": "ادا کیا",
-        "remarks": "Remarks",
+        "remarks": "ریمارکس",
         "status": "حیثیت",
         "to": "کو",
         "total": "کل",
-        "updatedAt": "Updated at"
+        "updatedAt": "پر اپ ڈیٹ کیا گیا۔"
     },
     "status": {
-        "active": "Active",
-        "cancelled": "Cancelled",
-        "completed": "Completed",
-        "confirmed": "Confirmed",
+        "active": "فعال",
+        "cancelled": "منسوخ",
+        "completed": "مکمل",
+        "confirmed": "تصدیق شدہ",
         "failed": "ناکام",
-        "inactive": "Inactive",
+        "inactive": "غیر فعال",
         "paid": "ادا کیا",
-        "pending": "Pending",
-        "unpaid": "Unpaid"
+        "pending": "زیر التواء",
+        "unpaid": "بلا معاوضہ"
     },
     "routeError": {
-        "title": "Something went wrong",
-        "message": "An unexpected error occurred.",
+        "title": "کچھ غلط ہو گیا۔",
+        "message": "ایک غیر متوقع خرابی پیش آگئی۔",
         "tryAgain": "دوبارہ کوشش کریں۔",
-        "goToDashboard": "Go to dashboard"
+        "goToDashboard": "ڈیش بورڈ پر جائیں۔"
     },
     "language": {
         "label": "زبان",
-        "switch": "Change language",
-        "switching": "Changing language…"
+        "switch": "زبان بدلو",
+        "switching": "زبان بدل رہی ہے…"
     },
     "theme": {
-        "toggle": "Toggle theme"
+        "toggle": "تھیم کو ٹوگل کریں۔"
     },
     "vehicleTypes": {
         "bus": "بس",
         "launch": "لانچ کریں۔",
-        "ship": "Ship",
+        "ship": "جہاز",
         "train": "ٹرین",
-        "air": "Air"
+        "air": "ہوا"
     },
     "roles": {
-        "accountant": "Accountant",
-        "admin": "Admin",
-        "counter": "Counter",
-        "executive": "Executive",
-        "manager": "Manager",
-        "merchant": "Merchant",
-        "staff": "Staff",
-        "supervisor": "Supervisor",
-        "unknown": "Staff",
-        "viewer": "Viewer"
+        "accountant": "اکاؤنٹنٹ",
+        "admin": "ایڈمن",
+        "counter": "کاؤنٹر",
+        "executive": "ایگزیکٹو",
+        "manager": "مینیجر",
+        "merchant": "مرچنٹ",
+        "staff": "عملہ",
+        "supervisor": "سپروائزر",
+        "unknown": "عملہ",
+        "viewer": "دیکھنے والا"
     },
     "errors": {
         "forbidden": "آپ کو ایسا کرنے کی اجازت نہیں ہے۔",
         "generic": "کچھ غلط ہو گیا۔ براہ کرم دوبارہ کوشش کریں۔",
-        "network": "Cannot reach the server. Check your internet connection.",
-        "notFound": "Requested resource was not found.",
-        "requestFailed": "Request failed",
-        "requestFailedWithStatus": "Request failed ({{status}})",
-        "server": "Server error. Please try again later.",
-        "sessionExpired": "Session expired. Please sign in again.",
-        "timeout": "Request timed out",
-        "unreachableHost": "Cannot reach API host ({{detail}})",
-        "validation": "Validation failed. Please check your input."
+        "network": "سرور تک نہیں پہنچ سکتا۔ اپنا انٹرنیٹ کنکشن چیک کریں۔",
+        "notFound": "مطلوبہ وسیلہ نہیں ملا۔",
+        "requestFailed": "درخواست ناکام ہوگئی",
+        "requestFailedWithStatus": "درخواست ناکام ہو گئی ({{status}})",
+        "server": "سرور کی خرابی۔ براہ کرم بعد میں دوبارہ کوشش کریں۔",
+        "sessionExpired": "سیشن ختم ہو گیا۔ براہ کرم دوبارہ سائن ان کریں۔",
+        "timeout": "درخواست کا وقت ختم ہو گیا۔",
+        "unreachableHost": "API میزبان تک نہیں پہنچ سکتا ({{detail}})",
+        "validation": "توثیق ناکام ہوگئی۔ براہ کرم اپنا ان پٹ چیک کریں۔"
     },
     "pagination": {
-        "next": "Next",
-        "pageOf": "Page {{page}} of {{total}}",
-        "previous": "Previous",
-        "rowsPerPage": "Rows per page",
-        "showing": "Showing {{from}}–{{to}} of {{total}}",
-        "totalRecords": "{{total}} records"
+        "next": "اگلا",
+        "pageOf": "صفحہ {{page}} از {{total}}",
+        "previous": "پچھلا",
+        "rowsPerPage": "قطار فی صفحہ",
+        "showing": "دکھایا جا رہا ہے {{from}}–{{to}} از {{total}}",
+        "totalRecords": "{{total}} ریکارڈز"
     },
     "table": {
         "noResults": "کوئی نتیجہ نہیں نکلا۔",
-        "selectAll": "Select all rows",
-        "selectRow": "Select row"
+        "selectAll": "تمام قطاریں منتخب کریں۔",
+        "selectRow": "قطار منتخب کریں۔"
     },
     "dialog": {
-        "close": "Close dialog",
-        "confirmDescription": "This action cannot be undone.",
-        "confirmTitle": "Are you sure?"
+        "close": "ڈائیلاگ بند کریں۔",
+        "confirmDescription": "اس کارروائی کو کالعدم نہیں کیا جا سکتا۔",
+        "confirmTitle": "کیا آپ کو یقین ہے؟"
     },
     "placeholders": {
-        "date": "Select date",
-        "dateTime": "Select date and time",
-        "email": "Enter email address",
-        "number": "Enter number",
-        "password": "Enter password",
-        "phone": "Enter phone number",
+        "date": "تاریخ منتخب کریں۔",
+        "dateTime": "تاریخ اور وقت منتخب کریں۔",
+        "email": "ای میل ایڈریس درج کریں۔",
+        "number": "نمبر درج کریں۔",
+        "password": "پاس ورڈ درج کریں۔",
+        "phone": "فون نمبر درج کریں۔",
         "search": "تلاش کریں۔",
-        "time": "Select time",
-        "value": "Enter value"
+        "time": "وقت منتخب کریں۔",
+        "value": "قدر درج کریں۔"
     },
     "a11y": {
         "hidePassword": "پاس ورڈ چھپائیں۔",
-        "otpDigit": "Digit {{position}}",
+        "otpDigit": "ہندسہ {{position}}",
         "showPassword": "پاس ورڈ دکھائیں۔"
     },
     "cities": {
-        "barisal": "Barisal",
-        "chattogram": "Chattogram",
-        "coxsBazar": "Cox's Bazar",
-        "dhaka": "Dhaka",
-        "khulna": "Khulna",
-        "mymensingh": "Mymensingh",
-        "rajshahi": "Rajshahi",
-        "rangpur": "Rangpur",
-        "sylhet": "Sylhet"
+        "barisal": "باریسل",
+        "chattogram": "چٹاگرام",
+        "coxsBazar": "کاکس بازار",
+        "dhaka": "ڈھاکہ",
+        "khulna": "کھلنا",
+        "mymensingh": "میمن سنگھ",
+        "rajshahi": "راجشاہی",
+        "rangpur": "رنگپور",
+        "sylhet": "سلہٹ"
     },
     "brand": {
-        "copyright": "© {{year}} Durpalla. All rights reserved.",
-        "tagline": "Connect your business",
-        "taglineDescription": "Manage bookings, settlements, and payments from one secure merchant platform."
+        "copyright": "© {{year}} Durpalla. جملہ حقوق محفوظ ہیں۔",
+        "tagline": "اپنے کاروبار سے جڑیں۔",
+        "taglineDescription": "ایک محفوظ مرچنٹ پلیٹ فارم سے بکنگ، سیٹلمنٹ اور ادائیگیوں کا نظم کریں۔"
     }
 }

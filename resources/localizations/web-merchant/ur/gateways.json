@@ -1,112 +1,112 @@
 {
     "list": {
-        "title": "Gateways",
-        "paymentTitle": "Payment gateways",
-        "smsTitle": "SMS gateways",
-        "description": "Enable approved payment and SMS providers. Configure credentials and params as instructed by each gateway class. Endpoints are managed by Durpalla Admin.",
-        "footnote": "You can remove an enabled gateway from your account. You cannot change its namespace or type. Endpoints are managed by Durpalla Admin.",
-        "emptyTitle": "No gateways enabled yet",
-        "emptyDescription": "Enable a template above to get started.",
-        "manage": "Manage"
+        "title": "گیٹ ویز",
+        "paymentTitle": "ادائیگی کے گیٹ ویز",
+        "smsTitle": "ایس ایم ایس گیٹ ویز",
+        "description": "منظور شدہ ادائیگی اور SMS فراہم کنندگان کو فعال کریں۔ ہر گیٹ وے کلاس کی ہدایت کے مطابق اسناد اور پیرامز کو ترتیب دیں۔ اینڈ پوائنٹس کا انتظام Durpalla ایڈمن کے ذریعے کیا جاتا ہے۔",
+        "footnote": "آپ اپنے اکاؤنٹ سے ایک فعال گیٹ وے کو ہٹا سکتے ہیں۔ آپ اس کی نام کی جگہ یا قسم کو تبدیل نہیں کر سکتے۔ اینڈ پوائنٹس کا انتظام Durpalla ایڈمن کے ذریعے کیا جاتا ہے۔",
+        "emptyTitle": "ابھی تک کوئی گیٹ وے فعال نہیں ہے۔",
+        "emptyDescription": "شروع کرنے کے لیے اوپر ایک ٹیمپلیٹ کو فعال کریں۔",
+        "manage": "انتظام کریں۔"
     },
     "tabs": {
         "all": "تمام",
         "payment": "ادائیگی",
-        "sms": "SMS"
+        "sms": "ایس ایم ایس"
     },
     "types": {
         "payment": "ادائیگی",
-        "sms": "SMS"
+        "sms": "ایس ایم ایس"
     },
     "enable": {
-        "title": "Enable a gateway",
-        "namespace": "Gateway namespace",
-        "selectPlaceholder": "Select…",
-        "noTemplates": "No templates available",
-        "action": "Enable",
-        "pending": "Enabling…",
-        "summaryTitle": "What you will need to configure",
-        "credentials": "Credentials: {{keys}}",
-        "params": "Params: {{keys}}",
-        "endpoints": "Endpoints (admin): {{keys}}"
+        "title": "گیٹ وے کو فعال کریں۔",
+        "namespace": "گیٹ وے نام کی جگہ",
+        "selectPlaceholder": "منتخب کریں…",
+        "noTemplates": "کوئی ٹیمپلیٹس دستیاب نہیں ہیں۔",
+        "action": "فعال کریں۔",
+        "pending": "فعال کر رہا ہے…",
+        "summaryTitle": "آپ کو کنفیگر کرنے کی ضرورت ہوگی۔",
+        "credentials": "اسناد: {{keys}}",
+        "params": "پیرامز: {{keys}}",
+        "endpoints": "اختتامی نقطہ (ایڈمن): {{keys}}"
     },
     "table": {
         "name": "نام",
-        "type": "Type",
-        "namespace": "Gateway namespace",
-        "code": "Code"
+        "type": "قسم",
+        "namespace": "گیٹ وے نام کی جگہ",
+        "code": "کوڈ"
     },
     "remove": {
         "action": "ہٹا دیں۔",
-        "pending": "Removing…",
-        "title": "Remove {{name}}?",
-        "description": "This removes the gateway from your account only. You can enable the same template again later. Namespace and type cannot be changed."
+        "pending": "ہٹا رہا ہے…",
+        "title": "{{name}} ہٹائیں؟",
+        "description": "یہ صرف آپ کے اکاؤنٹ سے گیٹ وے کو ہٹاتا ہے۔ آپ اسی ٹیمپلیٹ کو بعد میں دوبارہ فعال کر سکتے ہیں۔ نام کی جگہ اور قسم کو تبدیل نہیں کیا جا سکتا۔"
     },
     "edit": {
         "subtitle": "{{type}} · {{code}}",
         "notFoundTitle": "گیٹ وے نہیں ملا",
-        "notFoundDescription": "This gateway is not enabled for your account.",
-        "backToGateways": "Back to gateways",
-        "setupTitle": "Setup instructions",
-        "setupHint": "Configure credentials and params in the tabs below. Endpoints are managed by Durpalla Admin.",
+        "notFoundDescription": "یہ گیٹ وے آپ کے اکاؤنٹ کے لیے فعال نہیں ہے۔",
+        "backToGateways": "گیٹ ویز پر واپس جائیں۔",
+        "setupTitle": "سیٹ اپ کی ہدایات",
+        "setupHint": "ذیل میں دیے گئے ٹیبز میں اسناد اور پیرامز کو ترتیب دیں۔ اینڈ پوائنٹس کا انتظام Durpalla ایڈمن کے ذریعے کیا جاتا ہے۔",
         "tabs": {
-            "info": "Info",
-            "credential": "Credentials",
-            "endpoint": "Endpoints",
-            "param": "Params"
+            "info": "معلومات",
+            "credential": "اسناد",
+            "endpoint": "اینڈ پوائنٹس",
+            "param": "پارمس"
         }
     },
     "info": {
-        "title": "Gateway info",
+        "title": "گیٹ وے کی معلومات",
         "name": "نام",
-        "code": "Code",
-        "type": "Type",
-        "channel": "Channel",
-        "namespace": "Gateway namespace",
-        "save": "Save info"
+        "code": "کوڈ",
+        "type": "قسم",
+        "channel": "چینل",
+        "namespace": "گیٹ وے نام کی جگہ",
+        "save": "معلومات محفوظ کریں۔"
     },
     "credentials": {
-        "title": "Credentials",
-        "add": "Add credential",
-        "hint": "Leave a value blank to keep the existing secret. Only filled values are updated.",
-        "keyPlaceholder": "key",
+        "title": "اسناد",
+        "add": "اسناد شامل کریں۔",
+        "hint": "موجودہ راز رکھنے کے لیے ایک قدر خالی چھوڑ دیں۔ صرف بھری ہوئی اقدار کو اپ ڈیٹ کیا جاتا ہے۔",
+        "keyPlaceholder": "کلید",
         "valuePlaceholder": "********",
-        "removeRow": "Remove credential",
-        "save": "Save credentials",
-        "noneFilled": "Enter at least one credential value to update"
+        "removeRow": "اسناد کو ہٹا دیں۔",
+        "save": "اسناد کو محفوظ کریں۔",
+        "noneFilled": "اپ ڈیٹ کرنے کے لیے کم از کم ایک سندی قدر درج کریں۔"
     },
     "endpoints": {
-        "title": "Endpoints",
-        "hint": "Endpoints are managed by Durpalla Admin. You can only view their setup status here.",
+        "title": "اینڈ پوائنٹس",
+        "hint": "اینڈ پوائنٹس کا انتظام Durpalla ایڈمن کے ذریعے کیا جاتا ہے۔ آپ یہاں صرف ان کے سیٹ اپ کی حیثیت دیکھ سکتے ہیں۔",
         "name": "نام",
-        "key": "Key",
-        "configured": "Configured by admin",
-        "pending": "Pending admin setup",
-        "emptyTitle": "No endpoints",
-        "emptyDescription": "This gateway does not declare endpoint keys."
+        "key": "چابی",
+        "configured": "منتظم کے ذریعہ ترتیب دیا گیا ہے۔",
+        "pending": "زیر التواء ایڈمن سیٹ اپ",
+        "emptyTitle": "کوئی اینڈ پوائنٹ نہیں ہے۔",
+        "emptyDescription": "یہ گیٹ وے اینڈ پوائنٹ کیز کا اعلان نہیں کرتا ہے۔"
     },
     "params": {
-        "title": "Params",
-        "add": "Add param",
-        "hint": "Add any key/value pairs this gateway needs. Suggested keys are prefilled when available.",
-        "keyPlaceholder": "key",
-        "valuePlaceholder": "value",
-        "removeRow": "Remove param",
-        "save": "Save params"
+        "title": "پارمس",
+        "add": "پیرا شامل کریں۔",
+        "hint": "اس گیٹ وے کی ضرورت کے لیے کوئی بھی کلیدی/قدر کے جوڑے شامل کریں۔ تجویز کردہ چابیاں دستیاب ہونے پر پہلے سے بھری جاتی ہیں۔",
+        "keyPlaceholder": "کلید",
+        "valuePlaceholder": "قدر",
+        "removeRow": "پرم کو ہٹا دیں۔",
+        "save": "پیرامیٹرز کو محفوظ کریں۔"
     },
     "field": {
-        "required": "required",
+        "required": "کی ضرورت ہے",
         "requiredSuffix": "(ضروری)",
         "requiredMeta": "· درکار ہے۔"
     },
     "errors": {
         "notFound": "گیٹ وے نہیں ملا",
-        "duplicateKey": "Duplicate key: {{key}}"
+        "duplicateKey": "ڈپلیکیٹ کلید: {{key}}"
     },
     "toast": {
         "enabledSms": "گیٹ وے فعال ہے۔ پیغامات بھیجنا شروع کرنے کے لیے SMS اسناد کو اپ ڈیٹ کریں۔",
         "enabledPayment": "گیٹ وے فعال ہے۔ ادائیگیاں قبول کرنا شروع کرنے کے لیے اسناد کو اپ ڈیٹ کریں۔",
-        "infoSaved": "Info saved",
+        "infoSaved": "معلومات محفوظ ہو گئی۔",
         "credentialsSaved": "اسناد محفوظ ہو گئیں۔",
         "paramsSaved": "پرم نے بچایا"
     }

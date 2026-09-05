@@ -1,25 +1,25 @@
 {
     "page": {
-        "title": "Settlements",
-        "description": "Approve or decline settlement requests",
-        "rangeInvalid": "Date range is invalid"
+        "title": "بستیاں",
+        "description": "تصفیہ کی درخواستوں کو منظور یا مسترد کریں۔",
+        "rangeInvalid": "تاریخ کی حد غلط ہے۔"
     },
     "empty": {
-        "title": "No settlement requests"
+        "title": "کوئی تصفیہ کی درخواستیں نہیں۔"
     },
     "table": {
         "id": "ID",
-        "approve": "Approve",
-        "decline": "Decline"
+        "approve": "منظور کرو",
+        "decline": "رد کرنا"
     },
     "status": {
         "all": "تمام",
-        "pending": "Pending",
-        "approved": "Approved",
-        "declined": "Declined"
+        "pending": "زیر التواء",
+        "approved": "منظور شدہ",
+        "declined": "انکار کر دیا"
     },
     "toast": {
-        "approved": "Approved",
-        "declined": "Declined"
+        "approved": "منظور شدہ",
+        "declined": "انکار کر دیا"
     }
 }

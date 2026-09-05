@@ -1,162 +1,162 @@
 {
     "actions": {
-        "add": "Add",
-        "back": "Back",
+        "add": "اضافه کنید",
+        "back": "برگشت",
         "cancel": "لغو کنید",
         "close": "بستن",
-        "collect": "Collect",
-        "confirm": "Confirm",
-        "create": "Create",
-        "delete": "Delete",
+        "collect": "جمع آوری کنید",
+        "confirm": "تایید کنید",
+        "create": "ایجاد کنید",
+        "delete": "حذف کنید",
         "download": "دانلود کنید",
-        "edit": "Edit",
-        "export": "Export",
-        "filter": "Filter",
+        "edit": "ویرایش کنید",
+        "export": "صادرات",
+        "filter": "فیلتر کنید",
         "print": "چاپ کنید",
-        "refresh": "Refresh",
+        "refresh": "تازه کردن",
         "remove": "حذف کنید",
-        "reset": "Reset",
+        "reset": "بازنشانی کنید",
         "retry": "دوباره امتحان کنید",
-        "save": "Save",
+        "save": "ذخیره کنید",
         "search": "جستجو کنید",
         "share": "به اشتراک بگذارید",
-        "submit": "Submit",
-        "update": "Update",
-        "view": "View"
+        "submit": "ارسال کنید",
+        "update": "به روز رسانی",
+        "view": "مشاهده کنید"
     },
     "state": {
-        "empty": "No records found",
-        "error": "Something went wrong",
-        "loading": "Loading...",
-        "noResults": "No results match your filters",
-        "pending": "Please wait...",
-        "saving": "Saving..."
+        "empty": "هیچ رکوردی یافت نشد",
+        "error": "مشکلی پیش آمد",
+        "loading": "در حال بارگیری...",
+        "noResults": "هیچ نتیجه ای با فیلترهای شما مطابقت ندارد",
+        "pending": "لطفا صبر کنید...",
+        "saving": "در حال ذخیره..."
     },
     "labels": {
-        "actions": "Actions",
+        "actions": "اقدامات",
         "all": "همه",
         "amount": "مقدار",
-        "createdAt": "Created at",
+        "createdAt": "ایجاد شده در",
         "date": "تاریخ",
-        "dateRange": "Date range",
-        "due": "Due",
+        "dateRange": "محدوده تاریخ",
+        "due": "سررسید",
         "email": "ایمیل",
         "from": "از",
         "mobile": "موبایل",
         "name": "نام",
-        "notes": "Notes",
+        "notes": "یادداشت ها",
         "paid": "پرداخت شده است",
-        "remarks": "Remarks",
+        "remarks": "اظهارات",
         "status": "وضعیت",
         "to": "به",
         "total": "مجموع",
-        "updatedAt": "Updated at"
+        "updatedAt": "به روز شده در"
     },
     "status": {
-        "active": "Active",
-        "cancelled": "Cancelled",
-        "completed": "Completed",
-        "confirmed": "Confirmed",
+        "active": "فعال",
+        "cancelled": "لغو شد",
+        "completed": "تکمیل شد",
+        "confirmed": "تایید شد",
         "failed": "شکست خورد",
-        "inactive": "Inactive",
+        "inactive": "غیر فعال",
         "paid": "پرداخت شده است",
-        "pending": "Pending",
-        "unpaid": "Unpaid"
+        "pending": "در انتظار",
+        "unpaid": "پرداخت نشده"
     },
     "routeError": {
-        "title": "Something went wrong",
-        "message": "An unexpected error occurred.",
+        "title": "مشکلی پیش آمد",
+        "message": "یک خطای غیرمنتظره رخ داد.",
         "tryAgain": "دوباره امتحان کنید",
-        "goToDashboard": "Go to dashboard"
+        "goToDashboard": "به داشبورد بروید"
     },
     "language": {
         "label": "زبان",
-        "switch": "Change language",
-        "switching": "Changing language…"
+        "switch": "تغییر زبان",
+        "switching": "در حال تغییر زبان…"
     },
     "theme": {
-        "toggle": "Toggle theme"
+        "toggle": "تغییر موضوع"
     },
     "vehicleTypes": {
         "bus": "اتوبوس",
         "launch": "راه اندازی کنید",
-        "ship": "Ship",
+        "ship": "کشتی",
         "train": "قطار",
-        "air": "Air"
+        "air": "هوا"
     },
     "roles": {
-        "accountant": "Accountant",
-        "admin": "Admin",
-        "counter": "Counter",
-        "executive": "Executive",
-        "manager": "Manager",
-        "merchant": "Merchant",
-        "staff": "Staff",
-        "supervisor": "Supervisor",
-        "unknown": "Staff",
-        "viewer": "Viewer"
+        "accountant": "حسابدار",
+        "admin": "مدیر",
+        "counter": "شمارنده",
+        "executive": "اجرایی",
+        "manager": "مدیر",
+        "merchant": "بازرگان",
+        "staff": "کارکنان",
+        "supervisor": "سرپرست",
+        "unknown": "کارکنان",
+        "viewer": "بیننده"
     },
     "errors": {
         "forbidden": "شما اجازه این کار را ندارید.",
         "generic": "مشکلی پیش آمد. لطفا دوباره امتحان کنید.",
-        "network": "Cannot reach the server. Check your internet connection.",
-        "notFound": "Requested resource was not found.",
-        "requestFailed": "Request failed",
-        "requestFailedWithStatus": "Request failed ({{status}})",
-        "server": "Server error. Please try again later.",
-        "sessionExpired": "Session expired. Please sign in again.",
-        "timeout": "Request timed out",
-        "unreachableHost": "Cannot reach API host ({{detail}})",
-        "validation": "Validation failed. Please check your input."
+        "network": "دسترسی به سرور امکان پذیر نیست. اتصال اینترنت خود را بررسی کنید.",
+        "notFound": "منبع درخواستی یافت نشد.",
+        "requestFailed": "درخواست ناموفق بود",
+        "requestFailedWithStatus": "درخواست ناموفق بود ({{status}})",
+        "server": "خطای سرور لطفاً بعداً دوباره امتحان کنید.",
+        "sessionExpired": "جلسه منقضی شد لطفاً دوباره وارد شوید.",
+        "timeout": "زمان درخواست تمام شد",
+        "unreachableHost": "دسترسی به میزبان API امکان پذیر نیست ({{detail}})",
+        "validation": "اعتبارسنجی ناموفق بود. لطفا ورودی خود را بررسی کنید."
     },
     "pagination": {
-        "next": "Next",
-        "pageOf": "Page {{page}} of {{total}}",
-        "previous": "Previous",
-        "rowsPerPage": "Rows per page",
-        "showing": "Showing {{from}}–{{to}} of {{total}}",
-        "totalRecords": "{{total}} records"
+        "next": "بعدی",
+        "pageOf": "صفحه {{page}} از {{total}}",
+        "previous": "قبلی",
+        "rowsPerPage": "ردیف در هر صفحه",
+        "showing": "نمایش {{from}}–{{to}} از {{total}}",
+        "totalRecords": "رکوردهای {{total}}"
     },
     "table": {
         "noResults": "هیچ نتیجه ای وجود ندارد",
-        "selectAll": "Select all rows",
-        "selectRow": "Select row"
+        "selectAll": "همه ردیف ها را انتخاب کنید",
+        "selectRow": "ردیف را انتخاب کنید"
     },
     "dialog": {
-        "close": "Close dialog",
-        "confirmDescription": "This action cannot be undone.",
-        "confirmTitle": "Are you sure?"
+        "close": "بستن گفتگو",
+        "confirmDescription": "این عمل قابل لغو نیست.",
+        "confirmTitle": "مطمئنی؟"
     },
     "placeholders": {
-        "date": "Select date",
-        "dateTime": "Select date and time",
-        "email": "Enter email address",
-        "number": "Enter number",
-        "password": "Enter password",
-        "phone": "Enter phone number",
+        "date": "تاریخ را انتخاب کنید",
+        "dateTime": "تاریخ و زمان را انتخاب کنید",
+        "email": "آدرس ایمیل را وارد کنید",
+        "number": "شماره را وارد کنید",
+        "password": "رمز عبور را وارد کنید",
+        "phone": "شماره تلفن را وارد کنید",
         "search": "جستجو کنید",
-        "time": "Select time",
-        "value": "Enter value"
+        "time": "زمان را انتخاب کنید",
+        "value": "مقدار را وارد کنید"
     },
     "a11y": {
         "hidePassword": "پنهان کردن رمز عبور",
-        "otpDigit": "Digit {{position}}",
+        "otpDigit": "رقم {{position}}",
         "showPassword": "نمایش رمز عبور"
     },
     "cities": {
-        "barisal": "Barisal",
-        "chattogram": "Chattogram",
-        "coxsBazar": "Cox's Bazar",
-        "dhaka": "Dhaka",
-        "khulna": "Khulna",
-        "mymensingh": "Mymensingh",
-        "rajshahi": "Rajshahi",
-        "rangpur": "Rangpur",
-        "sylhet": "Sylhet"
+        "barisal": "باریسال",
+        "chattogram": "چتوگرام",
+        "coxsBazar": "بازار کاکس",
+        "dhaka": "داکا",
+        "khulna": "خولنا",
+        "mymensingh": "میمنسینگ",
+        "rajshahi": "رجشاهی",
+        "rangpur": "رنگپور",
+        "sylhet": "سیلت"
     },
     "brand": {
-        "copyright": "© {{year}} Durpalla. All rights reserved.",
-        "tagline": "Connect your business",
-        "taglineDescription": "Manage bookings, settlements, and payments from one secure merchant platform."
+        "copyright": "© {{year}} Durpalla. تمامی حقوق محفوظ است.",
+        "tagline": "کسب و کار خود را به هم متصل کنید",
+        "taglineDescription": "رزروها، تسویه حساب‌ها و پرداخت‌ها را از یک پلتفرم تجاری امن مدیریت کنید."
     }
 }

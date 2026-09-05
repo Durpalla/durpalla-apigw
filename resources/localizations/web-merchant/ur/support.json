@@ -1,88 +1,88 @@
 {
     "list": {
-        "title": "Support Tickets",
-        "description": "Manage and respond to support requests.",
-        "newTicket": "New Ticket",
-        "searchPlaceholder": "Search ticket ID, subject, or contact…",
-        "empty": "No tickets match these filters.",
-        "loading": "Loading tickets…",
-        "viewTicket": "View ticket {{id}}"
+        "title": "سپورٹ ٹکٹس",
+        "description": "سپورٹ کی درخواستوں کا نظم کریں اور ان کا جواب دیں۔",
+        "newTicket": "نیا ٹکٹ",
+        "searchPlaceholder": "ٹکٹ کی شناخت، موضوع، یا رابطہ تلاش کریں…",
+        "empty": "کوئی ٹکٹ ان فلٹرز سے مماثل نہیں ہے۔",
+        "loading": "ٹکٹیں لوڈ ہو رہی ہیں…",
+        "viewTicket": "ٹکٹ {{id}} دیکھیں"
     },
     "stats": {
-        "all": "All Tickets",
-        "open": "Open",
-        "progress": "In Progress",
-        "resolved": "Resolved"
+        "all": "تمام ٹکٹس",
+        "open": "کھولیں۔",
+        "progress": "جاری ہے۔",
+        "resolved": "حل ہو گیا۔"
     },
     "table": {
-        "ticket": "Ticket",
-        "contact": "Contact",
-        "category": "Category",
-        "priority": "Priority",
+        "ticket": "ٹکٹ",
+        "contact": "رابطہ کریں۔",
+        "category": "زمرہ",
+        "priority": "ترجیح",
         "updated": "تازہ کاری",
-        "action": "Action"
+        "action": "ایکشن"
     },
     "create": {
-        "title": "Create New Ticket",
-        "subject": "Subject",
-        "subjectPlaceholder": "Briefly describe the issue",
-        "category": "Category",
-        "priority": "Priority",
-        "description": "Description",
-        "descriptionPlaceholder": "Include details that will help the support team investigate.",
-        "attachments": "Attachments",
-        "chooseFiles": "Choose files",
-        "attachmentHint": "Up to {{files}} files, {{size}} MB each",
-        "oversized": "{{name}} is larger than {{size}} MB",
-        "submit": "Create Ticket",
-        "submitting": "Creating…"
+        "title": "نیا ٹکٹ بنائیں",
+        "subject": "موضوع",
+        "subjectPlaceholder": "مختصراً مسئلہ بیان کریں۔",
+        "category": "زمرہ",
+        "priority": "ترجیح",
+        "description": "تفصیل",
+        "descriptionPlaceholder": "ایسی تفصیلات شامل کریں جو سپورٹ ٹیم کو تحقیقات میں مدد کریں گی۔",
+        "attachments": "منسلکات",
+        "chooseFiles": "فائلوں کا انتخاب کریں۔",
+        "attachmentHint": "{{files}} فائلوں تک، {{size}} MB ہر ایک",
+        "oversized": "{{name}} {{size}} MB سے بڑا ہے۔",
+        "submit": "ٹکٹ بنائیں",
+        "submitting": "تخلیق ہو رہا ہے…"
     },
     "detail": {
-        "fallbackId": "Ticket",
+        "fallbackId": "ٹکٹ",
         "fallbackSubject": "ٹکٹ کی تفصیلات",
-        "contact": "Contact",
+        "contact": "رابطہ کریں۔",
         "phone": "فون",
-        "created": "Created",
+        "created": "بنایا",
         "updated": "تازہ کاری",
-        "description": "Description",
-        "attachments": "Attachments",
-        "conversation": "Conversation",
-        "noReplies": "No replies yet.",
+        "description": "تفصیل",
+        "attachments": "منسلکات",
+        "conversation": "بات چیت",
+        "noReplies": "ابھی تک کوئی جواب نہیں ہے۔",
         "staffSuffix": "(سپورٹ)",
-        "closed": "Ticket closed",
-        "replyPlaceholder": "Write a reply…",
-        "sendReply": "Send reply",
+        "closed": "ٹکٹ بند",
+        "replyPlaceholder": "جواب لکھیں…",
+        "sendReply": "جواب بھیجیں۔",
         "sending": "بھیج رہا ہے…"
     },
     "status": {
         "all": "تمام",
-        "open": "Open",
-        "inprogress": "In Progress",
-        "onhold": "On Hold",
-        "resolved": "Resolved",
-        "closed": "Closed"
+        "open": "کھولیں۔",
+        "inprogress": "جاری ہے۔",
+        "onhold": "ہولڈ پر",
+        "resolved": "حل ہو گیا۔",
+        "closed": "بند"
     },
     "priority": {
         "all": "تمام",
-        "low": "Low",
-        "medium": "Medium",
-        "high": "High"
+        "low": "کم",
+        "medium": "درمیانہ",
+        "high": "اعلی"
     },
     "category": {
-        "booking": "Booking",
+        "booking": "بکنگ",
         "payment": "ادائیگی",
-        "transport": "Transport",
+        "transport": "ٹرانسپورٹ",
         "hotel": "ہوٹل",
-        "account": "Account",
-        "technical": "Technical",
+        "account": "اکاؤنٹ",
+        "technical": "تکنیکی",
         "general": "جنرل"
     },
     "toast": {
-        "loadFailed": "Failed to load support tickets",
-        "detailFailed": "Failed to load ticket details",
-        "created": "Support ticket created",
-        "createFailed": "Failed to create ticket",
-        "replySent": "Reply sent",
-        "replyFailed": "Failed to send reply"
+        "loadFailed": "سپورٹ ٹکٹ لوڈ کرنے میں ناکام",
+        "detailFailed": "ٹکٹ کی تفصیلات لوڈ کرنے میں ناکام",
+        "created": "سپورٹ ٹکٹ بنایا گیا۔",
+        "createFailed": "ٹکٹ بنانے میں ناکام",
+        "replySent": "جواب بھیجا گیا۔",
+        "replyFailed": "جواب بھیجنے میں ناکام"
     }
 }

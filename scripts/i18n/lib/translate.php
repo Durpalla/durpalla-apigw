@@ -155,9 +155,18 @@ function i18n_translate_en(string $text, string $target): string
     }
 
     [$protected, $tokens] = i18n_protect_tokens($text);
-    $fromApi = i18n_translate_via_google($protected, $target)
-        ?? i18n_translate_via_mymemory($protected, $target);
-    if ($fromApi === null) {
+    $fromApi = null;
+    for ($attempt = 0; $attempt < 4; ++$attempt) {
+        $fromApi = i18n_translate_via_google($protected, $target);
+        if ($fromApi === null) {
+            $fromApi = i18n_translate_via_mymemory($protected, $target);
+        }
+        if ($fromApi !== null && $fromApi !== '') {
+            break;
+        }
+        usleep(400000 * ($attempt + 1));
+    }
+    if ($fromApi === null || $fromApi === '') {
         // Do not cache failures — allow later retries.
         return $text;
     }
@@ -167,7 +176,7 @@ function i18n_translate_en(string $text, string $target): string
     if ((++$GLOBALS['i18n_translate_cache_writes'] % 50) === 0) {
         i18n_translate_save_cache();
     }
-    usleep(20000);
+    usleep(80000);
 
     return $translated;
 }

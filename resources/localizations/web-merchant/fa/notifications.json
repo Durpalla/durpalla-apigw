@@ -1,14 +1,14 @@
 {
     "page": {
-        "title": "Notifications",
-        "markAllRead": "Mark all read",
-        "markRead": "Mark read",
-        "unread": "Unread"
+        "title": "اطلاعیه ها",
+        "markAllRead": "علامت گذاری به عنوان خوانده شده",
+        "markRead": "علامت گذاری به عنوان خوانده شده",
+        "unread": "خوانده نشده"
     },
     "empty": {
-        "title": "No notifications"
+        "title": "بدون اطلاعیه"
     },
     "toast": {
-        "allMarkedRead": "All marked as read"
+        "allMarkedRead": "همه به عنوان خوانده شده علامت گذاری شدند"
     }
 }

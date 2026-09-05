@@ -1,22 +1,22 @@
 {
     "page": {
-        "title": "Live bookings",
-        "description": "Realtime created and cancelled booking events"
+        "title": "لائیو بکنگ",
+        "description": "ریئل ٹائم بکنگ ایونٹس بنائے اور منسوخ ہوئے۔"
     },
     "empty": {
-        "title": "Waiting for live events",
-        "description": "New bookings will appear here via Pusher."
+        "title": "لائیو ایونٹس کا انتظار کر رہے ہیں۔",
+        "description": "نئی بکنگ یہاں پشر کے ذریعے ظاہر ہوں گی۔"
     },
     "table": {
-        "kind": "Kind",
+        "kind": "قسم",
         "passenger": "مسافر",
-        "property": "Property",
+        "property": "جائیداد",
         "trip": "سفر",
-        "time": "Time",
-        "open": "Open"
+        "time": "وقت",
+        "open": "کھولیں۔"
     },
     "kind": {
-        "created": "Created",
-        "cancelled": "Cancelled"
+        "created": "بنایا",
+        "cancelled": "منسوخ"
     }
 }

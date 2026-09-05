@@ -1,77 +1,77 @@
 {
     "page": {
-        "exportCsv": "Export CSV",
-        "exportFailed": "Export failed",
-        "rangeInvalid": "Date range is invalid",
-        "revenue": "Revenue",
-        "bookings": "Bookings",
-        "unitsSold": "Units sold",
-        "occupancy": "Occupancy",
-        "settlements": "Settlements",
-        "cancelledBookings": "Cancelled bookings",
-        "revenueTrend": "Revenue trend",
-        "revenueTrendDescription": "Daily revenue for the selected period.",
-        "bookingVolume": "Booking volume",
-        "bookingVolumeDescription": "Daily booking count for the selected period.",
-        "utilizationTrend": "Utilization trend",
-        "utilizationTrendDescription": "Units sold across the selected period.",
-        "topVehicles": "Top vehicles",
-        "topRoutes": "Top routes",
+        "exportCsv": "صادرات CSV",
+        "exportFailed": "صادرات انجام نشد",
+        "rangeInvalid": "محدوده تاریخ نامعتبر است",
+        "revenue": "درآمد",
+        "bookings": "رزروها",
+        "unitsSold": "واحد فروخته شده",
+        "occupancy": "اشغال",
+        "settlements": "شهرک سازی ها",
+        "cancelledBookings": "رزروهای لغو شده",
+        "revenueTrend": "روند درآمد",
+        "revenueTrendDescription": "درآمد روزانه برای دوره انتخابی.",
+        "bookingVolume": "حجم رزرو",
+        "bookingVolumeDescription": "تعداد رزرو روزانه برای دوره انتخاب شده.",
+        "utilizationTrend": "روند استفاده",
+        "utilizationTrendDescription": "واحدهای فروخته شده در دوره انتخابی",
+        "topVehicles": "وسایل نقلیه برتر",
+        "topRoutes": "مسیرهای برتر",
         "date": "تاریخ",
-        "units": "Units",
-        "noSeries": "No series data returned for this report type.",
-        "noChartData": "No chart data returned."
+        "units": "واحدها",
+        "noSeries": "هیچ داده سری برای این نوع گزارش بازگردانده نشد.",
+        "noChartData": "هیچ داده نموداری برگردانده نشد."
     },
     "definitions": {
         "dashboard": {
-            "label": "Dashboard",
-            "title": "Business Overview",
-            "purpose": "Executive summary of performance across the selected period."
+            "label": "داشبورد",
+            "title": "بررسی اجمالی کسب و کار",
+            "purpose": "خلاصه اجرایی عملکرد در دوره انتخاب شده."
         },
         "bookings": {
-            "label": "Bookings",
-            "title": "Booking Report",
-            "purpose": "Booking volume by date, source, channel, and status."
+            "label": "رزروها",
+            "title": "گزارش رزرو",
+            "purpose": "حجم رزرو بر اساس تاریخ، منبع، کانال و وضعیت."
         },
         "revenue": {
-            "label": "Revenue",
-            "title": "Revenue Report",
-            "purpose": "Revenue, commission, taxes, refunds, and discounts."
+            "label": "درآمد",
+            "title": "گزارش درآمد",
+            "purpose": "درآمد، کمیسیون، مالیات، بازپرداخت و تخفیف."
         },
         "occupancy": {
-            "label": "Occupancy",
-            "title": "Occupancy / Utilization Report",
-            "purpose": "Hotel occupancy and transport seat utilization."
+            "label": "اشغال",
+            "title": "گزارش اشغال / بهره برداری",
+            "purpose": "اشغال هتل و استفاده از صندلی حمل و نقل."
         },
         "customers": {
-            "label": "Customers",
-            "title": "Customer Report",
-            "purpose": "Customer activity and booking trends."
+            "label": "مشتریان",
+            "title": "گزارش مشتری",
+            "purpose": "فعالیت مشتری و روند رزرو."
         },
         "units": {
-            "label": "Rooms / Vehicles",
-            "title": "Room / Vehicle Performance",
-            "purpose": "Performance of rooms, vehicles, and routes."
+            "label": "اتاق ها / وسایل نقلیه",
+            "title": "عملکرد اتاق / خودرو",
+            "purpose": "عملکرد اتاق ها، وسایل نقلیه و مسیرها."
         },
         "cancellations": {
-            "label": "Cancellations",
-            "title": "Cancellation & Refund Report",
-            "purpose": "Cancellation and refund trends for the selected period."
+            "label": "لغوها",
+            "title": "گزارش لغو و بازپرداخت",
+            "purpose": "روند لغو و بازپرداخت برای دوره انتخاب شده."
         },
         "payments": {
-            "label": "Payments",
-            "title": "Payment Report",
-            "purpose": "Payment collection, due amounts, and settlements."
+            "label": "پرداخت ها",
+            "title": "گزارش پرداخت",
+            "purpose": "جمع آوری پرداخت، مبالغ سررسید و تسویه حساب."
         },
         "staff-performance": {
-            "label": "Staff Performance",
-            "title": "Staff Performance",
-            "purpose": "Bookings and revenue handled by staff."
+            "label": "عملکرد کارکنان",
+            "title": "عملکرد کارکنان",
+            "purpose": "رزرو و درآمد توسط کارکنان اداره می شود."
         },
         "sales-channels": {
-            "label": "Sales Channels",
-            "title": "Sales & Channel Report",
-            "purpose": "Sales performance across booking channels."
+            "label": "کانال های فروش",
+            "title": "گزارش فروش و کانال",
+            "purpose": "عملکرد فروش در کانال های رزرو."
         }
     }
 }

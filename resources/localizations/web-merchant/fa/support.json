@@ -1,88 +1,88 @@
 {
     "list": {
-        "title": "Support Tickets",
-        "description": "Manage and respond to support requests.",
-        "newTicket": "New Ticket",
-        "searchPlaceholder": "Search ticket ID, subject, or contact…",
-        "empty": "No tickets match these filters.",
-        "loading": "Loading tickets…",
-        "viewTicket": "View ticket {{id}}"
+        "title": "بلیط های پشتیبانی",
+        "description": "مدیریت و پاسخ به درخواست های پشتیبانی.",
+        "newTicket": "بلیط جدید",
+        "searchPlaceholder": "جستجوی شناسه بلیت، موضوع یا تماس…",
+        "empty": "هیچ بلیطی با این فیلترها مطابقت ندارد.",
+        "loading": "در حال بارگیری بلیط…",
+        "viewTicket": "مشاهده بلیط {{id}}"
     },
     "stats": {
-        "all": "All Tickets",
-        "open": "Open",
-        "progress": "In Progress",
-        "resolved": "Resolved"
+        "all": "همه بلیط ها",
+        "open": "باز کنید",
+        "progress": "در حال انجام است",
+        "resolved": "حل شد"
     },
     "table": {
-        "ticket": "Ticket",
-        "contact": "Contact",
-        "category": "Category",
-        "priority": "Priority",
+        "ticket": "بلیط",
+        "contact": "تماس بگیرید",
+        "category": "دسته بندی",
+        "priority": "اولویت",
         "updated": "به روز شد",
-        "action": "Action"
+        "action": "اقدام"
     },
     "create": {
-        "title": "Create New Ticket",
-        "subject": "Subject",
-        "subjectPlaceholder": "Briefly describe the issue",
-        "category": "Category",
-        "priority": "Priority",
-        "description": "Description",
-        "descriptionPlaceholder": "Include details that will help the support team investigate.",
-        "attachments": "Attachments",
-        "chooseFiles": "Choose files",
-        "attachmentHint": "Up to {{files}} files, {{size}} MB each",
-        "oversized": "{{name}} is larger than {{size}} MB",
-        "submit": "Create Ticket",
-        "submitting": "Creating…"
+        "title": "بلیط جدید ایجاد کنید",
+        "subject": "موضوع",
+        "subjectPlaceholder": "موضوع را به اختصار شرح دهید",
+        "category": "دسته بندی",
+        "priority": "اولویت",
+        "description": "توضیحات",
+        "descriptionPlaceholder": "شامل جزئیاتی باشد که به تیم پشتیبانی در بررسی کمک می کند.",
+        "attachments": "پیوست ها",
+        "chooseFiles": "فایل ها را انتخاب کنید",
+        "attachmentHint": "حداکثر تا {{files}} فایل، هر کدام {{size}} مگابایت",
+        "oversized": "{{name}} بزرگتر از {{size}} مگابایت است",
+        "submit": "ایجاد بلیط",
+        "submitting": "در حال ایجاد…"
     },
     "detail": {
-        "fallbackId": "Ticket",
+        "fallbackId": "بلیط",
         "fallbackSubject": "جزئیات بلیط",
-        "contact": "Contact",
+        "contact": "تماس بگیرید",
         "phone": "تلفن",
-        "created": "Created",
+        "created": "ایجاد شد",
         "updated": "به روز شد",
-        "description": "Description",
-        "attachments": "Attachments",
-        "conversation": "Conversation",
-        "noReplies": "No replies yet.",
-        "staffSuffix": " (Support)",
-        "closed": "Ticket closed",
-        "replyPlaceholder": "Write a reply…",
-        "sendReply": "Send reply",
+        "description": "توضیحات",
+        "attachments": "پیوست ها",
+        "conversation": "گفتگو",
+        "noReplies": "هنوز پاسخی داده نشده است.",
+        "staffSuffix": "(پشتیبانی)",
+        "closed": "بلیط بسته شد",
+        "replyPlaceholder": "پاسخ بنویس…",
+        "sendReply": "ارسال پاسخ",
         "sending": "در حال ارسال…"
     },
     "status": {
         "all": "همه",
-        "open": "Open",
-        "inprogress": "In Progress",
-        "onhold": "On Hold",
-        "resolved": "Resolved",
-        "closed": "Closed"
+        "open": "باز کنید",
+        "inprogress": "در حال انجام است",
+        "onhold": "در انتظار",
+        "resolved": "حل شد",
+        "closed": "بسته شد"
     },
     "priority": {
         "all": "همه",
-        "low": "Low",
-        "medium": "Medium",
-        "high": "High"
+        "low": "پایین",
+        "medium": "متوسط",
+        "high": "بالا"
     },
     "category": {
-        "booking": "Booking",
+        "booking": "رزرو",
         "payment": "پرداخت",
-        "transport": "Transport",
+        "transport": "حمل و نقل",
         "hotel": "هتل",
-        "account": "Account",
-        "technical": "Technical",
+        "account": "حساب",
+        "technical": "فنی",
         "general": "ژنرال"
     },
     "toast": {
-        "loadFailed": "Failed to load support tickets",
-        "detailFailed": "Failed to load ticket details",
-        "created": "Support ticket created",
-        "createFailed": "Failed to create ticket",
-        "replySent": "Reply sent",
-        "replyFailed": "Failed to send reply"
+        "loadFailed": "بلیت‌های پشتیبانی بارگیری نشد",
+        "detailFailed": "جزئیات بلیت بارگیری نشد",
+        "created": "تیکت پشتیبانی ایجاد شد",
+        "createFailed": "بلیت ایجاد نشد",
+        "replySent": "پاسخ ارسال شد",
+        "replyFailed": "پاسخ ارسال نشد"
     }
 }

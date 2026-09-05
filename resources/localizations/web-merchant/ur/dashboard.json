@@ -1,74 +1,74 @@
 {
     "page": {
-        "title": "Dashboard",
-        "description": "Booking, trip and revenue overview",
-        "asOf": "Live overview as of {{time}}",
-        "rangeOption": "Last {{days}} days",
-        "newBooking": "New booking",
-        "newHotelBooking": "New hotel booking",
-        "live": "Live"
+        "title": "ڈیش بورڈ",
+        "description": "بکنگ، سفر اور آمدنی کا جائزہ",
+        "asOf": "{{time}} تک براہ راست جائزہ",
+        "rangeOption": "آخری {{days}} دن",
+        "newBooking": "نئی بکنگ",
+        "newHotelBooking": "نئی ہوٹل بکنگ",
+        "live": "جیو"
     },
     "stats": {
-        "bookingsRange": "Bookings ({{days}}d)",
-        "activeTrips": "Active trips today",
-        "revenueToday": "Revenue today",
-        "avgOccupancy": "Avg occupancy",
-        "periodRevenue": "Period revenue",
-        "periodBookings": "Period bookings",
-        "unitsSold": "Units sold",
-        "pendingCancelled": "Pending / cancelled",
+        "bookingsRange": "بکنگ ({{days}}d)",
+        "activeTrips": "آج کے فعال دورے",
+        "revenueToday": "آج کی آمدنی",
+        "avgOccupancy": "اوسط قبضہ",
+        "periodRevenue": "مدت کی آمدنی",
+        "periodBookings": "مدت کی بکنگ",
+        "unitsSold": "یونٹس فروخت ہوئے۔",
+        "pendingCancelled": "زیر التواء/منسوخ",
         "hotels": "ہوٹل",
-        "hotelBookings": "Hotel bookings",
-        "hotelConfirmed": "Hotel confirmed",
-        "hotelPayable": "Hotel payable"
+        "hotelBookings": "ہوٹل کی بکنگ",
+        "hotelConfirmed": "ہوٹل نے تصدیق کر دی۔",
+        "hotelPayable": "قابل ادائیگی ہوٹل"
     },
     "charts": {
-        "revenueTrend": "Revenue trend",
-        "revenueTrendDescription": "Daily collected revenue over the selected period.",
-        "bookingsVolume": "Bookings volume",
-        "bookingsVolumeDescription": "Daily booking count for the selected period.",
-        "bookingStatus": "Booking status",
-        "bookingStatusDescription": "Share of bookings by current status.",
-        "revenueSeries": "Revenue",
-        "bookingsSeries": "Bookings",
-        "noData": "No chart data",
-        "noStatusData": "No status data"
+        "revenueTrend": "آمدنی کا رجحان",
+        "revenueTrendDescription": "منتخب مدت کے دوران روزانہ جمع شدہ محصول۔",
+        "bookingsVolume": "بکنگ کا حجم",
+        "bookingsVolumeDescription": "منتخب مدت کے لیے روزانہ بکنگ کی گنتی۔",
+        "bookingStatus": "بکنگ کی حیثیت",
+        "bookingStatusDescription": "موجودہ حیثیت کے لحاظ سے بکنگ کا حصہ۔",
+        "revenueSeries": "آمدنی",
+        "bookingsSeries": "بکنگ",
+        "noData": "کوئی چارٹ ڈیٹا نہیں ہے۔",
+        "noStatusData": "کوئی اسٹیٹس ڈیٹا نہیں۔"
     },
     "widgets": {
-        "trendVsPrevious": "{{value}}% vs previous",
-        "noTrend": "No trend data",
-        "bookingsCount_one": "{{value}} booking",
-        "bookingsCount_other": "{{value}} bookings"
+        "trendVsPrevious": "{{value}}% بمقابلہ گزشتہ",
+        "noTrend": "کوئی ٹرینڈ ڈیٹا نہیں۔",
+        "bookingsCount_one": "{{value}} بکنگ",
+        "bookingsCount_other": "{{value}} بکنگ"
     },
     "top": {
-        "title": "Top performers",
-        "description": "Routes and vehicles with the highest activity.",
-        "routes": "Top routes",
-        "vehicles": "Top vehicles",
-        "empty": "No ranking data returned by the dashboard API yet."
+        "title": "سرفہرست اداکار",
+        "description": "سب سے زیادہ سرگرمی والے راستے اور گاڑیاں۔",
+        "routes": "اوپر والے راستے",
+        "vehicles": "ٹاپ گاڑیاں",
+        "empty": "ڈیش بورڈ API کے ذریعہ ابھی تک کوئی درجہ بندی کا ڈیٹا واپس نہیں کیا گیا ہے۔"
     },
     "hotels": {
         "title": "ہوٹل",
-        "description": "Jump into hotel operations.",
-        "manage": "Manage hotels"
+        "description": "ہوٹل کے کاموں میں چھلانگ لگائیں۔",
+        "manage": "ہوٹلوں کا انتظام کریں۔"
     },
     "recent": {
-        "title": "Recent bookings",
-        "descriptionTransport": "Latest transport bookings from the dashboard feed.",
-        "description": "Latest bookings from the dashboard feed.",
-        "viewAll": "View all",
-        "empty": "No recent bookings.",
-        "code": "Code",
+        "title": "حالیہ بکنگ",
+        "descriptionTransport": "ڈیش بورڈ فیڈ سے ٹرانسپورٹ کی تازہ ترین بکنگ۔",
+        "description": "ڈیش بورڈ فیڈ سے تازہ ترین بکنگ۔",
+        "viewAll": "تمام دیکھیں",
+        "empty": "کوئی حالیہ بکنگ نہیں ہے۔",
+        "code": "کوڈ",
         "passenger": "مسافر",
-        "open": "Open"
+        "open": "کھولیں۔"
     },
     "quickActions": {
-        "title": "Quick actions",
-        "description": "Jump into everyday operations.",
-        "trips": "Manage trips",
-        "transportBookings": "Transport bookings",
-        "hotelBookings": "Hotel bookings",
-        "reports": "Open reports",
-        "settlements": "Settlements"
+        "title": "فوری اقدامات",
+        "description": "روزمرہ کے کاموں میں چھلانگ لگائیں۔",
+        "trips": "دوروں کا انتظام کریں۔",
+        "transportBookings": "ٹرانسپورٹ بکنگ",
+        "hotelBookings": "ہوٹل کی بکنگ",
+        "reports": "رپورٹیں کھولیں۔",
+        "settlements": "بستیاں"
     }
 }

@@ -2,140 +2,140 @@
     "index": {
         "title": "تنظیمات",
         "profile": "نمایه",
-        "profileDescription": "Account details and password",
-        "twoFactor": "Two-factor authentication",
-        "twoFactorDescription": "Email OTP and authenticator app",
-        "gateways": "Payment & SMS gateways",
-        "gatewaysDescription": "Enable templates and manage credentials",
-        "appearance": "Appearance",
-        "appearanceDescription": "Light / dark theme and language",
-        "printers": "Printing",
-        "printersDescription": "Browser print guidance for tickets"
+        "profileDescription": "جزئیات حساب و رمز عبور",
+        "twoFactor": "احراز هویت دو مرحله ای",
+        "twoFactorDescription": "ایمیل OTP و برنامه احراز هویت",
+        "gateways": "درگاه های پرداخت و پیامک",
+        "gatewaysDescription": "قالب ها را فعال کنید و اعتبارنامه ها را مدیریت کنید",
+        "appearance": "ظاهر",
+        "appearanceDescription": "تم و زبان روشن/تاریک",
+        "printers": "چاپ",
+        "printersDescription": "راهنمای چاپ مرورگر برای بلیط"
     },
     "appearance": {
-        "title": "Appearance",
-        "description": "Theme and language preference",
-        "themeTitle": "Theme",
+        "title": "ظاهر",
+        "description": "تم و ترجیح زبان",
+        "themeTitle": "موضوع",
         "themes": {
-            "light": "Light",
-            "dark": "Dark",
-            "system": "System"
+            "light": "نور",
+            "dark": "تاریک",
+            "system": "سیستم"
         },
-        "languageDescription": "Applies to the whole merchant desk on this browser."
+        "languageDescription": "برای کل میز فروشنده در این مرورگر اعمال می شود."
     },
     "printers": {
-        "title": "Printing",
-        "description": "Web-only printing uses the browser print dialog",
-        "supportedTitle": "Supported on web",
-        "printApiBefore": "Tickets and payment tokens open a print-ready HTML view and use ",
+        "title": "چاپ",
+        "description": "چاپ فقط وب از گفتگوی چاپ مرورگر استفاده می کند",
+        "supportedTitle": "در وب پشتیبانی می شود",
+        "printApiBefore": "بلیط‌ها و نشانه‌های پرداخت یک نمای HTML آماده برای چاپ باز می‌کنند و از آن استفاده می‌کنند",
         "printApiAfter": ".",
-        "unsupported": "Bluetooth pocket printers, USB/serial ESC-POS devices, and biometric login are not available in this browser app.",
-        "guidance": "Use a system printer or PDF from the browser print dialog for counter operations."
+        "unsupported": "چاپگرهای جیبی بلوتوث، دستگاه‌های USB/سریال ESC-POS و ورود به سیستم بیومتریک در این برنامه مرورگر موجود نیستند.",
+        "guidance": "از یک چاپگر سیستمی یا PDF از گفتگوی چاپ مرورگر برای عملیات شمارنده استفاده کنید."
     },
     "profile": {
         "title": "پروفایل من",
-        "description": "Manage your merchant account and personal information.",
-        "fallbackName": "Merchant",
-        "merchantId": "Merchant ID: {{value}}",
-        "securitySettings": "Security settings",
+        "description": "حساب تجاری و اطلاعات شخصی خود را مدیریت کنید.",
+        "fallbackName": "بازرگان",
+        "merchantId": "شناسه فروشنده: {{value}}",
+        "securitySettings": "تنظیمات امنیتی",
         "photos": {
-            "title": "Photos",
-            "description": "Upload a profile picture. PNG, JPG, or WebP up to 2 MB.",
-            "descriptionWithLogo": "Upload a profile picture and your business logo. PNG, JPG, or WebP up to 2 MB.",
-            "avatarLabel": "Profile picture",
-            "avatarHint": "Shown on your account menu and profile.",
-            "changePicture": "Change picture",
-            "uploadPicture": "Upload picture",
-            "logoLabel": "Business logo",
-            "logoHint": "Used on invoices and merchant branding.",
-            "changeLogo": "Change logo",
-            "uploadLogo": "Upload logo",
-            "uploading": "Uploading..."
+            "title": "عکس ها",
+            "description": "یک عکس پروفایل آپلود کنید PNG، JPG یا WebP تا 2 مگابایت.",
+            "descriptionWithLogo": "تصویر نمایه و لوگوی کسب و کار خود را آپلود کنید. PNG، JPG یا WebP تا 2 مگابایت.",
+            "avatarLabel": "عکس پروفایل",
+            "avatarHint": "در منوی حساب و نمایه شما نشان داده شده است.",
+            "changePicture": "تغییر تصویر",
+            "uploadPicture": "عکس آپلود کنید",
+            "logoLabel": "لوگوی کسب و کار",
+            "logoHint": "در فاکتورها و نام تجاری تجاری استفاده می شود.",
+            "changeLogo": "تغییر لوگو",
+            "uploadLogo": "لوگو بارگذاری کنید",
+            "uploading": "در حال آپلود..."
         },
         "personal": {
-            "title": "Personal information",
-            "description": "Update the contact details associated with your account.",
-            "namePlaceholder": "Enter your name",
-            "emailReadOnly": "Email address cannot be changed.",
-            "mobilePlaceholder": "Enter your mobile number",
-            "save": "Save changes",
-            "saving": "Saving..."
+            "title": "اطلاعات شخصی",
+            "description": "اطلاعات تماس مرتبط با حساب خود را به روز کنید.",
+            "namePlaceholder": "نام خود را وارد کنید",
+            "emailReadOnly": "آدرس ایمیل قابل تغییر نیست",
+            "mobilePlaceholder": "شماره موبایل خود را وارد کنید",
+            "save": "ذخیره تغییرات",
+            "saving": "در حال ذخیره..."
         },
         "password": {
-            "title": "Change password",
-            "description": "Use at least eight characters for your new password.",
+            "title": "رمز عبور را تغییر دهید",
+            "description": "حداقل از هشت کاراکتر برای رمز عبور جدید خود استفاده کنید.",
             "current": "رمز عبور فعلی",
-            "currentPlaceholder": "Enter current password",
-            "new": "New password",
+            "currentPlaceholder": "رمز عبور فعلی را وارد کنید",
+            "new": "رمز عبور جدید",
             "newPlaceholder": "رمز عبور جدید را وارد کنید",
             "confirm": "رمز عبور جدید را تایید کنید",
             "confirmPlaceholder": "رمز عبور جدید را تایید کنید",
             "label": "رمز عبور",
-            "confirmLabel": "Password confirmation",
-            "submit": "Update password",
+            "confirmLabel": "تایید رمز عبور",
+            "submit": "رمز عبور را به روز کنید",
             "submitting": "در حال به روز رسانی..."
         },
         "twoFactor": {
-            "title": "Two-factor authentication",
-            "enabled": "{{method}} is enabled",
-            "authenticator": "Authenticator app",
-            "emailOtp": "Email OTP",
-            "default": "Email OTP is the default protection method",
-            "manage": "Manage 2FA",
-            "enable": "Enable 2FA"
+            "title": "احراز هویت دو مرحله ای",
+            "enabled": "{{method}} فعال است",
+            "authenticator": "برنامه Authenticator",
+            "emailOtp": "ایمیل OTP",
+            "default": "ایمیل OTP روش حفاظتی پیش فرض است",
+            "manage": "2FA را مدیریت کنید",
+            "enable": "2FA را فعال کنید"
         },
         "toast": {
-            "updated": "Profile updated",
+            "updated": "نمایه به روز شد",
             "passwordChanged": "رمز عبور تغییر کرد",
-            "avatarUpdated": "Profile picture updated",
-            "logoUpdated": "Business logo updated",
-            "invalidImageType": "Use a PNG, JPG, or WebP image",
-            "imageTooLarge": "Image must be 2 MB or smaller",
-            "invalidProfile": "Invalid profile details",
-            "invalidPassword": "Invalid password details"
+            "avatarUpdated": "عکس پروفایل به روز شد",
+            "logoUpdated": "لوگوی کسب و کار به روز شد",
+            "invalidImageType": "از یک تصویر PNG، JPG یا WebP استفاده کنید",
+            "imageTooLarge": "تصویر باید 2 مگابایت یا کوچکتر باشد",
+            "invalidProfile": "جزئیات نمایه نامعتبر است",
+            "invalidPassword": "جزئیات رمز عبور نامعتبر است"
         }
     },
     "twoFactor": {
-        "title": "Two-factor authentication",
-        "description": "Protect your merchant account with an additional verification step.",
-        "protectedTitle": "Your account is protected",
-        "protectedDescription": "Email OTP is the default verification method. You can switch to an authenticator app below.",
-        "badgeDefault": "Default",
-        "badgeEnabled": "Enabled",
+        "title": "احراز هویت دو مرحله ای",
+        "description": "با یک مرحله تأیید اضافی، از حساب تجاری خود محافظت کنید.",
+        "protectedTitle": "حساب شما محافظت می شود",
+        "protectedDescription": "ایمیل OTP روش پیش فرض تأیید است. می‌توانید در زیر به برنامه احراز هویت بروید.",
+        "badgeDefault": "پیش فرض",
+        "badgeEnabled": "فعال شد",
         "email": {
-            "title": "Email OTP",
-            "description": "Receive a six-digit verification code at {{email}}.",
-            "fallbackEmail": "your account email",
-            "enabling": "Enabling email OTP...",
-            "enabled": "Email OTP enabled",
-            "enable": "Use email OTP",
+            "title": "ایمیل OTP",
+            "description": "کد تأیید شش رقمی را در {{email}} دریافت کنید.",
+            "fallbackEmail": "ایمیل حساب شما",
+            "enabling": "فعال کردن OTP ایمیل...",
+            "enabled": "ایمیل OTP فعال شد",
+            "enable": "از OTP ایمیل استفاده کنید",
             "missing": "ابتدا یک آدرس ایمیل به نمایه خود اضافه کنید."
         },
         "authenticator": {
-            "title": "Authenticator app",
-            "description": "Use Google Authenticator, Authy, Microsoft Authenticator, or another compatible app.",
-            "preparing": "Preparing setup...",
-            "setupAgain": "Set up again",
-            "setup": "Set up authenticator"
+            "title": "برنامه Authenticator",
+            "description": "از Google Authenticator، Authy، Microsoft Authenticator یا سایر برنامه های سازگار استفاده کنید.",
+            "preparing": "در حال آماده سازی راه اندازی...",
+            "setupAgain": "دوباره راه اندازی کنید",
+            "setup": "Authenticator را تنظیم کنید"
         },
         "connect": {
-            "title": "Connect your authenticator app",
-            "description": "Add the account using the setup link or secret, then enter the six-digit code.",
-            "openApp": "Open in authenticator app",
-            "secretLabel": "Setup secret",
-            "codeLabel": "Verification code",
-            "verifying": "Verifying...",
-            "submit": "Enable authenticator",
-            "secretField": "Authenticator secret",
-            "codeField": "Authenticator code"
+            "title": "برنامه احراز هویت خود را وصل کنید",
+            "description": "حساب را با استفاده از پیوند راه اندازی یا مخفی اضافه کنید، سپس کد شش رقمی را وارد کنید.",
+            "openApp": "در برنامه authenticator باز کنید",
+            "secretLabel": "راز راه اندازی",
+            "codeLabel": "کد تایید",
+            "verifying": "در حال تأیید...",
+            "submit": "Authenticator را فعال کنید",
+            "secretField": "راز احراز هویت",
+            "codeField": "کد احراز هویت"
         },
         "recovery": {
-            "title": "Save your recovery codes",
-            "description": "Store these codes securely. Each code can be used once."
+            "title": "کدهای بازیابی خود را ذخیره کنید",
+            "description": "این کدها را به صورت ایمن ذخیره کنید. هر کد یک بار قابل استفاده است."
         },
         "toast": {
-            "emailEnabled": "Email OTP is enabled",
-            "authenticatorEnabled": "Authenticator app is enabled"
+            "emailEnabled": "ایمیل OTP فعال است",
+            "authenticatorEnabled": "برنامه Authenticator فعال است"
         }
     }
 }

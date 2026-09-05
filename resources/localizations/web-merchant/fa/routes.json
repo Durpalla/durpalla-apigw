@@ -1,70 +1,70 @@
 {
     "list": {
-        "title": "Routes",
-        "description": "Service routes and boarding points",
-        "createRoute": "Create route",
-        "searchPlaceholder": "Search routes",
-        "empty": "No routes",
+        "title": "مسیرها",
+        "description": "مسیرهای خدماتی و نقاط سواری",
+        "createRoute": "مسیر ایجاد کنید",
+        "searchPlaceholder": "جستجوی مسیرها",
+        "empty": "بدون مسیر",
         "details": "جزئیات",
         "columns": {
-            "service": "Service",
-            "type": "Type",
+            "service": "خدمات",
+            "type": "تایپ کنید",
             "routeNo": "خیر"
         }
     },
     "form": {
-        "createTitle": "Create route",
-        "nameOptional": "Name (optional)",
-        "namePlaceholder": "Auto-generated if left empty",
-        "routeName": "Route name",
-        "serviceType": "Service type",
-        "routeStops": "Route stops",
-        "routeStopsHint": "Add VIA ghats in the order the vehicle will visit them.",
-        "selectStop": "Select {{label}}",
-        "stopGhat": "Stop {{index}} ghat",
-        "moveUp": "Move {{label}} up",
-        "moveDown": "Move {{label}} down",
-        "removeStop": "Remove {{label}}",
-        "addVia": "Add VIA ghat",
-        "submit": "Create route",
-        "creating": "Creating...",
+        "createTitle": "مسیر ایجاد کنید",
+        "nameOptional": "نام (اختیاری)",
+        "namePlaceholder": "در صورت خالی ماندن به صورت خودکار تولید می شود",
+        "routeName": "نام مسیر",
+        "serviceType": "نوع خدمات",
+        "routeStops": "مسیر متوقف می شود",
+        "routeStopsHint": "Ghats VIA را به ترتیبی که وسیله نقلیه از آنها بازدید می کند، اضافه کنید.",
+        "selectStop": "{{label}} را انتخاب کنید",
+        "stopGhat": "توقف {{index}} ghat",
+        "moveUp": "{{label}} به بالا حرکت کنید",
+        "moveDown": "{{label}} را به پایین حرکت دهید",
+        "removeStop": "حذف {{label}}",
+        "addVia": "VIA ghat را اضافه کنید",
+        "submit": "مسیر ایجاد کنید",
+        "creating": "ایجاد...",
         "stops": {
-            "start": "Starting ghat",
-            "destination": "Destination",
+            "start": "شروع گات",
+            "destination": "مقصد",
             "via": "VIA stop {{index}}"
         },
         "errors": {
-            "minStops": "Add at least two route stops",
-            "duplicateGhat": "Each stop must use a different ghat"
+            "minStops": "حداقل دو ایستگاه مسیر اضافه کنید",
+            "duplicateGhat": "هر توقف باید از یک گات متفاوت استفاده کند"
         }
     },
     "detail": {
-        "fallbackName": "Route #{{id}}",
-        "notFound": "Route not found",
-        "description": "Route details and ordered boarding points",
-        "viaPricing": "Via Stop Pricing",
-        "viewTrips": "View Trips",
-        "timeline": "Route Timeline",
-        "information": "Route Information",
-        "stopFallback": "Stop {{index}}",
-        "emptyTitle": "No boarding points returned",
-        "emptyDescription": "The route API did not include ordered stop data.",
+        "fallbackName": "مسیر #{{id}}",
+        "notFound": "مسیر پیدا نشد",
+        "description": "جزئیات مسیر و نقاط پرواز سفارش داده شده",
+        "viaPricing": "از طریق توقف قیمت گذاری",
+        "viewTrips": "مشاهده سفرها",
+        "timeline": "جدول زمانی مسیر",
+        "information": "اطلاعات مسیر",
+        "stopFallback": "توقف {{index}}",
+        "emptyTitle": "هیچ امتیازی برای پرواز برگشت داده نشد",
+        "emptyDescription": "API مسیر شامل داده های توقف سفارش شده نیست.",
         "stops": {
-            "start": "Starting point",
-            "destination": "Destination",
-            "via": "VIA stop"
+            "start": "نقطه شروع",
+            "destination": "مقصد",
+            "via": "توقف VIA"
         },
         "fields": {
-            "routeNumber": "Route number",
-            "service": "Service",
-            "routeType": "Route type",
-            "routeId": "Route ID",
-            "routeName": "Route name",
-            "serviceType": "Service type",
-            "boardingPoints": "Boarding points"
+            "routeNumber": "شماره مسیر",
+            "service": "خدمات",
+            "routeType": "نوع مسیر",
+            "routeId": "شناسه مسیر",
+            "routeName": "نام مسیر",
+            "serviceType": "نوع خدمات",
+            "boardingPoints": "امتیاز سوار شدن"
         }
     },
     "toast": {
-        "created": "Route created"
+        "created": "مسیر ایجاد شد"
     }
 }

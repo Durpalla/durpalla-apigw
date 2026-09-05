@@ -1,22 +1,22 @@
 {
     "page": {
-        "title": "Live bookings",
-        "description": "Realtime created and cancelled booking events"
+        "title": "رزرو زنده",
+        "description": "رویدادهای رزرو بلادرنگ ایجاد و لغو شد"
     },
     "empty": {
-        "title": "Waiting for live events",
-        "description": "New bookings will appear here via Pusher."
+        "title": "منتظر رویدادهای زنده",
+        "description": "رزروهای جدید از طریق Pusher در اینجا ظاهر می شوند."
     },
     "table": {
-        "kind": "Kind",
+        "kind": "مهربان",
         "passenger": "مسافر",
-        "property": "Property",
+        "property": "اموال",
         "trip": "سفر",
-        "time": "Time",
-        "open": "Open"
+        "time": "زمان",
+        "open": "باز کنید"
     },
     "kind": {
-        "created": "Created",
-        "cancelled": "Cancelled"
+        "created": "ایجاد شد",
+        "cancelled": "لغو شد"
     }
 }

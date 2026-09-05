@@ -1,112 +1,112 @@
 {
     "list": {
-        "title": "Gateways",
-        "paymentTitle": "Payment gateways",
-        "smsTitle": "SMS gateways",
-        "description": "Enable approved payment and SMS providers. Configure credentials and params as instructed by each gateway class. Endpoints are managed by Durpalla Admin.",
-        "footnote": "You can remove an enabled gateway from your account. You cannot change its namespace or type. Endpoints are managed by Durpalla Admin.",
-        "emptyTitle": "No gateways enabled yet",
-        "emptyDescription": "Enable a template above to get started.",
-        "manage": "Manage"
+        "title": "دروازه ها",
+        "paymentTitle": "درگاه های پرداخت",
+        "smsTitle": "درگاه های پیامکی",
+        "description": "ارائه دهندگان پرداخت و پیامک تایید شده را فعال کنید. اعتبارنامه ها و پارامترها را طبق دستور هر کلاس دروازه پیکربندی کنید. نقاط پایانی توسط مدیر Durpalla مدیریت می شوند.",
+        "footnote": "می توانید یک دروازه فعال را از حساب خود حذف کنید. شما نمی توانید فضای نام یا نوع آن را تغییر دهید. نقاط پایانی توسط مدیر Durpalla مدیریت می شوند.",
+        "emptyTitle": "هنوز هیچ دروازه‌ای فعال نشده است",
+        "emptyDescription": "برای شروع یک الگوی بالا را فعال کنید.",
+        "manage": "مدیریت کنید"
     },
     "tabs": {
         "all": "همه",
         "payment": "پرداخت",
-        "sms": "SMS"
+        "sms": "اس ام اس"
     },
     "types": {
         "payment": "پرداخت",
-        "sms": "SMS"
+        "sms": "اس ام اس"
     },
     "enable": {
-        "title": "Enable a gateway",
-        "namespace": "Gateway namespace",
-        "selectPlaceholder": "Select…",
-        "noTemplates": "No templates available",
-        "action": "Enable",
-        "pending": "Enabling…",
-        "summaryTitle": "What you will need to configure",
-        "credentials": "Credentials: {{keys}}",
-        "params": "Params: {{keys}}",
-        "endpoints": "Endpoints (admin): {{keys}}"
+        "title": "یک دروازه را فعال کنید",
+        "namespace": "فضای نام دروازه",
+        "selectPlaceholder": "انتخاب…",
+        "noTemplates": "هیچ قالبی در دسترس نیست",
+        "action": "فعال کردن",
+        "pending": "فعال کردن…",
+        "summaryTitle": "آنچه برای پیکربندی نیاز دارید",
+        "credentials": "اعتبار: {{keys}}",
+        "params": "پارامترها: {{keys}}",
+        "endpoints": "نقاط پایانی (ادمین): {{keys}}"
     },
     "table": {
         "name": "نام",
-        "type": "Type",
-        "namespace": "Gateway namespace",
-        "code": "Code"
+        "type": "تایپ کنید",
+        "namespace": "فضای نام دروازه",
+        "code": "کد"
     },
     "remove": {
         "action": "حذف کنید",
-        "pending": "Removing…",
-        "title": "Remove {{name}}?",
-        "description": "This removes the gateway from your account only. You can enable the same template again later. Namespace and type cannot be changed."
+        "pending": "در حال حذف…",
+        "title": "{{name}} حذف شود؟",
+        "description": "با این کار دروازه فقط از حساب شما حذف می شود. می توانید بعداً دوباره همان الگو را فعال کنید. فضای نام و نوع را نمی توان تغییر داد."
     },
     "edit": {
         "subtitle": "{{type}} · {{code}}",
         "notFoundTitle": "دروازه پیدا نشد",
-        "notFoundDescription": "This gateway is not enabled for your account.",
-        "backToGateways": "Back to gateways",
-        "setupTitle": "Setup instructions",
-        "setupHint": "Configure credentials and params in the tabs below. Endpoints are managed by Durpalla Admin.",
+        "notFoundDescription": "این دروازه برای حساب شما فعال نیست.",
+        "backToGateways": "بازگشت به دروازه ها",
+        "setupTitle": "دستورالعمل های راه اندازی",
+        "setupHint": "اطلاعات کاربری و پارامترها را در برگه های زیر پیکربندی کنید. نقاط پایانی توسط مدیر Durpalla مدیریت می شوند.",
         "tabs": {
-            "info": "Info",
-            "credential": "Credentials",
-            "endpoint": "Endpoints",
-            "param": "Params"
+            "info": "اطلاعات",
+            "credential": "اعتبارنامه",
+            "endpoint": "نقاط پایانی",
+            "param": "پارامترها"
         }
     },
     "info": {
-        "title": "Gateway info",
+        "title": "اطلاعات دروازه",
         "name": "نام",
-        "code": "Code",
-        "type": "Type",
-        "channel": "Channel",
-        "namespace": "Gateway namespace",
-        "save": "Save info"
+        "code": "کد",
+        "type": "تایپ کنید",
+        "channel": "کانال",
+        "namespace": "فضای نام دروازه",
+        "save": "ذخیره اطلاعات"
     },
     "credentials": {
-        "title": "Credentials",
-        "add": "Add credential",
-        "hint": "Leave a value blank to keep the existing secret. Only filled values are updated.",
-        "keyPlaceholder": "key",
+        "title": "اعتبارنامه",
+        "add": "اضافه کردن اعتبار",
+        "hint": "یک مقدار را خالی بگذارید تا راز موجود باقی بماند. فقط مقادیر پر شده به روز می شوند.",
+        "keyPlaceholder": "کلید",
         "valuePlaceholder": "********",
-        "removeRow": "Remove credential",
-        "save": "Save credentials",
-        "noneFilled": "Enter at least one credential value to update"
+        "removeRow": "حذف اعتبار",
+        "save": "ذخیره اعتبار",
+        "noneFilled": "حداقل یک مقدار اعتبار را برای به‌روزرسانی وارد کنید"
     },
     "endpoints": {
-        "title": "Endpoints",
-        "hint": "Endpoints are managed by Durpalla Admin. You can only view their setup status here.",
+        "title": "نقاط پایانی",
+        "hint": "نقاط پایانی توسط مدیر Durpalla مدیریت می شوند. شما فقط می توانید وضعیت راه اندازی آنها را در اینجا مشاهده کنید.",
         "name": "نام",
-        "key": "Key",
-        "configured": "Configured by admin",
-        "pending": "Pending admin setup",
-        "emptyTitle": "No endpoints",
-        "emptyDescription": "This gateway does not declare endpoint keys."
+        "key": "کلید",
+        "configured": "توسط ادمین پیکربندی شده است",
+        "pending": "درانتظار راه اندازی مدیر",
+        "emptyTitle": "هیچ نقطه پایانی وجود ندارد",
+        "emptyDescription": "این دروازه کلیدهای نقطه پایانی را اعلام نمی کند."
     },
     "params": {
-        "title": "Params",
-        "add": "Add param",
-        "hint": "Add any key/value pairs this gateway needs. Suggested keys are prefilled when available.",
-        "keyPlaceholder": "key",
-        "valuePlaceholder": "value",
-        "removeRow": "Remove param",
-        "save": "Save params"
+        "title": "پارامترها",
+        "add": "پارامتر اضافه کنید",
+        "hint": "هر جفت کلید/مقدار مورد نیاز این دروازه را اضافه کنید. کلیدهای پیشنهادی در صورت موجود بودن از قبل پر می شوند.",
+        "keyPlaceholder": "کلید",
+        "valuePlaceholder": "ارزش",
+        "removeRow": "پارامتر را حذف کنید",
+        "save": "ذخیره پارامترها"
     },
     "field": {
-        "required": "required",
-        "requiredSuffix": " (required)",
-        "requiredMeta": " · required"
+        "required": "مورد نیاز است",
+        "requiredSuffix": "(الزامی)",
+        "requiredMeta": "· مورد نیاز"
     },
     "errors": {
         "notFound": "دروازه پیدا نشد",
-        "duplicateKey": "Duplicate key: {{key}}"
+        "duplicateKey": "کلید تکراری: {{key}}"
     },
     "toast": {
         "enabledSms": "دروازه فعال شد. برای شروع ارسال پیام، اعتبار نامه SMS را به روز کنید.",
         "enabledPayment": "دروازه فعال شد. برای شروع پذیرش پرداخت ها، اعتبارنامه ها را به روز کنید.",
-        "infoSaved": "Info saved",
+        "infoSaved": "اطلاعات ذخیره شد",
         "credentialsSaved": "اعتبارنامه ها ذخیره شد",
         "paramsSaved": "پارامترها ذخیره شدند"
     }

@@ -1,159 +1,159 @@
 {
     "page": {
-        "title": "Via Stop Pricing",
-        "description": "Manage ticket prices between boarding and dropping stoppages for each trip.",
-        "createFare": "Create Fare",
-        "loadFailed": "Unable to load fares"
+        "title": "اسٹاپ پرائسنگ کے ذریعے",
+        "description": "ہر ٹرپ کے لیے بورڈنگ اور ڈراپنگ اسٹاپیجز کے درمیان ٹکٹ کی قیمتوں کا نظم کریں۔",
+        "createFare": "کرایہ بنائیں",
+        "loadFailed": "کرایہ لوڈ کرنے سے قاصر"
     },
     "breadcrumb": {
-        "transport": "Transport",
-        "routes": "Routes",
-        "current": "Via Stop Pricing"
+        "transport": "ٹرانسپورٹ",
+        "routes": "راستے",
+        "current": "اسٹاپ پرائسنگ کے ذریعے"
     },
     "info": {
         "route": "راستہ",
-        "routeNo": "Route No",
-        "serviceType": "Service Type",
-        "vehicleTypePlan": "Vehicle Type Plan",
-        "planHint": "One plan applies to all vehicles of this type on the route."
+        "routeNo": "روٹ نمبر",
+        "serviceType": "سروس کی قسم",
+        "vehicleTypePlan": "گاڑی کی قسم کا منصوبہ",
+        "planHint": "روٹ پر اس قسم کی تمام گاڑیوں پر ایک منصوبہ لاگو ہوتا ہے۔"
     },
     "stats": {
-        "totalStops": "Total Stops",
-        "totalFareRules": "Total Fare Rules",
-        "activeRules": "Active Rules",
-        "lastUpdated": "Last Updated"
+        "totalStops": "ٹوٹل اسٹاپس",
+        "totalFareRules": "کرایہ کے کل قواعد",
+        "activeRules": "فعال قواعد",
+        "lastUpdated": "آخری تازہ کاری"
     },
     "filters": {
-        "boardingPlaceholder": "Boarding Stop",
-        "allBoarding": "All boarding",
-        "droppingPlaceholder": "Dropping Stop",
-        "allDropping": "All dropping",
+        "boardingPlaceholder": "بورڈنگ اسٹاپ",
+        "allBoarding": "تمام بورڈنگ",
+        "droppingPlaceholder": "ڈراپنگ اسٹاپ",
+        "allDropping": "سب گر رہے ہیں۔",
         "statusPlaceholder": "حیثیت",
-        "allStatus": "All status",
-        "searchPlaceholder": "Search fare"
+        "allStatus": "تمام حیثیت",
+        "searchPlaceholder": "کرایہ تلاش کریں۔"
     },
     "bulk": {
-        "action": "Bulk action",
-        "increasePercent": "Increase Price (%)",
-        "decreasePercent": "Decrease Price (%)",
-        "setFixed": "Set Fixed Price",
-        "applyPercent": "Apply Percentage",
-        "value": "Value",
+        "action": "بڑی تعداد میں کارروائی",
+        "increasePercent": "قیمت میں اضافہ (%)",
+        "decreasePercent": "قیمت میں کمی (%)",
+        "setFixed": "فکسڈ قیمت مقرر کریں۔",
+        "applyPercent": "فیصد کا اطلاق کریں۔",
+        "value": "قدر",
         "apply": "لگائیں",
-        "invalidValue": "Enter a valid value"
+        "invalidValue": "ایک درست قدر درج کریں۔"
     },
     "empty": {
-        "title": "No fare rules created yet.",
-        "description": "Create stop-to-stop prices once for this route and vehicle type. They apply automatically to matching vehicles and trips.",
-        "action": "Create First Fare"
+        "title": "ابھی تک کرایہ کے کوئی اصول نہیں بنائے گئے ہیں۔",
+        "description": "اس راستے اور گاڑی کی قسم کے لیے ایک بار اسٹاپ ٹو اسٹاپ قیمتیں بنائیں۔ وہ مماثل گاڑیوں اور دوروں پر خود بخود لاگو ہوتے ہیں۔",
+        "action": "پہلا کرایہ بنائیں"
     },
     "matrix": {
-        "noStops": "Add boarding points to this route before setting fares.",
-        "fromTo": "From / To",
-        "addPrice": "Add Price"
+        "noStops": "کرایہ مقرر کرنے سے پہلے اس راستے میں بورڈنگ پوائنٹس شامل کریں۔",
+        "fromTo": "سے / تک",
+        "addPrice": "قیمت شامل کریں۔"
     },
     "mobile": {
-        "seat": "Seat {{value}}",
-        "cabin": "Cabin {{value}}"
+        "seat": "نشست {{value}}",
+        "cabin": "کیبن {{value}}"
     },
     "detail": {
-        "title": "Selected Fare Details",
-        "emptyHint": "Select a fare cell to view details.",
-        "boardingStop": "Boarding Stop",
-        "droppingStop": "Dropping Stop",
-        "distance": "Distance",
-        "distanceValue": "{{value}} km",
-        "estimatedTime": "Estimated Travel Time",
-        "seatPrice": "Seat Price",
-        "cabinPrice": "Cabin Price",
-        "childFare": "Child Fare",
-        "vipFare": "VIP Fare",
+        "title": "منتخب کرائے کی تفصیلات",
+        "emptyHint": "تفصیلات دیکھنے کے لیے کرایہ سیل منتخب کریں۔",
+        "boardingStop": "بورڈنگ اسٹاپ",
+        "droppingStop": "ڈراپنگ اسٹاپ",
+        "distance": "فاصلہ",
+        "distanceValue": "{{value}} کلومیٹر",
+        "estimatedTime": "متوقع سفر کا وقت",
+        "seatPrice": "سیٹ کی قیمت",
+        "cabinPrice": "کیبن کی قیمت",
+        "childFare": "بچوں کا کرایہ",
+        "vipFare": "وی آئی پی کرایہ",
         "discount": "رعایت",
-        "discountValue": "Student {{student}}% · Senior {{senior}}%",
-        "agentCommission": "Agent Commission",
+        "discountValue": "طالب علم {{student}}% · سینئر {{senior}}%",
+        "agentCommission": "ایجنٹ کمیشن",
         "percentValue": "{{value}}%",
-        "seatTypes": "Available Seat Types",
+        "seatTypes": "دستیاب نشستوں کی اقسام",
         "defaultSeatType": "نشست",
-        "lastUpdated": "Last Updated",
-        "edit": "Edit Fare",
-        "duplicate": "Duplicate",
-        "enable": "Enable",
-        "disable": "Disable"
+        "lastUpdated": "آخری تازہ کاری",
+        "edit": "کرایہ میں ترمیم کریں۔",
+        "duplicate": "نقل",
+        "enable": "فعال کریں۔",
+        "disable": "غیر فعال کریں۔"
     },
     "form": {
-        "editTitle": "Edit Fare",
-        "addTitle": "Add Fare",
-        "subtitle": "Route + {{vehicleType}} plan — applied automatically to matching vehicles and trips.",
+        "editTitle": "کرایہ میں ترمیم کریں۔",
+        "addTitle": "کرایہ شامل کریں۔",
+        "subtitle": "روٹ + {{vehicleType}} پلان — مماثل گاڑیوں اور دوروں پر خودکار طور پر لاگو ہوتا ہے۔",
         "sections": {
-            "route": "Route & Basic Information",
-            "fare": "Fare Information",
-            "commission": "Commission & Charges",
-            "rules": "Price Rules & Availability",
-            "notes": "Notes (Optional)"
+            "route": "روٹ اور بنیادی معلومات",
+            "fare": "کرایہ کی معلومات",
+            "commission": "کمیشن اور چارجز",
+            "rules": "قیمت کے اصول اور دستیابی۔",
+            "notes": "نوٹس (اختیاری)"
         },
-        "boardingStop": "Boarding Stop",
-        "droppingStop": "Dropping Stop",
-        "selectStop": "Select stop",
-        "sameStop": "Boarding and dropping must differ.",
-        "vehicleClass": "Vehicle Class",
+        "boardingStop": "بورڈنگ اسٹاپ",
+        "droppingStop": "ڈراپنگ اسٹاپ",
+        "selectStop": "اسٹاپ کو منتخب کریں۔",
+        "sameStop": "بورڈنگ اور چھوڑنے میں فرق ہونا چاہیے۔",
+        "vehicleClass": "گاڑیوں کی کلاس",
         "vehicleClasses": {
-            "acBusiness": "AC Business",
-            "nonAc": "Non-AC",
-            "sleeper": "Sleeper"
+            "acBusiness": "اے سی بزنس",
+            "nonAc": "نان اے سی",
+            "sleeper": "سلیپر"
         },
-        "serviceType": "Service Type",
-        "distance": "Distance (Approx.)",
-        "estimatedTime": "Estimated Time",
+        "serviceType": "سروس کی قسم",
+        "distance": "فاصلہ (تقریباً)",
+        "estimatedTime": "تخمینی وقت",
         "estimatedTimePlaceholder": "2h 40m",
-        "seatPrice": "Seat Price",
-        "cabinPrice": "Cabin Price",
-        "childPrice": "Child Price (5-12 yrs)",
-        "infantPrice": "Infant Price (0-4 yrs)",
-        "vipPrice": "VIP Seat Price",
-        "ladiesPrice": "Ladies Seat Price",
-        "roundTripPrice": "Round Trip Price (Optional)",
-        "seniorDiscount": "Senior Citizen Discount (%)",
-        "studentDiscount": "Student Discount (%)",
-        "priceType": "Price Type",
-        "perSeat": "Per Seat",
-        "perCabin": "Per Cabin",
-        "agentCommission": "Agent Commission (%)",
-        "platformCommission": "Platform Commission (%)",
-        "tax": "Tax (%)",
-        "taxIncluded": "Tax Included in Price",
-        "taxIncludedHint": "Ticket price includes tax",
-        "applyForDays": "Apply for Days",
+        "seatPrice": "سیٹ کی قیمت",
+        "cabinPrice": "کیبن کی قیمت",
+        "childPrice": "بچے کی قیمت (5-12 سال)",
+        "infantPrice": "بچے کی قیمت (0-4 سال)",
+        "vipPrice": "VIP سیٹ کی قیمت",
+        "ladiesPrice": "لیڈیز سیٹ کی قیمت",
+        "roundTripPrice": "راؤنڈ ٹرپ کی قیمت (اختیاری)",
+        "seniorDiscount": "سینئر سٹیزن ڈسکاؤنٹ (%)",
+        "studentDiscount": "طلباء کی رعایت (%)",
+        "priceType": "قیمت کی قسم",
+        "perSeat": "فی سیٹ",
+        "perCabin": "فی کیبن",
+        "agentCommission": "ایجنٹ کمیشن (%)",
+        "platformCommission": "پلیٹ فارم کمیشن (%)",
+        "tax": "ٹیکس (%)",
+        "taxIncluded": "قیمت میں ٹیکس شامل ہے۔",
+        "taxIncludedHint": "ٹکٹ کی قیمت میں ٹیکس شامل ہے۔",
+        "applyForDays": "دنوں کے لیے درخواست دیں۔",
         "days": {
-            "everyDay": "Every Day",
-            "weekdays": "Weekdays",
-            "weekends": "Weekends"
+            "everyDay": "ہر روز",
+            "weekdays": "ہفتے کے دن",
+            "weekends": "ویک اینڈ"
         },
-        "weekendPrice": "Weekend Price",
-        "holidayPrice": "Holiday Price",
-        "peakHourPrice": "Peak Hour Price",
-        "effectiveFrom": "Effective From",
-        "effectiveTo": "Effective To",
-        "priority": "Priority",
-        "priorityHint": "Lower number has higher priority",
-        "notesPlaceholder": "Add any notes or conditions for this stop price…",
-        "save": "Save Fare"
+        "weekendPrice": "ہفتے کے آخر میں قیمت",
+        "holidayPrice": "چھٹیوں کی قیمت",
+        "peakHourPrice": "چوٹی گھنٹے کی قیمت",
+        "effectiveFrom": "سے موثر",
+        "effectiveTo": "کے لیے موثر",
+        "priority": "ترجیح",
+        "priorityHint": "کم نمبر کو زیادہ ترجیح حاصل ہے۔",
+        "notesPlaceholder": "اس اسٹاپ قیمت کے لیے کوئی بھی نوٹس یا شرائط شامل کریں…",
+        "save": "کرایہ بچائیں۔"
     },
     "delete": {
-        "title": "Delete fare rule?",
-        "description": "This removes the route plan fare and synced vehicle copies for this stop pair."
+        "title": "کرایہ کا اصول حذف کریں؟",
+        "description": "اس سے روٹ پلان کا کرایہ اور اس اسٹاپ پیئر کے لیے مطابقت پذیر گاڑی کی کاپیاں ہٹ جاتی ہیں۔"
     },
     "export": {
-        "boarding": "Boarding",
-        "dropping": "Dropping",
-        "fare": "Fare",
+        "boarding": "بورڈنگ",
+        "dropping": "گرانا",
+        "fare": "کرایہ",
         "status": "حیثیت",
         "updated": "تازہ کاری"
     },
     "toast": {
-        "saved": "Fare saved",
-        "bulkApplied": "Bulk update applied",
-        "deleted": "Fare deleted",
-        "enabled": "Fare enabled",
-        "disabled": "Fare disabled"
+        "saved": "کرایہ بچ گیا۔",
+        "bulkApplied": "بلک اپ ڈیٹ لاگو کر دیا گیا۔",
+        "deleted": "کرایہ حذف کر دیا گیا۔",
+        "enabled": "کرایہ فعال ہے۔",
+        "disabled": "کرایہ غیر فعال ہے۔"
     }
 }

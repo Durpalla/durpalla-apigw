@@ -1,70 +1,70 @@
 {
     "list": {
-        "title": "Routes",
-        "description": "Service routes and boarding points",
-        "createRoute": "Create route",
-        "searchPlaceholder": "Search routes",
-        "empty": "No routes",
+        "title": "راستے",
+        "description": "سروس کے راستے اور بورڈنگ پوائنٹس",
+        "createRoute": "راستہ بنائیں",
+        "searchPlaceholder": "راستے تلاش کریں۔",
+        "empty": "کوئی راستہ نہیں۔",
         "details": "تفصیلات",
         "columns": {
-            "service": "Service",
-            "type": "Type",
+            "service": "سروس",
+            "type": "قسم",
             "routeNo": "نہیں"
         }
     },
     "form": {
-        "createTitle": "Create route",
-        "nameOptional": "Name (optional)",
-        "namePlaceholder": "Auto-generated if left empty",
-        "routeName": "Route name",
-        "serviceType": "Service type",
-        "routeStops": "Route stops",
-        "routeStopsHint": "Add VIA ghats in the order the vehicle will visit them.",
-        "selectStop": "Select {{label}}",
-        "stopGhat": "Stop {{index}} ghat",
-        "moveUp": "Move {{label}} up",
-        "moveDown": "Move {{label}} down",
-        "removeStop": "Remove {{label}}",
-        "addVia": "Add VIA ghat",
-        "submit": "Create route",
-        "creating": "Creating...",
+        "createTitle": "راستہ بنائیں",
+        "nameOptional": "نام (اختیاری)",
+        "namePlaceholder": "اگر خالی چھوڑ دیا جائے تو خودکار طور پر پیدا ہوتا ہے۔",
+        "routeName": "راستے کا نام",
+        "serviceType": "سروس کی قسم",
+        "routeStops": "راستہ رک جاتا ہے۔",
+        "routeStopsHint": "VIA گھاٹ اس ترتیب میں شامل کریں کہ گاڑی ان پر جائے گی۔",
+        "selectStop": "{{label}} منتخب کریں",
+        "stopGhat": "{{index}} گھاٹ کو روکیں۔",
+        "moveUp": "{{label}} اوپر لے جائیں۔",
+        "moveDown": "{{label}} نیچے منتقل کریں۔",
+        "removeStop": "{{label}} ہٹائیں",
+        "addVia": "VIA گھاٹ شامل کریں۔",
+        "submit": "راستہ بنائیں",
+        "creating": "تخلیق کر رہا ہے...",
         "stops": {
-            "start": "Starting ghat",
-            "destination": "Destination",
-            "via": "VIA stop {{index}}"
+            "start": "ابتدائی گھاٹ",
+            "destination": "منزل",
+            "via": "VIA سٹاپ {{index}}"
         },
         "errors": {
-            "minStops": "Add at least two route stops",
-            "duplicateGhat": "Each stop must use a different ghat"
+            "minStops": "کم از کم دو روٹ اسٹاپس شامل کریں۔",
+            "duplicateGhat": "ہر اسٹاپ کو ایک مختلف گھاٹ استعمال کرنا چاہیے۔"
         }
     },
     "detail": {
-        "fallbackName": "Route #{{id}}",
-        "notFound": "Route not found",
-        "description": "Route details and ordered boarding points",
-        "viaPricing": "Via Stop Pricing",
-        "viewTrips": "View Trips",
-        "timeline": "Route Timeline",
-        "information": "Route Information",
-        "stopFallback": "Stop {{index}}",
-        "emptyTitle": "No boarding points returned",
-        "emptyDescription": "The route API did not include ordered stop data.",
+        "fallbackName": "راستہ #{{id}}",
+        "notFound": "راستہ نہیں ملا",
+        "description": "روٹ کی تفصیلات اور بورڈنگ پوائنٹس کا آرڈر دیا۔",
+        "viaPricing": "اسٹاپ پرائسنگ کے ذریعے",
+        "viewTrips": "ٹرپس دیکھیں",
+        "timeline": "روٹ ٹائم لائن",
+        "information": "راستے کی معلومات",
+        "stopFallback": "روکیں {{index}}",
+        "emptyTitle": "کوئی بورڈنگ پوائنٹ واپس نہیں آیا",
+        "emptyDescription": "روٹ API میں آرڈر شدہ سٹاپ ڈیٹا شامل نہیں تھا۔",
         "stops": {
-            "start": "Starting point",
-            "destination": "Destination",
-            "via": "VIA stop"
+            "start": "نقطہ آغاز",
+            "destination": "منزل",
+            "via": "VIA اسٹاپ"
         },
         "fields": {
-            "routeNumber": "Route number",
-            "service": "Service",
-            "routeType": "Route type",
-            "routeId": "Route ID",
-            "routeName": "Route name",
-            "serviceType": "Service type",
-            "boardingPoints": "Boarding points"
+            "routeNumber": "روٹ نمبر",
+            "service": "سروس",
+            "routeType": "راستے کی قسم",
+            "routeId": "راستے کی شناخت",
+            "routeName": "راستے کا نام",
+            "serviceType": "سروس کی قسم",
+            "boardingPoints": "بورڈنگ پوائنٹس"
         }
     },
     "toast": {
-        "created": "Route created"
+        "created": "راستہ بنایا"
     }
 }

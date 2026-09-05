@@ -1,77 +1,77 @@
 {
     "page": {
-        "exportCsv": "Export CSV",
-        "exportFailed": "Export failed",
-        "rangeInvalid": "Date range is invalid",
-        "revenue": "Revenue",
-        "bookings": "Bookings",
-        "unitsSold": "Units sold",
-        "occupancy": "Occupancy",
-        "settlements": "Settlements",
-        "cancelledBookings": "Cancelled bookings",
-        "revenueTrend": "Revenue trend",
-        "revenueTrendDescription": "Daily revenue for the selected period.",
-        "bookingVolume": "Booking volume",
-        "bookingVolumeDescription": "Daily booking count for the selected period.",
-        "utilizationTrend": "Utilization trend",
-        "utilizationTrendDescription": "Units sold across the selected period.",
-        "topVehicles": "Top vehicles",
-        "topRoutes": "Top routes",
+        "exportCsv": "CSV برآمد کریں۔",
+        "exportFailed": "ایکسپورٹ ناکام ہو گیا۔",
+        "rangeInvalid": "تاریخ کی حد غلط ہے۔",
+        "revenue": "آمدنی",
+        "bookings": "بکنگ",
+        "unitsSold": "یونٹس فروخت ہوئے۔",
+        "occupancy": "قبضہ",
+        "settlements": "بستیاں",
+        "cancelledBookings": "بکنگ منسوخ کر دی گئی۔",
+        "revenueTrend": "آمدنی کا رجحان",
+        "revenueTrendDescription": "منتخب مدت کے لیے روزانہ کی آمدنی۔",
+        "bookingVolume": "بکنگ کا حجم",
+        "bookingVolumeDescription": "منتخب مدت کے لیے روزانہ بکنگ کی گنتی۔",
+        "utilizationTrend": "استعمال کا رجحان",
+        "utilizationTrendDescription": "منتخب شدہ مدت میں فروخت ہونے والی یونٹس۔",
+        "topVehicles": "ٹاپ گاڑیاں",
+        "topRoutes": "اوپر والے راستے",
         "date": "تاریخ",
-        "units": "Units",
-        "noSeries": "No series data returned for this report type.",
-        "noChartData": "No chart data returned."
+        "units": "یونٹس",
+        "noSeries": "اس رپورٹ کی قسم کے لیے سیریز کا کوئی ڈیٹا واپس نہیں کیا گیا۔",
+        "noChartData": "کوئی چارٹ ڈیٹا واپس نہیں آیا۔"
     },
     "definitions": {
         "dashboard": {
-            "label": "Dashboard",
-            "title": "Business Overview",
-            "purpose": "Executive summary of performance across the selected period."
+            "label": "ڈیش بورڈ",
+            "title": "کاروبار کا جائزہ",
+            "purpose": "منتخب مدت میں کارکردگی کا ایگزیکٹو خلاصہ۔"
         },
         "bookings": {
-            "label": "Bookings",
-            "title": "Booking Report",
-            "purpose": "Booking volume by date, source, channel, and status."
+            "label": "بکنگ",
+            "title": "بکنگ رپورٹ",
+            "purpose": "تاریخ، ذریعہ، چینل، اور حیثیت کے لحاظ سے بکنگ کا حجم۔"
         },
         "revenue": {
-            "label": "Revenue",
-            "title": "Revenue Report",
-            "purpose": "Revenue, commission, taxes, refunds, and discounts."
+            "label": "آمدنی",
+            "title": "ریونیو رپورٹ",
+            "purpose": "ریونیو، کمیشن، ٹیکس، ریفنڈز، اور چھوٹ۔"
         },
         "occupancy": {
-            "label": "Occupancy",
-            "title": "Occupancy / Utilization Report",
-            "purpose": "Hotel occupancy and transport seat utilization."
+            "label": "قبضہ",
+            "title": "قبضے/استعمال کی رپورٹ",
+            "purpose": "ہوٹل کا قبضہ اور ٹرانسپورٹ سیٹ کا استعمال۔"
         },
         "customers": {
-            "label": "Customers",
-            "title": "Customer Report",
-            "purpose": "Customer activity and booking trends."
+            "label": "گاہکوں",
+            "title": "کسٹمر رپورٹ",
+            "purpose": "گاہک کی سرگرمی اور بکنگ کے رجحانات۔"
         },
         "units": {
-            "label": "Rooms / Vehicles",
-            "title": "Room / Vehicle Performance",
-            "purpose": "Performance of rooms, vehicles, and routes."
+            "label": "کمرے / گاڑیاں",
+            "title": "کمرہ / گاڑی کی کارکردگی",
+            "purpose": "کمروں، گاڑیوں اور راستوں کی کارکردگی۔"
         },
         "cancellations": {
-            "label": "Cancellations",
-            "title": "Cancellation & Refund Report",
-            "purpose": "Cancellation and refund trends for the selected period."
+            "label": "منسوخیاں",
+            "title": "منسوخی اور رقم کی واپسی کی رپورٹ",
+            "purpose": "منتخب مدت کے لیے منسوخی اور رقم کی واپسی کے رجحانات۔"
         },
         "payments": {
-            "label": "Payments",
-            "title": "Payment Report",
-            "purpose": "Payment collection, due amounts, and settlements."
+            "label": "ادائیگیاں",
+            "title": "ادائیگی کی رپورٹ",
+            "purpose": "ادائیگی کی وصولی، واجب الادا رقم، اور تصفیہ۔"
         },
         "staff-performance": {
-            "label": "Staff Performance",
-            "title": "Staff Performance",
-            "purpose": "Bookings and revenue handled by staff."
+            "label": "عملے کی کارکردگی",
+            "title": "عملے کی کارکردگی",
+            "purpose": "بکنگ اور ریونیو عملے کے ذریعے سنبھالا جاتا ہے۔"
         },
         "sales-channels": {
-            "label": "Sales Channels",
-            "title": "Sales & Channel Report",
-            "purpose": "Sales performance across booking channels."
+            "label": "سیلز چینلز",
+            "title": "سیلز اور چینل کی رپورٹ",
+            "purpose": "بکنگ چینلز پر فروخت کی کارکردگی۔"
         }
     }
 }

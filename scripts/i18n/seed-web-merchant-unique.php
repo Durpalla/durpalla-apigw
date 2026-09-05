@@ -121,6 +121,13 @@ foreach ($remote as $locale) {
         }
     }
 
+    $translatedUnique = $totalUnique - $miss;
+    $uniqueRatio = $totalUnique === 0 ? 1.0 : $translatedUnique / $totalUnique;
+    if ($uniqueRatio < 0.7) {
+        echo "{$locale} SKIP write (unique ratio=".round($uniqueRatio, 3)." < 0.7) — retry later\n";
+        continue;
+    }
+
     foreach (glob($enDir.'/*.json') ?: [] as $enNs) {
         $name = basename($enNs);
         if ($name === 'manifest.json') {
