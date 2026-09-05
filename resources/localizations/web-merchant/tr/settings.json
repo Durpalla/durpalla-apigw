@@ -1,0 +1,141 @@
+{
+    "index": {
+        "title": "Settings",
+        "profile": "Profile",
+        "profileDescription": "Account details and password",
+        "twoFactor": "Two-factor authentication",
+        "twoFactorDescription": "Email OTP and authenticator app",
+        "gateways": "Payment & SMS gateways",
+        "gatewaysDescription": "Enable templates and manage credentials",
+        "appearance": "Appearance",
+        "appearanceDescription": "Light / dark theme and language",
+        "printers": "Printing",
+        "printersDescription": "Browser print guidance for tickets"
+    },
+    "appearance": {
+        "title": "Appearance",
+        "description": "Theme and language preference",
+        "themeTitle": "Theme",
+        "themes": {
+            "light": "Light",
+            "dark": "Dark",
+            "system": "System"
+        },
+        "languageDescription": "Applies to the whole merchant desk on this browser."
+    },
+    "printers": {
+        "title": "Printing",
+        "description": "Web-only printing uses the browser print dialog",
+        "supportedTitle": "Supported on web",
+        "printApiBefore": "Tickets and payment tokens open a print-ready HTML view and use ",
+        "printApiAfter": ".",
+        "unsupported": "Bluetooth pocket printers, USB/serial ESC-POS devices, and biometric login are not available in this browser app.",
+        "guidance": "Use a system printer or PDF from the browser print dialog for counter operations."
+    },
+    "profile": {
+        "title": "My profile",
+        "description": "Manage your merchant account and personal information.",
+        "fallbackName": "Merchant",
+        "merchantId": "Merchant ID: {{value}}",
+        "securitySettings": "Security settings",
+        "photos": {
+            "title": "Photos",
+            "description": "Upload a profile picture. PNG, JPG, or WebP up to 2 MB.",
+            "descriptionWithLogo": "Upload a profile picture and your business logo. PNG, JPG, or WebP up to 2 MB.",
+            "avatarLabel": "Profile picture",
+            "avatarHint": "Shown on your account menu and profile.",
+            "changePicture": "Change picture",
+            "uploadPicture": "Upload picture",
+            "logoLabel": "Business logo",
+            "logoHint": "Used on invoices and merchant branding.",
+            "changeLogo": "Change logo",
+            "uploadLogo": "Upload logo",
+            "uploading": "Uploading..."
+        },
+        "personal": {
+            "title": "Personal information",
+            "description": "Update the contact details associated with your account.",
+            "namePlaceholder": "Enter your name",
+            "emailReadOnly": "Email address cannot be changed.",
+            "mobilePlaceholder": "Enter your mobile number",
+            "save": "Save changes",
+            "saving": "Saving..."
+        },
+        "password": {
+            "title": "Change password",
+            "description": "Use at least eight characters for your new password.",
+            "current": "Current password",
+            "currentPlaceholder": "Enter current password",
+            "new": "New password",
+            "newPlaceholder": "Enter new password",
+            "confirm": "Confirm new password",
+            "confirmPlaceholder": "Confirm new password",
+            "label": "Password",
+            "confirmLabel": "Password confirmation",
+            "submit": "Update password",
+            "submitting": "Updating..."
+        },
+        "twoFactor": {
+            "title": "Two-factor authentication",
+            "enabled": "{{method}} is enabled",
+            "authenticator": "Authenticator app",
+            "emailOtp": "Email OTP",
+            "default": "Email OTP is the default protection method",
+            "manage": "Manage 2FA",
+            "enable": "Enable 2FA"
+        },
+        "toast": {
+            "updated": "Profile updated",
+            "passwordChanged": "Password changed",
+            "avatarUpdated": "Profile picture updated",
+            "logoUpdated": "Business logo updated",
+            "invalidImageType": "Use a PNG, JPG, or WebP image",
+            "imageTooLarge": "Image must be 2 MB or smaller",
+            "invalidProfile": "Invalid profile details",
+            "invalidPassword": "Invalid password details"
+        }
+    },
+    "twoFactor": {
+        "title": "Two-factor authentication",
+        "description": "Protect your merchant account with an additional verification step.",
+        "protectedTitle": "Your account is protected",
+        "protectedDescription": "Email OTP is the default verification method. You can switch to an authenticator app below.",
+        "badgeDefault": "Default",
+        "badgeEnabled": "Enabled",
+        "email": {
+            "title": "Email OTP",
+            "description": "Receive a six-digit verification code at {{email}}.",
+            "fallbackEmail": "your account email",
+            "enabling": "Enabling email OTP...",
+            "enabled": "Email OTP enabled",
+            "enable": "Use email OTP",
+            "missing": "Add an email address to your profile first."
+        },
+        "authenticator": {
+            "title": "Authenticator app",
+            "description": "Use Google Authenticator, Authy, Microsoft Authenticator, or another compatible app.",
+            "preparing": "Preparing setup...",
+            "setupAgain": "Set up again",
+            "setup": "Set up authenticator"
+        },
+        "connect": {
+            "title": "Connect your authenticator app",
+            "description": "Add the account using the setup link or secret, then enter the six-digit code.",
+            "openApp": "Open in authenticator app",
+            "secretLabel": "Setup secret",
+            "codeLabel": "Verification code",
+            "verifying": "Verifying...",
+            "submit": "Enable authenticator",
+            "secretField": "Authenticator secret",
+            "codeField": "Authenticator code"
+        },
+        "recovery": {
+            "title": "Save your recovery codes",
+            "description": "Store these codes securely. Each code can be used once."
+        },
+        "toast": {
+            "emailEnabled": "Email OTP is enabled",
+            "authenticatorEnabled": "Authenticator app is enabled"
+        }
+    }
+}

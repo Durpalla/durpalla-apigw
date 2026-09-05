@@ -1,0 +1,77 @@
+{
+    "page": {
+        "exportCsv": "Export CSV",
+        "exportFailed": "Export failed",
+        "rangeInvalid": "Date range is invalid",
+        "revenue": "Revenue",
+        "bookings": "Bookings",
+        "unitsSold": "Units sold",
+        "occupancy": "Occupancy",
+        "settlements": "Settlements",
+        "cancelledBookings": "Cancelled bookings",
+        "revenueTrend": "Revenue trend",
+        "revenueTrendDescription": "Daily revenue for the selected period.",
+        "bookingVolume": "Booking volume",
+        "bookingVolumeDescription": "Daily booking count for the selected period.",
+        "utilizationTrend": "Utilization trend",
+        "utilizationTrendDescription": "Units sold across the selected period.",
+        "topVehicles": "Top vehicles",
+        "topRoutes": "Top routes",
+        "date": "Date",
+        "units": "Units",
+        "noSeries": "No series data returned for this report type.",
+        "noChartData": "No chart data returned."
+    },
+    "definitions": {
+        "dashboard": {
+            "label": "Dashboard",
+            "title": "Business Overview",
+            "purpose": "Executive summary of performance across the selected period."
+        },
+        "bookings": {
+            "label": "Bookings",
+            "title": "Booking Report",
+            "purpose": "Booking volume by date, source, channel, and status."
+        },
+        "revenue": {
+            "label": "Revenue",
+            "title": "Revenue Report",
+            "purpose": "Revenue, commission, taxes, refunds, and discounts."
+        },
+        "occupancy": {
+            "label": "Occupancy",
+            "title": "Occupancy / Utilization Report",
+            "purpose": "Hotel occupancy and transport seat utilization."
+        },
+        "customers": {
+            "label": "Customers",
+            "title": "Customer Report",
+            "purpose": "Customer activity and booking trends."
+        },
+        "units": {
+            "label": "Rooms / Vehicles",
+            "title": "Room / Vehicle Performance",
+            "purpose": "Performance of rooms, vehicles, and routes."
+        },
+        "cancellations": {
+            "label": "Cancellations",
+            "title": "Cancellation & Refund Report",
+            "purpose": "Cancellation and refund trends for the selected period."
+        },
+        "payments": {
+            "label": "Payments",
+            "title": "Payment Report",
+            "purpose": "Payment collection, due amounts, and settlements."
+        },
+        "staff-performance": {
+            "label": "Staff Performance",
+            "title": "Staff Performance",
+            "purpose": "Bookings and revenue handled by staff."
+        },
+        "sales-channels": {
+            "label": "Sales Channels",
+            "title": "Sales & Channel Report",
+            "purpose": "Sales performance across booking channels."
+        }
+    }
+}

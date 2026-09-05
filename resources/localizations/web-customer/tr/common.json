@@ -1,0 +1,12 @@
+{
+    "nav": {
+        "bus": "Otobüs",
+        "launch": "Vapur",
+        "boat": "Tekne",
+        "hotels": "Oteller"
+    },
+    "language": {
+        "label": "Dil",
+        "switch": "Dili değiştir"
+    }
+}

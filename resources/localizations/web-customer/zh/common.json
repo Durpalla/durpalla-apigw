@@ -1,0 +1,12 @@
+{
+    "nav": {
+        "bus": "巴士",
+        "launch": "客轮",
+        "boat": "船",
+        "hotels": "酒店"
+    },
+    "language": {
+        "label": "语言",
+        "switch": "更改语言"
+    }
+}

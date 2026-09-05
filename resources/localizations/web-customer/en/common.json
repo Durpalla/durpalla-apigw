@@ -1,0 +1,12 @@
+{
+    "nav": {
+        "bus": "Bus",
+        "launch": "Launch",
+        "boat": "Boat",
+        "hotels": "Hotels"
+    },
+    "language": {
+        "label": "Language",
+        "switch": "Change language"
+    }
+}

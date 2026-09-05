@@ -1,0 +1,9 @@
+{
+    "app": "web-customer",
+    "locale": "es",
+    "version": 1,
+    "fallback_locale": "en",
+    "format": "i18next-namespaces",
+    "key_count": 6,
+    "exported_at": "2026-09-05T09:27:14+00:00"
+}

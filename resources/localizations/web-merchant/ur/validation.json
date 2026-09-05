@@ -1,0 +1,29 @@
+{
+    "required": "{{label}} is required",
+    "minLength": "{{label}} must be at least {{min}} characters",
+    "maxLength": "{{label}} must not exceed {{max}} characters",
+    "invalid": "{{label}} is invalid",
+    "invalidValue": "Enter a valid {{label}}",
+    "invalidNumberValue": "Enter a valid {{label}} number",
+    "confirmationMismatch": "{{label}} confirmation does not match",
+    "wholeNumber": "{{label}} must be a whole number",
+    "minValue": "{{label}} must be at least {{min}}",
+    "maxValue": "{{label}} must not exceed {{max}}",
+    "validNumber": "{{label}} must be a valid number",
+    "maxDecimals": "{{label}} can have at most {{decimals}} decimal places",
+    "selectValid": "Select a valid {{label}}",
+    "dateOrder": "{{from}} must be before or equal to {{to}}",
+    "notInPast": "{{label}} cannot be in the past",
+    "sixDigits": "{{label}} must contain exactly 6 digits",
+    "bookingCodeInvalid": "Booking or ticket code contains invalid characters",
+    "labels": {
+        "email": "Email",
+        "mobile": "Mobile",
+        "password": "Password",
+        "dateTime": "Date and time",
+        "fromDate": "From date",
+        "toDate": "To date",
+        "verificationCode": "Verification code",
+        "bookingCode": "Booking or ticket code"
+    }
+}

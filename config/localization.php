@@ -19,4 +19,30 @@ return [
         'es' => ['name' => 'Spanish', 'native_name' => 'Español', 'direction' => 'ltr'],
         'it' => ['name' => 'Italian', 'native_name' => 'Italiano', 'direction' => 'ltr'],
     ],
+
+    'apps' => [
+        'customer-app' => [
+            'label' => 'Durpalla Customer (Flutter)',
+            'format' => 'arb-flat',
+            'bundled_locales' => ['en', 'bn'],
+        ],
+        'merchant-desk' => [
+            'label' => 'Durpalla Merchant Desk (Flutter)',
+            'format' => 'arb-flat',
+            'bundled_locales' => ['en', 'bn'],
+        ],
+        'web-merchant' => [
+            'label' => 'Durpalla Merchant Web',
+            'format' => 'i18next-namespaces',
+            'bundled_locales' => ['en', 'bn'],
+        ],
+        'web-customer' => [
+            'label' => 'Durpalla Customer Web',
+            'format' => 'i18next-namespaces',
+            'bundled_locales' => ['en', 'bn'],
+        ],
+    ],
+
+    /** @deprecated Legacy flat files; use app-specific paths */
+    'legacy_default_app' => 'web-customer',
 ];

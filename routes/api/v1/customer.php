@@ -47,7 +47,14 @@ Route::middleware(['JsonResponse'])->group(function () {
 
     Route::prefix('localizations')->group(function () {
         Route::get('/', [LocalizationController::class, 'index']);
-        Route::get('{locale}', [LocalizationController::class, 'show']);
+        Route::get('{app}', [LocalizationController::class, 'appIndex'])
+            ->where('app', 'customer-app|merchant-desk|web-merchant|web-customer');
+        Route::get('{app}/{locale}/{namespace}', [LocalizationController::class, 'showNamespace'])
+            ->where('app', 'customer-app|merchant-desk|web-merchant|web-customer');
+        Route::get('{app}/{locale}', [LocalizationController::class, 'showApp'])
+            ->where('app', 'customer-app|merchant-desk|web-merchant|web-customer');
+        Route::get('{locale}', [LocalizationController::class, 'legacyShow'])
+            ->where('locale', 'en|bn|hi|ar|zh|ur|fa|tr|es|it');
     });
 
     Route::prefix('support')->group(function () {

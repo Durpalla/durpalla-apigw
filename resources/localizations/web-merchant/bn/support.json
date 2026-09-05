@@ -1,0 +1,88 @@
+{
+    "list": {
+        "title": "সাপোর্ট টিকিট",
+        "description": "সাপোর্ট অনুরোধ পরিচালনা করুন ও উত্তর দিন।",
+        "newTicket": "নতুন টিকিট",
+        "searchPlaceholder": "টিকিট আইডি, বিষয় বা যোগাযোগ দিয়ে খুঁজুন…",
+        "empty": "এই ফিল্টারে কোনো টিকিট নেই।",
+        "loading": "টিকিট লোড হচ্ছে…",
+        "viewTicket": "টিকিট {{id}} দেখুন"
+    },
+    "stats": {
+        "all": "সব টিকিট",
+        "open": "খোলা",
+        "progress": "চলমান",
+        "resolved": "সমাধান হয়েছে"
+    },
+    "table": {
+        "ticket": "টিকিট",
+        "contact": "যোগাযোগ",
+        "category": "ক্যাটাগরি",
+        "priority": "অগ্রাধিকার",
+        "updated": "হালনাগাদ",
+        "action": "কার্যক্রম"
+    },
+    "create": {
+        "title": "নতুন টিকিট তৈরি করুন",
+        "subject": "বিষয়",
+        "subjectPlaceholder": "সমস্যাটি সংক্ষেপে লিখুন",
+        "category": "ক্যাটাগরি",
+        "priority": "অগ্রাধিকার",
+        "description": "বিবরণ",
+        "descriptionPlaceholder": "সাপোর্ট টিম যেন বিষয়টি বুঝতে পারে এমন বিস্তারিত তথ্য দিন।",
+        "attachments": "সংযুক্তি",
+        "chooseFiles": "ফাইল বাছাই করুন",
+        "attachmentHint": "সর্বোচ্চ {{files}}টি ফাইল, প্রতিটি {{size}} এমবি",
+        "oversized": "{{name}} ফাইলটি {{size}} এমবি-র বেশি",
+        "submit": "টিকিট তৈরি করুন",
+        "submitting": "তৈরি হচ্ছে…"
+    },
+    "detail": {
+        "fallbackId": "টিকিট",
+        "fallbackSubject": "টিকিটের বিবরণ",
+        "contact": "যোগাযোগ",
+        "phone": "ফোন",
+        "created": "তৈরি",
+        "updated": "হালনাগাদ",
+        "description": "বিবরণ",
+        "attachments": "সংযুক্তি",
+        "conversation": "কথোপকথন",
+        "noReplies": "এখনো কোনো উত্তর নেই।",
+        "staffSuffix": " (সাপোর্ট)",
+        "closed": "টিকিট বন্ধ",
+        "replyPlaceholder": "উত্তর লিখুন…",
+        "sendReply": "উত্তর পাঠান",
+        "sending": "পাঠানো হচ্ছে…"
+    },
+    "status": {
+        "all": "সব",
+        "open": "খোলা",
+        "inprogress": "চলমান",
+        "onhold": "স্থগিত",
+        "resolved": "সমাধান হয়েছে",
+        "closed": "বন্ধ"
+    },
+    "priority": {
+        "all": "সব",
+        "low": "কম",
+        "medium": "মাঝারি",
+        "high": "জরুরি"
+    },
+    "category": {
+        "booking": "বুকিং",
+        "payment": "পেমেন্ট",
+        "transport": "ট্রান্সপোর্ট",
+        "hotel": "হোটেল",
+        "account": "অ্যাকাউন্ট",
+        "technical": "কারিগরি",
+        "general": "সাধারণ"
+    },
+    "toast": {
+        "loadFailed": "সাপোর্ট টিকিট লোড করা যায়নি",
+        "detailFailed": "টিকিটের বিবরণ লোড করা যায়নি",
+        "created": "সাপোর্ট টিকিট তৈরি হয়েছে",
+        "createFailed": "টিকিট তৈরি করা যায়নি",
+        "replySent": "উত্তর পাঠানো হয়েছে",
+        "replyFailed": "উত্তর পাঠানো যায়নি"
+    }
+}

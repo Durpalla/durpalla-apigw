@@ -1,0 +1,14 @@
+{
+    "page": {
+        "title": "Notifications",
+        "markAllRead": "Mark all read",
+        "markRead": "Mark read",
+        "unread": "Unread"
+    },
+    "empty": {
+        "title": "No notifications"
+    },
+    "toast": {
+        "allMarkedRead": "All marked as read"
+    }
+}

@@ -1,0 +1,113 @@
+{
+    "list": {
+        "title": "Gateways",
+        "paymentTitle": "Payment gateways",
+        "smsTitle": "SMS gateways",
+        "description": "Enable approved payment and SMS providers. Configure credentials and params as instructed by each gateway class. Endpoints are managed by Durpalla Admin.",
+        "footnote": "You can remove an enabled gateway from your account. You cannot change its namespace or type. Endpoints are managed by Durpalla Admin.",
+        "emptyTitle": "No gateways enabled yet",
+        "emptyDescription": "Enable a template above to get started.",
+        "manage": "Manage"
+    },
+    "tabs": {
+        "all": "All",
+        "payment": "Payment",
+        "sms": "SMS"
+    },
+    "types": {
+        "payment": "Payment",
+        "sms": "SMS"
+    },
+    "enable": {
+        "title": "Enable a gateway",
+        "namespace": "Gateway namespace",
+        "selectPlaceholder": "Select…",
+        "noTemplates": "No templates available",
+        "action": "Enable",
+        "pending": "Enabling…",
+        "summaryTitle": "What you will need to configure",
+        "credentials": "Credentials: {{keys}}",
+        "params": "Params: {{keys}}",
+        "endpoints": "Endpoints (admin): {{keys}}"
+    },
+    "table": {
+        "name": "Name",
+        "type": "Type",
+        "namespace": "Gateway namespace",
+        "code": "Code"
+    },
+    "remove": {
+        "action": "Remove",
+        "pending": "Removing…",
+        "title": "Remove {{name}}?",
+        "description": "This removes the gateway from your account only. You can enable the same template again later. Namespace and type cannot be changed."
+    },
+    "edit": {
+        "subtitle": "{{type}} · {{code}}",
+        "notFoundTitle": "Gateway not found",
+        "notFoundDescription": "This gateway is not enabled for your account.",
+        "backToGateways": "Back to gateways",
+        "setupTitle": "Setup instructions",
+        "setupHint": "Configure credentials and params in the tabs below. Endpoints are managed by Durpalla Admin.",
+        "tabs": {
+            "info": "Info",
+            "credential": "Credentials",
+            "endpoint": "Endpoints",
+            "param": "Params"
+        }
+    },
+    "info": {
+        "title": "Gateway info",
+        "name": "Name",
+        "code": "Code",
+        "type": "Type",
+        "channel": "Channel",
+        "namespace": "Gateway namespace",
+        "save": "Save info"
+    },
+    "credentials": {
+        "title": "Credentials",
+        "add": "Add credential",
+        "hint": "Leave a value blank to keep the existing secret. Only filled values are updated.",
+        "keyPlaceholder": "key",
+        "valuePlaceholder": "********",
+        "removeRow": "Remove credential",
+        "save": "Save credentials",
+        "noneFilled": "Enter at least one credential value to update"
+    },
+    "endpoints": {
+        "title": "Endpoints",
+        "hint": "Endpoints are managed by Durpalla Admin. You can only view their setup status here.",
+        "name": "Name",
+        "key": "Key",
+        "configured": "Configured by admin",
+        "pending": "Pending admin setup",
+        "emptyTitle": "No endpoints",
+        "emptyDescription": "This gateway does not declare endpoint keys."
+    },
+    "params": {
+        "title": "Params",
+        "add": "Add param",
+        "hint": "Add any key/value pairs this gateway needs. Suggested keys are prefilled when available.",
+        "keyPlaceholder": "key",
+        "valuePlaceholder": "value",
+        "removeRow": "Remove param",
+        "save": "Save params"
+    },
+    "field": {
+        "required": "required",
+        "requiredSuffix": " (required)",
+        "requiredMeta": " · required"
+    },
+    "errors": {
+        "notFound": "Gateway not found",
+        "duplicateKey": "Duplicate key: {{key}}"
+    },
+    "toast": {
+        "enabledSms": "Gateway enabled. Update SMS credentials to start sending messages.",
+        "enabledPayment": "Gateway enabled. Update credentials to start accepting payments.",
+        "infoSaved": "Info saved",
+        "credentialsSaved": "Credentials saved",
+        "paramsSaved": "Params saved"
+    }
+}

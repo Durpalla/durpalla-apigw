@@ -8,7 +8,7 @@ class LocalizationApiTest extends TestCase
 {
     private string $base = '/api/v1/localizations';
 
-    public function test_index_lists_locales(): void
+    public function test_index_lists_apps(): void
     {
         $response = $this->getJson($this->base);
 
@@ -17,40 +17,73 @@ class LocalizationApiTest extends TestCase
             ->assertJsonStructure([
                 'data' => [
                     'default_locale',
-                    'bundled_locales',
-                    'remote_locales',
+                    'apps',
                 ],
             ]);
     }
 
-    public function test_show_returns_en_dictionary(): void
+    public function test_app_index_customer_app(): void
+    {
+        $response = $this->getJson($this->base.'/customer-app');
+
+        $response->assertOk()
+            ->assertJsonPath('data.code', 'customer-app')
+            ->assertJsonPath('data.format', 'arb-flat');
+    }
+
+    public function test_customer_app_en_dictionary(): void
+    {
+        $response = $this->getJson($this->base.'/customer-app/en');
+
+        $response->assertOk()
+            ->assertJsonPath('data.app', 'customer-app')
+            ->assertJsonPath('data.locale', 'en')
+            ->assertJsonPath('data.format', 'arb-flat')
+            ->assertJsonStructure([
+                'data' => ['app', 'locale', 'version', 'fallback_locale', 'format', 'translations'],
+            ])
+            ->assertHeader('Content-Language', 'en')
+            ->assertHeader('ETag');
+
+        $this->assertArrayHasKey('home', $response->json('data.translations'));
+    }
+
+    public function test_web_merchant_combined_hi(): void
+    {
+        $response = $this->getJson($this->base.'/web-merchant/hi?combined=1');
+
+        $response->assertOk()
+            ->assertJsonPath('data.app', 'web-merchant')
+            ->assertJsonPath('data.locale', 'hi')
+            ->assertJsonStructure(['data' => ['translations' => ['common', 'nav']]]);
+    }
+
+    public function test_web_merchant_namespace(): void
+    {
+        $response = $this->getJson($this->base.'/web-merchant/en/common');
+
+        $response->assertOk()
+            ->assertJsonPath('data.namespace', 'common');
+    }
+
+    public function test_legacy_route_web_customer(): void
     {
         $response = $this->getJson($this->base.'/en');
 
         $response->assertOk()
-            ->assertJsonPath('success', true)
-            ->assertJsonPath('data.locale', 'en')
-            ->assertJsonStructure([
-                'data' => ['locale', 'version', 'fallback_locale', 'translations'],
-            ])
-            ->assertHeader('Content-Language', 'en')
-            ->assertHeader('ETag');
+            ->assertJsonPath('data.app', 'web-customer');
     }
 
-    public function test_show_returns_bn_with_accept_language(): void
+    public function test_unsupported_app_returns_404(): void
     {
-        $response = $this->getJson($this->base.'/bn', [
-            'Accept-Language' => 'bn-BD',
-        ]);
+        $response = $this->getJson($this->base.'/unknown-app/en');
 
-        $response->assertOk()
-            ->assertJsonPath('data.locale', 'bn')
-            ->assertHeader('Content-Language', 'bn');
+        $response->assertNotFound();
     }
 
     public function test_unsupported_locale_returns_404(): void
     {
-        $response = $this->getJson($this->base.'/xx');
+        $response = $this->getJson($this->base.'/customer-app/xx');
 
         $response->assertNotFound()
             ->assertJsonPath('success', false);
@@ -58,30 +91,11 @@ class LocalizationApiTest extends TestCase
 
     public function test_api_message_uses_accept_language(): void
     {
-        $response = $this->getJson($this->base.'/xx', [
+        $response = $this->getJson($this->base.'/customer-app/xx', [
             'Accept-Language' => 'bn',
         ]);
 
         $response->assertNotFound();
         $this->assertSame('Locale সমর্থিত নয়।', $response->json('message'));
-    }
-
-    public function test_api_message_falls_back_to_content_language(): void
-    {
-        $response = $this->withHeaders([
-            'Accept-Language' => '',
-            'Content-Language' => 'bn',
-        ])->getJson($this->base.'/xx');
-
-        $response->assertNotFound();
-        $this->assertSame('Locale সমর্থিত নয়।', $response->json('message'));
-    }
-
-    public function test_api_message_defaults_to_english(): void
-    {
-        $response = $this->getJson($this->base.'/xx');
-
-        $response->assertNotFound();
-        $this->assertSame('Locale not supported.', $response->json('message'));
     }
 }

@@ -1,0 +1,74 @@
+{
+    "list": {
+        "title": "স্টাফ",
+        "description": "টিমের সদস্য, ধরন ও পারমিশন",
+        "add": "স্টাফ যোগ করুন",
+        "searchPlaceholder": "খুঁজুন",
+        "allTypes": "সব ধরন",
+        "empty": "কোনো স্টাফ পাওয়া যায়নি",
+        "type": "ধরন",
+        "permissions": "পারমিশন",
+        "none": "নেই",
+        "details": "বিস্তারিত"
+    },
+    "form": {
+        "title": "নতুন স্টাফ যোগ করুন",
+        "sections": {
+            "info": "স্টাফের তথ্য",
+            "permissions": "সরাসরি পারমিশন",
+            "access": "লগইন ও অ্যাক্সেস"
+        },
+        "photoLabel": "প্রোফাইল ছবি",
+        "photoUpload": "ছবি আপলোড",
+        "photoHint": "JPG/PNG, ২ এমবি",
+        "photoAlt": "স্টাফের প্রোফাইল ছবির প্রিভিউ",
+        "photoNote": "স্টাফের ছবি আপলোড সুবিধা চালু না হওয়া পর্যন্ত এই ছবি শুধু প্রিভিউ হিসেবেই থাকবে।",
+        "name": "পুরো নাম",
+        "namePlaceholder": "পুরো নাম লিখুন",
+        "nameField": "স্টাফের নাম",
+        "email": "ইমেইল ঠিকানা",
+        "emailPlaceholder": "ইমেইল ঠিকানা লিখুন",
+        "mobile": "মোবাইল নম্বর",
+        "type": "ধরন",
+        "typePlaceholder": "ধরন নির্বাচন করুন",
+        "permissionsHint": "এই স্টাফ ডেস্কের কোন কোন অংশে ঢুকতে পারবে তা নির্বাচন করুন।",
+        "password": "পাসওয়ার্ড",
+        "passwordPlaceholder": "পাসওয়ার্ড লিখুন",
+        "passwordConfirm": "পাসওয়ার্ড নিশ্চিত করুন",
+        "passwordConfirmPlaceholder": "পাসওয়ার্ড আবার লিখুন",
+        "save": "স্টাফ সংরক্ষণ"
+    },
+    "detail": {
+        "subtitle": "{{type}} · {{mobile}}",
+        "notFound": "স্টাফ পাওয়া যায়নি",
+        "activate": "সক্রিয় করুন",
+        "deactivate": "নিষ্ক্রিয় করুন",
+        "type": "ধরন",
+        "accessTitle": "ধরন ও পারমিশন",
+        "directPermissions": "সরাসরি পারমিশন",
+        "saveAccess": "অ্যাক্সেস সংরক্ষণ",
+        "none": "নেই",
+        "summaryTitle": "কাজের সারসংক্ষেপ",
+        "assignedVehicles": "নির্ধারিত যানবাহন",
+        "tripsToday": "আজকের ট্রিপ",
+        "upcomingTrips": "আসন্ন ট্রিপ",
+        "bookingsToday": "আজকের বুকিং",
+        "bookingsLast7Days": "বুকিং (৭ দিন)",
+        "vehiclesTitle": "যানবাহন",
+        "noneAssigned": "কোনো যানবাহন নির্ধারিত নেই",
+        "assignSelected": "নির্বাচিতগুলো নির্ধারণ করুন",
+        "activityTitle": "সাম্প্রতিক কার্যক্রম",
+        "noActivities": "কোনো কার্যক্রম নেই"
+    },
+    "errors": {
+        "passwordMismatch": "পাসওয়ার্ড দুটি মিলছে না",
+        "noPermission": "অন্তত একটি পারমিশন নির্বাচন করুন",
+        "photoTooLarge": "ছবি ২ এমবির কম হতে হবে"
+    },
+    "toast": {
+        "created": "স্টাফ তৈরি হয়েছে",
+        "statusUpdated": "অবস্থা হালনাগাদ হয়েছে",
+        "vehiclesAssigned": "যানবাহন নির্ধারণ করা হয়েছে",
+        "accessUpdated": "অ্যাক্সেস হালনাগাদ হয়েছে"
+    }
+}

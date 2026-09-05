@@ -1,0 +1,29 @@
+{
+    "required": "{{label}} আবশ্যক",
+    "minLength": "{{label}} কমপক্ষে {{min}} অক্ষরের হতে হবে",
+    "maxLength": "{{label}} সর্বোচ্চ {{max}} অক্ষরের হতে পারবে",
+    "invalid": "{{label}} সঠিক নয়",
+    "invalidValue": "সঠিক {{label}} লিখুন",
+    "invalidNumberValue": "সঠিক {{label}} নম্বর লিখুন",
+    "confirmationMismatch": "{{label}} নিশ্চিতকরণ মিলছে না",
+    "wholeNumber": "{{label}} পূর্ণসংখ্যা হতে হবে",
+    "minValue": "{{label}} কমপক্ষে {{min}} হতে হবে",
+    "maxValue": "{{label}} সর্বোচ্চ {{max}} হতে পারবে",
+    "validNumber": "{{label}} একটি সঠিক সংখ্যা হতে হবে",
+    "maxDecimals": "{{label}} সর্বোচ্চ {{decimals}} দশমিক ঘর রাখতে পারবে",
+    "selectValid": "সঠিক {{label}} নির্বাচন করুন",
+    "dateOrder": "{{from}} অবশ্যই {{to}} এর আগে বা সমান হতে হবে",
+    "notInPast": "{{label}} অতীতের হতে পারবে না",
+    "sixDigits": "{{label}} অবশ্যই ৬ সংখ্যার হতে হবে",
+    "bookingCodeInvalid": "বুকিং বা টিকিট কোডে অবৈধ অক্ষর রয়েছে",
+    "labels": {
+        "email": "ইমেইল",
+        "mobile": "মোবাইল",
+        "password": "পাসওয়ার্ড",
+        "dateTime": "তারিখ ও সময়",
+        "fromDate": "শুরুর তারিখ",
+        "toDate": "শেষের তারিখ",
+        "verificationCode": "যাচাই কোড",
+        "bookingCode": "বুকিং বা টিকিট কোড"
+    }
+}

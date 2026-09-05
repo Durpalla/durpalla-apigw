@@ -1,0 +1,161 @@
+{
+    "actions": {
+        "add": "Add",
+        "back": "Back",
+        "cancel": "Cancel",
+        "close": "Close",
+        "collect": "Collect",
+        "confirm": "Confirm",
+        "create": "Create",
+        "delete": "Delete",
+        "download": "Download",
+        "edit": "Edit",
+        "export": "Export",
+        "filter": "Filter",
+        "print": "Print",
+        "refresh": "Refresh",
+        "remove": "Remove",
+        "reset": "Reset",
+        "retry": "Retry",
+        "save": "Save",
+        "search": "Search",
+        "share": "Share",
+        "submit": "Submit",
+        "update": "Update",
+        "view": "View"
+    },
+    "state": {
+        "empty": "No records found",
+        "error": "Something went wrong",
+        "loading": "Loading...",
+        "noResults": "No results match your filters",
+        "pending": "Please wait...",
+        "saving": "Saving..."
+    },
+    "labels": {
+        "actions": "Actions",
+        "all": "All",
+        "amount": "Amount",
+        "createdAt": "Created at",
+        "date": "Date",
+        "dateRange": "Date range",
+        "due": "Due",
+        "email": "Email",
+        "from": "From",
+        "mobile": "Mobile",
+        "name": "Name",
+        "notes": "Notes",
+        "paid": "Paid",
+        "remarks": "Remarks",
+        "status": "Status",
+        "to": "To",
+        "total": "Total",
+        "updatedAt": "Updated at"
+    },
+    "status": {
+        "active": "Active",
+        "cancelled": "Cancelled",
+        "completed": "Completed",
+        "confirmed": "Confirmed",
+        "failed": "Failed",
+        "inactive": "Inactive",
+        "paid": "Paid",
+        "pending": "Pending",
+        "unpaid": "Unpaid"
+    },
+    "routeError": {
+        "title": "Something went wrong",
+        "message": "An unexpected error occurred.",
+        "tryAgain": "Try again",
+        "goToDashboard": "Go to dashboard"
+    },
+    "language": {
+        "label": "Language",
+        "switch": "Change language"
+    },
+    "theme": {
+        "toggle": "Toggle theme"
+    },
+    "vehicleTypes": {
+        "bus": "Bus",
+        "launch": "Launch",
+        "ship": "Ship",
+        "train": "Train",
+        "air": "Air"
+    },
+    "roles": {
+        "accountant": "Accountant",
+        "admin": "Admin",
+        "counter": "Counter",
+        "executive": "Executive",
+        "manager": "Manager",
+        "merchant": "Merchant",
+        "staff": "Staff",
+        "supervisor": "Supervisor",
+        "unknown": "Staff",
+        "viewer": "Viewer"
+    },
+    "errors": {
+        "forbidden": "You do not have permission to do that.",
+        "generic": "Something went wrong. Please try again.",
+        "network": "Cannot reach the server. Check your internet connection.",
+        "notFound": "Requested resource was not found.",
+        "requestFailed": "Request failed",
+        "requestFailedWithStatus": "Request failed ({{status}})",
+        "server": "Server error. Please try again later.",
+        "sessionExpired": "Session expired. Please sign in again.",
+        "timeout": "Request timed out",
+        "unreachableHost": "Cannot reach API host ({{detail}})",
+        "validation": "Validation failed. Please check your input."
+    },
+    "pagination": {
+        "next": "Next",
+        "pageOf": "Page {{page}} of {{total}}",
+        "previous": "Previous",
+        "rowsPerPage": "Rows per page",
+        "showing": "Showing {{from}}–{{to}} of {{total}}",
+        "totalRecords": "{{total}} records"
+    },
+    "table": {
+        "noResults": "No results",
+        "selectAll": "Select all rows",
+        "selectRow": "Select row"
+    },
+    "dialog": {
+        "close": "Close dialog",
+        "confirmDescription": "This action cannot be undone.",
+        "confirmTitle": "Are you sure?"
+    },
+    "placeholders": {
+        "date": "Select date",
+        "dateTime": "Select date and time",
+        "email": "Enter email address",
+        "number": "Enter number",
+        "password": "Enter password",
+        "phone": "Enter phone number",
+        "search": "Search",
+        "time": "Select time",
+        "value": "Enter value"
+    },
+    "a11y": {
+        "hidePassword": "Hide password",
+        "otpDigit": "Digit {{position}}",
+        "showPassword": "Show password"
+    },
+    "cities": {
+        "barisal": "Barisal",
+        "chattogram": "Chattogram",
+        "coxsBazar": "Cox's Bazar",
+        "dhaka": "Dhaka",
+        "khulna": "Khulna",
+        "mymensingh": "Mymensingh",
+        "rajshahi": "Rajshahi",
+        "rangpur": "Rangpur",
+        "sylhet": "Sylhet"
+    },
+    "brand": {
+        "copyright": "© {{year}} Durpalla. All rights reserved.",
+        "tagline": "Connect your business",
+        "taglineDescription": "Manage bookings, settlements, and payments from one secure merchant platform."
+    }
+}

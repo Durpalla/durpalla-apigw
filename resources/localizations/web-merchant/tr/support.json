@@ -1,0 +1,88 @@
+{
+    "list": {
+        "title": "Support Tickets",
+        "description": "Manage and respond to support requests.",
+        "newTicket": "New Ticket",
+        "searchPlaceholder": "Search ticket ID, subject, or contact…",
+        "empty": "No tickets match these filters.",
+        "loading": "Loading tickets…",
+        "viewTicket": "View ticket {{id}}"
+    },
+    "stats": {
+        "all": "All Tickets",
+        "open": "Open",
+        "progress": "In Progress",
+        "resolved": "Resolved"
+    },
+    "table": {
+        "ticket": "Ticket",
+        "contact": "Contact",
+        "category": "Category",
+        "priority": "Priority",
+        "updated": "Updated",
+        "action": "Action"
+    },
+    "create": {
+        "title": "Create New Ticket",
+        "subject": "Subject",
+        "subjectPlaceholder": "Briefly describe the issue",
+        "category": "Category",
+        "priority": "Priority",
+        "description": "Description",
+        "descriptionPlaceholder": "Include details that will help the support team investigate.",
+        "attachments": "Attachments",
+        "chooseFiles": "Choose files",
+        "attachmentHint": "Up to {{files}} files, {{size}} MB each",
+        "oversized": "{{name}} is larger than {{size}} MB",
+        "submit": "Create Ticket",
+        "submitting": "Creating…"
+    },
+    "detail": {
+        "fallbackId": "Ticket",
+        "fallbackSubject": "Ticket details",
+        "contact": "Contact",
+        "phone": "Phone",
+        "created": "Created",
+        "updated": "Updated",
+        "description": "Description",
+        "attachments": "Attachments",
+        "conversation": "Conversation",
+        "noReplies": "No replies yet.",
+        "staffSuffix": " (Support)",
+        "closed": "Ticket closed",
+        "replyPlaceholder": "Write a reply…",
+        "sendReply": "Send reply",
+        "sending": "Sending…"
+    },
+    "status": {
+        "all": "All",
+        "open": "Open",
+        "inprogress": "In Progress",
+        "onhold": "On Hold",
+        "resolved": "Resolved",
+        "closed": "Closed"
+    },
+    "priority": {
+        "all": "All",
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+    },
+    "category": {
+        "booking": "Booking",
+        "payment": "Payment",
+        "transport": "Transport",
+        "hotel": "Hotel",
+        "account": "Account",
+        "technical": "Technical",
+        "general": "General"
+    },
+    "toast": {
+        "loadFailed": "Failed to load support tickets",
+        "detailFailed": "Failed to load ticket details",
+        "created": "Support ticket created",
+        "createFailed": "Failed to create ticket",
+        "replySent": "Reply sent",
+        "replyFailed": "Failed to send reply"
+    }
+}

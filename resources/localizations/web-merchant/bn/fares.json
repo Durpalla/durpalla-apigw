@@ -1,0 +1,159 @@
+{
+    "page": {
+        "title": "ভায়া স্টপ ভাড়া",
+        "description": "প্রতিটি ট্রিপে বোর্ডিং ও ড্রপিং স্টপের মধ্যে টিকিটের ভাড়া নির্ধারণ করুন।",
+        "createFare": "ভাড়া তৈরি করুন",
+        "loadFailed": "ভাড়ার তথ্য লোড করা যায়নি"
+    },
+    "breadcrumb": {
+        "transport": "পরিবহন",
+        "routes": "রুট",
+        "current": "ভায়া স্টপ ভাড়া"
+    },
+    "info": {
+        "route": "রুট",
+        "routeNo": "রুট নম্বর",
+        "serviceType": "সার্ভিসের ধরন",
+        "vehicleTypePlan": "যানবাহনের ধরন অনুযায়ী প্ল্যান",
+        "planHint": "এই রুটে একই ধরনের সব যানবাহনের জন্য একটি প্ল্যানই প্রযোজ্য।"
+    },
+    "stats": {
+        "totalStops": "মোট স্টপ",
+        "totalFareRules": "মোট ভাড়ার নিয়ম",
+        "activeRules": "সক্রিয় নিয়ম",
+        "lastUpdated": "সর্বশেষ হালনাগাদ"
+    },
+    "filters": {
+        "boardingPlaceholder": "বোর্ডিং স্টপ",
+        "allBoarding": "সব বোর্ডিং স্টপ",
+        "droppingPlaceholder": "ড্রপিং স্টপ",
+        "allDropping": "সব ড্রপিং স্টপ",
+        "statusPlaceholder": "অবস্থা",
+        "allStatus": "সব অবস্থা",
+        "searchPlaceholder": "ভাড়া খুঁজুন"
+    },
+    "bulk": {
+        "action": "একসাথে পরিবর্তন",
+        "increasePercent": "ভাড়া বাড়ান (%)",
+        "decreasePercent": "ভাড়া কমান (%)",
+        "setFixed": "নির্দিষ্ট ভাড়া বসান",
+        "applyPercent": "শতকরা হার প্রয়োগ করুন",
+        "value": "মান",
+        "apply": "প্রয়োগ করুন",
+        "invalidValue": "সঠিক একটি মান লিখুন"
+    },
+    "empty": {
+        "title": "এখনো কোনো ভাড়ার নিয়ম তৈরি হয়নি।",
+        "description": "এই রুট ও যানবাহনের ধরনের জন্য একবার স্টপ-টু-স্টপ ভাড়া নির্ধারণ করুন। মিলে যাওয়া যানবাহন ও ট্রিপে তা স্বয়ংক্রিয়ভাবে প্রযোজ্য হবে।",
+        "action": "প্রথম ভাড়া তৈরি করুন"
+    },
+    "matrix": {
+        "noStops": "ভাড়া নির্ধারণের আগে এই রুটে বোর্ডিং পয়েন্ট যোগ করুন।",
+        "fromTo": "থেকে / পর্যন্ত",
+        "addPrice": "ভাড়া যোগ করুন"
+    },
+    "mobile": {
+        "seat": "সিট {{value}}",
+        "cabin": "কেবিন {{value}}"
+    },
+    "detail": {
+        "title": "নির্বাচিত ভাড়ার বিবরণ",
+        "emptyHint": "বিস্তারিত দেখতে ভাড়ার ঘর নির্বাচন করুন।",
+        "boardingStop": "বোর্ডিং স্টপ",
+        "droppingStop": "ড্রপিং স্টপ",
+        "distance": "দূরত্ব",
+        "distanceValue": "{{value}} কিমি",
+        "estimatedTime": "আনুমানিক ভ্রমণ সময়",
+        "seatPrice": "সিট ভাড়া",
+        "cabinPrice": "কেবিন ভাড়া",
+        "childFare": "শিশু ভাড়া",
+        "vipFare": "ভিআইপি ভাড়া",
+        "discount": "ছাড়",
+        "discountValue": "শিক্ষার্থী {{student}}% · প্রবীণ {{senior}}%",
+        "agentCommission": "এজেন্ট কমিশন",
+        "percentValue": "{{value}}%",
+        "seatTypes": "উপলব্ধ সিটের ধরন",
+        "defaultSeatType": "সিট",
+        "lastUpdated": "সর্বশেষ হালনাগাদ",
+        "edit": "ভাড়া সম্পাদনা",
+        "duplicate": "অনুলিপি করুন",
+        "enable": "সক্রিয় করুন",
+        "disable": "নিষ্ক্রিয় করুন"
+    },
+    "form": {
+        "editTitle": "ভাড়া সম্পাদনা",
+        "addTitle": "ভাড়া যোগ করুন",
+        "subtitle": "রুট + {{vehicleType}} প্ল্যান — মিলে যাওয়া যানবাহন ও ট্রিপে স্বয়ংক্রিয়ভাবে প্রযোজ্য হবে।",
+        "sections": {
+            "route": "রুট ও প্রাথমিক তথ্য",
+            "fare": "ভাড়ার তথ্য",
+            "commission": "কমিশন ও চার্জ",
+            "rules": "ভাড়ার নিয়ম ও প্রাপ্যতা",
+            "notes": "নোট (ঐচ্ছিক)"
+        },
+        "boardingStop": "বোর্ডিং স্টপ",
+        "droppingStop": "ড্রপিং স্টপ",
+        "selectStop": "স্টপ নির্বাচন করুন",
+        "sameStop": "বোর্ডিং ও ড্রপিং স্টপ আলাদা হতে হবে।",
+        "vehicleClass": "যানবাহনের শ্রেণি",
+        "vehicleClasses": {
+            "acBusiness": "এসি বিজনেস",
+            "nonAc": "নন-এসি",
+            "sleeper": "স্লিপার"
+        },
+        "serviceType": "সার্ভিসের ধরন",
+        "distance": "দূরত্ব (আনুমানিক)",
+        "estimatedTime": "আনুমানিক সময়",
+        "estimatedTimePlaceholder": "২ ঘণ্টা ৪০ মিনিট",
+        "seatPrice": "সিট ভাড়া",
+        "cabinPrice": "কেবিন ভাড়া",
+        "childPrice": "শিশু ভাড়া (৫-১২ বছর)",
+        "infantPrice": "শিশু ভাড়া (০-৪ বছর)",
+        "vipPrice": "ভিআইপি সিট ভাড়া",
+        "ladiesPrice": "মহিলা সিট ভাড়া",
+        "roundTripPrice": "রাউন্ড ট্রিপ ভাড়া (ঐচ্ছিক)",
+        "seniorDiscount": "প্রবীণ নাগরিক ছাড় (%)",
+        "studentDiscount": "শিক্ষার্থী ছাড় (%)",
+        "priceType": "ভাড়ার ধরন",
+        "perSeat": "প্রতি সিট",
+        "perCabin": "প্রতি কেবিন",
+        "agentCommission": "এজেন্ট কমিশন (%)",
+        "platformCommission": "প্ল্যাটফর্ম কমিশন (%)",
+        "tax": "ট্যাক্স (%)",
+        "taxIncluded": "ভাড়ার মধ্যে ট্যাক্স অন্তর্ভুক্ত",
+        "taxIncludedHint": "টিকিটের ভাড়ায় ট্যাক্স ধরা আছে",
+        "applyForDays": "যেসব দিনে প্রযোজ্য",
+        "days": {
+            "everyDay": "প্রতিদিন",
+            "weekdays": "কর্মদিবস",
+            "weekends": "সাপ্তাহিক ছুটির দিন"
+        },
+        "weekendPrice": "সাপ্তাহিক ছুটির ভাড়া",
+        "holidayPrice": "ছুটির দিনের ভাড়া",
+        "peakHourPrice": "পিক আওয়ারের ভাড়া",
+        "effectiveFrom": "কার্যকর শুরু",
+        "effectiveTo": "কার্যকর শেষ",
+        "priority": "অগ্রাধিকার",
+        "priorityHint": "সংখ্যা যত ছোট, অগ্রাধিকার তত বেশি",
+        "notesPlaceholder": "এই স্টপের ভাড়া সম্পর্কে কোনো নোট বা শর্ত লিখুন…",
+        "save": "ভাড়া সংরক্ষণ"
+    },
+    "delete": {
+        "title": "ভাড়ার নিয়মটি মুছে ফেলবেন?",
+        "description": "এতে রুট প্ল্যানের ভাড়া এবং এই স্টপ জোড়ার সিঙ্ক করা যানবাহনের কপিগুলোও মুছে যাবে।"
+    },
+    "export": {
+        "boarding": "বোর্ডিং",
+        "dropping": "ড্রপিং",
+        "fare": "ভাড়া",
+        "status": "অবস্থা",
+        "updated": "হালনাগাদ"
+    },
+    "toast": {
+        "saved": "ভাড়া সংরক্ষণ হয়েছে",
+        "bulkApplied": "একসাথে পরিবর্তন প্রয়োগ হয়েছে",
+        "deleted": "ভাড়া মুছে ফেলা হয়েছে",
+        "enabled": "ভাড়া সক্রিয় করা হয়েছে",
+        "disabled": "ভাড়া নিষ্ক্রিয় করা হয়েছে"
+    }
+}

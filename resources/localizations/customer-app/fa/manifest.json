@@ -1,0 +1,9 @@
+{
+    "app": "customer-app",
+    "locale": "fa",
+    "version": 1,
+    "fallback_locale": "en",
+    "format": "arb-flat",
+    "key_count": 572,
+    "exported_at": "2026-09-05T09:27:14+00:00"
+}

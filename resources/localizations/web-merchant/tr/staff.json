@@ -1,0 +1,74 @@
+{
+    "list": {
+        "title": "Staff",
+        "description": "Team members, types, and permissions",
+        "add": "Add staff",
+        "searchPlaceholder": "Search",
+        "allTypes": "All types",
+        "empty": "No staff found",
+        "type": "Type",
+        "permissions": "Permissions",
+        "none": "None",
+        "details": "Details"
+    },
+    "form": {
+        "title": "Add New Staff",
+        "sections": {
+            "info": "Staff Information",
+            "permissions": "Direct Permissions",
+            "access": "Login & Access"
+        },
+        "photoLabel": "Profile photo",
+        "photoUpload": "Upload photo",
+        "photoHint": "JPG/PNG, 2 MB",
+        "photoAlt": "Staff profile preview",
+        "photoNote": "Profile photo is preview-only until staff media upload is supported.",
+        "name": "Full name",
+        "namePlaceholder": "Enter full name",
+        "nameField": "Staff name",
+        "email": "Email address",
+        "emailPlaceholder": "Enter email address",
+        "mobile": "Phone number",
+        "type": "Type",
+        "typePlaceholder": "Select type",
+        "permissionsHint": "Choose which desk sections this staff member can access.",
+        "password": "Password",
+        "passwordPlaceholder": "Enter password",
+        "passwordConfirm": "Confirm password",
+        "passwordConfirmPlaceholder": "Confirm password",
+        "save": "Save Staff"
+    },
+    "detail": {
+        "subtitle": "{{type}} · {{mobile}}",
+        "notFound": "Staff not found",
+        "activate": "Activate",
+        "deactivate": "Deactivate",
+        "type": "Type",
+        "accessTitle": "Type & Permissions",
+        "directPermissions": "Direct permissions",
+        "saveAccess": "Save access",
+        "none": "None",
+        "summaryTitle": "Performance summary",
+        "assignedVehicles": "Assigned vehicles",
+        "tripsToday": "Trips today",
+        "upcomingTrips": "Upcoming trips",
+        "bookingsToday": "Bookings today",
+        "bookingsLast7Days": "Bookings (7 days)",
+        "vehiclesTitle": "Vehicles",
+        "noneAssigned": "None assigned",
+        "assignSelected": "Assign selected",
+        "activityTitle": "Recent activity",
+        "noActivities": "No activities"
+    },
+    "errors": {
+        "passwordMismatch": "Passwords do not match",
+        "noPermission": "Select at least one permission",
+        "photoTooLarge": "Photo must be smaller than 2 MB"
+    },
+    "toast": {
+        "created": "Staff created",
+        "statusUpdated": "Status updated",
+        "vehiclesAssigned": "Vehicles assigned",
+        "accessUpdated": "Access updated"
+    }
+}

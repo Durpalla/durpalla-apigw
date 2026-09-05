@@ -24,3 +24,4 @@ Thumbs.db
 rr
 .rr.yaml
 .local/
+scripts/i18n/.translate-cache.json

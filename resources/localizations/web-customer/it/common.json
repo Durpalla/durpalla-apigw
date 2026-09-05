@@ -1,0 +1,12 @@
+{
+    "nav": {
+        "bus": "Autobus",
+        "launch": "Traghetto",
+        "boat": "Barca",
+        "hotels": "Hotel"
+    },
+    "language": {
+        "label": "Lingua",
+        "switch": "Cambia lingua"
+    }
+}

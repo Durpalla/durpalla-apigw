@@ -1,0 +1,22 @@
+{
+    "page": {
+        "title": "Live bookings",
+        "description": "Realtime created and cancelled booking events"
+    },
+    "empty": {
+        "title": "Waiting for live events",
+        "description": "New bookings will appear here via Pusher."
+    },
+    "table": {
+        "kind": "Kind",
+        "passenger": "Passenger",
+        "property": "Property",
+        "trip": "Trip",
+        "time": "Time",
+        "open": "Open"
+    },
+    "kind": {
+        "created": "Created",
+        "cancelled": "Cancelled"
+    }
+}

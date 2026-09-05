@@ -1,0 +1,74 @@
+{
+    "page": {
+        "title": "Dashboard",
+        "description": "Booking, trip and revenue overview",
+        "asOf": "Live overview as of {{time}}",
+        "rangeOption": "Last {{days}} days",
+        "newBooking": "New booking",
+        "newHotelBooking": "New hotel booking",
+        "live": "Live"
+    },
+    "stats": {
+        "bookingsRange": "Bookings ({{days}}d)",
+        "activeTrips": "Active trips today",
+        "revenueToday": "Revenue today",
+        "avgOccupancy": "Avg occupancy",
+        "periodRevenue": "Period revenue",
+        "periodBookings": "Period bookings",
+        "unitsSold": "Units sold",
+        "pendingCancelled": "Pending / cancelled",
+        "hotels": "Hotels",
+        "hotelBookings": "Hotel bookings",
+        "hotelConfirmed": "Hotel confirmed",
+        "hotelPayable": "Hotel payable"
+    },
+    "charts": {
+        "revenueTrend": "Revenue trend",
+        "revenueTrendDescription": "Daily collected revenue over the selected period.",
+        "bookingsVolume": "Bookings volume",
+        "bookingsVolumeDescription": "Daily booking count for the selected period.",
+        "bookingStatus": "Booking status",
+        "bookingStatusDescription": "Share of bookings by current status.",
+        "revenueSeries": "Revenue",
+        "bookingsSeries": "Bookings",
+        "noData": "No chart data",
+        "noStatusData": "No status data"
+    },
+    "widgets": {
+        "trendVsPrevious": "{{value}}% vs previous",
+        "noTrend": "No trend data",
+        "bookingsCount_one": "{{value}} booking",
+        "bookingsCount_other": "{{value}} bookings"
+    },
+    "top": {
+        "title": "Top performers",
+        "description": "Routes and vehicles with the highest activity.",
+        "routes": "Top routes",
+        "vehicles": "Top vehicles",
+        "empty": "No ranking data returned by the dashboard API yet."
+    },
+    "hotels": {
+        "title": "Hotels",
+        "description": "Jump into hotel operations.",
+        "manage": "Manage hotels"
+    },
+    "recent": {
+        "title": "Recent bookings",
+        "descriptionTransport": "Latest transport bookings from the dashboard feed.",
+        "description": "Latest bookings from the dashboard feed.",
+        "viewAll": "View all",
+        "empty": "No recent bookings.",
+        "code": "Code",
+        "passenger": "Passenger",
+        "open": "Open"
+    },
+    "quickActions": {
+        "title": "Quick actions",
+        "description": "Jump into everyday operations.",
+        "trips": "Manage trips",
+        "transportBookings": "Transport bookings",
+        "hotelBookings": "Hotel bookings",
+        "reports": "Open reports",
+        "settlements": "Settlements"
+    }
+}

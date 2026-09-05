@@ -1,0 +1,70 @@
+{
+    "list": {
+        "title": "রুট",
+        "description": "সার্ভিস রুট ও বোর্ডিং পয়েন্ট",
+        "createRoute": "রুট তৈরি করুন",
+        "searchPlaceholder": "রুট খুঁজুন",
+        "empty": "কোনো রুট নেই",
+        "details": "বিস্তারিত",
+        "columns": {
+            "service": "সার্ভিস",
+            "type": "ধরন",
+            "routeNo": "নম্বর"
+        }
+    },
+    "form": {
+        "createTitle": "রুট তৈরি করুন",
+        "nameOptional": "নাম (ঐচ্ছিক)",
+        "namePlaceholder": "খালি রাখলে স্বয়ংক্রিয়ভাবে তৈরি হবে",
+        "routeName": "রুটের নাম",
+        "serviceType": "সার্ভিসের ধরন",
+        "routeStops": "রুটের স্টপ",
+        "routeStopsHint": "গাড়ি যে ক্রমে ঘাটে থামবে, সেই ক্রমেই ভায়া ঘাট যোগ করুন।",
+        "selectStop": "{{label}} নির্বাচন করুন",
+        "stopGhat": "স্টপ {{index}}-এর ঘাট",
+        "moveUp": "{{label}} উপরে নিন",
+        "moveDown": "{{label}} নিচে নিন",
+        "removeStop": "{{label}} সরান",
+        "addVia": "ভায়া ঘাট যোগ করুন",
+        "submit": "রুট তৈরি করুন",
+        "creating": "তৈরি হচ্ছে...",
+        "stops": {
+            "start": "শুরুর ঘাট",
+            "destination": "গন্তব্য",
+            "via": "ভায়া স্টপ {{index}}"
+        },
+        "errors": {
+            "minStops": "অন্তত দুটি রুট স্টপ যোগ করুন",
+            "duplicateGhat": "প্রতিটি স্টপে আলাদা ঘাট নির্বাচন করতে হবে"
+        }
+    },
+    "detail": {
+        "fallbackName": "রুট #{{id}}",
+        "notFound": "রুট পাওয়া যায়নি",
+        "description": "রুটের বিবরণ ও ক্রমানুসারে বোর্ডিং পয়েন্ট",
+        "viaPricing": "ভায়া স্টপ ভাড়া",
+        "viewTrips": "ট্রিপ দেখুন",
+        "timeline": "রুট টাইমলাইন",
+        "information": "রুটের তথ্য",
+        "stopFallback": "স্টপ {{index}}",
+        "emptyTitle": "কোনো বোর্ডিং পয়েন্ট পাওয়া যায়নি",
+        "emptyDescription": "রুট API ক্রমানুসারে স্টপের তথ্য দেয়নি।",
+        "stops": {
+            "start": "শুরুর পয়েন্ট",
+            "destination": "গন্তব্য",
+            "via": "ভায়া স্টপ"
+        },
+        "fields": {
+            "routeNumber": "রুট নম্বর",
+            "service": "সার্ভিস",
+            "routeType": "রুটের ধরন",
+            "routeId": "রুট আইডি",
+            "routeName": "রুটের নাম",
+            "serviceType": "সার্ভিসের ধরন",
+            "boardingPoints": "বোর্ডিং পয়েন্ট"
+        }
+    },
+    "toast": {
+        "created": "রুট তৈরি হয়েছে"
+    }
+}

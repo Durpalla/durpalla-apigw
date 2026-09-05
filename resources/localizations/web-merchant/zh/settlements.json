@@ -1,0 +1,25 @@
+{
+    "page": {
+        "title": "Settlements",
+        "description": "Approve or decline settlement requests",
+        "rangeInvalid": "Date range is invalid"
+    },
+    "empty": {
+        "title": "No settlement requests"
+    },
+    "table": {
+        "id": "ID",
+        "approve": "Approve",
+        "decline": "Decline"
+    },
+    "status": {
+        "all": "All",
+        "pending": "Pending",
+        "approved": "Approved",
+        "declined": "Declined"
+    },
+    "toast": {
+        "approved": "Approved",
+        "declined": "Declined"
+    }
+}

@@ -1,0 +1,452 @@
+{
+    "list": {
+        "newBooking": "নতুন বুকিং",
+        "searchPlaceholder": "PNR / ইনভয়েস নম্বর (বা অতিথির নাম / মোবাইল)",
+        "find": "খুঁজুন",
+        "finding": "খোঁজা হচ্ছে...",
+        "columns": {
+            "booking": "বুকিং",
+            "type": "ধরন",
+            "guest": "অতিথি",
+            "passenger": "যাত্রী",
+            "reference": "PNR / ইনভয়েস"
+        },
+        "kind": {
+            "hotel": "হোটেল",
+            "transport": "পরিবহন"
+        },
+        "pagination": {
+            "previous": "আগের",
+            "next": "পরের",
+            "page": "পৃষ্ঠা {{page}} / {{total}}"
+        }
+    },
+    "transport": {
+        "title": "পরিবহন বুকিং",
+        "description": "PNR / ইনভয়েস নম্বর দিয়ে খুঁজুন, অথবা বুকিং হিস্ট্রি দেখুন।",
+        "empty": "কোনো পরিবহন বুকিং নেই"
+    },
+    "payments": {
+        "title": "পেমেন্ট",
+        "description": "বকেয়া আদায় করুন এবং পরিশোধিত বুকিং দেখুন (হোটেল + পরিবহন)।",
+        "filter": {
+            "due": "বকেয়া আছে",
+            "paid": "সম্পূর্ণ পরিশোধিত"
+        },
+        "emptyDues": "কোনো বকেয়া নেই",
+        "empty": "কোনো পেমেন্ট পাওয়া যায়নি"
+    },
+    "refunds": {
+        "title": "রিফান্ড",
+        "description": "রিফান্ড করা পরিবহন বুকিং",
+        "empty": "কোনো রিফান্ড নেই"
+    },
+    "cancellations": {
+        "title": "বাতিল বুকিং",
+        "description": "বাতিল করা পরিবহন বুকিং",
+        "empty": "কোনো বাতিল বুকিং নেই"
+    },
+    "status": {
+        "reserved": "রিজার্ভ",
+        "advance": "অগ্রিম",
+        "partial": "আংশিক",
+        "refunded": "রিফান্ড",
+        "rejected": "প্রত্যাখ্যাত",
+        "unknown": "অজানা"
+    },
+    "ticketType": {
+        "seat": "সিট",
+        "cabin": "কেবিন",
+        "sofa": "সোফা"
+    },
+    "ticketTypePlural": {
+        "seat": "সিট",
+        "cabin": "কেবিন",
+        "sofa": "সোফা"
+    },
+    "paymentMethod": {
+        "cash": "ক্যাশ",
+        "card": "কার্ড",
+        "bkash": "বিকাশ",
+        "nagad": "নগদ",
+        "pay_later": "পরে পেমেন্ট",
+        "online": "অনলাইন",
+        "bank": "ব্যাংক",
+        "cheque": "চেক"
+    },
+    "detail": {
+        "breadcrumb": {
+            "bookings": "বুকিং",
+            "transport": "পরিবহন",
+            "current": "বুকিং বিবরণ"
+        },
+        "backAria": "পরিবহন বুকিং তালিকায় ফিরে যান",
+        "title": "বুকিং বিবরণ",
+        "bookingId": "বুকিং আইডি",
+        "bookedOn": "বুকিংয়ের তারিখ",
+        "guest": "অতিথি",
+        "printInvoice": "ইনভয়েস প্রিন্ট",
+        "share": "শেয়ার",
+        "more": "আরও",
+        "cancelBooking": "বুকিং বাতিল",
+        "ac": "এসি",
+        "nonAc": "নন-এসি",
+        "tabs": {
+            "info": "বুকিং তথ্য",
+            "passengers": "যাত্রী ({{value}})",
+            "seats": "সিট বিবরণ",
+            "payment": "পেমেন্ট ও ইনভয়েস"
+        },
+        "trip": {
+            "heading": "ট্রিপ",
+            "journey": "যাত্রা",
+            "badge": "পরিবহন",
+            "departure": "ছাড়ার সময়",
+            "boarding": "বোর্ডিং",
+            "status": "ট্রিপের অবস্থা",
+            "onTime": "সময়মতো",
+            "seatsBooked": "বুক করা সিট",
+            "bookingRef": "বুকিং রেফারেন্স"
+        },
+        "info": {
+            "contact": "যোগাযোগের তথ্য",
+            "phone": "ফোন",
+            "address": "ঠিকানা",
+            "route": "ট্রিপ রুট",
+            "fareBreakdown": "ভাড়ার বিবরণ",
+            "fareRow": "{{label}} ({{value}} × {{unit}})",
+            "bookingStatus": "বুকিংয়ের অবস্থা",
+            "steps": {
+                "booked": "বুক হয়েছে",
+                "confirmed": "নিশ্চিত",
+                "boarding": "বোর্ডিং",
+                "completed": "সম্পন্ন"
+            },
+            "snapshot": "বুকিং সারসংক্ষেপ",
+            "bookingDate": "বুকিংয়ের তারিখ",
+            "tripDate": "ট্রিপের তারিখ",
+            "tickets": "টিকিট",
+            "platform": "প্ল্যাটফর্ম",
+            "platformValue": "মার্চেন্ট ডেস্ক",
+            "important": "গুরুত্বপূর্ণ তথ্য",
+            "tips": {
+                "arrive": "ট্রিপ ছাড়ার কমপক্ষে ৩০ মিনিট আগে উপস্থিত হন।",
+                "identity": "বোর্ডিংয়ের সময় বৈধ পরিচয়পত্র ও এই বুকিং রেফারেন্স সঙ্গে রাখুন।",
+                "seats": "বুকিং নিশ্চিত হয়ে গেলে সিট নম্বর আর পরিবর্তন করা যাবে না।"
+            }
+        },
+        "passengers": {
+            "heading": "যাত্রী ({{value}})",
+            "columns": {
+                "index": "#",
+                "passenger": "যাত্রী",
+                "phone": "ফোন",
+                "seat": "সিট",
+                "type": "ধরন",
+                "ac": "এসি",
+                "fare": "ভাড়া"
+            }
+        },
+        "seats": {
+            "heading": "সিট বিবরণ",
+            "type": "ধরন"
+        },
+        "sidebar": {
+            "paymentSummary": "পেমেন্ট সারসংক্ষেপ",
+            "amountPaid": "পরিশোধিত পরিমাণ",
+            "dueAmount": "বকেয়া পরিমাণ",
+            "viewInvoice": "ইনভয়েস দেখুন",
+            "actions": "বুকিং কার্যক্রম",
+            "reschedule": "বুকিং পুনঃনির্ধারণ",
+            "sendMessage": "এসএমএস / ইমেইল পাঠান",
+            "downloadInvoice": "ইনভয়েস ডাউনলোড",
+            "duplicate": "বুকিং কপি করুন",
+            "processing": "প্রসেস হচ্ছে...",
+            "needHelp": "সাহায্য দরকার?",
+            "supportText": "এই বুকিং পরিবর্তন বা যাচাই করতে সাপোর্টে যোগাযোগ করুন।",
+            "contactSupport": "সাপোর্টে যোগাযোগ"
+        }
+    },
+    "payment": {
+        "heading": "পেমেন্ট ও ইনভয়েস",
+        "totalFare": "মোট ভাড়া",
+        "method": "পেমেন্ট পদ্ধতি",
+        "methodLabel": "পদ্ধতি",
+        "status": "পেমেন্টের অবস্থা",
+        "collectHeading": "বকেয়া পেমেন্ট আদায়",
+        "maxAmount": "সর্বোচ্চ {{amount}}",
+        "collecting": "আদায় হচ্ছে...",
+        "collect": "পেমেন্ট আদায়",
+        "invoiceSummary": "ইনভয়েস সারসংক্ষেপ",
+        "bookingId": "বুকিং আইডি",
+        "trip": "ট্রিপ",
+        "tickets": "টিকিট",
+        "amountPaid": "পরিশোধিত পরিমাণ",
+        "balanceDue": "বকেয়া ব্যালেন্স"
+    },
+    "invoice": {
+        "previewTitle": "প্রিন্ট প্রিভিউ",
+        "previewDescription": "প্রিন্ট করার আগে বুকিং ইনভয়েসটি দেখে নিন। উপরে মার্চেন্টের তথ্য দেখানো হয় এবং powered-by অংশে দুর্পাল্লার লোগো থাকে।",
+        "documentTitle": "বুকিং ইনভয়েস",
+        "printWindowTitle": "বুকিং ইনভয়েস",
+        "verify": "যাচাই",
+        "verifyAlt": "যাচাই করতে স্ক্যান করুন",
+        "booking": "বুকিং",
+        "id": "আইডি",
+        "date": "তারিখ",
+        "officer": "কর্মকর্তা",
+        "payment": "পেমেন্ট",
+        "trip": "ট্রিপ",
+        "route": "রুট",
+        "vehicle": "যানবাহন",
+        "departure": "ছাড়ার সময়",
+        "boarding": "বোর্ডিং",
+        "paymentAndFare": "পেমেন্ট ও ভাড়া",
+        "method": "পদ্ধতি",
+        "fareRow": "{{label}} ({{value}})",
+        "columns": {
+            "index": "#",
+            "passenger": "যাত্রী",
+            "phone": "ফোন",
+            "seat": "সিট / কেবিন",
+            "type": "ধরন",
+            "ac": "এসি",
+            "fare": "ভাড়া"
+        },
+        "seats": "সিট",
+        "status": "অবস্থা",
+        "termsTitle": "শর্তাবলি",
+        "terms": [
+            "ট্রিপ ছাড়ার কমপক্ষে ৩০ মিনিট আগে বোর্ডিং পয়েন্টে উপস্থিত হন।",
+            "বোর্ডিংয়ের সময় বৈধ পরিচয়পত্র ও এই বুকিং রেফারেন্স দেখাতে হবে।",
+            "এই ইনভয়েস শুধুমাত্র উপরে উল্লিখিত ট্রিপ ও যাত্রীদের জন্য প্রযোজ্য।"
+        ],
+        "cancellationTitle": "বাতিলের নীতিমালা",
+        "cancellationDefault": "বাতিলের ক্ষেত্রে রিফান্ড বুকিংয়ের সময় নির্ধারিত মার্চেন্ট নীতিমালা অনুযায়ী হবে।",
+        "thanks": "বুকিং করার জন্য ধন্যবাদ। আপনার যাত্রা শুভ হোক।",
+        "poweredBy": "পাওয়ার্ড বাই",
+        "disclaimer": "কম্পিউটারে তৈরি ইনভয়েস। স্বাক্ষরের প্রয়োজন নেই।",
+        "renderFailed": "ইনভয়েস তৈরি করা যায়নি"
+    },
+    "transportBooking": {
+        "pageTitle": "নতুন বুকিং তৈরি করুন",
+        "pageDescription": "ট্রিপ খুঁজুন, সিট নির্ধারণ করুন এবং পেমেন্ট সম্পন্ন করুন।",
+        "dialogTitle": "নতুন পরিবহন বুকিং",
+        "dialogDescription": "আপনার অতিথির জন্য নতুন পরিবহন বুকিং তৈরি করুন।",
+        "steps": {
+            "findTrip": "ট্রিপ খুঁজুন",
+            "seatLayout": "সিট / কেবিন লেআউট",
+            "passengerDetails": "যাত্রীর তথ্য",
+            "reviewConfirm": "রিভিউ ও নিশ্চিতকরণ"
+        },
+        "stepIndex": "{{index}}. {{label}}",
+        "nav": {
+            "searchSchedules": "সময়সূচি খুঁজুন",
+            "continueToPassengers": "যাত্রীর তথ্যে যান",
+            "reviewBooking": "বুকিং রিভিউ",
+            "confirmBooking": "বুকিং নিশ্চিত করুন",
+            "confirming": "নিশ্চিত করা হচ্ছে..."
+        },
+        "serviceTypes": {
+            "launch": "লঞ্চ / ফেরি",
+            "bus": "বাস",
+            "train": "ট্রেন",
+            "air": "বিমান"
+        },
+        "serviceDescriptions": {
+            "launch": "নদী ও উপকূলীয় সার্ভিস",
+            "bus": "আন্তঃজেলা ও লোকাল কোচ",
+            "train": "আন্তঃনগর, এক্সপ্রেস, লোকাল",
+            "air": "অভ্যন্তরীণ ফ্লাইট"
+        },
+        "service": {
+            "heading": "ধাপ ১: ট্রিপ খুঁজুন",
+            "description": "সরাসরি গাড়ি বা ট্রিপ নম্বর দিয়ে খুঁজুন, অথবা ট্রিপের শর্ত ব্যবহার করুন।",
+            "vehicleSearch": "গাড়ির নম্বর দিয়ে খুঁজুন",
+            "vehicleSearchPlaceholder": "যেমন BA-11-2345",
+            "or": "অথবা",
+            "tripSearch": "ট্রিপ নম্বর দিয়ে খুঁজুন",
+            "tripSearchPlaceholder": "যেমন TRP-25052026-001",
+            "criteria": "অথবা শর্ত অনুযায়ী খুঁজুন",
+            "serviceType": "সার্ভিসের ধরন",
+            "route": "রুট",
+            "routePlaceholder": "রুট নির্বাচন করুন",
+            "journeyDate": "যাত্রার তারিখ",
+            "departureTime": "ছাড়ার সময়",
+            "times": {
+                "any": "যেকোনো সময়",
+                "morning": "সকাল",
+                "afternoon": "দুপুর",
+                "evening": "সন্ধ্যা",
+                "night": "রাত"
+            },
+            "operator": "অপারেটর",
+            "allOperators": "সব অপারেটর",
+            "tripStatus": "ট্রিপের অবস্থা",
+            "activeTrips": "সক্রিয় ট্রিপ",
+            "allTrips": "সব ট্রিপ",
+            "searchTrips": "ট্রিপ খুঁজুন"
+        },
+        "tripPicker": {
+            "heading": "উপলব্ধ ট্রিপ ({{value}})",
+            "emptyTitle": "কোনো সময়সূচি পাওয়া যায়নি",
+            "emptyDescription": "অন্য তারিখ, রুট বা সার্ভিসের ধরন দিয়ে চেষ্টা করুন।",
+            "selected": "নির্বাচিত",
+            "inactive": "নিষ্ক্রিয়",
+            "scheduled": "নির্ধারিত",
+            "registrationUnavailable": "রেজিস্ট্রেশন নম্বর নেই",
+            "capacity": "ধারণক্ষমতা",
+            "select": "ট্রিপ নির্বাচন",
+            "showFewer": "কম ট্রিপ দেখান",
+            "showMore": "আরও {{value}}টি ট্রিপ দেখান"
+        },
+        "selectedTrip": {
+            "noPhoto": "ছবি নেই",
+            "vehicleFallback": "যানবাহন",
+            "seatsAvailable": "খালি সিট {{available}} / {{total}}",
+            "changeTrip": "ট্রিপ পরিবর্তন"
+        },
+        "seatStatus": {
+            "available": "খালি",
+            "selected": "নির্বাচিত",
+            "blocked": "ব্লকড",
+            "booked": "বুকড",
+            "ladies": "মহিলা সিট"
+        },
+        "seatLayout": {
+            "heading": "সিট নির্বাচন করুন",
+            "availability": "{{total}} {{type}}-এর মধ্যে {{available}}টি খালি",
+            "floorPlaceholder": "ফ্লোর",
+            "viewLayout": "সিট লেআউট",
+            "viewList": "লিস্ট ভিউ",
+            "noItems": "এই নির্বাচনের জন্য কোনো লেআউট আইটেম নেই।",
+            "selectedSeats": "নির্বাচিত সিট ({{value}})",
+            "removeSeat": "{{seat}} সিট সরান",
+            "tapHint": "নির্বাচন করতে ম্যাপের সিটে ট্যাপ করুন।",
+            "clearAll": "সব মুছুন",
+            "totalSeats": "মোট সিট",
+            "totalAmount": "মোট পরিমাণ",
+            "confirmHint": "এগিয়ে যাওয়ার আগে নির্বাচিত সিটগুলো ঠিক আছে কিনা নিশ্চিত করুন।",
+            "front": "সামনে",
+            "back": "পিছনে",
+            "door": "দরজা",
+            "driver": "চালক"
+        },
+        "passengers": {
+            "heading": "যাত্রীর তথ্য",
+            "description": "যাত্রীর সংখ্যা ও অতিথির ধরন ঠিক করুন, এরপর প্রতিটি সিটের তথ্য দিন।",
+            "count": "যাত্রী সংখ্যা *",
+            "seatsWarning": "নির্বাচিত সিট: {{selected}}। আরও {{remaining}}টি সিট নিতে পিছনে যান।",
+            "guestType": "অতিথির ধরন",
+            "guestTypes": {
+                "walkIn": "ওয়াক-ইন",
+                "phone": "কল / ফোন",
+                "preBooking": "প্রি-বুকিং"
+            },
+            "fallbackLabel": "যাত্রী {{index}}",
+            "fullName": "পুরো নাম *",
+            "namePlaceholder": "যাত্রীর নাম লিখুন",
+            "mobile": "মোবাইল *",
+            "mobilePlaceholder": "মোবাইল নম্বর লিখুন"
+        },
+        "review": {
+            "heading": "বুকিং রিভিউ",
+            "service": "সার্ভিস",
+            "trip": "ট্রিপ",
+            "route": "রুট",
+            "date": "তারিখ",
+            "guest": "অতিথি",
+            "seats": "সিট",
+            "passengers": "যাত্রী",
+            "passengerRow": "{{index}}. {{name}} · {{mobile}}",
+            "internalNote": "অভ্যন্তরীণ নোট:",
+            "hideSpecialRequest": "বিশেষ অনুরোধ লুকান",
+            "addSpecialRequest": "+ বিশেষ অনুরোধ যোগ করুন (ঐচ্ছিক)",
+            "specialRequestPlaceholder": "যেকোনো বিশেষ অনুরোধ",
+            "paymentMode": "পেমেন্টের ধরন *",
+            "paymentModes": {
+                "full": "সম্পূর্ণ পেমেন্ট",
+                "partial": "আংশিক পেমেন্ট",
+                "none": "রিজার্ভ / পেমেন্ট ছাড়া"
+            },
+            "paymentMethod": "পেমেন্ট পদ্ধতি *",
+            "partialAmount": "আংশিক পরিমাণ *",
+            "partialAmountPlaceholder": "পরিশোধিত পরিমাণ লিখুন",
+            "estimatedTotal": "আনুমানিক মোট",
+            "lockNotice": "বুকিং নিশ্চিত না হওয়া পর্যন্ত সিটগুলো লক থাকবে।"
+        },
+        "summary": {
+            "title": "বুকিং সারসংক্ষেপ",
+            "emptyTitle": "এখনও কোনো ট্রিপ নির্বাচন করা হয়নি",
+            "emptyDescription": "বুকিং চালিয়ে যেতে একটি ট্রিপ খুঁজে নির্বাচন করুন।",
+            "tripDetails": "ট্রিপের তথ্য",
+            "tripId": "ট্রিপ আইডি",
+            "vehicle": "যানবাহন",
+            "route": "রুট",
+            "date": "তারিখ",
+            "departure": "ছাড়ার সময়",
+            "boarding": "বোর্ডিং",
+            "dropping": "নামার স্থান",
+            "serviceType": "সার্ভিসের ধরন",
+            "notSelected": "নির্বাচন করা হয়নি",
+            "seatDetails": "সিটের তথ্য",
+            "noSeats": "এখনও কোনো সিট নির্বাচন করা হয়নি।",
+            "seatType": "সিটের ধরন",
+            "ticketPrice": "টিকিটের মূল্য",
+            "totalSeats": "মোট সিট",
+            "totalAmount": "মোট পরিমাণ",
+            "confirmHint": "এগিয়ে যাওয়ার আগে নির্বাচিত সিটগুলো ঠিক আছে কিনা নিশ্চিত করুন।",
+            "notesTitle": "বুকিং নোট (অভ্যন্তরীণ)",
+            "noteLabel": "অভ্যন্তরীণ নোট",
+            "notePlaceholder": "এই বুকিংয়ের জন্য অভ্যন্তরীণ নোট লিখুন...",
+            "noteHint": "এই নোট শুধুমাত্র আপনার স্টাফরা দেখতে পাবেন।"
+        },
+        "ticket": {
+            "title": "টিকিট",
+            "heading": "বুকিং {{id}}",
+            "guest": "অতিথি",
+            "mobile": "মোবাইল",
+            "trip": "ট্রিপ",
+            "seats": "সিট"
+        }
+    },
+    "fields": {
+        "guest": "অতিথি",
+        "ticketType": "টিকিটের ধরন",
+        "route": "রুট",
+        "from": "যেখান থেকে",
+        "to": "যেখানে",
+        "journeyDate": "যাত্রার তারিখ",
+        "passengerName": "যাত্রী {{index}}-এর নাম",
+        "passengerMobile": "যাত্রী {{index}}-এর মোবাইল",
+        "paymentMode": "পেমেন্টের ধরন",
+        "paymentMethod": "পেমেন্ট পদ্ধতি",
+        "partialAmount": "আংশিক পরিমাণ"
+    },
+    "toast": {
+        "paymentCollected": "পেমেন্ট আদায় হয়েছে",
+        "bookingCancelled": "বুকিং বাতিল হয়েছে",
+        "invoiceDownloaded": "ইনভয়েস ডাউনলোড হয়েছে",
+        "invoiceDownloadFailed": "ইনভয়েস ডাউনলোড করা যায়নি",
+        "bookingCreated": "পরিবহন বুকিং তৈরি হয়েছে",
+        "seatLimit_one": "সর্বোচ্চ {{value}}টি সিট নির্বাচন করা যাবে",
+        "seatLimit_other": "সর্বোচ্চ {{value}}টি সিট নির্বাচন করা যাবে"
+    },
+    "errors": {
+        "dateRangeInvalid": "তারিখের পরিসর সঠিক নয়",
+        "enterCode": "PNR বা ইনভয়েস নম্বর লিখুন",
+        "noReference": "বুকিং পাওয়া গেছে, কিন্তু কোনো রেফারেন্স আইডি নেই",
+        "bookingNotFound": "বুকিং পাওয়া যায়নি",
+        "amountGreaterThanZero": "পরিমাণ ০-এর বেশি হতে হবে",
+        "amountExceedsDue": "পরিমাণ বকেয়ার ({{amount}}) চেয়ে বেশি হতে পারবে না",
+        "selectTripSchedule": "একটি ট্রিপ সময়সূচি নির্বাচন করুন",
+        "selectSchedule": "একটি সময়সূচি নির্বাচন করুন",
+        "selectSeat": "কমপক্ষে একটি সিট নির্বাচন করুন",
+        "returnDateRequired": "রাউন্ড ট্রিপের জন্য ফেরার তারিখ দিতে হবে",
+        "exactSeats_one": "আগের ধাপে ঠিক {{value}}টি সিট নির্বাচন করুন",
+        "exactSeats_other": "আগের ধাপে ঠিক {{value}}টি সিট নির্বাচন করুন",
+        "partialAmountGreaterThanZero": "আংশিক পরিমাণ ০-এর বেশি হতে হবে",
+        "passengerCountRequired": "যাত্রীর সংখ্যা লিখুন",
+        "completeFields": "প্রয়োজনীয় তথ্যগুলো পূরণ করুন"
+    }
+}

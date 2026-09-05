@@ -1,0 +1,74 @@
+{
+    "page": {
+        "title": "ড্যাশবোর্ড",
+        "description": "বুকিং, ট্রিপ ও আয়ের সারসংক্ষেপ",
+        "asOf": "লাইভ সারসংক্ষেপ — {{time}} পর্যন্ত",
+        "rangeOption": "শেষ {{days}} দিন",
+        "newBooking": "নতুন বুকিং",
+        "newHotelBooking": "নতুন হোটেল বুকিং",
+        "live": "লাইভ"
+    },
+    "stats": {
+        "bookingsRange": "বুকিং ({{days}} দিন)",
+        "activeTrips": "আজকের সক্রিয় ট্রিপ",
+        "revenueToday": "আজকের আয়",
+        "avgOccupancy": "গড় অকুপেন্সি",
+        "periodRevenue": "নির্বাচিত সময়ের আয়",
+        "periodBookings": "নির্বাচিত সময়ের বুকিং",
+        "unitsSold": "বিক্রীত ইউনিট",
+        "pendingCancelled": "অপেক্ষমাণ / বাতিল",
+        "hotels": "হোটেল",
+        "hotelBookings": "হোটেল বুকিং",
+        "hotelConfirmed": "নিশ্চিত হোটেল বুকিং",
+        "hotelPayable": "হোটেল প্রদেয়"
+    },
+    "charts": {
+        "revenueTrend": "আয়ের ধারা",
+        "revenueTrendDescription": "নির্বাচিত সময়ে দৈনিক আদায় হওয়া আয়।",
+        "bookingsVolume": "বুকিংয়ের পরিমাণ",
+        "bookingsVolumeDescription": "নির্বাচিত সময়ে দৈনিক বুকিং সংখ্যা।",
+        "bookingStatus": "বুকিংয়ের অবস্থা",
+        "bookingStatusDescription": "বর্তমান অবস্থা অনুযায়ী বুকিংয়ের অনুপাত।",
+        "revenueSeries": "আয়",
+        "bookingsSeries": "বুকিং",
+        "noData": "চার্টের কোনো তথ্য নেই",
+        "noStatusData": "অবস্থার কোনো তথ্য নেই"
+    },
+    "widgets": {
+        "trendVsPrevious": "আগের তুলনায় {{value}}%",
+        "noTrend": "ট্রেন্ডের তথ্য নেই",
+        "bookingsCount_one": "{{value}}টি বুকিং",
+        "bookingsCount_other": "{{value}}টি বুকিং"
+    },
+    "top": {
+        "title": "শীর্ষ পারফর্মার",
+        "description": "সবচেয়ে বেশি কার্যক্রম হওয়া রুট ও গাড়ি।",
+        "routes": "শীর্ষ রুট",
+        "vehicles": "শীর্ষ গাড়ি",
+        "empty": "ড্যাশবোর্ড এপিআই এখনো কোনো র‍্যাঙ্কিং তথ্য দেয়নি।"
+    },
+    "hotels": {
+        "title": "হোটেল",
+        "description": "হোটেলের কার্যক্রমে যান।",
+        "manage": "হোটেল ব্যবস্থাপনা"
+    },
+    "recent": {
+        "title": "সাম্প্রতিক বুকিং",
+        "descriptionTransport": "ড্যাশবোর্ড ফিড থেকে সর্বশেষ ট্রান্সপোর্ট বুকিং।",
+        "description": "ড্যাশবোর্ড ফিড থেকে সর্বশেষ বুকিং।",
+        "viewAll": "সব দেখুন",
+        "empty": "সাম্প্রতিক কোনো বুকিং নেই।",
+        "code": "কোড",
+        "passenger": "যাত্রী",
+        "open": "খুলুন"
+    },
+    "quickActions": {
+        "title": "দ্রুত কার্যক্রম",
+        "description": "প্রতিদিনের কাজে দ্রুত যান।",
+        "trips": "ট্রিপ ব্যবস্থাপনা",
+        "transportBookings": "ট্রান্সপোর্ট বুকিং",
+        "hotelBookings": "হোটেল বুকিং",
+        "reports": "রিপোর্ট দেখুন",
+        "settlements": "সেটেলমেন্ট"
+    }
+}

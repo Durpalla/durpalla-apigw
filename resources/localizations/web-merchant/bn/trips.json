@@ -1,0 +1,283 @@
+{
+    "list": {
+        "title": "ট্রিপ",
+        "description": "শিডিউল ও কাউন্টার কার্যক্রম",
+        "selectTitle": "ট্রিপ নির্বাচন করুন",
+        "selectDescription": "শিডিউল করা একটি ট্রিপ বেছে নিন, এরপর সিট নির্বাচন করে যাত্রীর তথ্য দিন।",
+        "createTrip": "নতুন ট্রিপ",
+        "filterByDate": "তারিখ দিয়ে ফিল্টার (ঐচ্ছিক)",
+        "clearDateFilter": "তারিখের ফিল্টার মুছুন",
+        "emptyForDate": "এই তারিখে কোনো ট্রিপ নেই",
+        "emptyUpcoming": "আসন্ন কোনো ট্রিপ নেই",
+        "vehicle": "যানবাহন",
+        "route": "রুট",
+        "leaving": "ছাড়ার সময়",
+        "type": "ধরন",
+        "easyBooking": "সহজ বুকিং",
+        "selectSeats": "সিট নির্বাচন",
+        "open": "খুলুন"
+    },
+    "detail": {
+        "notFound": "ট্রিপ পাওয়া যায়নি",
+        "backToTrips": "ট্রিপ তালিকায় ফিরুন",
+        "vehicleAlt": "যানবাহন",
+        "boardingAt": "বোর্ডিং {{time}}",
+        "editTrip": "ট্রিপ সম্পাদনা",
+        "bookItems_one": "{{formattedCount}}টি বুক করুন",
+        "bookItems_other": "{{formattedCount}}টি বুক করুন",
+        "collected": "আদায়কৃত",
+        "bookedTickets": "বুক হওয়া টিকিট",
+        "remaining": "বাকি",
+        "progress": "অগ্রগতি",
+        "floor": "তলা",
+        "layoutEmpty": "এই তলা বা ধরনের জন্য কোনো লেআউট পাওয়া যায়নি।",
+        "tabs": {
+            "overview": "সারসংক্ষেপ",
+            "layout": "সিট লেআউট"
+        },
+        "layoutTypes": {
+            "seat": "সিট",
+            "cabin": "কেবিন",
+            "sofa": "সোফা"
+        },
+        "overview": {
+            "scheduleRoute": "শিডিউল ও রুট",
+            "leavingAt": "ছাড়ার সময়",
+            "scheduleType": "শিডিউলের ধরন",
+            "operationHour": "চলাচলের সময়",
+            "hoursValue": "{{hours}} ঘণ্টা",
+            "timeline": "টাইমলাইন",
+            "stoppages": "স্টপেজ",
+            "noStoppages": "এই ট্রিপে কোনো স্টপেজ নেই।",
+            "deckSegments": "ডেক সেগমেন্ট",
+            "segment": "সেগমেন্ট",
+            "passengers": "যাত্রী",
+            "farePerPerson": "জনপ্রতি ভাড়া"
+        },
+        "sidebar": {
+            "vehicle": "যানবাহন",
+            "type": "ধরন",
+            "capacity": "ধারণক্ষমতা",
+            "registration": "রেজিস্ট্রেশন",
+            "registrationExpiry": "রেজি. মেয়াদ",
+            "fitnessExpiry": "ফিটনেস মেয়াদ",
+            "payments": "পেমেন্ট",
+            "cashOnHand": "হাতে থাকা নগদ",
+            "digitalPayments": "ডিজিটাল পেমেন্ট",
+            "collectedTotal": "মোট আদায়",
+            "inventory": "ইনভেন্টরি",
+            "seatsBooked": "বুক হওয়া সিট",
+            "cabinsBooked": "বুক হওয়া কেবিন",
+            "deckPassengers": "ডেক যাত্রী"
+        }
+    },
+    "booking": {
+        "title": "কাউন্টার বুকিং",
+        "items": "নির্বাচিত: {{items}}",
+        "passengerNamePlaceholder": "যাত্রীর নাম লিখুন",
+        "passengerMobilePlaceholder": "যাত্রীর মোবাইল নম্বর লিখুন",
+        "partialAmountPlaceholder": "পরিশোধিত টাকার পরিমাণ লিখুন",
+        "confirm": "বুকিং নিশ্চিত করুন",
+        "selectAtLeastOne": "কমপক্ষে একটি সিট নির্বাচন করুন",
+        "partialAmountPositive": "আংশিক পরিমাণ ০ এর বেশি হতে হবে",
+        "modes": {
+            "full": "সম্পূর্ণ",
+            "partial": "আংশিক",
+            "none": "কিছু না / রিজার্ভ"
+        },
+        "methods": {
+            "cash": "নগদ",
+            "card": "কার্ড",
+            "bkash": "বিকাশ",
+            "nagad": "নগদ (মোবাইল ব্যাংকিং)"
+        }
+    },
+    "create": {
+        "title": "নতুন ট্রিপ তৈরি",
+        "description": "ট্রিপের তথ্য, শিডিউল, ভাড়া ও অন্যান্য বিবরণ যোগ করুন",
+        "next": "পরবর্তী",
+        "submit": "ট্রিপ তৈরি করুন",
+        "creating": "তৈরি হচ্ছে…",
+        "saveAsDraft": "খসড়া সংরক্ষণ",
+        "draftSaved": "খসড়া স্থানীয়ভাবে সংরক্ষিত হয়েছে",
+        "draftSavedDescription": "এই সেশনে পরে আবার এই ট্রিপটি সম্পাদনা করতে পারবেন।",
+        "noRouteAssigned": "নির্বাচিত যানবাহনে কোনো রুট নির্ধারণ করা নেই",
+        "durationHoursMinutes": "{{hours}} ঘণ্টা {{minutes}} মিনিট",
+        "durationHoursOnly": "{{hours}} ঘণ্টা",
+        "steps": {
+            "basic": "মৌলিক তথ্য",
+            "schedule": "শিডিউল ও রুট",
+            "pricing": "ভাড়া ও সিট",
+            "review": "পর্যালোচনা ও সংরক্ষণ"
+        },
+        "basic": {
+            "title": "ট্রিপের তথ্য",
+            "tripType": "ট্রিপের ধরন",
+            "serviceType": "সার্ভিসের ধরন",
+            "tripName": "ট্রিপের নাম / নম্বর",
+            "tripNamePlaceholder": "যেমন: ঢাকা - কক্সবাজার সকাল",
+            "tripCode": "ট্রিপ কোড",
+            "loadingVehicles": "যানবাহন লোড হচ্ছে…",
+            "viewVehicleDetails": "যানবাহনের বিস্তারিত দেখুন",
+            "operator": "অপারেটর / ড্রাইভার",
+            "selectDriver": "ড্রাইভার নির্বাচন করুন",
+            "selectVehicleFirst": "আগে যানবাহন নির্বাচন করুন",
+            "noDrivers": "কোনো ড্রাইভার বা সুপারভাইজার পাওয়া যায়নি। ড্রাইভার বা সুপারভাইজার রোলে স্টাফ যোগ করুন।",
+            "assistant": "সহকারী / হেলপার",
+            "selectAssistant": "সহকারী নির্বাচন করুন",
+            "noAssistants": "কোনো সহকারী স্টাফ পাওয়া যায়নি। অ্যাসিসট্যান্ট, কাউন্টার বা এক্সিকিউটিভ রোলে স্টাফ যোগ করুন।",
+            "routeFallback": "রুট #{{id}}",
+            "stopFallback": "স্টপেজ {{number}}",
+            "noRouteOnVehicle": "এই যানবাহনে কোনো রুট নির্ধারণ করা নেই",
+            "viewRouteDetails": "রুটের বিস্তারিত দেখুন",
+            "assignRouteFirst": "ট্রিপ তৈরির আগে এই যানবাহনে একটি রুট নির্ধারণ করুন।",
+            "routeFromVehicle": "নির্বাচিত যানবাহন থেকে রুট নেওয়া হয়েছে।",
+            "tripCategory": "ট্রিপের ক্যাটাগরি",
+            "tripStatus": "ট্রিপের অবস্থা",
+            "bookingType": "বুকিংয়ের ধরন",
+            "routeStoppages": "রুটের স্টপেজ",
+            "boardingPoint": "বোর্ডিং পয়েন্ট",
+            "droppingPoint": "ড্রপিং পয়েন্ট",
+            "via": "হয়ে: {{stops}}",
+            "stopsFromRoute": "বোর্ডিং, ড্রপিং ও মাঝের স্টপেজ নির্বাচিত রুট থেকে নেওয়া হয়েছে।",
+            "serviceTypes": {
+                "ac-business": "এসি বিজনেস",
+                "non-ac": "নন-এসি",
+                "sleeper": "স্লিপার"
+            },
+            "tripCategories": {
+                "regular": "নিয়মিত সার্ভিস",
+                "special": "বিশেষ সার্ভিস",
+                "charter": "চার্টার"
+            },
+            "tripStatuses": {
+                "active": "সক্রিয়",
+                "draft": "খসড়া",
+                "cancelled": "বাতিল"
+            },
+            "bookingTypes": {
+                "public": "পাবলিক",
+                "private": "প্রাইভেট",
+                "corporate": "কর্পোরেট"
+            }
+        },
+        "schedule": {
+            "title": "শিডিউল ও রুট",
+            "journeyDate": "যাত্রার তারিখ",
+            "departureTime": "ছাড়ার সময়",
+            "estimatedDuration": "আনুমানিক সময়কাল (ঘণ্টা)",
+            "arrivalTime": "পৌঁছানোর সময় (আনুমানিক)",
+            "reverseHint": "এই ট্রিপটি রুটের বিপরীত দিকে চালান।"
+        },
+        "pricing": {
+            "seatCapacity": "সিট ও ধারণক্ষমতা",
+            "totalSeats": "মোট সিট",
+            "availableSeats": "খালি সিট",
+            "seatLayout": "সিট লেআউট",
+            "genderPolicy": "জেন্ডার নীতি",
+            "layoutNote": "নির্বাচিত যানবাহনের কনফিগারেশন অনুযায়ী সিট লেআউট ও খালি সিট যাচাই করা হবে।",
+            "viaStopPricing": "মাঝের স্টপেজের ভাড়া",
+            "viaStopPricingDescription": "বোর্ডিং ও ড্রপিং স্টপেজের মধ্যে ভাড়া নির্ধারণ করুন। এই রুট ও যানবাহনের ধরনের জন্য সংরক্ষিত হবে — মিল থাকা ট্রিপে স্বয়ংক্রিয়ভাবে প্রযোজ্য হবে।",
+            "fullPricingPage": "সম্পূর্ণ ভাড়ার পাতা",
+            "addFare": "ভাড়া যোগ করুন",
+            "selectVehicleWithRoute": "স্টপেজভিত্তিক ভাড়া নির্ধারণ করতে রুটসহ একটি যানবাহন নির্বাচন করুন।",
+            "noFareRules": "এখনো কোনো ভাড়া নির্ধারণ করা হয়নি। স্টপেজ থেকে স্টপেজের ভাড়া দিতে ঘরে ক্লিক করুন বা ভাড়া যোগ করুন।",
+            "noViaStops": "এই রুটে কোনো মাঝের স্টপেজ নেই, তাই স্টপেজভিত্তিক ভাড়া ব্যবস্থাপনা দেখানো হচ্ছে না। সেগমেন্ট অনুযায়ী ভাড়া লাগলে রুটে VIA স্টপেজ যোগ করুন।",
+            "genderPolicies": {
+                "mixed": "মিশ্র",
+                "male": "শুধু পুরুষ",
+                "female": "শুধু নারী"
+            }
+        },
+        "review": {
+            "title": "পর্যালোচনা ও সংরক্ষণ",
+            "class": "শ্রেণি",
+            "duration": "সময়কাল",
+            "direction": "দিক",
+            "directionReverse": "বিপরীত",
+            "directionStandard": "স্বাভাবিক",
+            "capacity": "ধারণক্ষমতা",
+            "booking": "বুকিং",
+            "additionalInfo": "অতিরিক্ত তথ্য",
+            "descriptionLabel": "বিবরণ (ঐচ্ছিক)",
+            "descriptionPlaceholder": "ট্রিপের বিবরণ, সুবিধা, শর্তাবলি বা বিশেষ নির্দেশনা লিখুন…",
+            "charCount": "{{used}} / {{max}}"
+        },
+        "sidebar": {
+            "tripSummary": "ট্রিপের সারসংক্ষেপ",
+            "tripCode": "ট্রিপ কোড",
+            "tripName": "ট্রিপের নাম",
+            "tripType": "ট্রিপের ধরন",
+            "journeyDate": "যাত্রার তারিখ",
+            "departure": "ছাড়ার সময়",
+            "arrival": "পৌঁছানোর সময়",
+            "totalSeats": "মোট সিট",
+            "vehicleInformation": "যানবাহনের তথ্য",
+            "noRegistration": "রেজিস্ট্রেশন নেই",
+            "class": "শ্রেণি",
+            "ac": "এসি",
+            "viewVehicleDetails": "যানবাহনের বিস্তারিত দেখুন",
+            "selectVehicleHint": "বিস্তারিত দেখতে একটি যানবাহন নির্বাচন করুন।",
+            "amenities": "সুবিধাসমূহ",
+            "amenityList": {
+                "airConditioner": "এয়ার কন্ডিশনার",
+                "wifi": "ওয়াই-ফাই",
+                "chargingPoint": "চার্জিং পয়েন্ট",
+                "readingLight": "রিডিং লাইট",
+                "blanket": "কম্বল",
+                "waterBottle": "পানির বোতল",
+                "pillow": "বালিশ",
+                "fireExtinguisher": "অগ্নিনির্বাপক"
+            }
+        }
+    },
+    "edit": {
+        "title": "ট্রিপ সম্পাদনা",
+        "reverseHint": "এই ট্রিপটি বিপরীত দিকে চালান।",
+        "saveChanges": "পরিবর্তন সংরক্ষণ"
+    },
+    "form": {
+        "vehicle": "যানবাহন",
+        "vehicleType": "যানবাহনের ধরন",
+        "route": "রুট",
+        "departure": "ছাড়ার সময়",
+        "durationHours": "সময়কাল (ঘণ্টা)",
+        "operationDuration": "চলাচলের সময়কাল",
+        "selectVehicle": "যানবাহন নির্বাচন করুন",
+        "selectRoute": "রুট নির্বাচন করুন",
+        "noRoutes": "কোনো রুট পাওয়া যায়নি",
+        "reverseSchedule": "রিভার্স শিডিউল",
+        "ticketType": "টিকিটের ধরন",
+        "passengerName": "যাত্রীর নাম",
+        "passengerMobile": "যাত্রীর মোবাইল",
+        "paymentMode": "পেমেন্টের ধরন",
+        "paymentMethod": "পেমেন্ট মাধ্যম",
+        "partialAmount": "আংশিক পরিমাণ"
+    },
+    "staff": {
+        "roles": {
+            "manager": "ম্যানেজার",
+            "supervisor": "সুপারভাইজার",
+            "driver": "ড্রাইভার",
+            "assistant": "সহকারী",
+            "counter": "কাউন্টার",
+            "executive": "এক্সিকিউটিভ",
+            "viewer": "দর্শক",
+            "accountant": "হিসাবরক্ষক",
+            "staff": "স্টাফ"
+        }
+    },
+    "toast": {
+        "tripCreated": "ট্রিপ তৈরি হয়েছে",
+        "tripUpdated": "ট্রিপ হালনাগাদ হয়েছে",
+        "bookingCreated": "বুকিং সম্পন্ন হয়েছে",
+        "fareSaved": "ভাড়া সংরক্ষিত হয়েছে"
+    },
+    "print": {
+        "ticket": "টিকিট",
+        "booking": "বুকিং {{code}}",
+        "passenger": "যাত্রী: {{name}}",
+        "mobile": "মোবাইল: {{mobile}}",
+        "items": "নির্বাচিত: {{items}}"
+    }
+}

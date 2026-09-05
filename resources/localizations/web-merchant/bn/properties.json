@@ -1,0 +1,254 @@
+{
+    "list": {
+        "title": "পরিবহন",
+        "description": "গাড়ি ও নৌযান",
+        "addVehicle": "গাড়ি যোগ করুন",
+        "searchPlaceholder": "গাড়ি বা রেজিস্ট্রেশন খুঁজুন...",
+        "allTypes": "সব ধরন",
+        "empty": "কোনো পরিবহন পাওয়া যায়নি",
+        "noRoute": "কোনো রুট নির্ধারণ করা হয়নি",
+        "passengers_one": "{{value}} জন যাত্রী",
+        "passengers_other": "{{value}} জন যাত্রী",
+        "registration": "রেজি: {{value}}",
+        "stoppages_one": "{{value}}টি স্টপেজ",
+        "stoppages_other": "{{value}}টি স্টপেজ",
+        "noStoppages": "কোনো স্টপেজ নেই",
+        "details": "বিস্তারিত",
+        "layout": "লেআউট",
+        "activate": "সক্রিয় করুন",
+        "deactivate": "নিষ্ক্রিয় করুন"
+    },
+    "labels": {
+        "ac": "এসি",
+        "yes": "হ্যাঁ",
+        "no": "না",
+        "notSet": "নির্ধারণ করা হয়নি",
+        "boarding": "বোর্ডিং",
+        "destination": "গন্তব্য",
+        "dropping": "ড্রপিং",
+        "via": "ভায়া",
+        "route": "রুট"
+    },
+    "status": {
+        "available": "উপলব্ধ",
+        "unavailable": "অনুপলব্ধ"
+    },
+    "vehicleClass": {
+        "acBusiness": "এসি বিজনেস ক্লাস",
+        "nonAc": "নন-এসি"
+    },
+    "fields": {
+        "vehicleName": "গাড়ির নাম",
+        "vehicleType": "গাড়ির ধরন",
+        "vehicleNumber": "গাড়ির নম্বর",
+        "vehicleNo": "গাড়ির নম্বর",
+        "registration": "রেজিস্ট্রেশন",
+        "registrationNumber": "রেজিস্ট্রেশন নম্বর",
+        "registrationNo": "রেজিস্ট্রেশন নম্বর",
+        "registrationExpiry": "রেজিস্ট্রেশনের মেয়াদ",
+        "registrationExpiryDate": "রেজিস্ট্রেশন মেয়াদ শেষের তারিখ",
+        "fitnessExpiry": "ফিটনেসের মেয়াদ",
+        "fitnessExpiryDate": "ফিটনেস মেয়াদ শেষের তারিখ",
+        "fitnessValidTill": "ফিটনেসের বৈধতা",
+        "engineNumber": "ইঞ্জিন নম্বর",
+        "engineNo": "ইঞ্জিন নম্বর",
+        "route": "রুট",
+        "assignedRoute": "নির্ধারিত রুট",
+        "capacity": "ধারণক্ষমতা",
+        "passengerCapacity": "যাত্রী ধারণক্ষমতা",
+        "floors": "ফ্লোর",
+        "numberOfFloors": "ফ্লোর সংখ্যা",
+        "floor": "ফ্লোর",
+        "seatLayout": "সিট লেআউট",
+        "layout": "লেআউট",
+        "layoutType": "লেআউটের ধরন",
+        "configuredSeats": "নির্ধারিত সিট",
+        "configuredCabins": "নির্ধারিত কেবিন",
+        "configuredSofas": "নির্ধারিত সোফা",
+        "totalSeats": "মোট সিট",
+        "seatsCabinsSofas": "সিট / কেবিন / সোফা",
+        "ac": "এসি",
+        "wifi": "ওয়াই-ফাই",
+        "airConditioned": "এসি সুবিধা",
+        "availability": "প্রাপ্যতা",
+        "nidVerification": "এনআইডি যাচাই",
+        "nidVerificationRequired": "এনআইডি যাচাই আবশ্যক",
+        "ticketTypes": "টিকিটের ধরন"
+    },
+    "amenities": {
+        "airConditioner": "এয়ার কন্ডিশনার",
+        "multiFloor": "একাধিক ফ্লোর",
+        "seatTickets": "সিট টিকিট",
+        "cabinTickets": "কেবিন টিকিট",
+        "sofaTickets": "সোফা টিকিট"
+    },
+    "documents": {
+        "registrationCertificate": "রেজিস্ট্রেশন সার্টিফিকেট",
+        "fitnessCertificate": "ফিটনেস সার্টিফিকেট",
+        "engineDetails": "ইঞ্জিনের তথ্য",
+        "vehicleNumber": "গাড়ির নম্বর",
+        "validTill": "মেয়াদ {{date}} পর্যন্ত"
+    },
+    "detail": {
+        "fallbackTitle": "গাড়ি #{{id}}",
+        "notFound": "গাড়ি পাওয়া যায়নি",
+        "editVehicle": "গাড়ি সম্পাদনা",
+        "moreActions": "আরও কার্যক্রম",
+        "seatLayout": "সিট লেআউট",
+        "viewTrips": "ট্রিপ দেখুন",
+        "assignRoute": "রুটে নির্ধারণ করুন",
+        "assignSchedule": "সময়সূচিতে নির্ধারণ করুন",
+        "vehicleActivity": "গাড়ির কার্যক্রম",
+        "block": "ব্লক / অনুপলব্ধ",
+        "activateVehicle": "গাড়ি সক্রিয় করুন",
+        "markAvailable": "উপলব্ধ হিসেবে চিহ্নিত করুন",
+        "vehicleInfo": "গাড়ির তথ্য",
+        "quickLinks": "দ্রুত লিংক",
+        "quickActions": "দ্রুত কার্যক্রম",
+        "backTo": "{{name}}-এ ফিরে যান",
+        "trips": "ট্রিপ",
+        "openTrips": "ট্রিপ খুলুন",
+        "open": "খুলুন",
+        "viewAll": "সব দেখুন",
+        "nextTrip": "পরবর্তী ট্রিপ",
+        "noUpcomingTrip": "আসন্ন কোনো ট্রিপ নেই",
+        "noTrips": "এই গাড়ির কোনো ট্রিপ পাওয়া যায়নি।",
+        "noRecentTrips": "এই গাড়ির সাম্প্রতিক কোনো ট্রিপ নেই।",
+        "boardingAt": "বোর্ডিং {{time}}",
+        "tabs": {
+            "overview": "সারসংক্ষেপ",
+            "layout": "সিট লেআউট",
+            "trips": "ট্রিপ",
+            "documents": "কাগজপত্র"
+        },
+        "sections": {
+            "vehicleDetails": "গাড়ির বিবরণ",
+            "amenities": "সুবিধাসমূহ",
+            "recentTrips": "সাম্প্রতিক ট্রিপ",
+            "statistics": "গাড়ির পরিসংখ্যান",
+            "statusAvailability": "অবস্থা ও প্রাপ্যতা",
+            "documents": "কাগজপত্র",
+            "documentsCompliance": "কাগজপত্র ও কমপ্লায়েন্স"
+        }
+    },
+    "stats": {
+        "totalTrips": "মোট ট্রিপ",
+        "totalBookings": "মোট বুকিং",
+        "occupancy": "অকুপেন্সি",
+        "revenue": "আয় (এই সময়ে)"
+    },
+    "seatLayout": {
+        "title": "গাড়ির লেআউট",
+        "description": "সিট, কেবিন ও সোফা লেআউট (CSV ইমপোর্ট)",
+        "manage": "লেআউট ব্যবস্থাপনা",
+        "seatMap": "সিট ম্যাপ",
+        "busLayout": "২+২ · {{floors}}",
+        "floorCount_one": "{{value}}টি ফ্লোর",
+        "floorCount_other": "{{value}}টি ফ্লোর",
+        "types": {
+            "seat": "সিট",
+            "cabin": "কেবিন",
+            "sofa": "সোফা"
+        },
+        "typeWord": {
+            "seat": "সিট",
+            "cabin": "কেবিন",
+            "sofa": "সোফা"
+        },
+        "stats": {
+            "capacity": "ধারণক্ষমতা",
+            "totalCapacity": "মোট ধারণক্ষমতা",
+            "floors": "ফ্লোর",
+            "seats": "সিট",
+            "cabins": "কেবিন",
+            "sofas": "সোফা"
+        },
+        "samples": {
+            "seat": "সিটের নমুনা",
+            "cabin": "কেবিনের নমুনা",
+            "sofa": "সোফার নমুনা"
+        },
+        "import": {
+            "title": "লেআউট CSV ইমপোর্ট",
+            "description": "নমুনা CSV ডাউনলোড করে পূরণ করুন, তারপর আপলোড করুন। Excel (.xlsx) ইমপোর্ট শুধু Durpalla অ্যাডমিন প্যানেলেই করা যায়।",
+            "download": "{{name}} ডাউনলোড করুন",
+            "upload": "আপলোড",
+            "uploading": "আপলোড হচ্ছে..."
+        },
+        "errors": {
+            "csvOnly": "CSV ফাইল আপলোড করুন (Excel .xlsx শুধু অ্যাডমিন প্যানেলে সমর্থিত)",
+            "tooLarge": "লেআউট ফাইল {{size}} MB এর বেশি হতে পারবে না"
+        },
+        "preview": {
+            "title": "বর্তমান লেআউট",
+            "noItems": "এখনো কিছু নেই",
+            "itemCount_one": "{{value}}টি {{type}}",
+            "itemCount_other": "{{value}}টি {{type}}",
+            "notImported": "এখনো কোনো {{type}} লেআউট ইমপোর্ট করা হয়নি। ম্যাপ তৈরি করতে ফাইল আপলোড করুন।",
+            "notConfigured": "এখনো কোনো {{type}} লেআউট নির্ধারণ করা হয়নি।"
+        }
+    },
+    "images": {
+        "title": "গাড়ির ছবি",
+        "thumbnail": "থাম্বনেইল",
+        "thumbnailAlt": "গাড়ির থাম্বনেইল",
+        "uploadThumbnail": "থাম্বনেইল আপলোড করুন",
+        "replaceThumbnail": "থাম্বনেইল পরিবর্তন করুন",
+        "hint": "JPG, PNG বা WebP · সর্বোচ্চ {{size}} MB",
+        "gallery": "গ্যালারি",
+        "galleryAlt": "গ্যালারির ছবি",
+        "addGallery": "গ্যালারিতে ছবি যোগ করুন",
+        "upTo": "সর্বোচ্চ {{value}}টি ছবি",
+        "invalidType": "PNG, JPG বা WebP ছবি ব্যবহার করুন",
+        "tooLarge": "{{name}} ফাইলটি {{size}} MB এর চেয়ে বড়",
+        "readFailed": "ছবিটি পড়া যায়নি"
+    },
+    "gallery": {
+        "dialogTitle": "{{name}} — ছবি {{current}} / {{total}}",
+        "imageAlt": "{{name}} {{index}}",
+        "previous": "আগের ছবি",
+        "next": "পরের ছবি"
+    },
+    "form": {
+        "createTitle": "নতুন গাড়ি যোগ করুন",
+        "editTitle": "গাড়ি সম্পাদনা",
+        "createDescription": "গাড়ির তথ্য ও কনফিগারেশন যোগ করুন।",
+        "editDescription": "গাড়ির তথ্য, থাম্বনেইল ও গ্যালারি হালনাগাদ করুন।",
+        "progressLabel": "গাড়ির ফর্মের অগ্রগতি",
+        "specifications": "স্পেসিফিকেশন",
+        "steps": {
+            "basic": "মূল তথ্য",
+            "seatLayout": "সিট ও লেআউট",
+            "compliance": "কাগজপত্র ও কমপ্লায়েন্স",
+            "review": "পর্যালোচনা ও সংরক্ষণ"
+        },
+        "placeholders": {
+            "selectRoute": "রুট নির্বাচন করুন",
+            "vehicleName": "যেমন: সেন্টমার্টিন পরিবহন",
+            "vehicleNumber": "যেমন: 1234",
+            "registrationNumber": "যেমন: ঢাকা মেট্রো ব-১১-১২৩৪",
+            "engineNumber": "ইঞ্জিন নম্বর লিখুন"
+        },
+        "ticketTypes": "উপলব্ধ টিকিটের ধরন",
+        "ticketTypesHint": "এই গাড়িতে যে ধরনের আসন সুবিধা আছে সেগুলো নির্বাচন করুন।",
+        "seatMapNote": "গাড়ি তৈরি করার পর বিস্তারিত সিট ম্যাপ ইমপোর্ট করা যাবে।",
+        "nidHint": "বুকিংয়ের জন্য যাত্রীর পরিচয় যাচাই বাধ্যতামূলক করুন।",
+        "documentUploadNote": "পরিবহন ডকুমেন্ট আপলোড সেবা চালু হলে কাগজপত্রের ফাইল যোগ করা যাবে।",
+        "selectTicketKind": "অন্তত একটি টিকিটের ধরন নির্বাচন করুন",
+        "saveNext": "সংরক্ষণ ও পরবর্তী",
+        "create": "গাড়ি তৈরি করুন",
+        "update": "গাড়ি হালনাগাদ করুন",
+        "quickSummary": "সংক্ষিপ্ত বিবরণ",
+        "notSelected": "নির্বাচন করা হয়নি",
+        "notEntered": "লেখা হয়নি",
+        "required": "আবশ্যক",
+        "notRequired": "আবশ্যক নয়"
+    },
+    "toast": {
+        "created": "গাড়ি যোগ করা হয়েছে",
+        "updated": "গাড়ির তথ্য হালনাগাদ হয়েছে",
+        "statusUpdated": "গাড়ির অবস্থা হালনাগাদ হয়েছে",
+        "layoutImported": "লেআউট ইমপোর্ট হয়েছে",
+        "chooseFile": "প্রথমে একটি লেআউট ফাইল নির্বাচন করুন"
+    }
+}

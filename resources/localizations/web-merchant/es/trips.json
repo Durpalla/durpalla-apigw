@@ -1,0 +1,283 @@
+{
+    "list": {
+        "title": "Trips",
+        "description": "Schedules and counter operations",
+        "selectTitle": "Select a trip",
+        "selectDescription": "Choose a scheduled trip, then select seats and enter passenger details.",
+        "createTrip": "Create trip",
+        "filterByDate": "Filter by date (optional)",
+        "clearDateFilter": "Clear date filter",
+        "emptyForDate": "No trips for this date",
+        "emptyUpcoming": "No upcoming trips",
+        "vehicle": "Vehicle",
+        "route": "Route",
+        "leaving": "Leaving",
+        "type": "Type",
+        "easyBooking": "Easy booking",
+        "selectSeats": "Select seats",
+        "open": "Open"
+    },
+    "detail": {
+        "notFound": "Trip not found",
+        "backToTrips": "Back to trips",
+        "vehicleAlt": "Vehicle",
+        "boardingAt": "Boarding {{time}}",
+        "editTrip": "Edit trip",
+        "bookItems_one": "Book {{formattedCount}} item",
+        "bookItems_other": "Book {{formattedCount}} items",
+        "collected": "Collected",
+        "bookedTickets": "Booked tickets",
+        "remaining": "Remaining",
+        "progress": "Progress",
+        "floor": "Floor",
+        "layoutEmpty": "No layout items returned for this floor/type.",
+        "tabs": {
+            "overview": "Overview",
+            "layout": "Seat Layout"
+        },
+        "layoutTypes": {
+            "seat": "Seats",
+            "cabin": "Cabins",
+            "sofa": "Sofas"
+        },
+        "overview": {
+            "scheduleRoute": "Schedule & Route",
+            "leavingAt": "Leaving at",
+            "scheduleType": "Schedule type",
+            "operationHour": "Operation hour",
+            "hoursValue": "{{hours}}h",
+            "timeline": "Timeline",
+            "stoppages": "Stoppages",
+            "noStoppages": "No stoppages available for this trip.",
+            "deckSegments": "Deck Segments",
+            "segment": "Segment",
+            "passengers": "Passengers",
+            "farePerPerson": "Fare / person"
+        },
+        "sidebar": {
+            "vehicle": "Vehicle",
+            "type": "Type",
+            "capacity": "Capacity",
+            "registration": "Registration",
+            "registrationExpiry": "Reg. expiry",
+            "fitnessExpiry": "Fitness expiry",
+            "payments": "Payments",
+            "cashOnHand": "Cash on hand",
+            "digitalPayments": "Digital payments",
+            "collectedTotal": "Collected total",
+            "inventory": "Inventory",
+            "seatsBooked": "Seats booked",
+            "cabinsBooked": "Cabins booked",
+            "deckPassengers": "Deck passengers"
+        }
+    },
+    "booking": {
+        "title": "Counter booking",
+        "items": "Items: {{items}}",
+        "passengerNamePlaceholder": "Enter passenger name",
+        "passengerMobilePlaceholder": "Enter passenger mobile",
+        "partialAmountPlaceholder": "Enter amount paid",
+        "confirm": "Confirm booking",
+        "selectAtLeastOne": "Select at least one item",
+        "partialAmountPositive": "Partial amount must be greater than 0",
+        "modes": {
+            "full": "Full",
+            "partial": "Partial",
+            "none": "None / reserve"
+        },
+        "methods": {
+            "cash": "Cash",
+            "card": "Card",
+            "bkash": "bKash",
+            "nagad": "Nagad"
+        }
+    },
+    "create": {
+        "title": "Create New Trip",
+        "description": "Add trip details, schedule, pricing and other information",
+        "next": "Next",
+        "submit": "Create Trip",
+        "creating": "Creating…",
+        "saveAsDraft": "Save as Draft",
+        "draftSaved": "Draft saved locally",
+        "draftSavedDescription": "You can continue editing this trip later in this session.",
+        "noRouteAssigned": "Selected vehicle has no route assigned",
+        "durationHoursMinutes": "{{hours}}h {{minutes}}m",
+        "durationHoursOnly": "{{hours}}h",
+        "steps": {
+            "basic": "Basic Information",
+            "schedule": "Schedule & Route",
+            "pricing": "Pricing & Seats",
+            "review": "Review & Save"
+        },
+        "basic": {
+            "title": "Trip Information",
+            "tripType": "Trip Type",
+            "serviceType": "Service Type",
+            "tripName": "Trip Name / Number",
+            "tripNamePlaceholder": "e.g. Dhaka - Cox's Bazar Morning",
+            "tripCode": "Trip Code",
+            "loadingVehicles": "Loading vehicles…",
+            "viewVehicleDetails": "View Vehicle Details",
+            "operator": "Operator / Driver",
+            "selectDriver": "Select driver",
+            "selectVehicleFirst": "Select a vehicle first",
+            "noDrivers": "No driver or supervisor staff found. Add staff with the Driver or Supervisor role.",
+            "assistant": "Assistant / Helper",
+            "selectAssistant": "Select assistant",
+            "noAssistants": "No assistant staff found. Add staff with the Assistant, Counter, or Executive role.",
+            "routeFallback": "Route #{{id}}",
+            "stopFallback": "Stop {{number}}",
+            "noRouteOnVehicle": "No route assigned to this vehicle",
+            "viewRouteDetails": "View Route Details",
+            "assignRouteFirst": "Assign a route to this vehicle before creating a trip.",
+            "routeFromVehicle": "Route is taken from the selected vehicle.",
+            "tripCategory": "Trip Category",
+            "tripStatus": "Trip Status",
+            "bookingType": "Booking Type",
+            "routeStoppages": "Route stoppages",
+            "boardingPoint": "Boarding point",
+            "droppingPoint": "Dropping point",
+            "via": "Via: {{stops}}",
+            "stopsFromRoute": "Boarding, dropping, and via stops come from the selected route.",
+            "serviceTypes": {
+                "ac-business": "AC Business",
+                "non-ac": "Non-AC",
+                "sleeper": "Sleeper"
+            },
+            "tripCategories": {
+                "regular": "Regular Service",
+                "special": "Special Service",
+                "charter": "Charter"
+            },
+            "tripStatuses": {
+                "active": "Active",
+                "draft": "Draft",
+                "cancelled": "Cancelled"
+            },
+            "bookingTypes": {
+                "public": "Public",
+                "private": "Private",
+                "corporate": "Corporate"
+            }
+        },
+        "schedule": {
+            "title": "Schedule & Route",
+            "journeyDate": "Journey Date",
+            "departureTime": "Departure Time",
+            "estimatedDuration": "Estimated Duration (hours)",
+            "arrivalTime": "Arrival Time (ETA)",
+            "reverseHint": "Run this trip in the route's reverse direction."
+        },
+        "pricing": {
+            "seatCapacity": "Seat & Capacity",
+            "totalSeats": "Total Seats",
+            "availableSeats": "Available Seats",
+            "seatLayout": "Seat Layout",
+            "genderPolicy": "Gender Policy",
+            "layoutNote": "Seat layout and availability will be validated with the selected vehicle configuration.",
+            "viaStopPricing": "Via Stop Pricing",
+            "viaStopPricingDescription": "Set fares between boarding and dropping stoppages. Saved for this route and vehicle type — applied to matching trips automatically.",
+            "fullPricingPage": "Full pricing page",
+            "addFare": "Add Fare",
+            "selectVehicleWithRoute": "Select a vehicle with a route to manage stop fares.",
+            "noFareRules": "No fare rules yet. Click a cell or Add Fare to create stop-to-stop prices.",
+            "noViaStops": "This route has no via stoppages, so stop-to-stop fare management is hidden. Add VIA stops on the route if you need segment pricing.",
+            "genderPolicies": {
+                "mixed": "Mixed",
+                "male": "Male only",
+                "female": "Female only"
+            }
+        },
+        "review": {
+            "title": "Review & Save",
+            "class": "Class",
+            "duration": "Duration",
+            "direction": "Direction",
+            "directionReverse": "Reverse",
+            "directionStandard": "Standard",
+            "capacity": "Capacity",
+            "booking": "Booking",
+            "additionalInfo": "Additional Info",
+            "descriptionLabel": "Description (Optional)",
+            "descriptionPlaceholder": "Add trip description, amenities, terms or any special instructions…",
+            "charCount": "{{used}} / {{max}}"
+        },
+        "sidebar": {
+            "tripSummary": "Trip Summary",
+            "tripCode": "Trip Code",
+            "tripName": "Trip Name",
+            "tripType": "Trip Type",
+            "journeyDate": "Journey Date",
+            "departure": "Departure",
+            "arrival": "Arrival",
+            "totalSeats": "Total Seats",
+            "vehicleInformation": "Vehicle Information",
+            "noRegistration": "No registration",
+            "class": "Class",
+            "ac": "AC",
+            "viewVehicleDetails": "View Vehicle Details",
+            "selectVehicleHint": "Select a vehicle to see details.",
+            "amenities": "Amenities",
+            "amenityList": {
+                "airConditioner": "Air Conditioner",
+                "wifi": "Wi-Fi",
+                "chargingPoint": "Charging Point",
+                "readingLight": "Reading Light",
+                "blanket": "Blanket",
+                "waterBottle": "Water Bottle",
+                "pillow": "Pillow",
+                "fireExtinguisher": "Fire Extinguisher"
+            }
+        }
+    },
+    "edit": {
+        "title": "Edit trip",
+        "reverseHint": "Run this trip in the reverse direction.",
+        "saveChanges": "Save changes"
+    },
+    "form": {
+        "vehicle": "Vehicle",
+        "vehicleType": "Vehicle type",
+        "route": "Route",
+        "departure": "Departure",
+        "durationHours": "Duration (hours)",
+        "operationDuration": "Operation duration",
+        "selectVehicle": "Select vehicle",
+        "selectRoute": "Select route",
+        "noRoutes": "No routes found",
+        "reverseSchedule": "Reverse schedule",
+        "ticketType": "Ticket type",
+        "passengerName": "Passenger name",
+        "passengerMobile": "Passenger mobile",
+        "paymentMode": "Payment mode",
+        "paymentMethod": "Payment method",
+        "partialAmount": "Partial amount"
+    },
+    "staff": {
+        "roles": {
+            "manager": "Manager",
+            "supervisor": "Supervisor",
+            "driver": "Driver",
+            "assistant": "Assistant",
+            "counter": "Counter",
+            "executive": "Executive",
+            "viewer": "Viewer",
+            "accountant": "Accountant",
+            "staff": "Staff"
+        }
+    },
+    "toast": {
+        "tripCreated": "Trip created",
+        "tripUpdated": "Trip updated",
+        "bookingCreated": "Booking created",
+        "fareSaved": "Fare saved"
+    },
+    "print": {
+        "ticket": "Ticket",
+        "booking": "Booking {{code}}",
+        "passenger": "Passenger: {{name}}",
+        "mobile": "Mobile: {{mobile}}",
+        "items": "Items: {{items}}"
+    }
+}
