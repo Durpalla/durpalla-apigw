@@ -1053,6 +1053,263 @@ class MerchantDeskBookingService
     }
 
     /**
+     * Extend stay nights on one or more booked rooms when inventory is available.
+     *
+     * @param  array{new_check_out: string, hotel_item_ids?: list<int>}  $data
+     */
+    public function extendStay(Booking $booking, array $data)
+    {
+        try {
+            $booking->loadMissing(['hotelItems.hotel', 'payment']);
+            $status = $this->normalizeHotelStatus($booking->status);
+            if (in_array($status, ['cancelled', 'checked-out', 'failed'], true)) {
+                return response()->failed(['message' => 'This booking cannot be extended.']);
+            }
+
+            $newCheckOut = Carbon::parse((string) ($data['new_check_out'] ?? ''))->startOfDay();
+            $itemIds = array_values(array_filter(array_map('intval', $data['hotel_item_ids'] ?? [])));
+            $items = $booking->hotelItems;
+            if ($itemIds !== []) {
+                $items = $items->whereIn('id', $itemIds)->values();
+            }
+            if ($items->isEmpty()) {
+                return response()->failed(['message' => 'No rooms selected to extend.']);
+            }
+
+            DB::beginTransaction();
+
+            $extraCharge = 0.0;
+            foreach ($items as $item) {
+                $oldCheckOut = Carbon::parse($item->check_out_date)->startOfDay();
+                if (! $newCheckOut->gt($oldCheckOut)) {
+                    DB::rollBack();
+
+                    return response()->failed([
+                        'message' => 'New check-out must be after the current check-out ('.$oldCheckOut->toDateString().').',
+                    ]);
+                }
+
+                $extraNights = (int) $oldCheckOut->diffInDays($newCheckOut);
+                if ($extraNights < 1) {
+                    continue;
+                }
+
+                $moduleRoomId = (int) ($item->room_id ?? 0);
+                $hotel = $item->hotel;
+                if ($moduleRoomId > 0 && $hotel && $this->tracksLocalInventory($hotel, ['platform' => 'merchant_desk'])) {
+                    try {
+                        $this->checkAndReserveInventory($moduleRoomId, $oldCheckOut, $newCheckOut, 1);
+                    } catch (\Exception $e) {
+                        DB::rollBack();
+
+                        return response()->failed([
+                            'message' => $e->getMessage() ?: 'Room not available for the extra nights.',
+                        ]);
+                    }
+                }
+
+                $unitPrice = (float) ($item->unit_price ?? 0);
+                $addAmount = round($unitPrice * $extraNights, 2);
+                $item->check_out_date = $newCheckOut->toDateString();
+                $item->nights = (int) Carbon::parse($item->check_in_date)->diffInDays($newCheckOut);
+                $item->total_price = round((float) $item->total_price + $addAmount, 2);
+                $item->save();
+                $extraCharge += $addAmount;
+            }
+
+            $booking->unsetRelation('hotelItems');
+            $booking->load('hotelItems');
+            $maxOut = $booking->hotelItems
+                ->map(fn ($row) => Carbon::parse($row->check_out_date)->startOfDay())
+                ->sort()
+                ->last();
+            if ($maxOut) {
+                $booking->to_date = $maxOut->toDateString();
+            }
+
+            $this->applyPayableDelta($booking, $extraCharge);
+            DB::commit();
+
+            $booking->load(['hotelItems.hotel', 'hotelItems.roomType', 'hotelItems.ratePlan', 'customer', 'payment', 'collections.supervisor']);
+
+            return response()->success($booking, 'Stay extended. Extra charge: '.number_format($extraCharge, 2));
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            LogHelper::exception($exception, [
+                'keyword' => 'HOTEL_BOOKING_EXTEND_EXCEPTION',
+                'booking_id' => $booking->id,
+            ]);
+
+            return response()->failed(['message' => 'Failed to extend stay']);
+        }
+    }
+
+    /**
+     * Add more rooms to an existing hotel booking.
+     *
+     * @param  array{rooms: list<array<string,mixed>>, check_in_date?: string, check_out_date?: string, adults?: int, children?: int}  $data
+     */
+    public function addRooms(Booking $booking, array $data)
+    {
+        try {
+            $booking->loadMissing(['hotelItems.hotel', 'payment']);
+            $status = $this->normalizeHotelStatus($booking->status);
+            if (in_array($status, ['cancelled', 'checked-out', 'failed'], true)) {
+                return response()->failed(['message' => 'Cannot add rooms to this booking.']);
+            }
+
+            $rooms = $data['rooms'] ?? null;
+            if (! is_array($rooms) || $rooms === []) {
+                return response()->failed(['message' => 'At least one room is required.']);
+            }
+
+            $checkIn = Carbon::parse((string) ($data['check_in_date'] ?? $booking->from_date))->startOfDay();
+            $checkOut = Carbon::parse((string) ($data['check_out_date'] ?? $booking->to_date))->startOfDay();
+            if (! $checkOut->gt($checkIn)) {
+                return response()->failed(['message' => 'Check-out date must be after check-in date.']);
+            }
+            $nights = (int) $checkIn->diffInDays($checkOut);
+
+            DB::beginTransaction();
+
+            $addedAmount = 0.0;
+            $localUnitsByRoomProduct = [];
+
+            foreach ($rooms as $roomData) {
+                if (! is_array($roomData)) {
+                    continue;
+                }
+
+                // One expanded row = one room (controller expands quantity like walk-in create).
+                $hotelId = (int) ($roomData['hotel_id'] ?? 0);
+                $roomTypeId = (int) ($roomData['room_type_id'] ?? 0);
+                $ratePlanId = (int) ($roomData['rate_plan_id'] ?? 0);
+                $moduleRoomId = (int) ($roomData['room_id'] ?? 0);
+                $adults = (int) ($roomData['adults'] ?? $data['adults'] ?? 1);
+                $children = (int) ($roomData['children'] ?? $data['children'] ?? 0);
+                $childrenAges = $roomData['children_ages'] ?? [];
+
+                $hotel = Hotel::findOrFail($hotelId);
+                $ratePlan = RoomRatePlan::findOrFail($ratePlanId);
+                $unitPrice = $this->getUnitPrice($hotel, $roomTypeId, $ratePlan, $data, $moduleRoomId ?: null);
+
+                $childPrice = 0.0;
+                if ($children > 0 && ! empty($childrenAges)) {
+                    $childRuleEngine = new ChildRuleEngine($hotel, $ratePlan, $unitPrice, $childrenAges, $nights);
+                    $validation = $childRuleEngine->validate();
+                    if (! $validation['valid']) {
+                        DB::rollBack();
+
+                        return response()->failed(['message' => implode(', ', $validation['errors'])]);
+                    }
+                    $childPrice = $childRuleEngine->calculateChildPrice();
+                }
+
+                $roomTotal = ($unitPrice * $nights) + $childPrice;
+                $addedAmount += $roomTotal;
+
+                if ($this->tracksLocalInventory($hotel, ['platform' => 'merchant_desk'])) {
+                    if ($moduleRoomId <= 0) {
+                        DB::rollBack();
+
+                        return response()->failed(['message' => 'room_id is required to reserve shared inventory.']);
+                    }
+                    $localUnitsByRoomProduct[$moduleRoomId] = ($localUnitsByRoomProduct[$moduleRoomId] ?? 0) + 1;
+                }
+
+                $this->bookingHotelItemRepository->create([
+                    'booking_id' => $booking->id,
+                    'hotel_id' => $hotelId,
+                    'room_id' => $moduleRoomId ?: null,
+                    'room_type_id' => $roomTypeId,
+                    'rate_plan_id' => $ratePlanId,
+                    'check_in_date' => $checkIn->format('Y-m-d'),
+                    'check_out_date' => $checkOut->format('Y-m-d'),
+                    'nights' => $nights,
+                    'adults' => $adults,
+                    'children' => $children,
+                    'children_ages' => $childrenAges,
+                    'unit_price' => $unitPrice,
+                    'child_price' => $childPrice,
+                    'total_price' => $roomTotal,
+                    'supplier' => $hotel->source,
+                ]);
+            }
+
+            foreach ($localUnitsByRoomProduct as $moduleRoomId => $units) {
+                try {
+                    $this->checkAndReserveInventory((int) $moduleRoomId, $checkIn, $checkOut, (int) $units);
+                } catch (\Exception $e) {
+                    DB::rollBack();
+
+                    return response()->failed(['message' => $e->getMessage() ?: 'Room not available for selected dates']);
+                }
+            }
+
+            $from = Carbon::parse((string) $booking->from_date)->startOfDay();
+            $to = Carbon::parse((string) $booking->to_date)->startOfDay();
+            if ($checkIn->lt($from)) {
+                $booking->from_date = $checkIn->toDateString();
+            }
+            if ($checkOut->gt($to)) {
+                $booking->to_date = $checkOut->toDateString();
+            }
+
+            $this->applyPayableDelta($booking, $addedAmount);
+            DB::commit();
+
+            $booking->load(['hotelItems.hotel', 'hotelItems.roomType', 'hotelItems.ratePlan', 'customer', 'payment', 'collections.supervisor']);
+
+            return response()->success($booking, 'Rooms added. Extra charge: '.number_format($addedAmount, 2));
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            LogHelper::exception($exception, [
+                'keyword' => 'HOTEL_BOOKING_ADD_ROOMS_EXCEPTION',
+                'booking_id' => $booking->id,
+            ]);
+
+            return response()->failed(['message' => $exception->getMessage() ?: 'Failed to add rooms']);
+        }
+    }
+
+    /**
+     * Increase booking payable and payment dues after customize actions.
+     */
+    protected function applyPayableDelta(Booking $booking, float $delta): void
+    {
+        if ($delta <= 0.009) {
+            $booking->save();
+
+            return;
+        }
+
+        $booking->total_amount = round((float) $booking->total_amount + $delta, 2);
+        $booking->total_payable = round((float) $booking->total_payable + $delta, 2);
+        $booking->payment_status = 0;
+        $booking->save();
+
+        $payment = $booking->payment;
+        if (! $payment) {
+            Payment::create([
+                'booking_id' => $booking->id,
+                'customer_id' => $booking->customer_id,
+                'paid_amount' => 0,
+                'dues' => (float) $booking->total_payable,
+                'payment_method' => 'pay_later',
+                'payment_gateway' => 'pay_later',
+                'status' => 'pending',
+            ]);
+
+            return;
+        }
+
+        $paid = (float) ($payment->paid_amount ?? 0);
+        $payment->dues = max(0.0, round((float) $booking->total_payable - $paid, 2));
+        $payment->status = $payment->dues < 0.01 ? AppConst::PAYMENT_SUCCESS : 'pending';
+        $payment->save();
+    }
+
+    /**
      * Release shared hotel_inventory for cancelled / shortened stays.
      */
     protected function releaseInventory($bookingItem, ?Carbon $from = null, ?Carbon $toExclusive = null)

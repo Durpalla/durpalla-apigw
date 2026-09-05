@@ -12,6 +12,7 @@ use App\Models\HotelRoom;
 use App\Models\RoomRatePlan;
 use App\Http\Requests\Hotel\HotelBookingCreateRequest;
 use App\Services\Hotel\MerchantDeskBookingService;
+use Carbon\Carbon;
 
 class MerchantHotelBookingController extends MerchantHotelBaseController
 {
@@ -382,6 +383,115 @@ class MerchantHotelBookingController extends MerchantHotelBaseController
         return response()->json([
             'success' => $ok,
             'message' => $payload['message'] ?? ($ok ? 'Checked out.' : 'Check-out failed.'),
+            'data' => $payload['data'] ?? null,
+        ], $ok ? 200 : 422);
+    }
+
+    /**
+     * POST /api/v1/merchant/hotel-bookings/{id}/extend
+     * Body: new_check_out (Y-m-d), hotel_item_ids? (optional subset of rooms)
+     */
+    public function extend(Request $request, int $id): JsonResponse
+    {
+        $ownerId = $this->merchantOwnerId($request);
+        $this->assertHotelAllowed($ownerId);
+
+        $booking = Booking::query()
+            ->hotel()
+            ->with(['hotelItems.hotel'])
+            ->whereHas('hotelItems.hotel', function ($hq) use ($ownerId) {
+                $hq->where('merchant_id', $ownerId);
+            })
+            ->findOrFail($id);
+
+        $validator = Validator::make($request->all(), [
+            'new_check_out' => ['required', 'date'],
+            'hotel_item_ids' => ['nullable', 'array'],
+            'hotel_item_ids.*' => ['integer', 'min:1'],
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $result = $this->bookingService->extendStay($booking, $validator->validated());
+        $payload = json_decode((string) $result->getContent(), true);
+        $ok = (bool) ($payload['status'] ?? false);
+
+        return response()->json([
+            'success' => $ok,
+            'message' => $payload['message'] ?? ($ok ? 'Stay extended.' : 'Extend failed.'),
+            'data' => $payload['data'] ?? null,
+        ], $ok ? 200 : 422);
+    }
+
+    /**
+     * POST /api/v1/merchant/hotel-bookings/{id}/rooms
+     * Body: rooms[] (same as walk-in), optional check_in_date / check_out_date (defaults to booking stay)
+     */
+    public function addRooms(Request $request, int $id): JsonResponse
+    {
+        $ownerId = $this->merchantOwnerId($request);
+        $this->assertHotelAllowed($ownerId);
+
+        $booking = Booking::query()
+            ->hotel()
+            ->with(['hotelItems.hotel'])
+            ->whereHas('hotelItems.hotel', function ($hq) use ($ownerId) {
+                $hq->where('merchant_id', $ownerId);
+            })
+            ->findOrFail($id);
+
+        $input = $this->expandMerchantRoomRows($request->all(), $ownerId);
+        $validator = Validator::make($input, [
+            'check_in_date' => ['nullable', 'date'],
+            'check_out_date' => ['nullable', 'date'],
+            'adults' => ['nullable', 'integer', 'min:1'],
+            'children' => ['nullable', 'integer', 'min:0'],
+            'rooms' => ['required', 'array', 'min:1'],
+            'rooms.*.hotel_id' => ['required', 'integer', 'exists:hotels,id'],
+            'rooms.*.room_id' => ['required', 'integer', 'exists:hotel_rooms,id'],
+            'rooms.*.room_type_id' => ['required', 'integer'],
+            'rooms.*.rate_plan_id' => ['required', 'integer', 'exists:room_rate_plans,id'],
+            'rooms.*.adults' => ['nullable', 'integer', 'min:1'],
+            'rooms.*.children' => ['nullable', 'integer', 'min:0'],
+            'rooms.*.children_ages' => ['nullable', 'array'],
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $validated = $validator->validated();
+        if (! empty($validated['check_in_date']) && ! empty($validated['check_out_date'])) {
+            if (! Carbon::parse($validated['check_out_date'])->gt(Carbon::parse($validated['check_in_date']))) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Check-out date must be after check-in date.',
+                ], 422);
+            }
+        }
+
+        foreach ($validated['rooms'] as $roomRow) {
+            $hotel = Hotel::query()->where('id', (int) $roomRow['hotel_id'])->where('merchant_id', $ownerId)->first();
+            if (! $hotel) {
+                return response()->json(['success' => false, 'message' => 'Hotel not owned by this merchant.'], 403);
+            }
+        }
+
+        $result = $this->bookingService->addRooms($booking, $validated);
+        $payload = json_decode((string) $result->getContent(), true);
+        $ok = (bool) ($payload['status'] ?? false);
+
+        return response()->json([
+            'success' => $ok,
+            'message' => $payload['message'] ?? ($ok ? 'Rooms added.' : 'Add rooms failed.'),
             'data' => $payload['data'] ?? null,
         ], $ok ? 200 : 422);
     }
