@@ -35,6 +35,10 @@ final class HotelInventoryService
         Carbon $checkIn,
         Carbon $checkOut,
     ): int {
+        if ($this->isStopSold($roomType, $checkIn, $checkOut)) {
+            return 0;
+        }
+
         $dates = self::nightDates($checkIn, $checkOut);
         if ($dates === []) {
             return 0;
@@ -72,6 +76,8 @@ final class HotelInventoryService
         Carbon $checkOut,
         int $unitsRequested = 1,
     ): void {
+        $this->assertNotStopSold($roomType, $checkIn, $checkOut);
+
         $dates = self::nightDates($checkIn, $checkOut);
         if ($dates === []) {
             throw new \InvalidArgumentException('Invalid stay range');
@@ -98,6 +104,8 @@ final class HotelInventoryService
      */
     public function applyHold(HotelRoomType $roomType, Carbon $checkIn, Carbon $checkOut, int $units = 1): void
     {
+        $this->assertNotStopSold($roomType, $checkIn, $checkOut);
+
         foreach (self::nightDates($checkIn, $checkOut) as $date) {
             $this->ensureInventoryRow($roomType, $date);
             $row = HotelInventory::query()
@@ -157,6 +165,8 @@ final class HotelInventoryService
      */
     public function sell(HotelRoomType $roomType, Carbon $checkIn, Carbon $checkOut, int $units = 1): void
     {
+        $this->assertNotStopSold($roomType, $checkIn, $checkOut);
+
         foreach (self::nightDates($checkIn, $checkOut) as $date) {
             $this->ensureInventoryRow($roomType, $date);
             $row = HotelInventory::query()
@@ -232,6 +242,47 @@ final class HotelInventoryService
             return;
         }
         $this->ensureInventoryRow($roomType, $date);
+    }
+
+    private function assertNotStopSold(HotelRoomType $roomType, Carbon $checkIn, Carbon $checkOut): void
+    {
+        [$hotelId, $moduleRoomTypeId] = $this->stopSaleScope($roomType);
+        if ($hotelId < 1) {
+            return;
+        }
+        app(HotelStopSaleService::class)->assertBookable($hotelId, $moduleRoomTypeId, $checkIn, $checkOut);
+    }
+
+    private function isStopSold(HotelRoomType $roomType, Carbon $checkIn, Carbon $checkOut): bool
+    {
+        [$hotelId, $moduleRoomTypeId] = $this->stopSaleScope($roomType);
+        if ($hotelId < 1) {
+            return false;
+        }
+
+        return app(HotelStopSaleService::class)->blocksStay($hotelId, $moduleRoomTypeId, $checkIn, $checkOut);
+    }
+
+    /**
+     * @return array{0:int,1:?int}
+     */
+    private function stopSaleScope(HotelRoomType $roomType): array
+    {
+        $hotelId = (int) $roomType->hotel_id;
+        $moduleRoomTypeId = null;
+        if (preg_match('/^mod_hr_(\d+)$/', (string) $roomType->code, $m) && Schema::hasTable('hotel_rooms')) {
+            $row = DB::table('hotel_rooms')->where('id', (int) $m[1])->first();
+            if ($row !== null) {
+                if ($hotelId < 1) {
+                    $hotelId = (int) ($row->hotel_id ?? 0);
+                }
+                if (isset($row->room_type_id) && (int) $row->room_type_id > 0) {
+                    $moduleRoomTypeId = (int) $row->room_type_id;
+                }
+            }
+        }
+
+        return [$hotelId, $moduleRoomTypeId];
     }
 
     private function defaultUnitsTotalForRoomType(HotelRoomType $roomType): int

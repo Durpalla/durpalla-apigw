@@ -105,6 +105,11 @@ class Hotel extends Model
         return $this->hasMany(HotelChildPolicy::class, 'hotel_id', 'id');
     }
 
+    public function stopSales(): HasMany
+    {
+        return $this->hasMany(HotelStopSale::class, 'hotel_id', 'id');
+    }
+
     /**
      * Keep the Extra Bed facility pivot in sync with accepts_extra_bed.
      */

@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\v1\Merchant\MerchantGatewayController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantHotelAvailabilityController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantHotelBookingController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantHotelChildPolicyController;
+use App\Http\Controllers\Api\v1\Merchant\MerchantHotelStopSaleController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantHotelController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantHotelFacilityController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantHotelHoldController;
@@ -190,6 +191,13 @@ Route::middleware(['auth:merchant_api,merchant_staff_api', 'merchant.active'])->
             ->whereNumber('hotelId')->whereNumber('policyId');
         Route::delete('hotels/{hotelId}/child-policies/{policyId}', [MerchantHotelChildPolicyController::class, 'destroy'])
             ->whereNumber('hotelId')->whereNumber('policyId');
+
+        Route::get('hotels/{hotelId}/stop-sales', [MerchantHotelStopSaleController::class, 'index'])->whereNumber('hotelId');
+        Route::post('hotels/{hotelId}/stop-sales', [MerchantHotelStopSaleController::class, 'store'])->whereNumber('hotelId');
+        Route::patch('hotels/{hotelId}/stop-sales/{id}', [MerchantHotelStopSaleController::class, 'update'])
+            ->whereNumber('hotelId')->whereNumber('id');
+        Route::delete('hotels/{hotelId}/stop-sales/{id}', [MerchantHotelStopSaleController::class, 'destroy'])
+            ->whereNumber('hotelId')->whereNumber('id');
 
         Route::post('hotel-holds', [MerchantHotelHoldController::class, 'store'])->middleware('saas.subscription');
         Route::get('hotel-holds', [MerchantHotelHoldController::class, 'index']);

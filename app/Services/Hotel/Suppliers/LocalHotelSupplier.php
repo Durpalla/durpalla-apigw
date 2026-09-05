@@ -9,6 +9,7 @@ use App\Models\HotelRoom;
 use App\Models\HotelRoomInventory;
 use App\Models\RoomType;
 use App\Models\RoomRatePlan;
+use App\Services\Hotel\HotelStopSaleService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -180,6 +181,10 @@ class LocalHotelSupplier implements HotelSupplierInterface
      */
     public function availableUnits($hotelId, $roomTypeId, Carbon $checkIn, Carbon $checkOut): int
     {
+        if (app(HotelStopSaleService::class)->blocksStay((int) $hotelId, $roomTypeId ? (int) $roomTypeId : null, $checkIn, $checkOut)) {
+            return 0;
+        }
+
         $dates = $this->stayDates($checkIn, $checkOut);
         if (empty($dates)) {
             return 0;
