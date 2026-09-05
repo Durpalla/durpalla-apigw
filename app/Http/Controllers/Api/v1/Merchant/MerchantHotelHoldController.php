@@ -161,6 +161,10 @@ class MerchantHotelHoldController extends MerchantHotelBaseController
             'guest_name' => ['required', 'string', 'max:191'],
             'guest_mobile' => ['required', 'string', 'max:64'],
             'guest_email' => ['nullable', 'email', 'max:191'],
+            'payment.mode' => ['nullable', 'string', 'in:full,partial,none'],
+            'payment.method' => ['nullable', 'string', 'max:32'],
+            'payment.amountPaid' => ['nullable', 'numeric', 'min:0', 'required_if:payment.mode,partial'],
+            'payment.amount_paid' => ['nullable', 'numeric', 'min:0'],
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -184,6 +188,7 @@ class MerchantHotelHoldController extends MerchantHotelBaseController
         $guestEmail = trim((string) $request->input('guest_email', ''));
 
         $quote = is_array($hold->quote_json) ? $hold->quote_json : [];
+        $payment = $request->input('payment');
         $payload = [
             'customer_id' => null,
             'guest_name' => $guestName,
@@ -198,6 +203,7 @@ class MerchantHotelHoldController extends MerchantHotelBaseController
             'skip_inventory_reserve' => true,
             'hotel_hold_id' => $hold->id,
             'hotel_id' => (int) ($quote['hotel_id'] ?? 0) ?: null,
+            'payment' => is_array($payment) ? $payment : ['mode' => 'none'],
         ];
 
         $serviceResponse = $this->bookingService->createWithValidatedData($payload);

@@ -59,6 +59,10 @@ class MerchantHotelBookingController extends MerchantHotelBaseController
         $rules['hotel_id'] = ['nullable', 'integer', 'exists:hotels,id'];
         $rules['rooms.*.hotel_room_id'] = ['nullable', 'integer', 'exists:hotel_rooms,id'];
         $rules['rooms.*.quantity'] = ['nullable', 'integer', 'min:1', 'max:20'];
+        $rules['payment.mode'] = ['nullable', 'string', 'in:full,partial,none'];
+        $rules['payment.method'] = ['nullable', 'string', 'max:32'];
+        $rules['payment.amountPaid'] = ['nullable', 'numeric', 'min:0', 'required_if:payment.mode,partial'];
+        $rules['payment.amount_paid'] = ['nullable', 'numeric', 'min:0'];
 
         $input = $this->expandMerchantRoomRows($request->all(), $ownerId);
 
@@ -98,6 +102,13 @@ class MerchantHotelBookingController extends MerchantHotelBaseController
             $payload['guest_email'] = $guestEmail;
         }
         $payload['platform'] = 'merchant_desk';
+        if (! empty($payload['payment']) && is_array($payload['payment'])) {
+            // keep validated payment block
+        } elseif ($request->filled('payment')) {
+            $payload['payment'] = $request->input('payment');
+        } else {
+            $payload['payment'] = ['mode' => 'none'];
+        }
 
         $serviceResponse = $this->bookingService->createWithValidatedData($payload);
         $decoded = json_decode((string) $serviceResponse->getContent(), true);
@@ -195,13 +206,105 @@ class MerchantHotelBookingController extends MerchantHotelBaseController
 
         $booking = Booking::query()
             ->hotel()
-            ->with(['hotelItems.hotel', 'hotelItems.roomType', 'hotelItems.ratePlan', 'customer', 'supplier'])
+            ->with([
+                'hotelItems.hotel',
+                'hotelItems.roomType',
+                'hotelItems.ratePlan',
+                'customer',
+                'supplier',
+                'payment',
+                'collections.supervisor',
+            ])
             ->whereHas('hotelItems.hotel', function ($hq) use ($ownerId) {
                 $hq->where('merchant_id', $ownerId);
             })
             ->findOrFail($id);
 
-        return response()->json(['success' => true, 'data' => $booking]);
+        $data = $booking->toArray();
+        $total = (float) ($booking->total_payable ?? $booking->total_amount ?? 0);
+        $paid = (float) ($booking->payment?->paid_amount ?? 0);
+        $due = max(0.0, round($total - $paid, 2));
+        $data['payment_summary'] = [
+            'method' => (string) ($booking->payment?->payment_method ?? 'pay_later'),
+            'amount_paid' => $paid,
+            'dues' => $due,
+            'due_amount' => $due,
+            'payment_status' => (string) ($booking->payment?->status ?? 'pending'),
+            'is_fully_paid' => $due < 0.01,
+        ];
+        $data['collections'] = $booking->collections->map(function ($row) {
+            return [
+                'id' => (int) $row->id,
+                'amount' => (float) $row->amount,
+                'payment_type' => (string) $row->payment_type,
+                'created_at' => optional($row->created_at)?->toIso8601String(),
+                'collected_by' => $row->supervisor?->name,
+            ];
+        })->values()->all();
+
+        return response()->json(['success' => true, 'data' => $data]);
+    }
+
+    /**
+     * POST /api/v1/merchant/hotel-bookings/{id}/collect
+     */
+    public function collect(Request $request, int $id): JsonResponse
+    {
+        $ownerId = $this->merchantOwnerId($request);
+        $this->assertHotelAllowed($ownerId);
+
+        $validator = Validator::make($request->all(), [
+            'amount' => ['required', 'numeric', 'min:0.01'],
+            'method' => ['nullable', 'string', 'max:32'],
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $booking = Booking::query()
+            ->hotel()
+            ->with(['hotelItems.hotel', 'payment'])
+            ->whereHas('hotelItems.hotel', function ($hq) use ($ownerId) {
+                $hq->where('merchant_id', $ownerId);
+            })
+            ->findOrFail($id);
+
+        $result = $this->bookingService->collectPayment(
+            $booking,
+            (float) $request->input('amount'),
+            $request->input('method'),
+            (int) ($request->user()->id ?? 0),
+        );
+
+        if (! ($result['success'] ?? false)) {
+            return response()->json([
+                'success' => false,
+                'message' => (string) ($result['message'] ?? 'Collection failed'),
+            ], 422);
+        }
+
+        $fresh = $result['booking'];
+        $total = (float) ($fresh->total_payable ?? $fresh->total_amount ?? 0);
+        $paid = (float) ($fresh->payment?->paid_amount ?? 0);
+        $due = max(0.0, round($total - $paid, 2));
+
+        return response()->json([
+            'success' => true,
+            'message' => (string) ($result['message'] ?? 'Payment recorded.'),
+            'data' => $fresh,
+            'payment_summary' => [
+                'method' => (string) ($fresh->payment?->payment_method ?? 'cash'),
+                'amount_paid' => $paid,
+                'dues' => $due,
+                'due_amount' => $due,
+                'payment_status' => (string) ($fresh->payment?->status ?? 'pending'),
+                'is_fully_paid' => $due < 0.01,
+                'collected_amount' => (float) ($result['collected_amount'] ?? 0),
+            ],
+        ]);
     }
 
     public function cancel(Request $request, int $id): JsonResponse

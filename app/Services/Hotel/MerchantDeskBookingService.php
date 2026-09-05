@@ -8,6 +8,7 @@ use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\HotelRoomType;
 use App\Models\Payment;
+use App\Models\PaymentCollector;
 use App\Services\Hotel\HotelInventoryService;
 use App\Services\Hotel\ChildRuleEngine;
 use App\Services\Telemetry\BusinessMetrics;
@@ -275,9 +276,17 @@ class MerchantDeskBookingService
                 $booking->update(['status' => AppConst::BOOKING_CONFIRMED]);
             }
 
+            try {
+                $this->applyDeskPayment($booking, (float) $totalPayable, $data);
+            } catch (\InvalidArgumentException $e) {
+                DB::rollBack();
+
+                return response()->failed(['message' => $e->getMessage()]);
+            }
+
             DB::commit();
 
-            $booking->load(['hotelItems.hotel', 'hotelItems.roomType', 'hotelItems.ratePlan', 'customer']);
+            $booking->load(['hotelItems.hotel', 'hotelItems.roomType', 'hotelItems.ratePlan', 'customer', 'payment', 'collections']);
 
             BusinessMetrics::recordBooking('hotel', 'success');
 
@@ -979,7 +988,7 @@ class MerchantDeskBookingService
     {
         try {
             $booking = Booking::where('service_type', 'hotel')
-                ->with(['hotelItems.hotel'])
+                ->with(['hotelItems.hotel', 'payment'])
                 ->findOrFail($id);
 
             $status = $this->normalizeHotelStatus($booking->status);
@@ -988,6 +997,13 @@ class MerchantDeskBookingService
             }
             if ($status === 'checked-out') {
                 return response()->success($booking, 'Guest is already checked out.');
+            }
+
+            $due = $this->outstandingDues($booking);
+            if ($due > 0.009) {
+                return response()->failed([
+                    'message' => 'Guest still owes '.number_format($due, 2).'. Collect dues before check-out.',
+                ]);
             }
 
             $actualCheckout = $checkoutDate
@@ -1071,5 +1087,168 @@ class MerchantDeskBookingService
                 'room_id' => $moduleRoomId,
             ]);
         }
+    }
+
+    /**
+     * Apply desk payment options (full / partial / none) when confirming a hotel booking.
+     *
+     * @param  array<string, mixed>  $data
+     *
+     * @throws \InvalidArgumentException
+     */
+    protected function applyDeskPayment(Booking $booking, float $totalPayable, array $data): void
+    {
+        $paymentInput = is_array($data['payment'] ?? null) ? $data['payment'] : [];
+        $mode = strtolower(trim((string) ($paymentInput['mode'] ?? 'none')));
+        if (! in_array($mode, ['full', 'partial', 'none'], true)) {
+            $mode = 'none';
+        }
+
+        $method = $this->normalizeDeskPaymentMethod($paymentInput['method'] ?? null, $mode === 'none' ? 'pay_later' : 'cash');
+
+        if ($mode === 'none') {
+            $paid = 0.0;
+            $method = 'pay_later';
+        } elseif ($mode === 'full') {
+            $paid = $totalPayable;
+        } else {
+            $paid = min(max(0.0, (float) ($paymentInput['amountPaid'] ?? $paymentInput['amount_paid'] ?? 0)), $totalPayable);
+            if ($paid <= 0.009 || $paid >= $totalPayable - 0.009) {
+                throw new \InvalidArgumentException('Partial payment must be greater than zero and less than total payable.');
+            }
+        }
+
+        $dues = max(0.0, $totalPayable - $paid);
+        $paymentStatus = $dues < 0.01 ? AppConst::PAYMENT_SUCCESS : 'pending';
+
+        $payment = Payment::create([
+            'booking_id' => $booking->id,
+            'customer_id' => $booking->customer_id,
+            'paid_amount' => $paid,
+            'store_amount' => $paid,
+            'dues' => $dues,
+            'payment_method' => $method,
+            'payment_gateway' => $method,
+            'status' => $paymentStatus,
+            'channel' => in_array($method, ['cash', 'bank_check', 'bank_transfer', 'pay_later'], true) ? 'offline' : 'merchant',
+        ]);
+
+        if ($paid > 0.009) {
+            $actorId = (int) (auth()->id() ?? 0);
+            if ($actorId > 0) {
+                PaymentCollector::create([
+                    'booking_id' => $booking->id,
+                    'payment_id' => $payment->id,
+                    'supervisor_id' => $actorId,
+                    'amount' => $paid,
+                    'payment_type' => $method,
+                ]);
+            }
+        }
+
+        $booking->payment_status = $dues < 0.01 ? 1 : 0;
+        $booking->save();
+        $booking->setRelation('payment', $payment);
+    }
+
+    /**
+     * Record an additional collection against an existing hotel booking.
+     *
+     * @return array{success: bool, message: string, booking?: Booking}
+     */
+    public function collectPayment(Booking $booking, float $amount, ?string $method, int $actorId): array
+    {
+        if (strtoupper((string) $booking->status) === AppConst::BOOKING_CANCELLED) {
+            return ['success' => false, 'message' => 'Cannot collect on a cancelled booking'];
+        }
+
+        $total = (float) ($booking->total_payable ?? $booking->total_amount);
+        $payment = $booking->payment;
+        if (! $payment) {
+            $payment = Payment::create([
+                'booking_id' => $booking->id,
+                'customer_id' => $booking->customer_id,
+                'paid_amount' => 0,
+                'dues' => max(0, $total),
+                'payment_method' => 'pay_later',
+                'payment_gateway' => 'pay_later',
+                'status' => 'pending',
+            ]);
+            $booking->setRelation('payment', $payment);
+        }
+
+        $paidBefore = (float) ($payment->paid_amount ?? 0);
+        $dueBefore = max(0.0, $total - $paidBefore);
+        if ($dueBefore < 0.01) {
+            return ['success' => false, 'message' => 'No balance due'];
+        }
+
+        $amount = min($amount, $dueBefore);
+        if ($amount < 0.01) {
+            return ['success' => false, 'message' => 'Invalid amount'];
+        }
+
+        $method = $this->normalizeDeskPaymentMethod($method, (string) ($payment->payment_method ?: 'cash'));
+        $collected = $amount;
+
+        DB::transaction(function () use ($booking, $payment, $total, $collected, $method, $actorId) {
+            $newPaid = (float) $payment->paid_amount + $collected;
+            $newDues = max(0.0, $total - $newPaid);
+            $payment->paid_amount = $newPaid;
+            $payment->store_amount = $newPaid;
+            $payment->dues = $newDues;
+            $payment->payment_method = $method;
+            $payment->payment_gateway = $method;
+            $payment->status = $newDues < 0.01 ? AppConst::PAYMENT_SUCCESS : 'pending';
+            $payment->save();
+
+            if ($actorId > 0) {
+                PaymentCollector::create([
+                    'booking_id' => $booking->id,
+                    'payment_id' => $payment->id,
+                    'supervisor_id' => $actorId,
+                    'amount' => $collected,
+                    'payment_type' => $method,
+                ]);
+            }
+
+            $booking->payment_status = $newDues < 0.01 ? 1 : 0;
+            $booking->save();
+        });
+
+        $booking = $booking->fresh([
+            'hotelItems.hotel',
+            'hotelItems.roomType',
+            'hotelItems.ratePlan',
+            'customer',
+            'payment',
+            'collections.supervisor',
+        ]);
+
+        $due = $this->outstandingDues($booking);
+
+        return [
+            'success' => true,
+            'message' => $due < 0.01 ? 'Payment complete.' : 'Payment recorded.',
+            'booking' => $booking,
+            'collected_amount' => $collected,
+        ];
+    }
+
+    public function outstandingDues(Booking $booking): float
+    {
+        $booking->loadMissing('payment');
+        $total = (float) ($booking->total_payable ?? $booking->total_amount ?? 0);
+        $paid = (float) ($booking->payment?->paid_amount ?? 0);
+
+        return max(0.0, round($total - $paid, 2));
+    }
+
+    protected function normalizeDeskPaymentMethod(mixed $method, string $default): string
+    {
+        $m = is_string($method) ? strtolower(trim($method)) : '';
+        $allowed = ['cash', 'card', 'bkash', 'nagad', 'bank_check', 'bank_transfer', 'pay_later'];
+
+        return in_array($m, $allowed, true) ? $m : (in_array($default, $allowed, true) ? $default : 'cash');
     }
 }

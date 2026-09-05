@@ -209,6 +209,7 @@ Route::middleware(['auth:merchant_api,merchant_staff_api', 'merchant.active'])->
         Route::post('hotel-bookings', [MerchantHotelBookingController::class, 'store'])->middleware('saas.subscription');
         Route::get('hotel-bookings', [MerchantHotelBookingController::class, 'index']);
         Route::get('hotel-bookings/{id}', [MerchantHotelBookingController::class, 'show'])->whereNumber('id');
+        Route::post('hotel-bookings/{id}/collect', [MerchantHotelBookingController::class, 'collect'])->whereNumber('id');
         Route::post('hotel-bookings/{id}/cancel', [MerchantHotelBookingController::class, 'cancel'])->whereNumber('id');
         Route::post('hotel-bookings/{id}/check-in', [MerchantHotelBookingController::class, 'checkIn'])->whereNumber('id');
         Route::post('hotel-bookings/{id}/check-out', [MerchantHotelBookingController::class, 'checkOut'])->whereNumber('id');

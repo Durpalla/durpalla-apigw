@@ -5,11 +5,15 @@ namespace App\Constants;
 class AppConst
 {
     const BOOKING_COMPLETE = 'COMPLETE';
+    const BOOKING_RESERVED = 'RESERVED';
     const BOOKING_PENDING = 'PENDING';
     const BOOKING_CANCELLED = 'CANCELLED';
     const BOOKING_REJECTED = 'REJECTED';
     const BOOKING_FAILED = 'FAILED';
     const BOOKING_ADVANCE = 'ADVANCE';
+    const BOOKING_CONFIRMED = 'CONFIRMED';
+    const BOOKING_CHECKED_IN = 'CHECKED_IN';
+    const BOOKING_CHECKED_OUT = 'CHECKED_OUT';
     const BOOKING_ITEM_PENDING = 0;
     const BOOKING_ITEM_ACTIVE = 1;
     const BOOKING_ITEM_CANCELLED = 2;
