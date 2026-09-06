@@ -245,27 +245,40 @@ class MerchantHotelHoldService
     }
 
     /**
-     * Convert hold → sold on shared inventory. Caller creates the booking.
+     * Build booking room rows from a pending hold without consuming it.
+     * Inventory stays held until {@see finalizeHoldAfterBooking()} after a successful booking.
      *
      * @return list<array<string, mixed>>
      */
-    public function consumeHoldForConfirm(HotelHold $hold): array
+    public function roomsPayloadForConfirm(HotelHold $hold): array
     {
-        if (! $this->isUsable($hold)) {
-            throw new \RuntimeException('Hold is not valid or has expired');
-        }
+        $this->assertUsableOrFail($hold);
 
         return DB::transaction(function () use ($hold) {
             $hold = HotelHold::query()->lockForUpdate()->findOrFail($hold->id);
-            if (! $this->isUsable($hold)) {
-                throw new \RuntimeException('Hold is not valid or has expired');
+            $this->assertUsableOrFail($hold);
+
+            return $this->buildRoomsPayload($hold);
+        });
+    }
+
+    /**
+     * Convert hold → sold on shared inventory and mark consumed.
+     * Call only after the booking row has been committed successfully.
+     */
+    public function finalizeHoldAfterBooking(HotelHold $hold): void
+    {
+        DB::transaction(function () use ($hold) {
+            $hold = HotelHold::query()->lockForUpdate()->findOrFail($hold->id);
+            if ($hold->status === HotelHold::STATUS_CONSUMED) {
+                return;
             }
+            $this->assertUsableOrFail($hold);
 
             $checkIn = Carbon::parse($hold->check_in)->startOfDay();
             $checkOut = Carbon::parse($hold->check_out)->startOfDay();
             $quote = is_array($hold->quote_json) ? $hold->quote_json : [];
             $lines = is_array($quote['lines'] ?? null) ? $quote['lines'] : [];
-            $roomsPayload = [];
 
             foreach ($lines as $line) {
                 $qty = max(1, (int) ($line['quantity'] ?? 1));
@@ -275,32 +288,92 @@ class MerchantHotelHoldService
                     throw new \RuntimeException('Hold room type missing');
                 }
                 $this->inventory->finalizeFromHold($rt, $checkIn, $checkOut, $qty);
-
-                $moduleRoomTypeId = (int) ($line['module_room_type_id'] ?? 0);
-                $moduleRoomId = (int) ($line['module_room_id'] ?? 0);
-                $ratePlanId = (int) ($line['rate_plan_id'] ?? 0);
-                $hotelId = (int) ($line['hotel_id'] ?? $quote['hotel_id'] ?? 0);
-                $lineAdults = max(1, (int) ($line['adults'] ?? $hold->adults));
-                $lineChildren = max(0, (int) ($line['children'] ?? $hold->children));
-                $lineAges = $this->normalizeChildrenAges($line['children_ages'] ?? ($quote['children_ages'] ?? null));
-
-                for ($i = 0; $i < $qty; $i++) {
-                    $roomsPayload[] = [
-                        'hotel_id' => $hotelId,
-                        'room_type_id' => $moduleRoomTypeId,
-                        'rate_plan_id' => $ratePlanId,
-                        'room_id' => $moduleRoomId > 0 ? $moduleRoomId : null,
-                        'adults' => $lineAdults,
-                        'children' => $lineChildren,
-                        'children_ages' => $lineAges,
-                    ];
-                }
             }
 
             $hold->update(['status' => HotelHold::STATUS_CONSUMED]);
-
-            return $roomsPayload;
         });
+    }
+
+    /**
+     * @deprecated Use roomsPayloadForConfirm + finalizeHoldAfterBooking
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function consumeHoldForConfirm(HotelHold $hold): array
+    {
+        $rooms = $this->roomsPayloadForConfirm($hold);
+        $this->finalizeHoldAfterBooking($hold);
+
+        return $rooms;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    protected function buildRoomsPayload(HotelHold $hold): array
+    {
+        $quote = is_array($hold->quote_json) ? $hold->quote_json : [];
+        $lines = is_array($quote['lines'] ?? null) ? $quote['lines'] : [];
+        if ($lines === []) {
+            throw new \RuntimeException('Hold has no room lines to confirm.');
+        }
+
+        $roomsPayload = [];
+        foreach ($lines as $line) {
+            $qty = max(1, (int) ($line['quantity'] ?? 1));
+            $apiRoomTypeId = (int) ($line['room_type_id'] ?? 0);
+            if (! HotelRoomType::query()->whereKey($apiRoomTypeId)->exists()) {
+                throw new \RuntimeException('Hold room type missing');
+            }
+
+            $moduleRoomTypeId = (int) ($line['module_room_type_id'] ?? 0);
+            $moduleRoomId = (int) ($line['module_room_id'] ?? 0);
+            $ratePlanId = (int) ($line['rate_plan_id'] ?? 0);
+            $hotelId = (int) ($line['hotel_id'] ?? $quote['hotel_id'] ?? 0);
+            if ($hotelId < 1 || $moduleRoomTypeId < 1 || $ratePlanId < 1) {
+                throw new \RuntimeException(
+                    'Hold is missing hotel, room type, or rate plan. Release it and create a new hold.'
+                );
+            }
+
+            $lineAdults = max(1, (int) ($line['adults'] ?? $hold->adults));
+            $lineChildren = max(0, (int) ($line['children'] ?? $hold->children));
+            $lineAges = $this->normalizeChildrenAges($line['children_ages'] ?? ($quote['children_ages'] ?? null));
+
+            for ($i = 0; $i < $qty; $i++) {
+                $roomsPayload[] = [
+                    'hotel_id' => $hotelId,
+                    'room_type_id' => $moduleRoomTypeId,
+                    'rate_plan_id' => $ratePlanId,
+                    'room_id' => $moduleRoomId > 0 ? $moduleRoomId : null,
+                    'adults' => $lineAdults,
+                    'children' => $lineChildren,
+                    'children_ages' => $lineAges,
+                ];
+            }
+        }
+
+        return $roomsPayload;
+    }
+
+    protected function assertUsableOrFail(HotelHold $hold): void
+    {
+        if ($hold->status === HotelHold::STATUS_CONSUMED) {
+            throw new \RuntimeException(
+                'This hold was already used for a booking. Open Bookings or create a new hold.'
+            );
+        }
+        if ($hold->status === HotelHold::STATUS_CANCELLED) {
+            throw new \RuntimeException('This hold was released. Create a new hold.');
+        }
+        if ($hold->status === HotelHold::STATUS_EXPIRED
+            || ! $hold->expires_at
+            || $hold->expires_at->isPast()) {
+            throw new \RuntimeException('Hold has expired. Create a new hold and confirm within the hold time.');
+        }
+        if ($hold->status !== HotelHold::STATUS_PENDING) {
+            throw new \RuntimeException('Hold is not valid or has expired');
+        }
     }
 
     public function expireStaleForOwner(int $merchantOwnerId): int

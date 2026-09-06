@@ -181,7 +181,8 @@ class MerchantHotelHoldController extends MerchantHotelBaseController
             ->findOrFail($id);
 
         try {
-            $roomsPayload = $this->holds->consumeHoldForConfirm($hold);
+            // Keep hold pending + inventory held until booking succeeds.
+            $roomsPayload = $this->holds->roomsPayloadForConfirm($hold);
         } catch (\RuntimeException $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         }
@@ -203,6 +204,8 @@ class MerchantHotelHoldController extends MerchantHotelBaseController
             'adults' => (int) $hold->adults,
             'children' => (int) $hold->children,
             'rooms' => $roomsPayload,
+            // Hold still owns units_held; booking must not sell again.
+            // finalizeHoldAfterBooking moves held → sold after create succeeds.
             'skip_inventory_reserve' => true,
             'hotel_hold_id' => $hold->id,
             'hotel_id' => (int) ($quote['hotel_id'] ?? 0) ?: null,
@@ -219,6 +222,17 @@ class MerchantHotelHoldController extends MerchantHotelBaseController
                 'message' => (string) ($decoded['message'] ?? 'Booking failed after hold.'),
                 'data' => $decoded['data'] ?? null,
             ], 422);
+        }
+
+        try {
+            $this->holds->finalizeHoldAfterBooking($hold->fresh() ?? $hold);
+        } catch (\RuntimeException $e) {
+            // Booking already created; surface inventory finalize failure without claiming hold expired.
+            \Illuminate\Support\Facades\Log::error('merchant_hold_finalize_failed', [
+                'hold_id' => $hold->id,
+                'booking_id' => data_get($decoded, 'data.id'),
+                'error' => $e->getMessage(),
+            ]);
         }
 
         $body = [
