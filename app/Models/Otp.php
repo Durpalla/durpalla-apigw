@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Illuminate\Support\Str;
-use Ramsey\Uuid\UuidInterface;
 
 /**
  * Lightweight OTP rows for merchant login/reset (no Auth module package).
@@ -90,10 +89,10 @@ class Otp extends Model
         }
     }
 
-    private function uniqueId(): UuidInterface
+    private function uniqueId(): string
     {
         while (true) {
-            $uuid = Str::uuid();
+            $uuid = (string) Str::uuid();
             if (! self::where('reference', $uuid)->exists()) {
                 return $uuid;
             }

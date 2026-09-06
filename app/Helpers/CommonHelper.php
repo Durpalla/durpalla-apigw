@@ -204,6 +204,19 @@ class CommonHelper
         return str_replace(PHP_EOL, $replace, $string);
     }
 
+    public static function parseLocalTimeZone($datetime, $tz = '+06:00'): string
+    {
+        try {
+            $timezone = auth()->user()?->timezone ?? $tz;
+
+            return \Carbon\Carbon::parse($datetime)->setTimezone($timezone)->format('d/m/Y h:i a');
+        } catch (\Throwable) {
+            return is_scalar($datetime) || $datetime instanceof \Stringable
+                ? (string) $datetime
+                : '';
+        }
+    }
+
     public static function generateUniqueUUID(): string
     {
         $uuid = (string) Str::uuid();

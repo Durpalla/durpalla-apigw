@@ -9,11 +9,11 @@ use App\Http\Requests\Merchant\MerchantVerifyResetOtpRequest;
 use App\Models\Merchant;
 use App\Models\MerchantStaff;
 use App\Services\Merchant\MerchantPasswordResetService;
+use App\Support\PasswordVerifier;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use App\Traits\Auth2FaTrait;
 use App\Services\TwoFactorService;
@@ -71,7 +71,7 @@ class MerchantAuthController extends Controller
             }
 
             $passwordHash = (string) ($user->getAttributes()['password'] ?? '');
-            if ($passwordHash === '' || ! Hash::check($secret, $passwordHash)) {
+            if (! PasswordVerifier::check($secret, $passwordHash)) {
                 return response()->json(['success' => false, 'message' => 'Invalid credentials.'], 401);
             }
 
@@ -303,6 +303,9 @@ class MerchantAuthController extends Controller
             ? ['*']
             : ($user instanceof MerchantStaff ? $user->permissionNames() : []);
 
+        $avatarUrl = rescue(static fn () => $user->profile_pic_url ?? null, null, false);
+        $logoUrl = rescue(static fn () => $merchant?->logo_url, null, false);
+
         return response()->json([
             'success' => true,
             'message' => 'Login success',
@@ -316,13 +319,13 @@ class MerchantAuthController extends Controller
                 'type' => $user instanceof Merchant ? 'merchant' : (string) ($user->type ?? $appRole),
                 'permissions' => $permissions,
                 'merchant_id' => $merchantOwnerId,
-                'avatar_url' => $user->profile_pic_url ?? null,
-                'merchant_logo_url' => $merchant?->logo_url ?? null,
+                'avatar_url' => $avatarUrl,
+                'merchant_logo_url' => $logoUrl,
                 'merchant_name' => $merchant
                     ? (string) ($merchant->merchant_name ?? $merchant->name ?? '')
                     : null,
             ],
-        ]);
+        ], 200, [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     }
 
     private function findMerchantActor(string $login): Merchant|MerchantStaff|null
