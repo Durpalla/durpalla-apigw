@@ -180,59 +180,61 @@ class MerchantHotelHoldController extends MerchantHotelBaseController
             ->where('merchant_owner_id', $ownerId)
             ->findOrFail($id);
 
-        try {
-            // Keep hold pending + inventory held until booking succeeds.
-            $roomsPayload = $this->holds->roomsPayloadForConfirm($hold);
-        } catch (\RuntimeException $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
-        }
-
         $guestName = trim((string) $request->input('guest_name'));
         $guestMobile = trim((string) $request->input('guest_mobile'));
         $guestEmail = trim((string) $request->input('guest_email', ''));
-
-        $quote = is_array($hold->quote_json) ? $hold->quote_json : [];
         $payment = $request->input('payment');
-        $payload = [
-            'customer_id' => null,
-            'guest_name' => $guestName,
-            'guest_mobile' => $guestMobile,
-            'guest_email' => $guestEmail !== '' ? $guestEmail : null,
-            'platform' => 'merchant_desk',
-            'check_in_date' => $hold->check_in->format('Y-m-d'),
-            'check_out_date' => $hold->check_out->format('Y-m-d'),
-            'adults' => (int) $hold->adults,
-            'children' => (int) $hold->children,
-            'rooms' => $roomsPayload,
-            // Hold still owns units_held; booking must not sell again.
-            // finalizeHoldAfterBooking moves held → sold after create succeeds.
-            'skip_inventory_reserve' => true,
-            'hotel_hold_id' => $hold->id,
-            'hotel_id' => (int) ($quote['hotel_id'] ?? 0) ?: null,
-            'payment' => is_array($payment) ? $payment : ['mode' => 'none'],
-        ];
-
-        $serviceResponse = $this->bookingService->createWithValidatedData($payload);
-        $decoded = json_decode((string) $serviceResponse->getContent(), true);
-        $ok = (bool) ($decoded['status'] ?? false);
-
-        if (! $ok) {
-            return response()->json([
-                'success' => false,
-                'message' => (string) ($decoded['message'] ?? 'Booking failed after hold.'),
-                'data' => $decoded['data'] ?? null,
-            ], 422);
-        }
 
         try {
-            $this->holds->finalizeHoldAfterBooking($hold->fresh() ?? $hold);
+            $decoded = $this->holds->confirmWithBooking(
+                $hold,
+                function (HotelHold $lockedHold, array $roomsPayload) use ($guestName, $guestMobile, $guestEmail, $payment) {
+                    $quote = is_array($lockedHold->quote_json) ? $lockedHold->quote_json : [];
+                    $payload = [
+                        'customer_id' => null,
+                        'guest_name' => $guestName,
+                        'guest_mobile' => $guestMobile,
+                        'guest_email' => $guestEmail !== '' ? $guestEmail : null,
+                        'platform' => 'merchant_desk',
+                        'check_in_date' => $lockedHold->check_in->format('Y-m-d'),
+                        'check_out_date' => $lockedHold->check_out->format('Y-m-d'),
+                        'adults' => (int) $lockedHold->adults,
+                        'children' => (int) $lockedHold->children,
+                        'rooms' => $roomsPayload,
+                        // Hold still owns units_held until finalize in the same outer transaction.
+                        'skip_inventory_reserve' => true,
+                        'hotel_hold_id' => $lockedHold->id,
+                        'hotel_id' => (int) ($quote['hotel_id'] ?? 0) ?: null,
+                        'payment' => is_array($payment) ? $payment : ['mode' => 'none'],
+                    ];
+
+                    $serviceResponse = $this->bookingService->createWithValidatedData($payload);
+                    $decoded = json_decode((string) $serviceResponse->getContent(), true);
+                    if (! (bool) ($decoded['status'] ?? false)) {
+                        // Throw so the outer transaction rolls back booking + hold finalize.
+                        throw new \RuntimeException(
+                            (string) ($decoded['message'] ?? 'Booking failed after hold.')
+                        );
+                    }
+
+                    return $decoded;
+                }
+            );
         } catch (\RuntimeException $e) {
-            // Booking already created; surface inventory finalize failure without claiming hold expired.
-            \Illuminate\Support\Facades\Log::error('merchant_hold_finalize_failed', [
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('merchant_hold_confirm_failed', [
                 'hold_id' => $hold->id,
-                'booking_id' => data_get($decoded, 'data.id'),
                 'error' => $e->getMessage(),
             ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to confirm hold right now. Please try again.',
+            ], 500);
         }
 
         $body = [

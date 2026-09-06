@@ -245,8 +245,47 @@ class MerchantHotelHoldService
     }
 
     /**
+     * Confirm a pending hold inside one DB transaction:
+     * lock hold → build rooms → run $book → finalize inventory + mark consumed.
+     * If $book throws (or anything fails), the whole unit rolls back and the hold stays pending for retry.
+     *
+     * @param  callable(HotelHold, list<array<string, mixed>>): mixed  $book
+     */
+    public function confirmWithBooking(HotelHold $hold, callable $book): mixed
+    {
+        return DB::transaction(function () use ($hold, $book) {
+            $hold = HotelHold::query()->lockForUpdate()->findOrFail($hold->id);
+            $this->assertUsableOrFail($hold);
+
+            $roomsPayload = $this->buildRoomsPayload($hold);
+            $result = $book($hold, $roomsPayload);
+
+            $hold = HotelHold::query()->lockForUpdate()->findOrFail($hold->id);
+            $this->assertUsableOrFail($hold);
+
+            $checkIn = Carbon::parse($hold->check_in)->startOfDay();
+            $checkOut = Carbon::parse($hold->check_out)->startOfDay();
+            $quote = is_array($hold->quote_json) ? $hold->quote_json : [];
+            $lines = is_array($quote['lines'] ?? null) ? $quote['lines'] : [];
+
+            foreach ($lines as $line) {
+                $qty = max(1, (int) ($line['quantity'] ?? 1));
+                $apiRoomTypeId = (int) ($line['room_type_id'] ?? 0);
+                $rt = HotelRoomType::query()->find($apiRoomTypeId);
+                if (! $rt) {
+                    throw new \RuntimeException('Hold room type missing');
+                }
+                $this->inventory->finalizeFromHold($rt, $checkIn, $checkOut, $qty);
+            }
+
+            $hold->update(['status' => HotelHold::STATUS_CONSUMED]);
+
+            return $result;
+        });
+    }
+
+    /**
      * Build booking room rows from a pending hold without consuming it.
-     * Inventory stays held until {@see finalizeHoldAfterBooking()} after a successful booking.
      *
      * @return list<array<string, mixed>>
      */
@@ -264,7 +303,6 @@ class MerchantHotelHoldService
 
     /**
      * Convert hold → sold on shared inventory and mark consumed.
-     * Call only after the booking row has been committed successfully.
      */
     public function finalizeHoldAfterBooking(HotelHold $hold): void
     {
@@ -295,16 +333,11 @@ class MerchantHotelHoldService
     }
 
     /**
-     * @deprecated Use roomsPayloadForConfirm + finalizeHoldAfterBooking
-     *
      * @return list<array<string, mixed>>
      */
     public function consumeHoldForConfirm(HotelHold $hold): array
     {
-        $rooms = $this->roomsPayloadForConfirm($hold);
-        $this->finalizeHoldAfterBooking($hold);
-
-        return $rooms;
+        return $this->confirmWithBooking($hold, static fn (HotelHold $h, array $rooms): array => $rooms);
     }
 
     /**
