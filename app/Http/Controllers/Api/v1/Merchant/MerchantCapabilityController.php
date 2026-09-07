@@ -13,6 +13,8 @@ class MerchantCapabilityController extends Controller
 {
     use ResolvesMerchantOwner;
 
+    private const STAY_TYPES = ['hotel', 'resort', 'homestay'];
+
     /**
      * GET /api/v1/merchant/capabilities
      *
@@ -34,25 +36,30 @@ class MerchantCapabilityController extends Controller
                 $allowed = [];
             }
         }
-        $allowed = array_values(array_unique(array_filter(array_map('strval', $allowed))));
+        $allowed = array_values(array_unique(array_filter(array_map(
+            static fn ($type) => strtolower(trim((string) $type)),
+            $allowed
+        ))));
 
         // Backward compatible: empty list means "no explicit restriction".
         $isRestricted = count($allowed) > 0;
-        $canHotels = ! $isRestricted || in_array('hotel', $allowed, true);
+        $canHotels = ! $isRestricted || count(array_intersect($allowed, self::STAY_TYPES)) > 0;
+        $canTours = ! $isRestricted || in_array('tour', $allowed, true);
 
         $transportTypes = $this->transportServiceTypes();
+        $nonTransport = array_merge(self::STAY_TYPES, ['tour']);
         $canTransport = ! $isRestricted;
         if ($isRestricted) {
+            $canTransport = false;
             foreach ($allowed as $type) {
-                $normalized = strtolower(trim((string) $type));
-                if ($normalized === '' || $normalized === 'hotel') {
+                if ($type === '' || in_array($type, $nonTransport, true)) {
                     continue;
                 }
-                if (in_array($normalized, $transportTypes, true)) {
+                if (in_array($type, $transportTypes, true)) {
                     $canTransport = true;
                     break;
                 }
-                // Unknown non-hotel types still count as transport (e.g. vessel).
+                // Unknown non-stay/tour types still count as transport (e.g. vessel).
                 $canTransport = true;
                 break;
             }
@@ -67,6 +74,7 @@ class MerchantCapabilityController extends Controller
                 'allowed_service_types' => $allowed,
                 'is_service_type_restricted' => $isRestricted,
                 'can_manage_hotels' => $canHotels,
+                'can_manage_tours' => $canTours,
                 'can_manage_transport' => $canTransport,
                 'subscription' => $subscription,
             ],
@@ -88,4 +96,3 @@ class MerchantCapabilityController extends Controller
         )));
     }
 }
-

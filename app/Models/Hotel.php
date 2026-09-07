@@ -44,6 +44,7 @@ class Hotel extends Model
         'max_extra_beds',
         'external_id',
         'source',
+        'property_type',
         'supplier_meta',
         'created_by',
         'updated_by',

@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\v1\Agent\AgentReferredPropertyController;
 use App\Http\Controllers\Api\v1\Agent\AgentTransportBookingController;
 use App\Http\Controllers\Api\v1\Agent\AgentUpcomingTripController;
 use App\Http\Controllers\Api\v1\Agent\AgentHotelController;
+use App\Http\Controllers\Api\v1\Agent\AgentTourController;
 use App\Http\Controllers\Api\v1\Agent\AgentWalletController;
 use App\Http\Controllers\Api\v1\Agent\AgentWithdrawalController;
 use App\Http\Controllers\Api\v1\Agent\AgentWithdrawalMethodController;
@@ -63,6 +64,9 @@ Route::prefix('agent')->middleware(['JsonResponse'])->group(function () {
         Route::get('hotels/{id}', [AgentHotelController::class, 'show'])->whereNumber('id');
         Route::get('favourite-hotels', [AgentHotelController::class, 'favourites']);
 
+        Route::get('tours/search', [AgentTourController::class, 'search']);
+        Route::get('tours/{id}', [AgentTourController::class, 'show'])->whereNumber('id');
+
         // Booking + referral mutations — approved (active) agents only.
         Route::middleware(['agent.active'])->group(function () {
             Route::post('my/referred-properties', [AgentReferredPropertyController::class, 'store']);
@@ -86,6 +90,9 @@ Route::prefix('agent')->middleware(['JsonResponse'])->group(function () {
             Route::post('hotels/confirm', [AgentHotelController::class, 'confirm']);
             Route::post('favourite-hotels', [AgentHotelController::class, 'addFavourite']);
             Route::delete('favourite-hotels/{hotelId}', [AgentHotelController::class, 'removeFavourite']);
+
+            Route::post('tours/hold', [AgentTourController::class, 'hold']);
+            Route::post('tours/confirm', [AgentTourController::class, 'confirm']);
         });
     });
 });

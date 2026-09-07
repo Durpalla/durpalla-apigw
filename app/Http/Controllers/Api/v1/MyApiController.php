@@ -98,6 +98,7 @@ class MyApiController extends Controller
             'payment',
             'hotelReservation.hotel',
             'hotelReservation.roomType',
+            'tourItems',
         ])
             ->where('customer_id', $user->id)->orderBy('created_at', 'desc');
 
@@ -185,6 +186,9 @@ class MyApiController extends Controller
                 $row['items'][] = $hotelItem;
 
             }
+            foreach ($this->tourItemsAsAndroidBookingItems($booking) as $tourItem) {
+                $row['items'][] = $tourItem;
+            }
             $row['downloadable'] = $this->bookingAllowsInvoiceDownload($booking);
             $this->attachCommonInvoiceFields($row, $booking);
             $responseArr[] = $row;
@@ -218,6 +222,7 @@ class MyApiController extends Controller
             'payment.gateway',
             'hotelReservation.hotel',
             'hotelReservation.roomType',
+            'tourItems',
         ])
             ->where('customer_id', $user->id)->orderBy('created_at', 'desc');
 
@@ -300,6 +305,9 @@ class MyApiController extends Controller
                 $row['items'][] = $hotelItem;
 
             }
+            foreach ($this->tourItemsAsAndroidBookingItems($booking) as $tourItem) {
+                $row['items'][] = $tourItem;
+            }
             $row['downloadable'] = $this->bookingAllowsInvoiceDownload($booking);
             $this->attachCommonInvoiceFields($row, $booking);
             $responseArr[] = $row;
@@ -327,6 +335,7 @@ class MyApiController extends Controller
             'payment',
             'hotelReservation.hotel',
             'hotelReservation.roomType',
+            'tourItems',
         ])
             ->where('customer_id', $user->id)->orderBy('booking_date', 'desc')->findOrFail($id);
 
@@ -406,6 +415,9 @@ class MyApiController extends Controller
                 $responseArr['items'][] = $hotelRow;
 
             }
+            foreach ($this->tourItemsAsAndroidBookingItems($booking) as $tourItem) {
+                $responseArr['items'][] = $tourItem;
+            }
 
             if( !getOption('is_cancellation_enabled') ) {
                 $responseArr['cancellable'] = false;
@@ -432,6 +444,7 @@ class MyApiController extends Controller
             'payment.gateway',
             'hotelReservation.hotel.photos',
             'hotelReservation.roomType',
+            'tourItems',
         ])
             ->where('customer_id', $user->id)->orderBy('booking_date', 'desc')->findOrFail($id);
 
@@ -450,6 +463,7 @@ class MyApiController extends Controller
             'payment.gateway',
             'hotelReservation.hotel.photos',
             'hotelReservation.roomType',
+            'tourItems',
         ]);
 
         $responseArr = [];
@@ -576,6 +590,20 @@ class MyApiController extends Controller
                     'guest_name' => $hotelRow['passenger']['name'] ?? '',
                     'guest_mobile' => $hotelRow['passenger']['mobile'] ?? '',
                     'guest_email' => $hotelRow['guest_email'] ?? '',
+                ];
+            }
+            $tourRows = $this->tourItemsAsAndroidBookingItems($booking);
+            if ($tourRows !== []) {
+                foreach ($tourRows as $tourRow) {
+                    $responseArr['items'][] = $tourRow;
+                }
+                $firstTour = $tourRows[0];
+                $responseArr['service_type'] = 'tour';
+                $responseArr['tour'] = [
+                    'tour_title' => $firstTour['tour_title'] ?? '',
+                    'destination' => $firstTour['destination'] ?? '',
+                    'depart_date' => $firstTour['depart_date'] ?? '',
+                    'places' => $firstTour['places'] ?? 1,
                 ];
             }
 
@@ -1585,6 +1613,51 @@ class MyApiController extends Controller
             ],
             'guest_email' => $passengerEmail,
         ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function tourItemsAsAndroidBookingItems(Booking $booking): array
+    {
+        if (! Schema::hasTable('booking_tour_items')) {
+            return [];
+        }
+
+        $items = $booking->relationLoaded('tourItems')
+            ? $booking->tourItems
+            : $booking->tourItems()->get();
+
+        if ($items === null || $items->isEmpty()) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($items as $item) {
+            $departDate = $item->depart_date?->toDateString() ?? '';
+            $out[] = [
+                'id' => (int) $item->id,
+                'item_type' => 'tour',
+                'cabin_type' => 'tour',
+                'tour_title' => (string) ($item->tour_title ?? 'Tour'),
+                'destination' => (string) ($item->destination ?? ''),
+                'depart_date' => $departDate,
+                'places' => (int) $item->places,
+                'fare' => (float) $item->total_price,
+                'vehicle_name' => (string) ($item->tour_title ?? 'Tour'),
+                'route_name' => (string) ($item->destination ?? ''),
+                'schedule_date' => $departDate,
+                'leaving_time' => '',
+                'leaving_time_formated' => '',
+                'cancellable' => false,
+                'status' => 1,
+                'is_ac' => false,
+                'cabin_no' => '',
+                'passenger' => is_array($item->travelers) ? ($item->travelers[0] ?? []) : [],
+            ];
+        }
+
+        return $out;
     }
 
     /**

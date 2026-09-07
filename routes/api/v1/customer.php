@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\v1\FaqController;
 use App\Http\Controllers\Api\v1\FrontApiController;
 use App\Http\Controllers\Api\v1\GatewayController;
 use App\Http\Controllers\Api\v1\HotelController;
+use App\Http\Controllers\Api\v1\TourController;
 use App\Http\Controllers\Api\v1\LocalizationController;
 use App\Http\Controllers\Api\v1\MyApiController;
 use App\Http\Controllers\Api\v1\NidVerificationController;
@@ -100,6 +101,13 @@ Route::middleware(['JsonResponse'])->group(function () {
         Route::get('{hotel}/rooms', [HotelController::class, 'rooms'])->whereNumber('hotel');
     });
 
+    Route::prefix('tour')->group(function () {
+        Route::get('home/top', [TourController::class, 'homeTop']);
+        Route::get('search', [TourController::class, 'search']);
+        Route::post('quote', [TourController::class, 'quote']);
+        Route::get('{tour}', [TourController::class, 'show'])->whereNumber('tour');
+    });
+
     // Cart list + lock/unlock (guest via EnsureGuestId cookie / X-Guest-Id).
     Route::middleware(['optional.customer.auth'])->group(function () {
         Route::get('cart', [ApiCartController::class, 'index']);
@@ -134,6 +142,12 @@ Route::middleware(['JsonResponse'])->group(function () {
             Route::post('hold/release', [HotelController::class, 'releaseHoldPost']);
             Route::post('booking/confirm', [HotelController::class, 'confirm']);
             Route::post('{hotel}/reviews', [HotelController::class, 'storeReview'])->whereNumber('hotel');
+        });
+
+        Route::prefix('tour')->group(function () {
+            Route::post('hold', [TourController::class, 'hold']);
+            Route::delete('hold/{hold}', [TourController::class, 'releaseHold'])->whereNumber('hold');
+            Route::post('booking/confirm', [TourController::class, 'confirm']);
         });
 
         Route::prefix('booking')->group(function () {

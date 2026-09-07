@@ -20,6 +20,7 @@ class MerchantHotelController extends MerchantHotelBaseController
             'country' => ['nullable', 'string', 'max:191'],
             'status' => ['nullable', 'integer'],
             'source' => ['nullable', 'string', 'max:32'],
+            'property_type' => ['nullable', 'string', 'max:64'],
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:200'],
         ]);
@@ -36,6 +37,11 @@ class MerchantHotelController extends MerchantHotelBaseController
             ->withSum('rooms as total_rooms_sum', 'total_rooms')
             ->where('merchant_id', $ownerId)
             ->orderByDesc('id');
+
+        $allowedStayTypes = $this->allowedStayPropertyTypes($ownerId);
+        if (count($allowedStayTypes) < count(self::STAY_TYPES)) {
+            $q->whereIn('property_type', $allowedStayTypes);
+        }
 
         if ($request->filled('search')) {
             $s = '%'.trim((string) $request->search).'%';
@@ -66,6 +72,16 @@ class MerchantHotelController extends MerchantHotelBaseController
         }
         if ($request->filled('source')) {
             $q->where('source', (string) $request->source);
+        }
+        if ($request->filled('property_type')) {
+            $types = array_values(array_filter(array_map(
+                static fn ($v) => strtolower(trim((string) $v)),
+                preg_split('/[,\s]+/', (string) $request->input('property_type')) ?: []
+            )));
+            $types = array_values(array_intersect($types, $allowedStayTypes));
+            if ($types !== []) {
+                $q->whereIn('property_type', $types);
+            }
         }
 
         $perPage = (int) ($request->get('per_page', 10));
@@ -112,17 +128,22 @@ class MerchantHotelController extends MerchantHotelBaseController
             'check_out_time' => ['nullable', 'date_format:H:i'],
             'status' => ['nullable', 'integer', 'in:0,1,2'],
             'source' => ['nullable', 'string', 'max:32'],
+            'property_type' => ['nullable', 'string', 'in:hotel,resort,homestay'],
             'external_id' => ['nullable', 'string', 'max:191'],
             'supplier_meta' => ['nullable', 'array'],
             'accepts_extra_bed' => ['nullable', 'boolean'],
             'max_extra_beds' => ['nullable', 'integer', 'min:0', 'max:10'],
         ]);
 
+        $propertyType = strtolower((string) ($validated['property_type'] ?? 'hotel'));
+        $this->assertPropertyTypeAllowed($ownerId, $propertyType);
+
         $payload = array_merge($validated, [
             'merchant_id' => $ownerId,
             'created_by' => (int) auth()->id(),
             'updated_by' => (int) auth()->id(),
             'source' => $validated['source'] ?? 'local',
+            'property_type' => $propertyType,
             'status' => $validated['status'] ?? 1,
             'accepts_extra_bed' => (bool) ($validated['accepts_extra_bed'] ?? false),
             'max_extra_beds' => (int) ($validated['max_extra_beds'] ?? 1),
@@ -186,9 +207,14 @@ class MerchantHotelController extends MerchantHotelBaseController
             'check_in_time' => ['nullable', 'date_format:H:i'],
             'check_out_time' => ['nullable', 'date_format:H:i'],
             'status' => ['nullable', 'integer', 'in:0,1,2'],
+            'property_type' => ['sometimes', 'required', 'string', 'in:hotel,resort,homestay'],
             'accepts_extra_bed' => ['nullable', 'boolean'],
             'max_extra_beds' => ['nullable', 'integer', 'min:0', 'max:10'],
         ]);
+
+        if (array_key_exists('property_type', $validated)) {
+            $this->assertPropertyTypeAllowed($ownerId, (string) $validated['property_type']);
+        }
 
         if (array_key_exists('accepts_extra_bed', $validated)) {
             $validated['accepts_extra_bed'] = (bool) $validated['accepts_extra_bed'];

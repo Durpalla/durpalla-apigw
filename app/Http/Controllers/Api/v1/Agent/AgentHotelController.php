@@ -50,7 +50,7 @@ class AgentHotelController extends Controller
             ]);
         }
 
-        $result = $this->hotels->list($agent, $request->only(['city', 'q', 'check_in', 'check_out', 'mode']));
+        $result = $this->hotels->list($agent, $request->only(['city', 'q', 'check_in', 'check_out', 'mode', 'property_type']));
 
         return response()->json([
             'success' => true,

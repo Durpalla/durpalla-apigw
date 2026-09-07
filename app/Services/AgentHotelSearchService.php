@@ -50,7 +50,7 @@ class AgentHotelSearchService
         if ($isSearch) {
             $checkIn = trim((string) ($filters['check_in'] ?? ''));
             $checkOut = trim((string) ($filters['check_out'] ?? ''));
-            $items = $this->searchHotels($city, $meta['favourite_hotel_ids']);
+            $items = $this->searchHotels($city, $meta['favourite_hotel_ids'], $filters['property_type'] ?? null);
 
             return [
                 'mode' => 'search',
@@ -62,6 +62,7 @@ class AgentHotelSearchService
                     'query' => $city,
                     'check_in' => $checkIn !== '' ? $checkIn : null,
                     'check_out' => $checkOut !== '' ? $checkOut : null,
+                    'property_type' => $filters['property_type'] ?? null,
                     'total' => count($items),
                 ],
             ];
@@ -218,11 +219,12 @@ class AgentHotelSearchService
      * @param  list<int>  $favouriteIds
      * @return list<array<string, mixed>>
      */
-    private function searchHotels(string $city, array $favouriteIds): array
+    private function searchHotels(string $city, array $favouriteIds, mixed $propertyType = null): array
     {
         $query = Hotel::query()
             ->where('status', 1);
         \App\Support\PublicListingVisibility::applyApprovedHotel($query);
+        $this->applyPropertyTypeFilter($query, $propertyType);
 
         if ($city !== '') {
             $like = '%'.addcslashes($city, '%_\\').'%';
@@ -297,6 +299,7 @@ class AgentHotelSearchService
             'id' => (int) $hotel->id,
             'hotel_id' => (int) $hotel->id,
             'name' => (string) $hotel->name,
+            'property_type' => (string) ($hotel->getAttribute('property_type') ?? 'hotel'),
             'location' => $city !== '' ? $city : (string) ($hotel->address ?? ''),
             'city' => $city,
             'address' => (string) ($hotel->address ?? ''),
@@ -309,6 +312,24 @@ class AgentHotelSearchService
             'amenities' => $amenities,
             'is_favourite' => $isFavourite,
         ];
+    }
+
+    /**
+     * @param  Builder<Hotel>  $query
+     */
+    private function applyPropertyTypeFilter(Builder $query, mixed $propertyType): void
+    {
+        if (! Schema::hasColumn('hotels', 'property_type') || $propertyType === null || $propertyType === '') {
+            return;
+        }
+        $types = array_values(array_unique(array_filter(array_map(
+            static fn ($v) => strtolower(trim((string) $v)),
+            is_array($propertyType) ? $propertyType : (preg_split('/[,\s]+/', (string) $propertyType) ?: [])
+        ))));
+        $types = array_values(array_intersect($types, ['hotel', 'resort', 'homestay']));
+        if ($types !== []) {
+            $query->whereIn('property_type', $types);
+        }
     }
 
     private function resolveCityLabel(Hotel $hotel): string

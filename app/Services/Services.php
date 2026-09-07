@@ -32,6 +32,8 @@ class Services
             return [
                 'id' => $item->id,
                 'name' => $item->name,
+                'slug' => $item->slug,
+                'type' => $item->type ?? 'transport',
                 'status' => $item->status
             ];
         });

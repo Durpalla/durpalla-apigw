@@ -824,6 +824,9 @@ class AgentApiPresenter
         foreach ($parts as $part) {
             $code = match (strtolower(trim($part))) {
                 'hotel', 'hotel_ops' => 'hotel',
+                'resort', 'resort_ops' => 'resort',
+                'homestay', 'home_stay', 'homestay_ops' => 'homestay',
+                'tour', 'tours', 'tour_ops', 'tour_agency' => 'tour',
                 'bus', 'bus_company', 'bus_ops' => 'bus',
                 'train' => 'train',
                 'air', 'airline', 'flight' => 'air',

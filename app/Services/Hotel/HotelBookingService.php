@@ -83,6 +83,7 @@ final class HotelBookingService
 
         $q = Hotel::query();
         $this->applyHotelsSearchVisibilityFilter($q);
+        $this->applyPropertyTypeFilter($q, $request);
 
         $lat = $request->input('lat');
         $lng = $request->input('lng');
@@ -215,6 +216,7 @@ final class HotelBookingService
                 'id' => $hotel->id,
                 'hotel_id' => $hotel->id,
                 'name' => $hotel->name,
+                'property_type' => (string) ($hotel->getAttribute('property_type') ?? 'hotel'),
                 'location' => $cityLabel ?? $hotel->address ?? '',
                 'city' => $cityLabel,
                 'photo' => $photoUrl,
@@ -263,6 +265,7 @@ final class HotelBookingService
 
         $q = Hotel::query();
         $this->applyHotelsSearchVisibilityFilter($q);
+        $this->applyPropertyTypeFilter($q, $request);
 
         if (Schema::hasColumn($this->hotelsTable(), 'aggregate_rating')) {
             $q->orderByDesc('aggregate_rating');
@@ -318,6 +321,7 @@ final class HotelBookingService
                 'id' => $hotel->id,
                 'hotel_id' => $hotel->id,
                 'name' => $hotel->name,
+                'property_type' => (string) ($hotel->getAttribute('property_type') ?? 'hotel'),
                 'location' => $cityLabel ?? $hotel->address ?? '',
                 'city' => $cityLabel,
                 'photo' => $photoUrl,
@@ -333,6 +337,29 @@ final class HotelBookingService
         }
 
         return $out;
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<Hotel>  $q
+     */
+    private function applyPropertyTypeFilter($q, Request $request): void
+    {
+        if (! Schema::hasColumn($this->hotelsTable(), 'property_type')) {
+            return;
+        }
+        $raw = $request->input('property_type', $request->input('propertyType'));
+        if ($raw === null || $raw === '') {
+            return;
+        }
+        $types = array_values(array_unique(array_filter(array_map(
+            static fn ($v) => strtolower(trim((string) $v)),
+            is_array($raw) ? $raw : (preg_split('/[,\s]+/', (string) $raw) ?: [])
+        ))));
+        $types = array_values(array_intersect($types, ['hotel', 'resort', 'homestay']));
+        if ($types === []) {
+            return;
+        }
+        $q->whereIn('hotels.property_type', $types);
     }
 
     /**
@@ -972,6 +999,7 @@ final class HotelBookingService
         return [
             'id' => $hotel->id,
             'name' => $hotel->name,
+            'property_type' => (string) ($hotel->getAttribute('property_type') ?? 'hotel'),
             'city' => $this->resolveHotelCityLabel($hotel, $cityNamesById),
             'address' => $hotel->address,
             'lat' => $hotel->lat ?? $this->firstHotelLocationLatitude($hotel->id),

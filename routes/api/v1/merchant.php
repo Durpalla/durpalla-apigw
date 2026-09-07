@@ -19,6 +19,11 @@ use App\Http\Controllers\Api\v1\Merchant\MerchantHotelReportController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantHotelRoomController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantHotelRoomImageController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantHotelRoomUnitController;
+use App\Http\Controllers\Api\v1\Merchant\MerchantTourBookingController;
+use App\Http\Controllers\Api\v1\Merchant\MerchantTourController;
+use App\Http\Controllers\Api\v1\Merchant\MerchantTourDepartureController;
+use App\Http\Controllers\Api\v1\Merchant\MerchantTourImageController;
+use App\Http\Controllers\Api\v1\Merchant\MerchantTourItineraryController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantNotificationController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantProfileController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantPropertyController;
@@ -218,5 +223,37 @@ Route::middleware(['auth:merchant_api,merchant_staff_api', 'merchant.active'])->
 
         Route::get('hotels/reports/summary', [MerchantHotelReportController::class, 'summary']);
         Route::get('hotels/reports/export', [MerchantHotelReportController::class, 'export']);
+
+        // Tours & Travels (merchant-scoped)
+        Route::get('tours', [MerchantTourController::class, 'index']);
+        Route::post('tours', [MerchantTourController::class, 'store']);
+        Route::get('tours/{id}', [MerchantTourController::class, 'show'])->whereNumber('id');
+        Route::put('tours/{id}', [MerchantTourController::class, 'update'])->whereNumber('id');
+        Route::patch('tours/{id}/status', [MerchantTourController::class, 'updateStatus'])->whereNumber('id');
+        Route::delete('tours/{id}', [MerchantTourController::class, 'destroy'])->whereNumber('id');
+
+        Route::get('tours/{tourId}/images', [MerchantTourImageController::class, 'index'])->whereNumber('tourId');
+        Route::post('tours/{tourId}/images', [MerchantTourImageController::class, 'store'])->whereNumber('tourId');
+        Route::delete('tours/{tourId}/images/{imageId}', [MerchantTourImageController::class, 'destroy'])
+            ->whereNumber('tourId')->whereNumber('imageId');
+        Route::post('tours/{tourId}/images/reorder', [MerchantTourImageController::class, 'reorder'])->whereNumber('tourId');
+
+        Route::get('tours/{tourId}/itinerary', [MerchantTourItineraryController::class, 'index'])->whereNumber('tourId');
+        Route::post('tours/{tourId}/itinerary', [MerchantTourItineraryController::class, 'store'])->whereNumber('tourId');
+        Route::patch('tours/{tourId}/itinerary/{dayId}', [MerchantTourItineraryController::class, 'update'])
+            ->whereNumber('tourId')->whereNumber('dayId');
+        Route::delete('tours/{tourId}/itinerary/{dayId}', [MerchantTourItineraryController::class, 'destroy'])
+            ->whereNumber('tourId')->whereNumber('dayId');
+
+        Route::get('tours/{tourId}/departures', [MerchantTourDepartureController::class, 'index'])->whereNumber('tourId');
+        Route::post('tours/{tourId}/departures', [MerchantTourDepartureController::class, 'store'])->whereNumber('tourId');
+        Route::patch('tours/{tourId}/departures/{departureId}', [MerchantTourDepartureController::class, 'update'])
+            ->whereNumber('tourId')->whereNumber('departureId');
+        Route::delete('tours/{tourId}/departures/{departureId}', [MerchantTourDepartureController::class, 'destroy'])
+            ->whereNumber('tourId')->whereNumber('departureId');
+
+        Route::get('tour-bookings', [MerchantTourBookingController::class, 'index']);
+        Route::get('tour-bookings/{id}', [MerchantTourBookingController::class, 'show'])->whereNumber('id');
+        Route::post('tour-bookings/{id}/cancel', [MerchantTourBookingController::class, 'cancel'])->whereNumber('id');
 
 });

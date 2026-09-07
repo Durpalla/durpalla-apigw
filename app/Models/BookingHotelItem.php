@@ -10,6 +10,7 @@ class BookingHotelItem extends Model
     protected $fillable = [
         'booking_id',
         'hotel_id',
+        'property_type',
         'room_id',
         'room_type_id',
         'rate_plan_id',
