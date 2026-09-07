@@ -32,5 +32,7 @@
         "logout": "Cerrar sesión"
     },
     "tours": "Tours",
-    "tourBookings": "Reservas de tours"
+    "tourBookings": "Reservas de tours",
+    "boatRentals": "Alquiler de barcos",
+    "boatBookings": "Reservas de barcos"
 }

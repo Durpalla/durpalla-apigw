@@ -1,0 +1,155 @@
+{
+    "list": {
+        "title": "নৌকা ভাড়া",
+        "description": "নৌকা, রেট ও ট্রিপ প্যাকেজ",
+        "create": "নতুন নৌকা",
+        "bookings": "নৌকা বুকিং",
+        "stoppages": "স্টপেজ",
+        "tripRequests": "ট্রিপ অনুরোধ",
+        "searchPlaceholder": "নৌকা খুঁজুন",
+        "city": "শহর",
+        "allCities": "সব শহর",
+        "cityFallback": "শহর {{id}}",
+        "empty": "কোনো নৌকা নেই",
+        "thumb": "ছবি",
+        "boatTitle": "নৌকা",
+        "capacity": "ধারণক্ষমতা",
+        "baseLocation": "বেস লোকেশন",
+        "open": "খুলুন",
+        "toggleStatus": "{{name}} এর অবস্থা পরিবর্তন করুন",
+        "showing": "{{total}} টির মধ্যে {{from}} - {{to}} দেখানো হচ্ছে",
+        "showingEmpty": "০ টির মধ্যে ০ দেখানো হচ্ছে",
+        "previous": "পূর্ববর্তী",
+        "next": "পরবর্তী",
+        "pageOf": "পৃষ্ঠা {{page}} / {{total}}"
+    },
+    "form": {
+        "createTitle": "নতুন নৌকা",
+        "editTitle": "নৌকা সম্পাদনা",
+        "createDescription": "নতুন ভাড়ার নৌকা যোগ করুন",
+        "editDescription": "নৌকার তথ্য আপডেট করুন",
+        "save": "নৌকা সংরক্ষণ",
+        "sections": {
+            "basic": "মূল তথ্য",
+            "capacity": "ধারণক্ষমতা ও লোকেশন",
+            "descriptions": "বিবরণ",
+            "policy": "বাতিলকরণ নীতি"
+        },
+        "fields": {
+            "title": "শিরোনাম",
+            "titlePlaceholder": "লাক্সারি কেবিন ক্রুজার",
+            "city": "শহর",
+            "cityPlaceholder": "শহর নির্বাচন করুন",
+            "capacityMax": "সর্বোচ্চ ধারণক্ষমতা",
+            "baseLocation": "বেস লোকেশন",
+            "baseLocationPlaceholder": "জেটি / মেরিনা",
+            "shortDescription": "সংক্ষিপ্ত বিবরণ",
+            "longDescription": "বিস্তারিত বিবরণ",
+            "cancellationPolicy": "বাতিলকরণ নীতি",
+            "statusActive": "সক্রিয়"
+        }
+    },
+    "detail": {
+        "edit": "সম্পাদনা",
+        "bookings": "বুকিং",
+        "tabs": {
+            "overview": "সারাংশ",
+            "images": "ছবি",
+            "rates": "রেট",
+            "packages": "প্যাকেজ"
+        },
+        "overview": {
+            "capacity": "ধারণক্ষমতা",
+            "city": "শহর",
+            "baseLocation": "বেস লোকেশন",
+            "shortDescription": "সংক্ষিপ্ত বিবরণ",
+            "longDescription": "বিস্তারিত বিবরণ",
+            "cancellationPolicy": "বাতিলকরণ নীতি"
+        },
+        "images": {
+            "upload": "ছবি আপলোড",
+            "empty": "এখনও কোনো ছবি নেই",
+            "remove": "মুছুন"
+        },
+        "rates": {
+            "add": "রেট যোগ করুন",
+            "empty": "এখনও কোনো রেট নেই",
+            "mode": "মোড",
+            "hourly": "ঘণ্টাভিত্তিক",
+            "daily": "দিনভিত্তিক",
+            "unitPrice": "ইউনিট মূল্য",
+            "minUnits": "সর্বনিম্ন ইউনিট",
+            "maxUnits": "সর্বোচ্চ ইউনিট",
+            "save": "সংরক্ষণ",
+            "delete": "মুছুন"
+        },
+        "packages": {
+            "add": "প্যাকেজ যোগ করুন",
+            "empty": "এখনও কোনো প্যাকেজ নেই",
+            "title": "শিরোনাম",
+            "durationHours": "সময়কাল (ঘণ্টা)",
+            "basePrice": "মূল্য",
+            "description": "বিবরণ",
+            "save": "সংরক্ষণ",
+            "delete": "মুছুন"
+        }
+    },
+    "bookings": {
+        "title": "নৌকা বুকিং",
+        "description": "আপনার ভাড়ার নৌকার বুকিং",
+        "empty": "কোনো নৌকা বুকিং নেই",
+        "code": "কোড",
+        "customer": "গ্রাহক",
+        "boat": "নৌকা",
+        "startsAt": "শুরু",
+        "endsAt": "শেষ",
+        "guests": "অতিথি",
+        "amount": "পরিমাণ",
+        "status": "অবস্থা",
+        "open": "খুলুন",
+        "allStatuses": "সব অবস্থা",
+        "showing": "{{total}} টির মধ্যে {{from}} - {{to}} দেখানো হচ্ছে",
+        "showingEmpty": "০ টির মধ্যে ০ দেখানো হচ্ছে",
+        "previous": "পূর্ববর্তী",
+        "next": "পরবর্তী",
+        "pageOf": "পৃষ্ঠা {{page}} / {{total}}"
+    },
+    "stoppages": {
+        "title": "স্টপেজ",
+        "description": "কাস্টম ট্রিপের জন্য শেয়ার্ড স্টপেজ ক্যাটালগ",
+        "create": "স্টপেজ যোগ করুন",
+        "empty": "কোনো স্টপেজ নেই",
+        "name": "নাম",
+        "city": "শহর",
+        "status": "অবস্থা"
+    },
+    "tripRequests": {
+        "title": "ট্রিপ অনুরোধ",
+        "description": "গ্রাহক RFQ ও মার্চেন্ট বিড",
+        "empty": "কোনো ট্রিপ অনুরোধ নেই",
+        "bids": "বিড",
+        "guests": "অতিথি",
+        "status": "অবস্থা",
+        "open": "খুলুন"
+    },
+    "toast": {
+        "statusUpdated": "নৌকার অবস্থা আপডেট হয়েছে",
+        "created": "নৌকা তৈরি হয়েছে",
+        "updated": "নৌকা আপডেট হয়েছে",
+        "imageAdded": "ছবি আপলোড হয়েছে",
+        "imageRemoved": "ছবি মুছে ফেলা হয়েছে",
+        "rateSaved": "রেট সংরক্ষিত",
+        "rateDeleted": "রেট মুছে ফেলা হয়েছে",
+        "packageSaved": "প্যাকেজ সংরক্ষিত",
+        "packageDeleted": "প্যাকেজ মুছে ফেলা হয়েছে",
+        "stoppageSaved": "স্টপেজ সংরক্ষিত",
+        "bidSubmitted": "বিড জমা হয়েছে"
+    },
+    "validation": {
+        "searchInvalid": "সার্চ সঠিক নয়",
+        "labels": {
+            "search": "খুঁজুন",
+            "title": "শিরোনাম"
+        }
+    }
+}

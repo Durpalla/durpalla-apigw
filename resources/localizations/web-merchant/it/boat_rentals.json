@@ -1,0 +1,155 @@
+{
+    "list": {
+        "title": "Boat rentals",
+        "description": "Boats, rates, and trip packages",
+        "create": "Create boat",
+        "bookings": "Boat bookings",
+        "stoppages": "Stoppages",
+        "tripRequests": "Trip requests",
+        "searchPlaceholder": "Search boats",
+        "city": "City",
+        "allCities": "All cities",
+        "cityFallback": "City {{id}}",
+        "empty": "No boats",
+        "thumb": "Thumb",
+        "boatTitle": "Boat",
+        "capacity": "Capacity",
+        "baseLocation": "Base location",
+        "open": "Open",
+        "toggleStatus": "Toggle {{name}} status",
+        "showing": "Showing {{from}} - {{to}} of {{total}}",
+        "showingEmpty": "Showing 0 of 0",
+        "previous": "Previous",
+        "next": "Next",
+        "pageOf": "Page {{page}} of {{total}}"
+    },
+    "form": {
+        "createTitle": "Create boat",
+        "editTitle": "Edit boat",
+        "createDescription": "Add a new rental boat",
+        "editDescription": "Update boat details",
+        "save": "Save boat",
+        "sections": {
+            "basic": "Basic information",
+            "capacity": "Capacity & location",
+            "descriptions": "Descriptions",
+            "policy": "Cancellation policy"
+        },
+        "fields": {
+            "title": "Title",
+            "titlePlaceholder": "Luxury cabin cruiser",
+            "city": "City",
+            "cityPlaceholder": "Select city",
+            "capacityMax": "Max capacity",
+            "baseLocation": "Base location",
+            "baseLocationPlaceholder": "Jetty / marina",
+            "shortDescription": "Short description",
+            "longDescription": "Long description",
+            "cancellationPolicy": "Cancellation policy",
+            "statusActive": "Active"
+        }
+    },
+    "detail": {
+        "edit": "Edit",
+        "bookings": "Bookings",
+        "tabs": {
+            "overview": "Overview",
+            "images": "Images",
+            "rates": "Rates",
+            "packages": "Packages"
+        },
+        "overview": {
+            "capacity": "Capacity",
+            "city": "City",
+            "baseLocation": "Base location",
+            "shortDescription": "Short description",
+            "longDescription": "Long description",
+            "cancellationPolicy": "Cancellation policy"
+        },
+        "images": {
+            "upload": "Upload image",
+            "empty": "No images yet",
+            "remove": "Remove"
+        },
+        "rates": {
+            "add": "Add rate",
+            "empty": "No rates yet",
+            "mode": "Mode",
+            "hourly": "Hourly",
+            "daily": "Daily",
+            "unitPrice": "Unit price",
+            "minUnits": "Min units",
+            "maxUnits": "Max units",
+            "save": "Save",
+            "delete": "Delete"
+        },
+        "packages": {
+            "add": "Add package",
+            "empty": "No packages yet",
+            "title": "Title",
+            "durationHours": "Duration (hours)",
+            "basePrice": "Base price",
+            "description": "Description",
+            "save": "Save",
+            "delete": "Delete"
+        }
+    },
+    "bookings": {
+        "title": "Boat bookings",
+        "description": "Bookings for your rental boats",
+        "empty": "No boat bookings",
+        "code": "Code",
+        "customer": "Customer",
+        "boat": "Boat",
+        "startsAt": "Starts",
+        "endsAt": "Ends",
+        "guests": "Guests",
+        "amount": "Amount",
+        "status": "Status",
+        "open": "Open",
+        "allStatuses": "All statuses",
+        "showing": "Showing {{from}} - {{to}} of {{total}}",
+        "showingEmpty": "Showing 0 of 0",
+        "previous": "Previous",
+        "next": "Next",
+        "pageOf": "Page {{page}} of {{total}}"
+    },
+    "stoppages": {
+        "title": "Stoppages",
+        "description": "Shared stoppage catalog for custom trips",
+        "create": "Add stoppage",
+        "empty": "No stoppages",
+        "name": "Name",
+        "city": "City",
+        "status": "Status"
+    },
+    "tripRequests": {
+        "title": "Trip requests",
+        "description": "Customer RFQs and merchant bids",
+        "empty": "No trip requests",
+        "bids": "Bids",
+        "guests": "Guests",
+        "status": "Status",
+        "open": "Open"
+    },
+    "toast": {
+        "statusUpdated": "Boat status updated",
+        "created": "Boat created",
+        "updated": "Boat updated",
+        "imageAdded": "Image uploaded",
+        "imageRemoved": "Image removed",
+        "rateSaved": "Rate saved",
+        "rateDeleted": "Rate deleted",
+        "packageSaved": "Package saved",
+        "packageDeleted": "Package deleted",
+        "stoppageSaved": "Stoppage saved",
+        "bidSubmitted": "Bid submitted"
+    },
+    "validation": {
+        "searchInvalid": "Search is invalid",
+        "labels": {
+            "search": "Search",
+            "title": "Title"
+        }
+    }
+}

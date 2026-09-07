@@ -32,5 +32,7 @@
         "logout": "Logout"
     },
     "tours": "Tours",
-    "tourBookings": "Tour bookings"
+    "tourBookings": "Tour bookings",
+    "boatRentals": "Boat rentals",
+    "boatBookings": "Boat bookings"
 }

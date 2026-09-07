@@ -45,9 +45,10 @@ class MerchantCapabilityController extends Controller
         $isRestricted = count($allowed) > 0;
         $canHotels = ! $isRestricted || count(array_intersect($allowed, self::STAY_TYPES)) > 0;
         $canTours = ! $isRestricted || in_array('tour', $allowed, true);
+        $canBoats = ! $isRestricted || in_array('boat_rental', $allowed, true);
 
         $transportTypes = $this->transportServiceTypes();
-        $nonTransport = array_merge(self::STAY_TYPES, ['tour']);
+        $nonTransport = array_merge(self::STAY_TYPES, ['tour', 'boat_rental']);
         $canTransport = ! $isRestricted;
         if ($isRestricted) {
             $canTransport = false;
@@ -59,7 +60,7 @@ class MerchantCapabilityController extends Controller
                     $canTransport = true;
                     break;
                 }
-                // Unknown non-stay/tour types still count as transport (e.g. vessel).
+                // Unknown non-stay/tour/boat_rental types still count as transport (e.g. vessel).
                 $canTransport = true;
                 break;
             }
@@ -75,6 +76,7 @@ class MerchantCapabilityController extends Controller
                 'is_service_type_restricted' => $isRestricted,
                 'can_manage_hotels' => $canHotels,
                 'can_manage_tours' => $canTours,
+                'can_manage_boats' => $canBoats,
                 'can_manage_transport' => $canTransport,
                 'subscription' => $subscription,
             ],

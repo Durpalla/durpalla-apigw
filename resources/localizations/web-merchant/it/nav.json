@@ -32,5 +32,7 @@
         "logout": "Esci"
     },
     "tours": "Tour",
-    "tourBookings": "Prenotazioni tour"
+    "tourBookings": "Prenotazioni tour",
+    "boatRentals": "Noleggio barche",
+    "boatBookings": "Prenotazioni barche"
 }

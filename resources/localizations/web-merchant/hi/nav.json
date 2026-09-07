@@ -32,5 +32,7 @@
         "logout": "लॉग आउट"
     },
     "tours": "टूर",
-    "tourBookings": "टूर बुकिंग"
+    "tourBookings": "टूर बुकिंग",
+    "boatRentals": "नाव किराया",
+    "boatBookings": "नाव बुकिंग"
 }

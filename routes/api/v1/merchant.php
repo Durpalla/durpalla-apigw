@@ -25,6 +25,14 @@ use App\Http\Controllers\Api\v1\Merchant\MerchantTourDepartureController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantTourHoldController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantTourImageController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantTourItineraryController;
+use App\Http\Controllers\Api\v1\Merchant\MerchantBoatBookingController;
+use App\Http\Controllers\Api\v1\Merchant\MerchantBoatController;
+use App\Http\Controllers\Api\v1\Merchant\MerchantBoatHoldController;
+use App\Http\Controllers\Api\v1\Merchant\MerchantBoatImageController;
+use App\Http\Controllers\Api\v1\Merchant\MerchantBoatPackageController;
+use App\Http\Controllers\Api\v1\Merchant\MerchantBoatRateController;
+use App\Http\Controllers\Api\v1\Merchant\MerchantBoatStoppageController;
+use App\Http\Controllers\Api\v1\Merchant\MerchantBoatTripRequestController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantNotificationController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantProfileController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantPropertyController;
@@ -260,5 +268,55 @@ Route::middleware(['auth:merchant_api,merchant_staff_api', 'merchant.active'])->
         Route::post('tour-holds', [MerchantTourHoldController::class, 'store']);
         Route::delete('tour-holds/{id}', [MerchantTourHoldController::class, 'destroy'])->whereNumber('id');
         Route::post('tour-holds/{id}/confirm', [MerchantTourHoldController::class, 'confirm'])->whereNumber('id');
+
+        // Boat rental (merchant-scoped)
+        Route::get('boats', [MerchantBoatController::class, 'index']);
+        Route::post('boats', [MerchantBoatController::class, 'store']);
+        Route::get('boats/{id}', [MerchantBoatController::class, 'show'])->whereNumber('id');
+        Route::put('boats/{id}', [MerchantBoatController::class, 'update'])->whereNumber('id');
+        Route::patch('boats/{id}/status', [MerchantBoatController::class, 'updateStatus'])->whereNumber('id');
+        Route::delete('boats/{id}', [MerchantBoatController::class, 'destroy'])->whereNumber('id');
+
+        Route::get('boats/{boatId}/images', [MerchantBoatImageController::class, 'index'])->whereNumber('boatId');
+        Route::post('boats/{boatId}/images', [MerchantBoatImageController::class, 'store'])->whereNumber('boatId');
+        Route::delete('boats/{boatId}/images/{imageId}', [MerchantBoatImageController::class, 'destroy'])
+            ->whereNumber('boatId')->whereNumber('imageId');
+        Route::post('boats/{boatId}/images/reorder', [MerchantBoatImageController::class, 'reorder'])->whereNumber('boatId');
+
+        Route::get('boats/{boatId}/rates', [MerchantBoatRateController::class, 'index'])->whereNumber('boatId');
+        Route::post('boats/{boatId}/rates', [MerchantBoatRateController::class, 'upsert'])->whereNumber('boatId');
+        Route::delete('boats/{boatId}/rates/{rateId}', [MerchantBoatRateController::class, 'destroy'])
+            ->whereNumber('boatId')->whereNumber('rateId');
+
+        Route::get('boats/{boatId}/packages', [MerchantBoatPackageController::class, 'index'])->whereNumber('boatId');
+        Route::post('boats/{boatId}/packages', [MerchantBoatPackageController::class, 'store'])->whereNumber('boatId');
+        Route::get('boats/{boatId}/packages/{packageId}', [MerchantBoatPackageController::class, 'show'])
+            ->whereNumber('boatId')->whereNumber('packageId');
+        Route::put('boats/{boatId}/packages/{packageId}', [MerchantBoatPackageController::class, 'update'])
+            ->whereNumber('boatId')->whereNumber('packageId');
+        Route::delete('boats/{boatId}/packages/{packageId}', [MerchantBoatPackageController::class, 'destroy'])
+            ->whereNumber('boatId')->whereNumber('packageId');
+
+        Route::get('boat-stoppages', [MerchantBoatStoppageController::class, 'index']);
+        Route::post('boat-stoppages', [MerchantBoatStoppageController::class, 'store']);
+        Route::get('boat-stoppages/{id}', [MerchantBoatStoppageController::class, 'show'])->whereNumber('id');
+        Route::put('boat-stoppages/{id}', [MerchantBoatStoppageController::class, 'update'])->whereNumber('id');
+        Route::delete('boat-stoppages/{id}', [MerchantBoatStoppageController::class, 'destroy'])->whereNumber('id');
+
+        Route::get('boat-bookings', [MerchantBoatBookingController::class, 'index']);
+        Route::get('boat-bookings/{id}', [MerchantBoatBookingController::class, 'show'])->whereNumber('id');
+        Route::post('boat-bookings/{id}/cancel', [MerchantBoatBookingController::class, 'cancel'])->whereNumber('id');
+
+        Route::post('boat-holds', [MerchantBoatHoldController::class, 'store']);
+        Route::delete('boat-holds/{id}', [MerchantBoatHoldController::class, 'destroy'])->whereNumber('id');
+        Route::post('boat-holds/{id}/confirm', [MerchantBoatHoldController::class, 'confirm'])->whereNumber('id');
+
+        Route::get('boat-trip-requests', [MerchantBoatTripRequestController::class, 'index']);
+        Route::post('boat-trip-requests/{requestId}/bids', [MerchantBoatTripRequestController::class, 'placeBid'])
+            ->whereNumber('requestId');
+        Route::patch('boat-trip-bids/{bidId}', [MerchantBoatTripRequestController::class, 'updateBid'])->whereNumber('bidId');
+        Route::post('boat-trip-bids/{bidId}/withdraw', [MerchantBoatTripRequestController::class, 'withdrawBid'])
+            ->whereNumber('bidId');
+        Route::get('boat-trip-bids', [MerchantBoatTripRequestController::class, 'myBids']);
 
 });

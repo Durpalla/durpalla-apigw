@@ -156,6 +156,11 @@ class Booking extends Model
         return $this->hasMany(BookingTourItem::class, 'booking_id', 'id');
     }
 
+    public function boatItems()
+    {
+        return $this->hasMany(BookingBoatItem::class, 'booking_id', 'id');
+    }
+
     public function scopeHotel($query)
     {
         return $query->where('service_type', 'hotel');
@@ -164,6 +169,11 @@ class Booking extends Model
     public function scopeTour($query)
     {
         return $query->where('service_type', 'tour');
+    }
+
+    public function scopeBoatRental($query)
+    {
+        return $query->where('service_type', 'boat_rental');
     }
 
     public function cancellations()

@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\v1\Agent\AgentTransportBookingController;
 use App\Http\Controllers\Api\v1\Agent\AgentUpcomingTripController;
 use App\Http\Controllers\Api\v1\Agent\AgentHotelController;
 use App\Http\Controllers\Api\v1\Agent\AgentTourController;
+use App\Http\Controllers\Api\v1\Agent\AgentBoatRentalController;
 use App\Http\Controllers\Api\v1\Agent\AgentWalletController;
 use App\Http\Controllers\Api\v1\Agent\AgentWithdrawalController;
 use App\Http\Controllers\Api\v1\Agent\AgentWithdrawalMethodController;
@@ -67,6 +68,11 @@ Route::prefix('agent')->middleware(['JsonResponse'])->group(function () {
         Route::get('tours/search', [AgentTourController::class, 'search']);
         Route::get('tours/{id}', [AgentTourController::class, 'show'])->whereNumber('id');
 
+        Route::get('boats/search', [AgentBoatRentalController::class, 'search']);
+        Route::get('boats/stoppages', [AgentBoatRentalController::class, 'stoppages']);
+        Route::post('boats/quote', [AgentBoatRentalController::class, 'quote']);
+        Route::get('boats/{id}', [AgentBoatRentalController::class, 'show'])->whereNumber('id');
+
         // Booking + referral mutations — approved (active) agents only.
         Route::middleware(['agent.active'])->group(function () {
             Route::post('my/referred-properties', [AgentReferredPropertyController::class, 'store']);
@@ -93,6 +99,13 @@ Route::prefix('agent')->middleware(['JsonResponse'])->group(function () {
 
             Route::post('tours/hold', [AgentTourController::class, 'hold']);
             Route::post('tours/confirm', [AgentTourController::class, 'confirm']);
+
+            Route::post('boats/hold', [AgentBoatRentalController::class, 'hold']);
+            Route::post('boats/confirm', [AgentBoatRentalController::class, 'confirm']);
+            Route::post('boats/trip-requests', [AgentBoatRentalController::class, 'createRequest']);
+            Route::get('boats/trip-requests/{id}', [AgentBoatRentalController::class, 'showRequest'])->whereNumber('id');
+            Route::get('boats/trip-requests/{id}/bids', [AgentBoatRentalController::class, 'listBids'])->whereNumber('id');
+            Route::post('boats/bids/{id}/accept', [AgentBoatRentalController::class, 'acceptBid'])->whereNumber('id');
         });
     });
 });

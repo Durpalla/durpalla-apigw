@@ -32,5 +32,7 @@
         "logout": "Oturumu kapat"
     },
     "tours": "Turlar",
-    "tourBookings": "Tur rezervasyonları"
+    "tourBookings": "Tur rezervasyonları",
+    "boatRentals": "Tekne kiralama",
+    "boatBookings": "Tekne rezervasyonları"
 }

@@ -32,5 +32,7 @@
         "logout": "লগ আউট"
     },
     "tours": "ট্যুর",
-    "tourBookings": "ট্যুর বুকিং"
+    "tourBookings": "ট্যুর বুকিং",
+    "boatRentals": "নৌকা ভাড়া",
+    "boatBookings": "নৌকা বুকিং"
 }

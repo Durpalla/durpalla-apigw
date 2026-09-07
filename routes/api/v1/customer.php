@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\v1\FrontApiController;
 use App\Http\Controllers\Api\v1\GatewayController;
 use App\Http\Controllers\Api\v1\HotelController;
 use App\Http\Controllers\Api\v1\TourController;
+use App\Http\Controllers\Api\v1\BoatRentalController;
 use App\Http\Controllers\Api\v1\LocalizationController;
 use App\Http\Controllers\Api\v1\MyApiController;
 use App\Http\Controllers\Api\v1\NidVerificationController;
@@ -108,6 +109,14 @@ Route::middleware(['JsonResponse'])->group(function () {
         Route::get('{tour}', [TourController::class, 'show'])->whereNumber('tour');
     });
 
+    Route::prefix('boat-rental')->group(function () {
+        Route::get('home/top', [BoatRentalController::class, 'homeTop']);
+        Route::get('search', [BoatRentalController::class, 'search']);
+        Route::get('stoppages', [BoatRentalController::class, 'stoppages']);
+        Route::post('quote', [BoatRentalController::class, 'quote']);
+        Route::get('{boat}', [BoatRentalController::class, 'show'])->whereNumber('boat');
+    });
+
     // Cart list + lock/unlock (guest via EnsureGuestId cookie / X-Guest-Id).
     Route::middleware(['optional.customer.auth'])->group(function () {
         Route::get('cart', [ApiCartController::class, 'index']);
@@ -148,6 +157,18 @@ Route::middleware(['JsonResponse'])->group(function () {
             Route::post('hold', [TourController::class, 'hold']);
             Route::delete('hold/{hold}', [TourController::class, 'releaseHold'])->whereNumber('hold');
             Route::post('booking/confirm', [TourController::class, 'confirm']);
+        });
+
+        Route::prefix('boat-rental')->group(function () {
+            Route::post('hold', [BoatRentalController::class, 'hold']);
+            Route::delete('hold/{hold}', [BoatRentalController::class, 'releaseHold'])->whereNumber('hold');
+            Route::post('booking/confirm', [BoatRentalController::class, 'confirm']);
+            Route::get('trip-requests', [BoatRentalController::class, 'indexTripRequests']);
+            Route::post('trip-requests', [BoatRentalController::class, 'storeTripRequest']);
+            Route::get('trip-requests/{id}', [BoatRentalController::class, 'showTripRequest'])->whereNumber('id');
+            Route::post('trip-requests/{id}/cancel', [BoatRentalController::class, 'cancelTripRequest'])->whereNumber('id');
+            Route::get('trip-requests/{id}/bids', [BoatRentalController::class, 'listBids'])->whereNumber('id');
+            Route::post('bids/{id}/accept', [BoatRentalController::class, 'acceptBid'])->whereNumber('id');
         });
 
         Route::prefix('booking')->group(function () {

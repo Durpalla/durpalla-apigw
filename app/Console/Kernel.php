@@ -45,6 +45,10 @@ class Kernel extends ConsoleKernel
         $schedule->command('hotel:maintain')
             ->everyMinute()
             ->runInBackground();
+
+        $schedule->command('boat-rental:expire-requests')
+            ->everyFiveMinutes()
+            ->runInBackground();
     }
 
     protected function commands(): void

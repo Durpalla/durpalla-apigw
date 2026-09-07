@@ -32,5 +32,7 @@
         "logout": "退出"
     },
     "tours": "旅游",
-    "tourBookings": "旅游订单"
+    "tourBookings": "旅游订单",
+    "boatRentals": "船只租赁",
+    "boatBookings": "船只预订"
 }
