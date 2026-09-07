@@ -30,5 +30,7 @@
         "hotelBooking": "Prenotazione alberghiera",
         "scanQr": "Scansione QR",
         "logout": "Esci"
-    }
+    },
+    "tours": "Tour",
+    "tourBookings": "Prenotazioni tour"
 }

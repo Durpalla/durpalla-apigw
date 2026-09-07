@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\v1\Merchant\MerchantHotelRoomUnitController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantTourBookingController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantTourController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantTourDepartureController;
+use App\Http\Controllers\Api\v1\Merchant\MerchantTourHoldController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantTourImageController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantTourItineraryController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantNotificationController;
@@ -255,5 +256,9 @@ Route::middleware(['auth:merchant_api,merchant_staff_api', 'merchant.active'])->
         Route::get('tour-bookings', [MerchantTourBookingController::class, 'index']);
         Route::get('tour-bookings/{id}', [MerchantTourBookingController::class, 'show'])->whereNumber('id');
         Route::post('tour-bookings/{id}/cancel', [MerchantTourBookingController::class, 'cancel'])->whereNumber('id');
+
+        Route::post('tour-holds', [MerchantTourHoldController::class, 'store']);
+        Route::delete('tour-holds/{id}', [MerchantTourHoldController::class, 'destroy'])->whereNumber('id');
+        Route::post('tour-holds/{id}/confirm', [MerchantTourHoldController::class, 'confirm'])->whereNumber('id');
 
 });

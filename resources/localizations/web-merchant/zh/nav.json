@@ -30,5 +30,7 @@
         "hotelBooking": "酒店预订",
         "scanQr": "扫描二维码",
         "logout": "退出"
-    }
+    },
+    "tours": "旅游",
+    "tourBookings": "旅游订单"
 }

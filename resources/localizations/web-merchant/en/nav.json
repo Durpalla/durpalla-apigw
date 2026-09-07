@@ -30,5 +30,7 @@
         "hotelBooking": "Hotel booking",
         "scanQr": "Scan QR",
         "logout": "Logout"
-    }
+    },
+    "tours": "Tours",
+    "tourBookings": "Tour bookings"
 }

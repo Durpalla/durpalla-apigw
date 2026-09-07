@@ -30,5 +30,7 @@
         "hotelBooking": "होटल बुकिंग",
         "scanQr": "QR स्कैन करें",
         "logout": "लॉग आउट"
-    }
+    },
+    "tours": "टूर",
+    "tourBookings": "टूर बुकिंग"
 }

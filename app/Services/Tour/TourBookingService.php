@@ -202,6 +202,8 @@ final class TourBookingService
             $existingQ->where('user_id', $user->id);
         } elseif ($agentId) {
             $existingQ->where('agent_id', $agentId);
+        } elseif ($merchantId) {
+            $existingQ->where('merchant_id', $merchantId);
         }
         $existing = $existingQ->first();
         if ($existing) {
@@ -211,6 +213,9 @@ final class TourBookingService
         $departure = TourDeparture::query()
             ->with('tour')
             ->findOrFail((int) ($input['departure_id'] ?? 0));
+        if ($merchantId && (int) ($departure->tour?->merchant_id ?? 0) !== (int) $merchantId) {
+            throw new \RuntimeException('Tour does not belong to this merchant.');
+        }
         $places = max(1, (int) ($input['places'] ?? 1));
         $this->assertPartySize($departure->tour, $places);
 
@@ -239,7 +244,7 @@ final class TourBookingService
         });
     }
 
-    public function releaseHold(?Customer $user, int $holdId, ?int $agentId = null): bool
+    public function releaseHold(?Customer $user, int $holdId, ?int $agentId = null, ?int $merchantId = null): bool
     {
         $q = TourHold::query()
             ->where('id', $holdId)
@@ -248,6 +253,8 @@ final class TourBookingService
             $q->where('user_id', $user->id);
         } elseif ($agentId) {
             $q->where('agent_id', $agentId);
+        } elseif ($merchantId) {
+            $q->where('merchant_id', $merchantId);
         }
 
         $hold = $q->first();
@@ -267,6 +274,7 @@ final class TourBookingService
     }
 
     /**
+     * @param  array{mode?:string,method?:string,amount_paid?:float|int|string}|null  $payment
      * @return array{booking: Booking, payment: Payment, item: BookingTourItem}
      */
     public function confirmFromHold(
@@ -275,12 +283,16 @@ final class TourBookingService
         ?string $platform = 'web',
         ?array $guest = null,
         ?int $agentId = null,
+        ?int $merchantId = null,
+        ?array $paymentInput = null,
     ): array {
         $q = TourHold::query()->where('id', $holdId);
         if ($user) {
             $q->where('user_id', $user->id);
         } elseif ($agentId) {
             $q->where('agent_id', $agentId);
+        } elseif ($merchantId) {
+            $q->where('merchant_id', $merchantId);
         }
         $hold = $q->firstOrFail();
 
@@ -289,10 +301,13 @@ final class TourBookingService
                 ->where('tour_id', $hold->tour_id)
                 ->where('departure_id', $hold->departure_id)
                 ->where('places', $hold->places)
-                ->whereHas('booking', function ($bq) use ($user) {
+                ->whereHas('booking', function ($bq) use ($user, $merchantId) {
                     $bq->where('service_type', 'tour');
                     if ($user) {
                         $bq->where('customer_id', $user->id);
+                    }
+                    if ($merchantId) {
+                        $bq->where('platform', 'merchant_desk');
                     }
                 })
                 ->latest('id')
@@ -315,7 +330,7 @@ final class TourBookingService
             'email' => trim((string) ($guest['email'] ?? '')) ?: (string) ($user->email ?? ''),
         ];
 
-        return DB::transaction(function () use ($user, $hold, $platform, $guestPayload) {
+        return DB::transaction(function () use ($user, $hold, $platform, $guestPayload, $paymentInput) {
             $departure = TourDeparture::query()->lockForUpdate()->findOrFail($hold->departure_id);
             $tour = Tour::query()->findOrFail($hold->tour_id);
 
@@ -323,6 +338,17 @@ final class TourBookingService
 
             $total = (float) $hold->total_price;
             $bookingPlatform = $this->normalizePlatform($platform);
+            $payMode = strtolower(trim((string) ($paymentInput['mode'] ?? 'none')));
+            $amountPaid = (float) ($paymentInput['amount_paid'] ?? $paymentInput['amountPaid'] ?? 0);
+            if ($payMode === 'full') {
+                $amountPaid = $total;
+            }
+            if ($payMode === 'none') {
+                $amountPaid = 0;
+            }
+            $amountPaid = max(0, min($total, round($amountPaid, 2)));
+            $isPaid = $amountPaid + 0.001 >= $total;
+            $bookingStatus = $isPaid ? AppConst::BOOKING_COMPLETE : AppConst::BOOKING_PENDING;
 
             $booking = Booking::create([
                 'booking_date' => date('Y-m-d'),
@@ -337,7 +363,7 @@ final class TourBookingService
                 'charge_total' => 0,
                 'booking_party' => 'durpalla',
                 'platform' => $bookingPlatform,
-                'status' => AppConst::BOOKING_PENDING,
+                'status' => $bookingStatus,
                 'service_type' => 'tour',
                 'from_date' => $departure->depart_date?->toDateString(),
                 'to_date' => $departure->return_date?->toDateString() ?? $departure->depart_date?->toDateString(),
@@ -365,10 +391,11 @@ final class TourBookingService
                 'booking_id' => $booking->id,
                 'transaction_id' => strtoupper(uniqid((string) $booking->id, false)),
                 'customer_id' => $user?->id,
-                'status' => 'pending',
-                'paid_amount' => $total,
-                'dues' => $total,
-                'store_amount' => 0,
+                'status' => $isPaid ? 'success' : ($amountPaid > 0 ? 'advance' : 'pending'),
+                'payment_method' => $paymentInput['method'] ?? ($isPaid ? 'cash' : null),
+                'paid_amount' => $amountPaid > 0 ? $amountPaid : $total,
+                'dues' => max(0, round($total - $amountPaid, 2)),
+                'store_amount' => $amountPaid,
             ]);
 
             return compact('booking', 'payment', 'item');
@@ -465,7 +492,7 @@ final class TourBookingService
     private function normalizePlatform(?string $platform): string
     {
         $p = strtolower(trim((string) $platform));
-        $allowed = ['android', 'web', 'counter', 'office', 'agent_app', 'supervisor_app'];
+        $allowed = ['android', 'web', 'counter', 'office', 'agent_app', 'supervisor_app', 'merchant_desk'];
 
         return in_array($p, $allowed, true) ? $p : 'web';
     }

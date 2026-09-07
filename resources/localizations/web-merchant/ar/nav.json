@@ -30,5 +30,7 @@
         "hotelBooking": "حجز الفندق",
         "scanQr": "مسح QR",
         "logout": "تسجيل الخروج"
-    }
+    },
+    "tours": "الجولات",
+    "tourBookings": "حجوزات الجولات"
 }

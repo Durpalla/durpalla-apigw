@@ -30,5 +30,7 @@
         "hotelBooking": "হোটেল বুকিং",
         "scanQr": "কিউআর স্ক্যান",
         "logout": "লগ আউট"
-    }
+    },
+    "tours": "ট্যুর",
+    "tourBookings": "ট্যুর বুকিং"
 }

@@ -30,5 +30,7 @@
         "hotelBooking": "رزرو هتل",
         "scanQr": "اسکن QR",
         "logout": "خروج از سیستم"
-    }
+    },
+    "tours": "تورها",
+    "tourBookings": "رزرو تور"
 }

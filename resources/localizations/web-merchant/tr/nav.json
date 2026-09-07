@@ -30,5 +30,7 @@
         "hotelBooking": "Otel rezervasyonu",
         "scanQr": "QR'yi tara",
         "logout": "Oturumu kapat"
-    }
+    },
+    "tours": "Turlar",
+    "tourBookings": "Tur rezervasyonları"
 }
