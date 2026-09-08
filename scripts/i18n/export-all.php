@@ -152,53 +152,81 @@ function flattenKeys(array $data, string $prefix = ''): array
     return $out;
 }
 
+function parseWebCustomerMessagesTs(string $messagesTsPath): array
+{
+    if (! is_file($messagesTsPath)) {
+        throw new RuntimeException("web-customer messages.ts not found: {$messagesTsPath}");
+    }
+    $src = file_get_contents($messagesTsPath);
+    $packs = [];
+    if (! preg_match_all(
+        "/export const ([a-z]{2})Messages: Record<string, string> = \\{([\\s\\S]*?)\\n\\}/",
+        $src,
+        $matches,
+        PREG_SET_ORDER
+    )) {
+        throw new RuntimeException('No locale message blocks found in messages.ts');
+    }
+    foreach ($matches as $match) {
+        $locale = $match[1];
+        $flat = [];
+        if (preg_match_all("/'((?:\\\\'|[^'])*)':\\s*'((?:\\\\'|[^'])*)'/", $match[2], $pairs, PREG_SET_ORDER)) {
+            foreach ($pairs as $pair) {
+                $key = stripcslashes($pair[1]);
+                $value = stripcslashes($pair[2]);
+                $flat[$key] = $value;
+            }
+        }
+        $packs[$locale] = $flat;
+    }
+
+    return $packs;
+}
+
+function nestFlatMessages(array $flat): array
+{
+    $root = [];
+    foreach ($flat as $full => $value) {
+        $parts = explode('.', (string) $full);
+        $cur = &$root;
+        $last = array_pop($parts);
+        foreach ($parts as $part) {
+            if (! isset($cur[$part]) || ! is_array($cur[$part])) {
+                $cur[$part] = [];
+            }
+            $cur = &$cur[$part];
+        }
+        $cur[$last] = $value;
+        unset($cur);
+    }
+
+    return $root;
+}
+
 function exportWebCustomer(string $app): void
 {
     global $outBase, $allLocales;
 
-    $en = [
-        'nav' => [
-            'bus' => 'Bus',
-            'launch' => 'Launch',
-            'boat' => 'Boat',
-            'hotels' => 'Hotels',
-        ],
-        'language' => [
-            'label' => 'Language',
-            'switch' => 'Change language',
-        ],
-    ];
-    $bn = [
-        'nav' => [
-            'bus' => 'বাস',
-            'launch' => 'লঞ্চ',
-            'boat' => 'নৌকা',
-            'hotels' => 'হোটেল',
-        ],
-        'language' => [
-            'label' => 'ভাষা',
-            'switch' => 'ভাষা পরিবর্তন',
-        ],
-    ];
-
-    writeJson($outBase.'/'.$app.'/en/common.json', $en);
-    writeJson($outBase.'/'.$app.'/bn/common.json', $bn);
-    $keys = count(flattenKeys($en));
-    writeManifest($app, 'en', 'i18next-namespaces', $keys);
-    writeManifest($app, 'bn', 'i18next-namespaces', count(flattenKeys($bn)));
+    $messagesTs = '/var/www/html/durpalla-web/lib/i18n/messages.ts';
+    $packs = parseWebCustomerMessagesTs($messagesTs);
+    if (! isset($packs['en'])) {
+        throw new RuntimeException('enMessages missing from messages.ts');
+    }
+    $enFlat = $packs['en'];
 
     foreach ($allLocales as $locale) {
-        if (in_array($locale, ['en', 'bn'], true)) {
-            continue;
+        $flat = $packs[$locale] ?? [];
+        foreach ($enFlat as $key => $enValue) {
+            if (! array_key_exists($key, $flat)) {
+                $flat[$key] = $enValue;
+            }
         }
-        $dir = $outBase.'/'.$app.'/'.$locale;
-        if (! is_file($dir.'/common.json')) {
-            writeJson($dir.'/common.json', $en);
-            writeManifest($app, $locale, 'i18next-namespaces', $keys);
-        }
+        $nested = nestFlatMessages($flat);
+        writeJson($outBase.'/'.$app.'/'.$locale.'/common.json', $nested);
+        writeManifest($app, $locale, 'i18next-namespaces', count($flat));
     }
 
-    echo "Exported web-customer namespaces\n";
+    echo 'Exported web-customer namespaces from messages.ts ('.count($enFlat)." keys)\n";
 }
 
 // Flutter ARB exports
