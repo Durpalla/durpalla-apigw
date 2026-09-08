@@ -22,7 +22,9 @@
         "showingEmpty": "Mostrando 0 de 0",
         "previous": "Anterior",
         "next": "Próximo",
-        "pageOf": "Página {{page}} de {{total}}"
+        "pageOf": "Página {{page}} de {{total}}",
+        "propertyType": "Tipo de propiedad",
+        "allPropertyTypes": "Todos los tipos"
     },
     "form": {
         "createTitle": "Crear hotel",

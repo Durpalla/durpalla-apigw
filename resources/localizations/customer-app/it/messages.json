@@ -570,5 +570,20 @@
     "privacyPolicyDataUsage": "2. Utilizzo dei dati\nI dati raccolti vengono utilizzati esclusivamente per facilitare la prenotazione dei biglietti e migliorare il nostro servizio.",
     "privacyPolicyDataProtection": "3. Protezione dei dati\nImplementiamo misure di sicurezza standard del settore per mantenere i tuoi dati al sicuro.",
     "privacyPolicyContact": "Per ulteriori informazioni, contattare support@jolzan.com",
-    "priceRangeBdt": "৳{min} – ৳{max} BDT"
+    "priceRangeBdt": "৳{min} – ৳{max} BDT",
+    "boatRentals": "Noleggio barche",
+    "boatRentalSlogan": "Noleggia a ore, a giornata o con pacchetto viaggio.",
+    "boatHourly": "Orario",
+    "boatDaily": "Giornaliero",
+    "boatPackage": "Pacchetto",
+    "boatPackages": "Pacchetti",
+    "boatCapacity": "Capacità",
+    "boatBaseLocation": "Posizione base",
+    "boatCustomTrip": "Viaggio personalizzato",
+    "boatSubmitRequest": "Invia richiesta di viaggio",
+    "boatBids": "Offerte",
+    "boatAcceptBid": "Accetta offerta",
+    "boatNoBids": "Nessuna offerta ancora",
+    "boatCheckout": "Pagamento barca",
+    "boatHoldHint": "La barca è trattenuta brevemente, poi passi al pagamento."
 }

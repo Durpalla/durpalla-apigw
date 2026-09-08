@@ -22,7 +22,9 @@
         "showingEmpty": "عرض 0 من 0",
         "previous": "سابق",
         "next": "التالي",
-        "pageOf": "صفحة {{page}} من {{total}}"
+        "pageOf": "صفحة {{page}} من {{total}}",
+        "propertyType": "نوع العقار",
+        "allPropertyTypes": "جميع الأنواع"
     },
     "form": {
         "createTitle": "إنشاء فندق",

@@ -570,5 +570,20 @@
     "privacyPolicyDataUsage": "2. 数据使用\n收集的数据严格用于促进机票预订和改善我们的服务。",
     "privacyPolicyDataProtection": "3. 数据保护\n我们实施行业标准的安全措施来保证您的数据安全。",
     "privacyPolicyContact": "欲了解更多信息，请联系 support@jolzan.com",
-    "priceRangeBdt": "৳{min} – ৳{max} BDT"
+    "priceRangeBdt": "৳{min} – ৳{max} BDT",
+    "boatRentals": "租船",
+    "boatRentalSlogan": "按小时、按天或行程套餐租用。",
+    "boatHourly": "按小时",
+    "boatDaily": "按天",
+    "boatPackage": "套餐",
+    "boatPackages": "套餐",
+    "boatCapacity": "载客量",
+    "boatBaseLocation": "基地位置",
+    "boatCustomTrip": "定制行程",
+    "boatSubmitRequest": "提交行程请求",
+    "boatBids": "报价",
+    "boatAcceptBid": "接受报价",
+    "boatNoBids": "暂无报价",
+    "boatCheckout": "租船结账",
+    "boatHoldHint": "船只将短暂锁定，然后继续付款。"
 }

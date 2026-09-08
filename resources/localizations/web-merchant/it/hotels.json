@@ -22,7 +22,9 @@
         "showingEmpty": "Mostra 0 di 0",
         "previous": "Precedente",
         "next": "Prossimo",
-        "pageOf": "Pagina {{page}} di {{total}}"
+        "pageOf": "Pagina {{page}} di {{total}}",
+        "propertyType": "Tipo di struttura",
+        "allPropertyTypes": "Tutti i tipi"
     },
     "form": {
         "createTitle": "Crea albergo",

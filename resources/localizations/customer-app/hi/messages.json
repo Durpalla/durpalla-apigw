@@ -570,5 +570,20 @@
     "privacyPolicyDataUsage": "2. डेटा उपयोग\nएकत्रित डेटा का उपयोग टिकट बुकिंग की सुविधा और हमारी सेवा को बेहतर बनाने के लिए सख्ती से किया जाता है।",
     "privacyPolicyDataProtection": "3. डेटा सुरक्षा\nहम आपके डेटा को सुरक्षित रखने के लिए उद्योग-मानक सुरक्षा उपाय लागू करते हैं।",
     "privacyPolicyContact": "अधिक जानकारी के लिए support@joljan.com पर संपर्क करें",
-    "priceRangeBdt": "৳{न्यूनतम} – ৳{अधिकतम} बीडीटी"
+    "priceRangeBdt": "৳{न्यूनतम} – ৳{अधिकतम} बीडीटी",
+    "boatRentals": "नाव किराया",
+    "boatRentalSlogan": "घंटे, दिन या यात्रा पैकेज के अनुसार किराए पर लें।",
+    "boatHourly": "घंटे के हिसाब से",
+    "boatDaily": "दैनिक",
+    "boatPackage": "पैकेज",
+    "boatPackages": "पैकेज",
+    "boatCapacity": "क्षमता",
+    "boatBaseLocation": "बेस स्थान",
+    "boatCustomTrip": "कस्टम यात्रा",
+    "boatSubmitRequest": "यात्रा अनुरोध जमा करें",
+    "boatBids": "बिड",
+    "boatAcceptBid": "बिड स्वीकार करें",
+    "boatNoBids": "अभी कोई बिड नहीं",
+    "boatCheckout": "नाव चेकआउट",
+    "boatHoldHint": "नाव थोड़ी देर के लिए होल्ड होती है, फिर भुगतान पर जाएँ।"
 }

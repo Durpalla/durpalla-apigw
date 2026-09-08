@@ -22,7 +22,9 @@
         "showingEmpty": "0 میں سے 0 دکھا رہا ہے۔",
         "previous": "پچھلا",
         "next": "اگلا",
-        "pageOf": "صفحہ {{page}} از {{total}}"
+        "pageOf": "صفحہ {{page}} از {{total}}",
+        "propertyType": "پراپرٹی کی قسم",
+        "allPropertyTypes": "تمام اقسام"
     },
     "form": {
         "createTitle": "ہوٹل بنائیں",

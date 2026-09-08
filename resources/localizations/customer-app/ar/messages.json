@@ -570,5 +570,20 @@
     "privacyPolicyDataUsage": "2. استخدام البيانات\nيتم استخدام البيانات المجمعة بشكل صارم لتسهيل حجز التذاكر وتحسين خدماتنا.",
     "privacyPolicyDataProtection": "3. حماية البيانات\nنحن ننفذ إجراءات أمنية متوافقة مع معايير الصناعة للحفاظ على أمان بياناتك.",
     "privacyPolicyContact": "لمزيد من المعلومات، اتصل بـ support@jolzan.com",
-    "priceRangeBdt": "৳{دقيقة} – ৳{max} BDT"
+    "priceRangeBdt": "৳{دقيقة} – ৳{max} BDT",
+    "boatRentals": "تأجير القوارب",
+    "boatRentalSlogan": "استأجر بالساعة أو باليوم أو بحزمة رحلة.",
+    "boatHourly": "بالساعة",
+    "boatDaily": "يومي",
+    "boatPackage": "باقة",
+    "boatPackages": "الباقات",
+    "boatCapacity": "السعة",
+    "boatBaseLocation": "موقع القاعدة",
+    "boatCustomTrip": "رحلة مخصصة",
+    "boatSubmitRequest": "إرسال طلب الرحلة",
+    "boatBids": "العروض",
+    "boatAcceptBid": "قبول العرض",
+    "boatNoBids": "لا عروض بعد",
+    "boatCheckout": "إتمام حجز القارب",
+    "boatHoldHint": "يُحجز القارب مؤقتًا ثم تنتقل إلى الدفع."
 }

@@ -22,7 +22,9 @@
         "showingEmpty": "0 में से 0 दिखा रहा है",
         "previous": "पहले का",
         "next": "अगला",
-        "pageOf": "पेज {{page}} का {{total}}"
+        "pageOf": "पेज {{page}} का {{total}}",
+        "propertyType": "संपत्ति का प्रकार",
+        "allPropertyTypes": "सभी प्रकार"
     },
     "form": {
         "createTitle": "होटल बनाएं",

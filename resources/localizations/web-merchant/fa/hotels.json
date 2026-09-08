@@ -22,7 +22,9 @@
         "showingEmpty": "نمایش 0 از 0",
         "previous": "قبلی",
         "next": "بعدی",
-        "pageOf": "صفحه {{page}} از {{total}}"
+        "pageOf": "صفحه {{page}} از {{total}}",
+        "propertyType": "نوع ملک",
+        "allPropertyTypes": "همه انواع"
     },
     "form": {
         "createTitle": "ایجاد هتل",

@@ -570,5 +570,20 @@
     "privacyPolicyDataUsage": "2. ڈیٹا کا استعمال\nجمع کردہ ڈیٹا کو ٹکٹ کی بکنگ کی سہولت اور ہماری سروس کو بہتر بنانے کے لیے سختی سے استعمال کیا جاتا ہے۔",
     "privacyPolicyDataProtection": "3. ڈیٹا کا تحفظ\nہم آپ کے ڈیٹا کو محفوظ رکھنے کے لیے صنعتی معیار کے حفاظتی اقدامات نافذ کرتے ہیں۔",
     "privacyPolicyContact": "مزید معلومات کے لیے support@jolzan.com سے رابطہ کریں۔",
-    "priceRangeBdt": "৳{منٹ} – ৳{زیادہ سے زیادہ} BDT"
+    "priceRangeBdt": "৳{منٹ} – ৳{زیادہ سے زیادہ} BDT",
+    "boatRentals": "کشتی کرایہ",
+    "boatRentalSlogan": "گھنٹہ، دن یا سفر پیکج کے مطابق کرایہ پر لیں۔",
+    "boatHourly": "گھنٹہ وار",
+    "boatDaily": "روزانہ",
+    "boatPackage": "پیکج",
+    "boatPackages": "پیکجز",
+    "boatCapacity": "گنجائش",
+    "boatBaseLocation": "بیس مقام",
+    "boatCustomTrip": "حسبِ ضرورت سفر",
+    "boatSubmitRequest": "سفر کی درخواست جمع کریں",
+    "boatBids": "بولیاں",
+    "boatAcceptBid": "بولی قبول کریں",
+    "boatNoBids": "ابھی کوئی بولی نہیں",
+    "boatCheckout": "کشتی چیک آؤٹ",
+    "boatHoldHint": "کشتی مختصر طور پر ہولڈ ہوتی ہے، پھر ادائیگی پر جائیں۔"
 }

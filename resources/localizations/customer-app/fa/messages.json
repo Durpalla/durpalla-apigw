@@ -570,5 +570,20 @@
     "privacyPolicyDataUsage": "2. استفاده از داده ها\nداده های جمع آوری شده به شدت برای تسهیل رزرو بلیط و بهبود خدمات ما استفاده می شود.",
     "privacyPolicyDataProtection": "3. حفاظت از داده ها\nما اقدامات امنیتی استاندارد صنعتی را برای ایمن نگه داشتن داده های شما اجرا می کنیم.",
     "privacyPolicyContact": "برای اطلاعات بیشتر با support@jolzan.com تماس بگیرید",
-    "priceRangeBdt": "৳{دقیقه} - ৳{حداکثر} BDT"
+    "priceRangeBdt": "৳{دقیقه} - ৳{حداکثر} BDT",
+    "boatRentals": "اجاره قایق",
+    "boatRentalSlogan": "ساعتی، روزانه یا با بسته سفر اجاره کنید.",
+    "boatHourly": "ساعتی",
+    "boatDaily": "روزانه",
+    "boatPackage": "بسته",
+    "boatPackages": "بسته‌ها",
+    "boatCapacity": "ظرفیت",
+    "boatBaseLocation": "محل پایه",
+    "boatCustomTrip": "سفر سفارشی",
+    "boatSubmitRequest": "ارسال درخواست سفر",
+    "boatBids": "پیشنهادها",
+    "boatAcceptBid": "پذیرش پیشنهاد",
+    "boatNoBids": "هنوز پیشنهادی نیست",
+    "boatCheckout": "تسویه قایق",
+    "boatHoldHint": "قایق موقتاً رزرو می‌شود، سپس به پرداخت می‌روید."
 }

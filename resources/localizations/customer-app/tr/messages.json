@@ -570,5 +570,20 @@
     "privacyPolicyDataUsage": "2. Veri Kullanımı\nToplanan veriler kesinlikle bilet rezervasyonlarını kolaylaştırmak ve hizmetimizi geliştirmek için kullanılır.",
     "privacyPolicyDataProtection": "3. Veri Koruma\nVerilerinizi güvende tutmak için endüstri standardında güvenlik önlemleri uyguluyoruz.",
     "privacyPolicyContact": "Daha fazla bilgi için support@jolzan.com ile iletişime geçin.",
-    "priceRangeBdt": "৳{min} – ৳{max} BDT"
+    "priceRangeBdt": "৳{min} – ৳{max} BDT",
+    "boatRentals": "Tekne kiralama",
+    "boatRentalSlogan": "Saatlik, günlük veya gezi paketine göre kiralayın.",
+    "boatHourly": "Saatlik",
+    "boatDaily": "Günlük",
+    "boatPackage": "Paket",
+    "boatPackages": "Paketler",
+    "boatCapacity": "Kapasite",
+    "boatBaseLocation": "Üs konumu",
+    "boatCustomTrip": "Özel gezi",
+    "boatSubmitRequest": "Gezi talebi gönder",
+    "boatBids": "Teklifler",
+    "boatAcceptBid": "Teklifi kabul et",
+    "boatNoBids": "Henüz teklif yok",
+    "boatCheckout": "Tekne ödemesi",
+    "boatHoldHint": "Tekne kısa süre tutulur, ardından ödemeye geçersiniz."
 }

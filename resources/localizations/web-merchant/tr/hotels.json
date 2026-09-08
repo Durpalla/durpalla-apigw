@@ -22,7 +22,9 @@
         "showingEmpty": "0 / 0 gösteriliyor",
         "previous": "Öncesi",
         "next": "Sonraki",
-        "pageOf": "Sayfa {{page}} / {{total}}"
+        "pageOf": "Sayfa {{page}} / {{total}}",
+        "propertyType": "Mülk türü",
+        "allPropertyTypes": "Tüm türler"
     },
     "form": {
         "createTitle": "Otel Oluştur",
