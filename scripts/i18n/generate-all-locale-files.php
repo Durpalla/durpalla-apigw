@@ -27,7 +27,7 @@ if ($valCode !== 0) {
     exit($valCode);
 }
 
-passthru('python3 scripts/i18n/seed-web-customer-translations.py', $webCode);
+passthru('php scripts/i18n/export-web-customer.php', $webCode);
 if ($webCode !== 0) {
     exit($webCode);
 }

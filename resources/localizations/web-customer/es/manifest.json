@@ -1,9 +1,9 @@
 {
     "app": "web-customer",
     "locale": "es",
-    "version": 1,
+    "version": 2,
     "fallback_locale": "en",
     "format": "i18next-namespaces",
-    "key_count": 144,
-    "exported_at": "2026-09-08T03:26:33Z"
+    "key_count": 1026,
+    "exported_at": "2026-09-08T16:11:33+00:00"
 }

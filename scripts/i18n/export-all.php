@@ -170,7 +170,16 @@ function parseWebCustomerMessagesTs(string $messagesTsPath): array
     foreach ($matches as $match) {
         $locale = $match[1];
         $flat = [];
+        // Single-quoted values: 'key': 'value'
         if (preg_match_all("/'((?:\\\\'|[^'])*)':\\s*'((?:\\\\'|[^'])*)'/", $match[2], $pairs, PREG_SET_ORDER)) {
+            foreach ($pairs as $pair) {
+                $key = stripcslashes($pair[1]);
+                $value = stripcslashes($pair[2]);
+                $flat[$key] = $value;
+            }
+        }
+        // Double-quoted values: 'key': "value"
+        if (preg_match_all("/'((?:\\\\'|[^'])*)':\\s*\"((?:\\\\\"|[^\"])*)\"/", $match[2], $pairs, PREG_SET_ORDER)) {
             foreach ($pairs as $pair) {
                 $key = stripcslashes($pair[1]);
                 $value = stripcslashes($pair[2]);
@@ -223,7 +232,7 @@ function exportWebCustomer(string $app): void
         }
         $nested = nestFlatMessages($flat);
         writeJson($outBase.'/'.$app.'/'.$locale.'/common.json', $nested);
-        writeManifest($app, $locale, 'i18next-namespaces', count($flat));
+        writeManifest($app, $locale, 'i18next-namespaces', count($flat), 2);
     }
 
     echo 'Exported web-customer namespaces from messages.ts ('.count($enFlat)." keys)\n";
