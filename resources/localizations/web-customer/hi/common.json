@@ -14,7 +14,7 @@
         "pageTitle": "टूर और यात्रा",
         "pageSubtitle": "गंतव्य और प्रस्थान तिथि से ग्रुप टूर खोजें।",
         "destination": "गंतव्य",
-        "destinationPlaceholder": "e.g. Cox's Bazar",
+        "destinationPlaceholder": "e.g. Cox\\",
         "departFrom": "Depart from",
         "search": "टूर खोजें",
         "showing": "Showing",
@@ -55,7 +55,7 @@
         "holdHint": "Places are held briefly, then you continue to payment.",
         "searchDestAria": "Tour destination",
         "searchDateAria": "Departure date",
-        "destHeroPlaceholder": "Destination (e.g. Cox's Bazar)"
+        "destHeroPlaceholder": "Destination (e.g. Cox\\"
     },
     "boat": {
         "pageTitle": "नाव किराया",
@@ -109,6 +109,50 @@
         "refreshBids": "रीफ़्रेश",
         "noBids": "अभी कोई बिड नहीं — बाद में देखें।",
         "acceptBid": "स्वीकार करें और चेकआउट"
+    },
+    "hero": {
+        "badge": "बांग्लादेश का विश्वसनीय ट्रैवल प्लेटफ़ॉर्म",
+        "title": "हर यात्रा के साथ एक नई कहानी बनाएँ",
+        "subtitle": "फ़्लाइट, होटल, हॉलिडे और वीज़ा — सब एक जगह",
+        "trustSecure": "सुरक्षित भुगतान",
+        "trustSupport": "२४/७ सहायता",
+        "trustRoutes": "देशभर के रूट",
+        "tagline": {
+            "bus": "पूरे बांग्लादेश में आरामदायक इंटरसिटी कोच।",
+            "launch": "नदी मार्ग और जलमार्ग, लाइव शेड्यूल के साथ।",
+            "hotel": "बजट से प्रीमियम तक — सही ठहराव खोजें।",
+            "boat": "घंटे, दिन और पैकेज आधारित नाव यात्राएँ।",
+            "tour": "ग्रुप टूर पैकेज — आगामी प्रस्थान पर सीट बुक करें।"
+        },
+        "appBadge": "मोबाइल ऐप",
+        "appTitle": "रास्ते में तेज़ी से बुक करें",
+        "appBody": "फ़ोन से ट्रिप खोजें, सीट चुनें और सुरक्षित भुगतान करें — बस, लॉन्च, होटल और अधिक।",
+        "appStore": "ऐप स्टोर",
+        "googlePlay": "गूगल प्ले",
+        "appScreenshotAlt": "दुरपल्ला मोबाइल ऐप"
+    },
+    "search": {
+        "oneWay": "एक तरफ़ा",
+        "roundWay": "राउंड ट्रिप",
+        "from": "से",
+        "to": "तक",
+        "departureCity": "प्रस्थान शहर",
+        "destinationCity": "गंतव्य शहर",
+        "swapLocations": "स्थान बदलें",
+        "journeyDate": "यात्रा तिथि",
+        "returnDate": "वापसी तिथि",
+        "searching": "खोज रहे हैं...",
+        "searchBuses": "बस खोजें",
+        "searchLaunches": "लॉन्च खोजें",
+        "searchHotels": "होटल खोजें",
+        "city": "शहर",
+        "cityPlaceholder": "आप कहाँ जा रहे हैं?",
+        "checkIn": "चेक-इन",
+        "checkOut": "चेक-आउट",
+        "type": "प्रकार",
+        "propertyType": "संपत्ति का प्रकार",
+        "allStays": "सभी ठहराव",
+        "checkOutAfterCheckIn": "चेक-आउट कम से कम एक रात बाद होना चाहिए।"
     },
     "property": {
         "hotel": "Hotel",

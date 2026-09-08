@@ -14,7 +14,7 @@
         "pageTitle": "Turlar ve seyahat",
         "pageSubtitle": "Find group tours by destination and departure date.",
         "destination": "Destinasyon",
-        "destinationPlaceholder": "e.g. Cox's Bazar",
+        "destinationPlaceholder": "e.g. Cox\\",
         "departFrom": "Depart from",
         "search": "Tur ara",
         "showing": "Showing",
@@ -55,7 +55,7 @@
         "holdHint": "Places are held briefly, then you continue to payment.",
         "searchDestAria": "Tour destination",
         "searchDateAria": "Departure date",
-        "destHeroPlaceholder": "Destination (e.g. Cox's Bazar)"
+        "destHeroPlaceholder": "Destination (e.g. Cox\\"
     },
     "boat": {
         "pageTitle": "Tekne kiralama",
@@ -109,6 +109,50 @@
         "refreshBids": "Yenile",
         "noBids": "Henüz teklif yok — daha sonra bakın.",
         "acceptBid": "Kabul et ve öde"
+    },
+    "hero": {
+        "badge": "Bangladeş\\",
+        "title": "Her yolculukta yeni bir hikâye yaratın",
+        "subtitle": "Uçuş, otel, tatil ve vize parmaklarınızın ucunda",
+        "trustSecure": "Güvenli ödemeler",
+        "trustSupport": "7/24 destek",
+        "trustRoutes": "Ülke çapında güzergâhlar",
+        "tagline": {
+            "bus": "Bangladeş genelinde konforlu şehirlerarası otobüsler.",
+            "launch": "Canlı seferlerle nehir ve su yolları.",
+            "hotel": "Bütçeden premiuma — ideal konaklamayı bulun.",
+            "boat": "Saatlik, günlük ve paket tekne turları.",
+            "tour": "Grup tur paketleri — yaklaşan kalkışlarda yer ayırtın."
+        },
+        "appBadge": "Mobil uygulama",
+        "appTitle": "Yolda daha hızlı rezervasyon",
+        "appBody": "Telefonunuzdan sefer arayın, koltuk seçin ve güvenle ödeyin — otobüs, feribot, otel ve daha fazlası.",
+        "appStore": "App Store",
+        "googlePlay": "Google Play",
+        "appScreenshotAlt": "Durpalla mobil uygulaması"
+    },
+    "search": {
+        "oneWay": "Tek yön",
+        "roundWay": "Gidiş-dönüş",
+        "from": "Nereden",
+        "to": "Nereye",
+        "departureCity": "Kalkış şehri",
+        "destinationCity": "Varış şehri",
+        "swapLocations": "Konumları değiştir",
+        "journeyDate": "Yolculuk tarihi",
+        "returnDate": "Dönüş tarihi",
+        "searching": "Aranıyor...",
+        "searchBuses": "Otobüs ara",
+        "searchLaunches": "Feribot ara",
+        "searchHotels": "Otel ara",
+        "city": "Şehir",
+        "cityPlaceholder": "Nereye gidiyorsunuz?",
+        "checkIn": "Giriş",
+        "checkOut": "Çıkış",
+        "type": "Tür",
+        "propertyType": "Mülk türü",
+        "allStays": "Tüm konaklamalar",
+        "checkOutAfterCheckIn": "Çıkış, girişten en az bir gece sonra olmalıdır."
     },
     "property": {
         "hotel": "Hotel",

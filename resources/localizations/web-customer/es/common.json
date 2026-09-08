@@ -14,7 +14,7 @@
         "pageTitle": "Tours y viajes",
         "pageSubtitle": "Find group tours by destination and departure date.",
         "destination": "Destino",
-        "destinationPlaceholder": "e.g. Cox's Bazar",
+        "destinationPlaceholder": "e.g. Cox\\",
         "departFrom": "Depart from",
         "search": "Buscar tours",
         "showing": "Showing",
@@ -55,7 +55,7 @@
         "holdHint": "Places are held briefly, then you continue to payment.",
         "searchDestAria": "Tour destination",
         "searchDateAria": "Departure date",
-        "destHeroPlaceholder": "Destination (e.g. Cox's Bazar)"
+        "destHeroPlaceholder": "Destination (e.g. Cox\\"
     },
     "boat": {
         "pageTitle": "Alquiler de barcos",
@@ -109,6 +109,50 @@
         "refreshBids": "Actualizar",
         "noBids": "Aún no hay ofertas — vuelve pronto.",
         "acceptBid": "Aceptar y pagar"
+    },
+    "hero": {
+        "badge": "La plataforma de viajes de confianza de Bangladés",
+        "title": "Crea una nueva historia con cada viaje",
+        "subtitle": "Vuelos, hoteles, vacaciones y visados al alcance de tu mano",
+        "trustSecure": "Pagos seguros",
+        "trustSupport": "Soporte 24/7",
+        "trustRoutes": "Rutas en todo el país",
+        "tagline": {
+            "bus": "Autobuses interurbanos cómodos por Bangladés.",
+            "launch": "Rutas fluviales con horarios en vivo.",
+            "hotel": "Encuentra el alojamiento ideal — del económico al premium.",
+            "boat": "Viajes en barco por hora, día o paquete.",
+            "tour": "Paquetes de tours en grupo — reserva asientos en próximas salidas."
+        },
+        "appBadge": "App móvil",
+        "appTitle": "Reserva más rápido en movimiento",
+        "appBody": "Busca viajes, elige asientos y paga de forma segura desde el móvil — bus, ferry, hoteles y más.",
+        "appStore": "App Store",
+        "googlePlay": "Google Play",
+        "appScreenshotAlt": "App móvil de Durpalla"
+    },
+    "search": {
+        "oneWay": "Solo ida",
+        "roundWay": "Ida y vuelta",
+        "from": "Desde",
+        "to": "Hasta",
+        "departureCity": "Ciudad de salida",
+        "destinationCity": "Ciudad de destino",
+        "swapLocations": "Intercambiar ubicaciones",
+        "journeyDate": "Fecha del viaje",
+        "returnDate": "Fecha de regreso",
+        "searching": "Buscando...",
+        "searchBuses": "Buscar buses",
+        "searchLaunches": "Buscar ferries",
+        "searchHotels": "Buscar hoteles",
+        "city": "Ciudad",
+        "cityPlaceholder": "¿A dónde vas?",
+        "checkIn": "Entrada",
+        "checkOut": "Salida",
+        "type": "Tipo",
+        "propertyType": "Tipo de propiedad",
+        "allStays": "Todos los alojamientos",
+        "checkOutAfterCheckIn": "La salida debe ser al menos una noche después de la entrada."
     },
     "property": {
         "hotel": "Hotel",

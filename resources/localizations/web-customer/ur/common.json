@@ -14,7 +14,7 @@
         "pageTitle": "ٹورز اور سفر",
         "pageSubtitle": "Find group tours by destination and departure date.",
         "destination": "منزل",
-        "destinationPlaceholder": "e.g. Cox's Bazar",
+        "destinationPlaceholder": "e.g. Cox\\",
         "departFrom": "Depart from",
         "search": "ٹور تلاش",
         "showing": "Showing",
@@ -55,7 +55,7 @@
         "holdHint": "Places are held briefly, then you continue to payment.",
         "searchDestAria": "Tour destination",
         "searchDateAria": "Departure date",
-        "destHeroPlaceholder": "Destination (e.g. Cox's Bazar)"
+        "destHeroPlaceholder": "Destination (e.g. Cox\\"
     },
     "boat": {
         "pageTitle": "کشتی کرایہ",
@@ -109,6 +109,50 @@
         "refreshBids": "ریفریش",
         "noBids": "ابھی کوئی بولی نہیں — بعد میں دیکھیں۔",
         "acceptBid": "قبول کریں اور چیک آؤٹ"
+    },
+    "hero": {
+        "badge": "بنگلہ دیش کا قابلِ اعتماد سفری پلیٹ فارم",
+        "title": "ہر سفر کے ساتھ نئی کہانی بنائیں",
+        "subtitle": "فلائٹ، ہوٹل، ہالیڈے اور ویزا — سب ایک جگہ",
+        "trustSecure": "محفوظ ادائیگی",
+        "trustSupport": "۲۴/۷ سپورٹ",
+        "trustRoutes": "ملک بھر کے راستے",
+        "tagline": {
+            "bus": "پورے بنگلہ دیش میں آرام دہ انٹر سٹی کوچ۔",
+            "launch": "دریا اور آبی راستے، براہِ راست شیڈول کے ساتھ۔",
+            "hotel": "بجٹ سے پریمیم تک — مناسب قیام تلاش کریں۔",
+            "boat": "گھنٹہ وار، یومیہ اور پیکج کشتی سفر۔",
+            "tour": "گروپ ٹور پیکجز — آنے والی روانگیوں پر سیٹ بک کریں۔"
+        },
+        "appBadge": "موبائل ایپ",
+        "appTitle": "راستے میں تیزی سے بک کریں",
+        "appBody": "فون سے سفر تلاش کریں، سیٹ منتخب کریں اور محفوظ ادائیگی کریں — بس، لانچ، ہوٹل اور مزید۔",
+        "appStore": "ایپ اسٹور",
+        "googlePlay": "گوگل پلے",
+        "appScreenshotAlt": "درپلا موبائل ایپ"
+    },
+    "search": {
+        "oneWay": "ایک طرفہ",
+        "roundWay": "راؤنڈ ٹرپ",
+        "from": "سے",
+        "to": "تک",
+        "departureCity": "روانگی شہر",
+        "destinationCity": "منزل شہر",
+        "swapLocations": "مقامات تبدیل کریں",
+        "journeyDate": "سفر کی تاریخ",
+        "returnDate": "واپسی کی تاریخ",
+        "searching": "تلاش جاری ہے...",
+        "searchBuses": "بسیں تلاش کریں",
+        "searchLaunches": "لانچ تلاش کریں",
+        "searchHotels": "ہوٹل تلاش کریں",
+        "city": "شہر",
+        "cityPlaceholder": "آپ کہاں جا رہے ہیں؟",
+        "checkIn": "چیک اِن",
+        "checkOut": "چیک آؤٹ",
+        "type": "قسم",
+        "propertyType": "پراپرٹی کی قسم",
+        "allStays": "تمام قیام",
+        "checkOutAfterCheckIn": "چیک آؤٹ کم از کم ایک رات بعد ہونا چاہیے۔"
     },
     "property": {
         "hotel": "Hotel",

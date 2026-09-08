@@ -14,7 +14,7 @@
         "pageTitle": "الجولات والسفر",
         "pageSubtitle": "Find group tours by destination and departure date.",
         "destination": "الوجهة",
-        "destinationPlaceholder": "e.g. Cox's Bazar",
+        "destinationPlaceholder": "e.g. Cox\\",
         "departFrom": "Depart from",
         "search": "بحث الجولات",
         "showing": "Showing",
@@ -55,7 +55,7 @@
         "holdHint": "Places are held briefly, then you continue to payment.",
         "searchDestAria": "Tour destination",
         "searchDateAria": "Departure date",
-        "destHeroPlaceholder": "Destination (e.g. Cox's Bazar)"
+        "destHeroPlaceholder": "Destination (e.g. Cox\\"
     },
     "boat": {
         "pageTitle": "تأجير القوارب",
@@ -109,6 +109,50 @@
         "refreshBids": "تحديث",
         "noBids": "لا توجد عروض بعد — تحقق لاحقًا.",
         "acceptBid": "قبول والمتابعة للدفع"
+    },
+    "hero": {
+        "badge": "منصة السفر الموثوقة في بنغلاديش",
+        "title": "اصنع قصة جديدة مع كل رحلة",
+        "subtitle": "طيران وفنادق وعطلات وتأشيرات في متناول يدك",
+        "trustSecure": "مدفوعات آمنة",
+        "trustSupport": "دعم على مدار الساعة",
+        "trustRoutes": "مسارات في أنحاء البلاد",
+        "tagline": {
+            "bus": "حافلات مريحة بين المدن في أنحاء بنغلاديش.",
+            "launch": "طرق نهرية وممرات مائية بجداول مباشرة.",
+            "hotel": "اعثر على الإقامة المثالية — من الاقتصادي إلى الفاخر.",
+            "boat": "رحلات قوارب بالساعة أو باليوم أو بحزم جاهزة.",
+            "tour": "باقات جولات جماعية — احجز مقاعد في الرحلات القادمة."
+        },
+        "appBadge": "تطبيق الجوال",
+        "appTitle": "احجز أسرع أثناء التنقل",
+        "appBody": "ابحث عن الرحلات واختر المقاعد وادفع بأمان من هاتفك — حافلات وعبارات وفنادق والمزيد.",
+        "appStore": "آب ستور",
+        "googlePlay": "جوجل بلاي",
+        "appScreenshotAlt": "تطبيق دوربالا للجوال"
+    },
+    "search": {
+        "oneWay": "اتجاه واحد",
+        "roundWay": "ذهاب وإياب",
+        "from": "من",
+        "to": "إلى",
+        "departureCity": "مدينة المغادرة",
+        "destinationCity": "مدينة الوجهة",
+        "swapLocations": "تبديل المواقع",
+        "journeyDate": "تاريخ الرحلة",
+        "returnDate": "تاريخ العودة",
+        "searching": "جارٍ البحث...",
+        "searchBuses": "بحث الحافلات",
+        "searchLaunches": "بحث العبّارات",
+        "searchHotels": "بحث الفنادق",
+        "city": "المدينة",
+        "cityPlaceholder": "إلى أين تذهب؟",
+        "checkIn": "تسجيل الوصول",
+        "checkOut": "تسجيل المغادرة",
+        "type": "النوع",
+        "propertyType": "نوع العقار",
+        "allStays": "كل الإقامات",
+        "checkOutAfterCheckIn": "يجب أن يكون تسجيل المغادرة بعد ليلة واحدة على الأقل من تسجيل الوصول."
     },
     "property": {
         "hotel": "Hotel",

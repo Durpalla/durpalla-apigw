@@ -14,7 +14,7 @@
         "pageTitle": "旅游与行程",
         "pageSubtitle": "Find group tours by destination and departure date.",
         "destination": "目的地",
-        "destinationPlaceholder": "e.g. Cox's Bazar",
+        "destinationPlaceholder": "e.g. Cox\\",
         "departFrom": "Depart from",
         "search": "搜索旅游",
         "showing": "Showing",
@@ -55,7 +55,7 @@
         "holdHint": "Places are held briefly, then you continue to payment.",
         "searchDestAria": "Tour destination",
         "searchDateAria": "Departure date",
-        "destHeroPlaceholder": "Destination (e.g. Cox's Bazar)"
+        "destHeroPlaceholder": "Destination (e.g. Cox\\"
     },
     "boat": {
         "pageTitle": "船只租赁",
@@ -109,6 +109,50 @@
         "refreshBids": "刷新",
         "noBids": "暂无报价 — 请稍后再看。",
         "acceptBid": "接受并结账"
+    },
+    "hero": {
+        "badge": "孟加拉国值得信赖的旅行平台",
+        "title": "每一次出行，都是新故事",
+        "subtitle": "机票、酒店、度假与签证，尽在指尖",
+        "trustSecure": "安全支付",
+        "trustSupport": "全天候支持",
+        "trustRoutes": "覆盖全国线路",
+        "tagline": {
+            "bus": "舒适的孟加拉国城际大巴。",
+            "launch": "河运航线，实时班次。",
+            "hotel": "从经济到高端，找到理想住宿。",
+            "boat": "按小时、按天或套餐的水路行程。",
+            "tour": "团体旅游套餐 — 预订即将出发的席位。"
+        },
+        "appBadge": "手机应用",
+        "appTitle": "出行途中更快预订",
+        "appBody": "用手机搜索行程、选座并安全付款 — 巴士、渡轮、酒店等。",
+        "appStore": "App Store",
+        "googlePlay": "Google Play",
+        "appScreenshotAlt": "Durpalla 手机应用"
+    },
+    "search": {
+        "oneWay": "单程",
+        "roundWay": "往返",
+        "from": "出发地",
+        "to": "目的地",
+        "departureCity": "出发城市",
+        "destinationCity": "目的地城市",
+        "swapLocations": "交换地点",
+        "journeyDate": "出行日期",
+        "returnDate": "返程日期",
+        "searching": "搜索中...",
+        "searchBuses": "搜索巴士",
+        "searchLaunches": "搜索渡轮",
+        "searchHotels": "搜索酒店",
+        "city": "城市",
+        "cityPlaceholder": "您要去哪里？",
+        "checkIn": "入住",
+        "checkOut": "退房",
+        "type": "类型",
+        "propertyType": "物业类型",
+        "allStays": "全部住宿",
+        "checkOutAfterCheckIn": "退房日期须至少比入住晚一晚。"
     },
     "property": {
         "hotel": "Hotel",

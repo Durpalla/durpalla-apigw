@@ -14,7 +14,7 @@
         "pageTitle": "Tours & travels",
         "pageSubtitle": "Find group tours by destination and departure date.",
         "destination": "Destination",
-        "destinationPlaceholder": "e.g. Cox's Bazar",
+        "destinationPlaceholder": "e.g. Cox\\",
         "departFrom": "Depart from",
         "search": "Search tours",
         "showing": "Showing",
@@ -55,7 +55,7 @@
         "holdHint": "Places are held briefly, then you continue to payment.",
         "searchDestAria": "Tour destination",
         "searchDateAria": "Departure date",
-        "destHeroPlaceholder": "Destination (e.g. Cox's Bazar)"
+        "destHeroPlaceholder": "Destination (e.g. Cox\\"
     },
     "boat": {
         "pageTitle": "Boat rentals",
@@ -109,6 +109,50 @@
         "refreshBids": "Refresh",
         "noBids": "No bids yet — check back soon.",
         "acceptBid": "Accept & checkout"
+    },
+    "hero": {
+        "badge": "Bangladesh\\",
+        "title": "Create a new story with every trip",
+        "subtitle": "Flight, hotel, holidays & visa at your fingertips",
+        "trustSecure": "Secure payments",
+        "trustSupport": "24/7 support",
+        "trustRoutes": "Nationwide routes",
+        "tagline": {
+            "bus": "Comfortable intercity coaches across Bangladesh.",
+            "launch": "River routes and waterways with live schedules.",
+            "hotel": "Find the perfect stay — from budget to premium.",
+            "boat": "Hourly, daily, and package boat trips across the waterways.",
+            "tour": "Group tour packages — book seats on upcoming departures."
+        },
+        "appBadge": "Mobile app",
+        "appTitle": "Book faster on the go",
+        "appBody": "Search trips, pick seats, and pay securely from your phone — bus, launch, hotels and more.",
+        "appStore": "App Store",
+        "googlePlay": "Google Play",
+        "appScreenshotAlt": "Durpalla mobile app"
+    },
+    "search": {
+        "oneWay": "One way",
+        "roundWay": "Round way",
+        "from": "From",
+        "to": "To",
+        "departureCity": "Departure city",
+        "destinationCity": "Destination city",
+        "swapLocations": "Swap locations",
+        "journeyDate": "Journey date",
+        "returnDate": "Return date",
+        "searching": "Searching...",
+        "searchBuses": "Search buses",
+        "searchLaunches": "Search launches",
+        "searchHotels": "Search hotels",
+        "city": "City",
+        "cityPlaceholder": "Where are you going?",
+        "checkIn": "Check-in",
+        "checkOut": "Check-out",
+        "type": "Type",
+        "propertyType": "Property type",
+        "allStays": "All stays",
+        "checkOutAfterCheckIn": "Check-out must be at least one night after check-in."
     },
     "property": {
         "hotel": "Hotel",

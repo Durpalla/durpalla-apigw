@@ -14,7 +14,7 @@
         "pageTitle": "تور و سفر",
         "pageSubtitle": "Find group tours by destination and departure date.",
         "destination": "مقصد",
-        "destinationPlaceholder": "e.g. Cox's Bazar",
+        "destinationPlaceholder": "e.g. Cox\\",
         "departFrom": "Depart from",
         "search": "جستجوی تور",
         "showing": "Showing",
@@ -55,7 +55,7 @@
         "holdHint": "Places are held briefly, then you continue to payment.",
         "searchDestAria": "Tour destination",
         "searchDateAria": "Departure date",
-        "destHeroPlaceholder": "Destination (e.g. Cox's Bazar)"
+        "destHeroPlaceholder": "Destination (e.g. Cox\\"
     },
     "boat": {
         "pageTitle": "اجاره قایق",
@@ -109,6 +109,50 @@
         "refreshBids": "بازخوانی",
         "noBids": "هنوز پیشنهادی نیست — بعداً دوباره ببینید.",
         "acceptBid": "پذیرش و تسویه"
+    },
+    "hero": {
+        "badge": "پلتفرم قابل اعتماد سفر در بنگلادش",
+        "title": "با هر سفر داستانی تازه بسازید",
+        "subtitle": "پرواز، هتل، تعطیلات و ویزا در دسترس شما",
+        "trustSecure": "پرداخت امن",
+        "trustSupport": "پشتیبانی ۲۴/۷",
+        "trustRoutes": "مسیرهای سراسری",
+        "tagline": {
+            "bus": "اتوبوس‌های بین‌شهری راحت در سراسر بنگلادش.",
+            "launch": "مسیرهای رودخانه‌ای با برنامه زنده.",
+            "hotel": "اقامتگاهی مناسب — از اقتصادی تا لوکس.",
+            "boat": "سفرهای قایقی ساعتی، روزانه و بسته‌ای.",
+            "tour": "پکیج تور گروهی — صندلی برای حرکت‌های آینده رزرو کنید."
+        },
+        "appBadge": "اپلیکیشن موبایل",
+        "appTitle": "در حرکت سریع‌تر رزرو کنید",
+        "appBody": "از گوشی سفر جستجو کنید، صندلی بگیرید و امن پرداخت کنید — اتوبوس، لانچ، هتل و بیشتر.",
+        "appStore": "اپ استور",
+        "googlePlay": "گوگل پلی",
+        "appScreenshotAlt": "اپ موبایل دورپالا"
+    },
+    "search": {
+        "oneWay": "یک‌طرفه",
+        "roundWay": "رفت و برگشت",
+        "from": "از",
+        "to": "به",
+        "departureCity": "شهر مبدأ",
+        "destinationCity": "شهر مقصد",
+        "swapLocations": "جابه‌جایی مکان‌ها",
+        "journeyDate": "تاریخ سفر",
+        "returnDate": "تاریخ بازگشت",
+        "searching": "در حال جستجو...",
+        "searchBuses": "جستجوی اتوبوس",
+        "searchLaunches": "جستجوی لانچ",
+        "searchHotels": "جستجوی هتل",
+        "city": "شهر",
+        "cityPlaceholder": "کجا می‌روید؟",
+        "checkIn": "ورود",
+        "checkOut": "خروج",
+        "type": "نوع",
+        "propertyType": "نوع ملک",
+        "allStays": "همه اقامتگاه‌ها",
+        "checkOutAfterCheckIn": "خروج باید حداقل یک شب بعد از ورود باشد."
     },
     "property": {
         "hotel": "Hotel",
