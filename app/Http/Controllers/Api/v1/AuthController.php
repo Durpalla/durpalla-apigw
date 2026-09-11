@@ -253,7 +253,7 @@ class AuthController extends Controller
                 try {
                     $user = new Customer;
                     $user->name = $request->name;
-                    $user->email = $request->email;
+                    $user->email = $request->filled('email') ? $request->email : null;
                     $user->mobile = $request->mobile;
                     $user->password = Hash::make($request->password);
                     $user->email_verified_at = now();

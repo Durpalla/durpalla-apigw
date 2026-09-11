@@ -14,11 +14,18 @@ class RegisterRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if (! $this->filled('email')) {
+            $this->merge(['email' => null]);
+        }
+    }
+
     public function rules(): array
     {
         return [
             'name' => 'bail|required|max:191|min:3',
-            'email' => 'bail|required|max:191|email|unique:customers,email',
+            'email' => 'bail|nullable|max:191|email|unique:customers,email',
             'mobile' => 'bail|required|max:14|regex:/^(01){1}[3456789]{1}(\d){8}$/|min:11|unique:customers,mobile',
             'nid' => 'bail|nullable|min:10|max:17|string',
             // Medium policy: 8–20 chars with letter, number, and special character.
