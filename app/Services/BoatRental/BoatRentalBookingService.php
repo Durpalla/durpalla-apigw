@@ -76,7 +76,8 @@ final class BoatRentalBookingService
             $q->where(function ($inner) use ($term) {
                 $inner->where('title', 'LIKE', $term)
                     ->orWhere('base_location', 'LIKE', $term)
-                    ->orWhere('short_description', 'LIKE', $term);
+                    ->orWhere('short_description', 'LIKE', $term)
+                    ->orWhereHas('city', fn ($cq) => $cq->where('name', 'LIKE', $term));
             });
         }
         if ($request->filled('city_id')) {
