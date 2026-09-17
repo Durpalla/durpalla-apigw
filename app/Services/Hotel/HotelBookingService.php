@@ -261,7 +261,7 @@ final class HotelBookingService
      */
     public function homeTopHotels(Request $request): array
     {
-        $limit = max(1, min(20, (int) $request->query('limit', 8)));
+        $limit = max(1, min(24, (int) $request->query('limit', 8)));
 
         $q = Hotel::query();
         $this->applyHotelsSearchVisibilityFilter($q);

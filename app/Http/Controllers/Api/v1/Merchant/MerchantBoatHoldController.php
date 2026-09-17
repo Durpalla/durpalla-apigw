@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\v1\Merchant;
 
+use App\Exceptions\BoatRentalException;
 use App\Models\BoatHold;
 use App\Services\ApiIdempotencyService;
 use App\Services\BoatRental\BoatRentalBookingService;
@@ -74,6 +75,12 @@ class MerchantBoatHoldController extends MerchantBoatBaseController
                 null,
                 $ownerId,
             );
+        } catch (BoatRentalException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage() ?: 'Unable to hold boat.',
+                'code' => $e->errorCode,
+            ], 422);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
@@ -157,6 +164,12 @@ class MerchantBoatHoldController extends MerchantBoatBaseController
                 $ownerId,
                 is_array($request->input('payment')) ? $request->input('payment') : ['mode' => 'full', 'method' => 'cash'],
             );
+        } catch (BoatRentalException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage() ?: 'Unable to confirm booking.',
+                'code' => $e->errorCode,
+            ], 422);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,

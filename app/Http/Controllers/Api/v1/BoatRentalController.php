@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
+use App\Exceptions\BoatRentalException;
 use App\Models\Customer;
 use App\Services\BoatRental\BoatRentalBookingService;
 use App\Services\BoatRental\BoatTripBidService;
@@ -72,6 +73,12 @@ class BoatRentalController extends Controller
                 'success' => true,
                 'data' => $this->boats->quote($request),
             ]);
+        } catch (BoatRentalException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'code' => $e->errorCode,
+            ], 422);
         } catch (\InvalidArgumentException|\RuntimeException $e) {
             return response()->json([
                 'success' => false,
@@ -102,10 +109,14 @@ class BoatRentalController extends Controller
         }
 
         $idempotencyKey = trim((string) $request->header('Idempotency-Key', ''));
+        if ($idempotencyKey === '') {
+            $idempotencyKey = trim((string) $request->header('X-Idempotency-Key', ''));
+        }
         if ($idempotencyKey === '' || strlen($idempotencyKey) > 64) {
             return response()->json([
                 'success' => false,
                 'message' => __('Send a non-empty Idempotency-Key header (max 64 characters).'),
+                'code' => 'IDEMPOTENCY_KEY_REQUIRED',
             ], 422);
         }
 
@@ -124,6 +135,12 @@ class BoatRentalController extends Controller
                 'success' => true,
                 'data' => $this->boats->holdPayload($hold),
             ]);
+        } catch (BoatRentalException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'code' => $e->errorCode,
+            ], 422);
         } catch (\InvalidArgumentException|\RuntimeException $e) {
             return response()->json([
                 'success' => false,
@@ -225,6 +242,12 @@ class BoatRentalController extends Controller
                     ],
                 ],
             ]);
+        } catch (BoatRentalException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'code' => $e->errorCode,
+            ], 422);
         } catch (\RuntimeException $e) {
             return response()->json([
                 'success' => false,
@@ -350,10 +373,14 @@ class BoatRentalController extends Controller
         }
 
         $idempotencyKey = trim((string) $request->header('Idempotency-Key', ''));
+        if ($idempotencyKey === '') {
+            $idempotencyKey = trim((string) $request->header('X-Idempotency-Key', ''));
+        }
         if ($idempotencyKey === '' || strlen($idempotencyKey) > 64) {
             return response()->json([
                 'success' => false,
                 'message' => __('Send a non-empty Idempotency-Key header (max 64 characters).'),
+                'code' => 'IDEMPOTENCY_KEY_REQUIRED',
             ], 422);
         }
 
@@ -364,6 +391,12 @@ class BoatRentalController extends Controller
                 'success' => true,
                 'data' => $this->boats->holdPayload($hold),
             ]);
+        } catch (BoatRentalException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'code' => $e->errorCode,
+            ], 422);
         } catch (\InvalidArgumentException|\RuntimeException $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         }

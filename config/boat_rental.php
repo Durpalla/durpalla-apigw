@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'hold_ttl_minutes' => (int) env('BOAT_HOLD_TTL_MINUTES', 15),
+    'hold_ttl_minutes' => (int) env('BOAT_HOLD_TTL_MINUTES', 10),
     'rfq_expiry_hours' => (int) env('BOAT_RFQ_EXPIRY_HOURS', 24),
     'search_default_limit' => (int) env('BOAT_SEARCH_LIMIT', 30),
     'min_bid_amount' => (float) env('BOAT_MIN_BID_AMOUNT', 1),

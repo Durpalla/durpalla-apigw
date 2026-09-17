@@ -2,6 +2,7 @@
 
 namespace App\Services\BoatRental;
 
+use App\Exceptions\BoatRentalException;
 use App\Models\Boat;
 use App\Models\BoatHold;
 use App\Models\BoatStoppage;
@@ -9,6 +10,7 @@ use App\Models\BoatTripBid;
 use App\Models\BoatTripRequest;
 use App\Models\Customer;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -363,8 +365,14 @@ final class BoatTripBidService
 
             $boat = $bid->boat;
             if (! $boat || (int) $boat->status !== 1) {
-                throw new \RuntimeException('Boat is not available');
+                throw new BoatRentalException(
+                    BoatRentalException::SLOT_UNAVAILABLE,
+                    'Boat is not available.',
+                );
             }
+
+            // Serialize against customer/merchant holds for the same boat.
+            Boat::query()->whereKey($boat->id)->lockForUpdate()->firstOrFail();
 
             $startsAt = Carbon::parse($request->starts_at);
             $endsAt = Carbon::parse($request->ends_at);
@@ -384,28 +392,56 @@ final class BoatTripBidService
             ]);
 
             $stoppages = $this->stoppagesFromIds($request->stoppage_ids ?? []);
-            $ttl = max(5, (int) config('boat_rental.hold_ttl_minutes', 15));
+            $ttl = max(5, (int) config('boat_rental.hold_ttl_minutes', 10));
             $amount = round((float) $bid->amount, 2);
 
-            return BoatHold::create([
-                'boat_id' => $boat->id,
-                'user_id' => $user?->id ?? $request->user_id,
-                'agent_id' => $agentId ?? $request->agent_id,
-                'rental_mode' => 'bid',
-                'pricing_source' => 'bid',
-                'starts_at' => $startsAt,
-                'ends_at' => $endsAt,
-                'trip_request_id' => $request->id,
-                'bid_id' => $bid->id,
-                'guests' => (int) $request->guests,
-                'unit_price' => $amount,
-                'total_price' => $amount,
-                'units' => 1,
-                'stoppages_json' => $stoppages,
-                'status' => BoatHold::STATUS_PENDING,
-                'expires_at' => now()->addMinutes($ttl),
-                'idempotency_key' => $idempotencyKey !== '' ? $idempotencyKey : null,
-            ]);
+            try {
+                return BoatHold::create([
+                    'boat_id' => $boat->id,
+                    'user_id' => $user?->id ?? $request->user_id,
+                    'agent_id' => $agentId ?? $request->agent_id,
+                    'rental_mode' => 'bid',
+                    'pricing_source' => 'bid',
+                    'starts_at' => $startsAt,
+                    'ends_at' => $endsAt,
+                    'trip_request_id' => $request->id,
+                    'bid_id' => $bid->id,
+                    'guests' => (int) $request->guests,
+                    'unit_price' => $amount,
+                    'total_price' => $amount,
+                    'units' => 1,
+                    'stoppages_json' => $stoppages,
+                    'status' => BoatHold::STATUS_PENDING,
+                    'expires_at' => now()->addMinutes($ttl),
+                    'idempotency_key' => $idempotencyKey !== '' ? $idempotencyKey : null,
+                ]);
+            } catch (QueryException $e) {
+                if ($idempotencyKey !== '') {
+                    $existingQ = BoatHold::query()->where('idempotency_key', $idempotencyKey);
+                    if ($user) {
+                        $existingQ->where('user_id', $user->id);
+                    } elseif ($agentId) {
+                        $existingQ->where('agent_id', $agentId);
+                    }
+                    $existing = $existingQ->first();
+                    if ($existing) {
+                        return $existing;
+                    }
+                }
+
+                $sqlState = (string) ($e->errorInfo[0] ?? '');
+                $driverCode = (int) ($e->errorInfo[1] ?? 0);
+                if ($driverCode === 1062 || $sqlState === '23505' || str_contains(strtolower($e->getMessage()), 'duplicate')) {
+                    throw new BoatRentalException(
+                        BoatRentalException::DUPLICATE_REQUEST,
+                        'Duplicate hold request. Please retry with a new Idempotency-Key.',
+                        0,
+                        $e,
+                    );
+                }
+
+                throw $e;
+            }
         });
     }
 

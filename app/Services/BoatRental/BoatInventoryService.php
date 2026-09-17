@@ -3,6 +3,7 @@
 namespace App\Services\BoatRental;
 
 use App\Constants\AppConst;
+use App\Exceptions\BoatRentalException;
 use App\Models\BoatHold;
 use App\Models\BookingBoatItem;
 use Carbon\Carbon;
@@ -10,6 +11,9 @@ use Illuminate\Support\Facades\Schema;
 
 final class BoatInventoryService
 {
+    /**
+     * Half-open interval [starts_at, ends_at): adjacent ranges that touch at an endpoint do not conflict.
+     */
     public function isAvailable(int $boatId, Carbon $startsAt, Carbon $endsAt, ?int $ignoreHoldId = null): bool
     {
         if ($endsAt->lessThanOrEqualTo($startsAt)) {
@@ -23,6 +27,7 @@ final class BoatInventoryService
                 ->where(function ($q) {
                     $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
                 })
+                // Overlap: existing.starts < requested.ends AND existing.ends > requested.starts
                 ->where('starts_at', '<', $endsAt)
                 ->where('ends_at', '>', $startsAt);
             if ($ignoreHoldId) {
@@ -42,9 +47,14 @@ final class BoatInventoryService
                     $bq->where('service_type', 'boat_rental')
                         ->whereNotIn('status', [
                             AppConst::BOOKING_CANCELLED,
+                            AppConst::BOOKING_FAILED,
+                            AppConst::BOOKING_REJECTED,
                             'FAILED',
                             'failed',
                             'cancelled',
+                            'CANCELLED',
+                            'REJECTED',
+                            'rejected',
                         ]);
                 })
                 ->exists();
@@ -59,7 +69,10 @@ final class BoatInventoryService
     public function assertAvailable(int $boatId, Carbon $startsAt, Carbon $endsAt, ?int $ignoreHoldId = null): void
     {
         if (! $this->isAvailable($boatId, $startsAt, $endsAt, $ignoreHoldId)) {
-            throw new \RuntimeException('Boat is not available for the selected period');
+            throw new BoatRentalException(
+                BoatRentalException::SLOT_UNAVAILABLE,
+                'Boat is not available for the selected period.',
+            );
         }
     }
 

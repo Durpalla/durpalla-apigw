@@ -3,6 +3,7 @@
 namespace App\Services\BoatRental;
 
 use App\Constants\AppConst;
+use App\Exceptions\BoatRentalException;
 use App\Models\Boat;
 use App\Models\BoatHold;
 use App\Models\BoatRate;
@@ -12,6 +13,7 @@ use App\Models\BookingBoatItem;
 use App\Models\Customer;
 use App\Models\Payment;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -237,20 +239,13 @@ final class BoatRentalBookingService
         ?int $agentId = null,
         ?int $merchantId = null,
     ): BoatHold {
-        $existingQ = BoatHold::query()->where('idempotency_key', $idempotencyKey);
-        if ($user) {
-            $existingQ->where('user_id', $user->id);
-        } elseif ($agentId) {
-            $existingQ->where('agent_id', $agentId);
-        } elseif ($merchantId) {
-            $existingQ->where('merchant_id', $merchantId);
-        }
-        $existing = $existingQ->first();
+        $existing = $this->findHoldByIdempotency($idempotencyKey, $user, $agentId, $merchantId);
         if ($existing) {
             return $existing;
         }
 
-        $boat = Boat::query()->active()->findOrFail((int) ($input['boat_id'] ?? 0));
+        $boatId = (int) ($input['boat_id'] ?? 0);
+        $boat = Boat::query()->active()->findOrFail($boatId);
         if ($merchantId && (int) $boat->merchant_id !== (int) $merchantId) {
             throw new \RuntimeException('Boat does not belong to this merchant.');
         }
@@ -269,39 +264,99 @@ final class BoatRentalBookingService
 
         $this->inventory->assertCapacity((int) $boat->capacity_max, $guests);
         $priced = $this->resolvePrice($boat, $mode, $startsAt, $endsAt, $input['package_id'] ?? null);
-        $ttl = max(5, (int) config('boat_rental.hold_ttl_minutes', 15));
+        $ttl = max(5, (int) config('boat_rental.hold_ttl_minutes', 10));
         $guest = is_array($input['guest'] ?? null) ? $input['guest'] : null;
         $stoppages = $mode === 'package' && $priced['package']
             ? $this->resolveStoppagesJson($priced['package'])
             : null;
 
-        return DB::transaction(function () use (
-            $user, $boat, $mode, $guests, $startsAt, $endsAt, $priced, $ttl,
-            $idempotencyKey, $agentId, $merchantId, $guest, $stoppages
-        ) {
-            $this->inventory->assertAvailable((int) $boat->id, $startsAt, $endsAt);
+        try {
+            return DB::transaction(function () use (
+                $user, $boatId, $mode, $guests, $startsAt, $endsAt, $priced, $ttl,
+                $idempotencyKey, $agentId, $merchantId, $guest, $stoppages
+            ) {
+                // Serialize all hold/confirm writers for this boat.
+                $boat = Boat::query()->lockForUpdate()->findOrFail($boatId);
+                if ((int) $boat->status !== 1) {
+                    throw new BoatRentalException(
+                        BoatRentalException::SLOT_UNAVAILABLE,
+                        'Boat is not available for the selected period.',
+                    );
+                }
 
-            return BoatHold::create([
-                'boat_id' => $boat->id,
-                'user_id' => $user?->id,
-                'merchant_id' => $merchantId,
-                'agent_id' => $agentId,
-                'rental_mode' => $mode,
-                'pricing_source' => $mode === 'package' ? 'package' : 'rate',
-                'starts_at' => $startsAt,
-                'ends_at' => $endsAt,
-                'package_id' => $priced['package_id'],
-                'guests' => $guests,
-                'unit_price' => $priced['unit_price'],
-                'total_price' => $priced['total'],
-                'units' => $priced['units'],
-                'stoppages_json' => $stoppages,
-                'status' => BoatHold::STATUS_PENDING,
-                'expires_at' => now()->addMinutes($ttl),
-                'guest_json' => $guest,
-                'idempotency_key' => $idempotencyKey,
-            ]);
-        });
+                $existing = $this->findHoldByIdempotency($idempotencyKey, $user, $agentId, $merchantId);
+                if ($existing) {
+                    return $existing;
+                }
+
+                $this->inventory->assertAvailable((int) $boat->id, $startsAt, $endsAt);
+
+                return BoatHold::create([
+                    'boat_id' => $boat->id,
+                    'user_id' => $user?->id,
+                    'merchant_id' => $merchantId,
+                    'agent_id' => $agentId,
+                    'rental_mode' => $mode,
+                    'pricing_source' => $mode === 'package' ? 'package' : 'rate',
+                    'starts_at' => $startsAt,
+                    'ends_at' => $endsAt,
+                    'package_id' => $priced['package_id'],
+                    'guests' => $guests,
+                    'unit_price' => $priced['unit_price'],
+                    'total_price' => $priced['total'],
+                    'units' => $priced['units'],
+                    'stoppages_json' => $stoppages,
+                    'status' => BoatHold::STATUS_PENDING,
+                    'expires_at' => now()->addMinutes($ttl),
+                    'guest_json' => $guest,
+                    'idempotency_key' => $idempotencyKey,
+                ]);
+            });
+        } catch (QueryException $e) {
+            // Unique idempotency_key race: return the winner's hold.
+            $existing = $this->findHoldByIdempotency($idempotencyKey, $user, $agentId, $merchantId);
+            if ($existing) {
+                return $existing;
+            }
+
+            if ($this->isUniqueConstraintViolation($e)) {
+                throw new BoatRentalException(
+                    BoatRentalException::DUPLICATE_REQUEST,
+                    'Duplicate hold request. Please retry with a new Idempotency-Key.',
+                    0,
+                    $e,
+                );
+            }
+
+            throw $e;
+        }
+    }
+
+    private function findHoldByIdempotency(
+        string $idempotencyKey,
+        ?Customer $user,
+        ?int $agentId,
+        ?int $merchantId,
+    ): ?BoatHold {
+        $q = BoatHold::query()->where('idempotency_key', $idempotencyKey);
+        if ($user) {
+            $q->where('user_id', $user->id);
+        } elseif ($agentId) {
+            $q->where('agent_id', $agentId);
+        } elseif ($merchantId) {
+            $q->where('merchant_id', $merchantId);
+        }
+
+        return $q->first();
+    }
+
+    private function isUniqueConstraintViolation(QueryException $e): bool
+    {
+        $sqlState = (string) ($e->errorInfo[0] ?? '');
+        $driverCode = (int) ($e->errorInfo[1] ?? 0);
+
+        // MySQL/MariaDB 1062, Postgres 23505
+        return $driverCode === 1062 || $sqlState === '23505' || str_contains(strtolower($e->getMessage()), 'duplicate');
     }
 
     public function releaseHold(?Customer $user, int $holdId, ?int $agentId = null, ?int $merchantId = null): bool
@@ -340,51 +395,65 @@ final class BoatRentalBookingService
         ?int $merchantId = null,
         ?array $paymentInput = null,
     ): array {
-        $q = BoatHold::query()->where('id', $holdId);
-        if ($user) {
-            $q->where('user_id', $user->id);
-        } elseif ($agentId) {
-            $q->where('agent_id', $agentId);
-        } elseif ($merchantId) {
-            $q->where('merchant_id', $merchantId);
-        }
-        $hold = $q->firstOrFail();
-
-        if ($hold->status === BoatHold::STATUS_CONSUMED) {
-            $item = BookingBoatItem::query()
-                ->where('boat_id', $hold->boat_id)
-                ->where('starts_at', $hold->starts_at)
-                ->where('ends_at', $hold->ends_at)
-                ->whereHas('booking', function ($bq) use ($user, $merchantId) {
-                    $bq->where('service_type', 'boat_rental');
-                    if ($user) {
-                        $bq->where('customer_id', $user->id);
-                    }
-                    if ($merchantId) {
-                        $bq->where('platform', 'merchant_desk');
-                    }
-                })
-                ->latest('id')
-                ->first();
-            if ($item) {
-                $booking = $item->booking;
-                $payment = Payment::query()->where('booking_id', $booking->id)->orderByDesc('id')->firstOrFail();
-
-                return ['booking' => $booking, 'payment' => $payment, 'item' => $item];
-            }
-        }
-
-        if ($hold->status !== BoatHold::STATUS_PENDING || ($hold->expires_at && now()->greaterThan($hold->expires_at))) {
-            throw new \RuntimeException('Hold is not valid');
-        }
-
         $guestPayload = [
             'name' => trim((string) ($guest['name'] ?? '')) ?: (string) ($user->name ?? ''),
             'mobile' => trim((string) ($guest['mobile'] ?? '')) ?: (string) ($user->mobile ?? ''),
             'email' => trim((string) ($guest['email'] ?? '')) ?: (string) ($user->email ?? ''),
         ];
 
-        return DB::transaction(function () use ($user, $hold, $platform, $guestPayload, $paymentInput) {
+        return DB::transaction(function () use (
+            $user, $holdId, $platform, $guestPayload, $paymentInput, $agentId, $merchantId
+        ) {
+            $q = BoatHold::query()->where('id', $holdId)->lockForUpdate();
+            if ($user) {
+                $q->where('user_id', $user->id);
+            } elseif ($agentId) {
+                $q->where('agent_id', $agentId);
+            } elseif ($merchantId) {
+                $q->where('merchant_id', $merchantId);
+            }
+            $hold = $q->first();
+            if (! $hold) {
+                throw new BoatRentalException(
+                    BoatRentalException::HOLD_INVALID,
+                    'Hold not found.',
+                );
+            }
+
+            if ($hold->status === BoatHold::STATUS_CONSUMED) {
+                $existing = $this->bookingFromConsumedHold($hold, $user, $merchantId);
+                if ($existing) {
+                    return $existing;
+                }
+
+                throw new BoatRentalException(
+                    BoatRentalException::HOLD_USED,
+                    'Hold was already used.',
+                );
+            }
+
+            if (in_array($hold->status, [BoatHold::STATUS_CANCELLED, BoatHold::STATUS_EXPIRED], true)) {
+                throw new BoatRentalException(
+                    BoatRentalException::HOLD_USED,
+                    'Hold is no longer valid.',
+                );
+            }
+
+            if ($hold->status !== BoatHold::STATUS_PENDING) {
+                throw new BoatRentalException(
+                    BoatRentalException::HOLD_INVALID,
+                    'Hold is not valid.',
+                );
+            }
+
+            if ($hold->expires_at && now()->greaterThan($hold->expires_at)) {
+                $hold->update(['status' => BoatHold::STATUS_EXPIRED]);
+                throw new BoatRentalException(
+                    BoatRentalException::HOLD_EXPIRED,
+                    'Hold has expired.',
+                );
+            }
+
             $boat = Boat::query()->lockForUpdate()->findOrFail($hold->boat_id);
             $this->inventory->assertAvailable(
                 (int) $boat->id,
@@ -463,6 +532,42 @@ final class BoatRentalBookingService
 
             return compact('booking', 'payment', 'item');
         });
+    }
+
+    /**
+     * @return array{booking: Booking, payment: Payment, item: BookingBoatItem}|null
+     */
+    private function bookingFromConsumedHold(
+        BoatHold $hold,
+        ?Customer $user,
+        ?int $merchantId,
+    ): ?array {
+        $item = BookingBoatItem::query()
+            ->where('boat_id', $hold->boat_id)
+            ->where('starts_at', $hold->starts_at)
+            ->where('ends_at', $hold->ends_at)
+            ->whereHas('booking', function ($bq) use ($user, $merchantId) {
+                $bq->where('service_type', 'boat_rental');
+                if ($user) {
+                    $bq->where('customer_id', $user->id);
+                }
+                if ($merchantId) {
+                    $bq->where('platform', 'merchant_desk');
+                }
+            })
+            ->latest('id')
+            ->first();
+        if (! $item) {
+            return null;
+        }
+
+        $booking = $item->booking;
+        $payment = Payment::query()->where('booking_id', $booking->id)->orderByDesc('id')->first();
+        if (! $booking || ! $payment) {
+            return null;
+        }
+
+        return ['booking' => $booking, 'payment' => $payment, 'item' => $item];
     }
 
     public function cancelBooking(int $bookingId, ?string $reason = null): array
