@@ -1,0 +1,26 @@
+---
+description: Read and update the project memory bank on every task
+alwaysApply: true
+---
+
+# Memory Bank
+
+Project requirements and durable context live in `memory-bank/`.
+
+## Required behavior
+
+1. **Read first** — Before implementing, open the relevant memory-bank files (at least `projectbrief.md` and `activeContext.md`). Treat them as the source of project requirements.
+2. **Update always** — After meaningful work (features, architecture discoveries, decisions, blockers, progress), update the memory bank in the same session.
+3. **Never delete rules** — Do **not** remove, empty, truncate, or strip any file under `.cursor/` (or `AGENTS.md`) unless the user explicitly asks. Only add or amend. Especially never wipe API controllers/routes/config.
+4. **Prefer bank over rediscovery** — Use memory-bank facts before scanning the repo.
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `memory-bank/projectbrief.md` | Scope, goals, ecosystem |
+| `memory-bank/productContext.md` | Product purpose, consumers |
+| `memory-bank/systemPatterns.md` | Architecture and conventions |
+| `memory-bank/techContext.md` | Stack, tooling, constraints |
+| `memory-bank/activeContext.md` | Current focus and recent decisions |
+| `memory-bank/progress.md` | What works / what's next |
