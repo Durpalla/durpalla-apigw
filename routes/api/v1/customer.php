@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\v1\GatewayController;
 use App\Http\Controllers\Api\v1\HotelController;
 use App\Http\Controllers\Api\v1\TourController;
 use App\Http\Controllers\Api\v1\BoatRentalController;
+use App\Http\Controllers\Api\v1\EntertainmentController;
 use App\Http\Controllers\Api\v1\LocalizationController;
 use App\Http\Controllers\Api\v1\MyApiController;
 use App\Http\Controllers\Api\v1\NidVerificationController;
@@ -117,6 +118,15 @@ Route::middleware(['JsonResponse'])->group(function () {
         Route::get('{boat}', [BoatRentalController::class, 'show'])->whereNumber('boat');
     });
 
+    Route::prefix('entertainment')->group(function () {
+        Route::get('home/top', [EntertainmentController::class, 'homeTop']);
+        Route::get('search', [EntertainmentController::class, 'search']);
+        Route::post('quote', [EntertainmentController::class, 'quote']);
+        Route::get('{venue}/availability', [EntertainmentController::class, 'availability'])->whereNumber('venue');
+        Route::get('{venue}/reviews', [EntertainmentController::class, 'reviews'])->whereNumber('venue');
+        Route::get('{venue}', [EntertainmentController::class, 'show'])->whereNumber('venue');
+    });
+
     // Cart list + lock/unlock (guest via EnsureGuestId cookie / X-Guest-Id).
     Route::middleware(['optional.customer.auth'])->group(function () {
         Route::get('cart', [ApiCartController::class, 'index']);
@@ -169,6 +179,13 @@ Route::middleware(['JsonResponse'])->group(function () {
             Route::post('trip-requests/{id}/cancel', [BoatRentalController::class, 'cancelTripRequest'])->whereNumber('id');
             Route::get('trip-requests/{id}/bids', [BoatRentalController::class, 'listBids'])->whereNumber('id');
             Route::post('bids/{id}/accept', [BoatRentalController::class, 'acceptBid'])->whereNumber('id');
+        });
+
+        Route::prefix('entertainment')->group(function () {
+            Route::post('hold', [EntertainmentController::class, 'hold']);
+            Route::delete('hold/{hold}', [EntertainmentController::class, 'releaseHold'])->whereNumber('hold');
+            Route::post('booking/confirm', [EntertainmentController::class, 'confirm']);
+            Route::post('{venue}/reviews', [EntertainmentController::class, 'storeReview'])->whereNumber('venue');
         });
 
         Route::prefix('booking')->group(function () {

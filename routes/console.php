@@ -51,6 +51,11 @@ Schedule::command('hotel:maintain')
     ->everyMinute()
     ->runInBackground();
 
+Schedule::command('entertainment:expire-tickets')
+    ->hourly()
+    ->runInBackground()
+    ->withoutOverlapping();
+
 // Credits agent commissions once the trip window ends, so cancelled or
 // refunded seats never earn (see AgentJourneyCommissionService).
 Schedule::command('commission:journey-complete')
@@ -64,3 +69,6 @@ Schedule::command('commission:repair-missing --hours=1 --limit=100')
     ->hourly()
     ->runInBackground()
     ->withoutOverlapping();
+
+// Entertainment ticket expiry
+use Illuminate\Support\Facades\Schedule;

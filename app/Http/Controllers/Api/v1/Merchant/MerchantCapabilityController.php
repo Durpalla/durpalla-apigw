@@ -46,9 +46,10 @@ class MerchantCapabilityController extends Controller
         $canHotels = ! $isRestricted || count(array_intersect($allowed, self::STAY_TYPES)) > 0;
         $canTours = ! $isRestricted || in_array('tour', $allowed, true);
         $canBoats = ! $isRestricted || in_array('boat_rental', $allowed, true);
+        $canEntertainment = ! $isRestricted || in_array('entertainment', $allowed, true);
 
         $transportTypes = $this->transportServiceTypes();
-        $nonTransport = array_merge(self::STAY_TYPES, ['tour', 'boat_rental']);
+        $nonTransport = array_merge(self::STAY_TYPES, ['tour', 'boat_rental', 'entertainment']);
         $canTransport = ! $isRestricted;
         if ($isRestricted) {
             $canTransport = false;
@@ -77,6 +78,7 @@ class MerchantCapabilityController extends Controller
                 'can_manage_hotels' => $canHotels,
                 'can_manage_tours' => $canTours,
                 'can_manage_boats' => $canBoats,
+                'can_manage_entertainment' => $canEntertainment,
                 'can_manage_transport' => $canTransport,
                 'subscription' => $subscription,
             ],

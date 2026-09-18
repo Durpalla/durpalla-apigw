@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\v1\Agent\AgentUpcomingTripController;
 use App\Http\Controllers\Api\v1\Agent\AgentHotelController;
 use App\Http\Controllers\Api\v1\Agent\AgentTourController;
 use App\Http\Controllers\Api\v1\Agent\AgentBoatRentalController;
+use App\Http\Controllers\Api\v1\Agent\AgentEntertainmentController;
 use App\Http\Controllers\Api\v1\Agent\AgentWalletController;
 use App\Http\Controllers\Api\v1\Agent\AgentWithdrawalController;
 use App\Http\Controllers\Api\v1\Agent\AgentWithdrawalMethodController;
@@ -68,6 +69,9 @@ Route::prefix('agent')->middleware(['JsonResponse'])->group(function () {
         Route::get('tours/search', [AgentTourController::class, 'search']);
         Route::get('tours/{id}', [AgentTourController::class, 'show'])->whereNumber('id');
 
+        Route::get('entertainment/search', [AgentEntertainmentController::class, 'search']);
+        Route::get('entertainment/{id}', [AgentEntertainmentController::class, 'show'])->whereNumber('id');
+
         Route::get('boats/search', [AgentBoatRentalController::class, 'search']);
         Route::get('boats/stoppages', [AgentBoatRentalController::class, 'stoppages']);
         Route::post('boats/quote', [AgentBoatRentalController::class, 'quote']);
@@ -99,6 +103,9 @@ Route::prefix('agent')->middleware(['JsonResponse'])->group(function () {
 
             Route::post('tours/hold', [AgentTourController::class, 'hold']);
             Route::post('tours/confirm', [AgentTourController::class, 'confirm']);
+
+            Route::post('entertainment/hold', [AgentEntertainmentController::class, 'hold']);
+            Route::post('entertainment/confirm', [AgentEntertainmentController::class, 'confirm']);
 
             Route::post('boats/hold', [AgentBoatRentalController::class, 'hold']);
             Route::post('boats/confirm', [AgentBoatRentalController::class, 'confirm']);

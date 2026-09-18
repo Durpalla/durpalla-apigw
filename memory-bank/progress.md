@@ -14,3 +14,6 @@
 ## Next (when requested)
 
 - Update this bank when endpoints, auth, or deploy assumptions change
+
+## Entertainment vertical (2026-09-18)
+- Schema + APIs + web/merchant/admin/flutter/agent surfaces landed for parks/museums ticket booking.

@@ -14,3 +14,6 @@
 
 - When adding hotel/transport fields, migrate in **durpalla**, then update services/resources here
 - Extra-guest / localization docs exist under `docs/` — consult when touching guest pricing or i18n extras
+## 2026-09-18
+
+- Entertainment APIs: customer/merchant/agent hold-confirm-redeem-override; expire-tickets command.

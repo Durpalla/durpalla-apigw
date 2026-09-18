@@ -33,6 +33,7 @@ use App\Http\Controllers\Api\v1\Merchant\MerchantBoatPackageController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantBoatRateController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantBoatStoppageController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantBoatTripRequestController;
+use App\Http\Controllers\Api\v1\Merchant\MerchantEntertainmentController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantNotificationController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantProfileController;
 use App\Http\Controllers\Api\v1\Merchant\MerchantPropertyController;
@@ -268,6 +269,22 @@ Route::middleware(['auth:merchant_api,merchant_staff_api', 'merchant.active'])->
         Route::post('tour-holds', [MerchantTourHoldController::class, 'store']);
         Route::delete('tour-holds/{id}', [MerchantTourHoldController::class, 'destroy'])->whereNumber('id');
         Route::post('tour-holds/{id}/confirm', [MerchantTourHoldController::class, 'confirm'])->whereNumber('id');
+
+        // Entertainment venues (merchant-scoped)
+        Route::get('entertainment', [MerchantEntertainmentController::class, 'index']);
+        Route::post('entertainment', [MerchantEntertainmentController::class, 'store']);
+        Route::get('entertainment/bookings', [MerchantEntertainmentController::class, 'bookings']);
+        Route::post('entertainment/walk-in', [MerchantEntertainmentController::class, 'walkIn']);
+        Route::get('entertainment/tickets/lookup', [MerchantEntertainmentController::class, 'lookupTicket']);
+        Route::post('entertainment/tickets/{id}/redeem', [MerchantEntertainmentController::class, 'redeemTicket'])->whereNumber('id');
+        Route::post('entertainment/tickets/{id}/redeem-override', [MerchantEntertainmentController::class, 'redeemOverride'])->whereNumber('id');
+        Route::get('entertainment/{id}', [MerchantEntertainmentController::class, 'show'])->whereNumber('id');
+        Route::put('entertainment/{id}', [MerchantEntertainmentController::class, 'update'])->whereNumber('id');
+        Route::patch('entertainment/{id}/status', [MerchantEntertainmentController::class, 'updateStatus'])->whereNumber('id');
+        Route::post('entertainment/{id}/ticket-types', [MerchantEntertainmentController::class, 'upsertTicketType'])->whereNumber('id');
+        Route::post('entertainment/{id}/slots', [MerchantEntertainmentController::class, 'upsertSlot'])->whereNumber('id');
+        Route::post('entertainment/{id}/inventory', [MerchantEntertainmentController::class, 'upsertInventory'])->whereNumber('id');
+        Route::post('entertainment/{id}/images', [MerchantEntertainmentController::class, 'storeImage'])->whereNumber('id');
 
         // Boat rental (merchant-scoped)
         Route::get('boats', [MerchantBoatController::class, 'index']);
