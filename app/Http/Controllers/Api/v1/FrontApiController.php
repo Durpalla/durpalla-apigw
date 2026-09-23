@@ -284,30 +284,24 @@ class FrontApiController extends Controller
     }
 
     /**
-     * Public home: soonest future departures (no login). Used by the passenger app home strip.
+     * Public home: today's remaining departures (no login). Used by the passenger app home strip.
      */
     public function popularUpcomingTrips(Request $request): JsonResponse
     {
         $limit = (int) $request->query('limit', 8);
         $limit = max(1, min(20, $limit));
 
+        $today = date('Y-m-d');
         $query = VehicleSchedule::with([
             'route', 'startingPoint.ghat', 'endingPoint.ghat', 'boardingVias.ghat', 'startFrom', 'stopTo',
             'mappings', 'locks', 'bookingItems', 'vehicle',
         ])
             ->where('status', 'ACTIVE')
-            ->where(function ($q) {
-                $today = date('Y-m-d');
-                $q->where('schedule_date', '>', $today)
-                    ->orWhere(function ($q2) use ($today) {
-                        $q2->where('schedule_date', $today)
-                            ->where('leaving_at', '>=', now());
-                    });
-            });
+            ->whereDate('schedule_date', $today)
+            ->where('leaving_at', '>=', now());
         \App\Support\PublicListingVisibility::applyApprovedVehicle($query, 'vehicle');
 
         $results = $query
-            ->orderBy('schedule_date', 'asc')
             ->orderBy('leaving_at', 'asc')
             ->limit($limit)
             ->get();
