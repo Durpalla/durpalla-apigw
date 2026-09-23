@@ -10,6 +10,10 @@
 - Agents read/update `memory-bank/` for requirements
 - Existing `.cursor/rules/*` retained unchanged (additive `memory-bank.mdc` only)
 
+## 2026-09-23
+
+- Forgot-password OTP: `auth/forgot` refreshes `user_otps.updated_at` on every send. Verify expires a forgot-password code after 5 minutes (other OTP types stay at 15). A reused dev code (`111111`) used to leave `updated_at` stale, so verify always returned expired.
+
 ## Open notes
 
 - When adding hotel/transport fields, migrate in **durpalla**, then update services/resources here

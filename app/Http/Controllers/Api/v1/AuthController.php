@@ -189,14 +189,15 @@ class AuthController extends Controller
                 });
             }
 
-            $otp = $query->latest()->first();
+            $otp = $query->latest('id')->first();
             if (! $otp) {
                 $data['message'] = 'Your OTP code is invalid.';
 
                 return response()->json($data, $this->success);
             }
 
-            if (strtotime($otp->updated_at) < time() - 900) {
+            $ttl = $type === 'forgot' ? 300 : 900;
+            if (strtotime($otp->updated_at) < time() - $ttl) {
                 $data['message'] = 'Your otp code has been expired.';
             } else {
                 $user = Customer::where('mobile', $request->mobile)->first();
@@ -487,9 +488,22 @@ class AuthController extends Controller
                 $data['message'] = $validator->errors()->first();
             } else {
                 $code = $this->getOtpCode();
-                $otp = UserOtp::firstOrNew(['mobile' => $request->mobile, 'type' => 'forgot']);
-                $otp->mobile = $request->mobile;
+                // Reuse the newest forgot row. firstOrNew() keeps the oldest, while
+                // verify() reads latest(); a repeat send of the same code (dev OTP)
+                // is not dirty, so updated_at stayed stale and verify always expired.
+                $otp = UserOtp::query()
+                    ->where('mobile', $request->mobile)
+                    ->where('type', 'forgot')
+                    ->latest('id')
+                    ->first();
+                if (! $otp) {
+                    $otp = new UserOtp();
+                    $otp->mobile = $request->mobile;
+                    $otp->type = 'forgot';
+                }
                 $otp->otp_code = $code;
+                $otp->verified = 0;
+                $otp->updated_at = now();
                 if ($otp->save()) {
                     sendSMS([
                         'mobile' => $request->mobile,
