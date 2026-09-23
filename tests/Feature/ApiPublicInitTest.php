@@ -131,6 +131,15 @@ class ApiPublicInitTest extends TestCase
         }
     }
 
+    public function test_public_gateways_returns_json_without_token(): void
+    {
+        $response = $this->getJson($this->base . '/public/gateways');
+        $this->assertOkOrServerError($response->status());
+        if ($response->status() === 200) {
+            $response->assertJsonStructure(['success', 'data']);
+        }
+    }
+
     public function test_gateway_returns_401_without_token(): void
     {
         $response = $this->getJson($this->base . '/gateway');

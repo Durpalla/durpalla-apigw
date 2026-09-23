@@ -18,6 +18,14 @@ class GatewayController extends Controller
         $this->gatewayService = $gatewayService;
     }
 
+    public function publicIndex(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => $this->gatewayService->forPublicCustomers(),
+        ]);
+    }
+
     public function index(Request $request): JsonResponse
     {
         $payload = [

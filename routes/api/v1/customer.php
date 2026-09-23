@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['JsonResponse'])->group(function () {
     Route::get('public/popular-upcoming-trips', [FrontApiController::class, 'popularUpcomingTrips']);
+    Route::get('public/gateways', [GatewayController::class, 'publicIndex']);
     Route::get('public/app-config', [AppConfigController::class, 'show']);
     Route::get('offers', [FrontApiController::class, 'offers']);
     Route::get('site/init', [FrontApiController::class, 'init']);
