@@ -69,6 +69,3 @@ Schedule::command('commission:repair-missing --hours=1 --limit=100')
     ->hourly()
     ->runInBackground()
     ->withoutOverlapping();
-
-// Entertainment ticket expiry
-use Illuminate\Support\Facades\Schedule;
